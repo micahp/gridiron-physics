@@ -1,0 +1,6 @@
+node_modules/
+__pycache__/
+*.pyc
+data/raw/*.csv
+data/raw/*.csv.gz
+.DS_Store

@@ -1,0 +1,69 @@
+<title>Mile High Film Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="web/style.css">
+
+<div class="app" id="app">
+  <header class="bug" aria-label="Scoreboard">
+    <div class="bug-team" id="bug-away"></div>
+    <div class="bug-mid">
+      <div class="bug-clock"><span id="bug-q">Q1</span><span id="bug-clock">15:00</span></div>
+      <div class="bug-down" id="bug-down">KICKOFF</div>
+    </div>
+    <div class="bug-team" id="bug-home"></div>
+    <div class="bug-meta" id="bug-meta"></div>
+  </header>
+
+  <main class="stage">
+    <canvas id="view" aria-label="3D reconstruction of the current play"></canvas>
+    <div class="tags" id="tags" aria-hidden="true"></div>
+    <div class="ticker" id="ticker" aria-live="polite"></div>
+    <div class="cams" role="group" aria-label="Camera">
+      <button data-cam="broadcast" class="on">Broadcast</button>
+      <button data-cam="all22">All-22</button>
+      <button data-cam="sky">Skycam</button>
+      <button data-cam="top">Chalkboard</button>
+      <button data-cam="follow">Follow</button>
+      <button data-cam="free">Free</button>
+    </div>
+    <div class="loader" id="loader">
+      <div class="loader-k">Simulating 22 bodies per snap</div>
+      <div class="loader-bar"><i id="loader-bar"></i></div>
+      <div class="loader-n" id="loader-n">0 / 0 plays</div>
+    </div>
+  </main>
+
+  <section class="transport" aria-label="Playback">
+    <div class="tp-row">
+      <button id="prev" title="Previous play (←)" aria-label="Previous play">‹</button>
+      <button id="play" title="Play / pause (space)" aria-label="Play or pause">▶</button>
+      <button id="next" title="Next play (→)" aria-label="Next play">›</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Scrub within play">
+      <select id="speed" aria-label="Playback speed">
+        <option value="0.25">¼×</option><option value="0.5">½×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+      </select>
+      <label class="auto"><input type="checkbox" id="auto" checked> Auto-advance</label>
+    </div>
+    <p class="playtext" id="playtext"></p>
+    <canvas id="wp" height="46" aria-label="Win probability by play"></canvas>
+  </section>
+
+  <aside class="panel" aria-label="Details">
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="drives" class="on">Drives</button>
+      <button role="tab" data-tab="physics">Physics</button>
+      <button role="tab" data-tab="roster">Ratings</button>
+      <button role="tab" data-tab="player">Player</button>
+    </nav>
+    <div class="tab" id="tab-drives"></div>
+    <div class="tab" id="tab-physics" hidden></div>
+    <div class="tab" id="tab-roster" hidden></div>
+    <div class="tab" id="tab-player" hidden><p class="hint">Click any player on the field, or pick one from Ratings.</p></div>
+  </aside>
+</div>
+
+<script type="module" src="web/app.js"></script>

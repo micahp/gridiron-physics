@@ -1,0 +1,14 @@
+{
+  "name": "gridiron-physics",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Physics-based 22-player reconstruction of a real NFL game from ESPN play-by-play, with a Madden-style rating engine grounded in public research.",
+  "scripts": {
+    "data": "python3 pipeline/fetch.py && python3 pipeline/ratings.py && python3 pipeline/build_game.py",
+    "build": "python3 pipeline/ratings.py && python3 pipeline/build_game.py",
+    "test": "node test/validate.mjs --strict",
+    "serve": "python3 -m http.server 8080 --directory ."
+  },
+  "license": "MIT"
+}
