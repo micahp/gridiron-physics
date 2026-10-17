@@ -56,17 +56,43 @@ leaders.speed = [...bestSpeed.values()].sort((a, b) => b.v - a.v).slice(0, 8);
 leaders.hits.sort((a, b) => b.closing - a.closing);
 leaders.hits = leaders.hits.slice(0, 6);
 
+// ------------------------------------------------- key & scoring plays
+// ESPN's gamecast exposes three filters: All Plays / Scoring Plays / Key Plays.
+// Scoring plays come straight from ESPN's scoringPlay flag. ESPN's "Key Plays"
+// tab is a curated highlights reel, so we approximate it from the win-probability
+// data we already pulled: the plays that moved the home team's win probability the
+// most. Admin rows (END GAME, END QUARTER, ...) are excluded.
+const scoringIdx = new Set(game.plays.map((p, i) => (p.scoring ? i : -1)).filter((i) => i >= 0));
+const keyIdx = new Set(scoringIdx);
+{
+  const seq = game.plays.map((p, i) => (p.homeWp == null ? -1 : i)).filter((i) => i >= 0).sort((a, b) => a - b);
+  const swings = [];
+  for (let k = 1; k < seq.length; k++) swings.push([Math.abs(game.plays[seq[k]].homeWp - game.plays[seq[k - 1]].homeWp), seq[k]]);
+  swings.sort((a, b) => b[0] - a[0]);
+  for (const [d, i] of swings) {
+    if (d < 0.05) break;
+    const k = game.plays[i].kind;
+    if (k === 'admin' || k === 'presnap') continue;
+    keyIdx.add(i);
+  }
+}
+const matches = (i) => state.filter === 'all' || (state.filter === 'scoring' ? scoringIdx.has(i) : keyIdx.has(i));
+
 // -------------------------------------------------------------- state
-const state = { i: simIdx[0], t: 0, playing: true, speed: 1, auto: true, pause: 0, evIdx: 0, sel: null };
+const state = { i: simIdx[0], t: 0, playing: true, speed: 1, auto: true, pause: 0, evIdx: 0, sel: null, filter: 'all' };
 
 function playable(i, step) {
   let j = i;
-  do j += step; while (j >= 0 && j < recs.length && !recs[j]);
+  do j += step; while (j >= 0 && j < recs.length && (!recs[j] || !matches(j)));
   return j >= 0 && j < recs.length ? j : null;
 }
 
 function load(i, { keepPlaying = true } = {}) {
-  if (!recs[i]) i = playable(i, 1) ?? simIdx[0];
+  if (i == null || isNaN(i)) i = simIdx[0];
+  if (!recs[i] || !matches(i)) {
+    const j = playable(i, 1) ?? playable(i, -1) ?? playable(simIdx[0], 1) ?? simIdx[0];
+    if (j != null) i = j;
+  }
   state.i = i;
   const rec = recs[i];
   state.t = rec.t0;
@@ -166,23 +192,44 @@ function pushTicker(e) {
 }
 
 // -------------------------------------------------------------- tags
+// Tags track the *interpolated* body position (same as Renderer.draw), not the
+// nearest recorded frame, and their DOM nodes are reused instead of being rebuilt
+// each frame. Both were sources of visible jitter while a player was moving.
 const tagBox = $('#tags');
+const tagEls = new Map();
+function clearTags() {
+  for (const el of tagEls.values()) el.remove();
+  tagEls.clear();
+}
 function renderTags() {
   const rec = recs[state.i];
-  if (!rec) return;
-  const fi = Math.max(0, Math.min(rec.frames.length - 1, Math.round((state.t - rec.t0) * rec.hz)));
-  const f = rec.frames[fi];
-  const out = [];
-  rec.roster.forEach((r, i) => {
-    const carrying = f[i * 6 + 5] > 0.5;
-    if (!carrying && r.id !== state.sel) return;
-    const p = R.project(f[i * 6], f[i * 6 + 1], 2.6);
-    if (p.behind) return;
-    const mph = (f[i * 6 + 3] * MPH).toFixed(1);
-    out.push(`<div class="tag" style="left:${p.x}px;top:${p.y}px">#${esc(P[r.id].jersey)} ${esc(shortNm(r.id))}<small>${mph} mph</small></div>`);
-  });
-  tagBox.innerHTML = out.join('');
-  return f;
+  if (!rec) { clearTags(); return null; }
+  const fi = Math.max(0, Math.min(rec.frames.length - 1.001, (state.t - rec.t0) * rec.hz));
+  const k0 = Math.floor(fi), a = fi - k0;
+  const f0 = rec.frames[k0], f1 = rec.frames[Math.min(rec.frames.length - 1, k0 + 1)];
+  const L = (i) => f0[i] + (f1[i] - f0[i]) * a;
+  const seen = new Set();
+  for (let i = 0; i < rec.roster.length; i++) {
+    const r = rec.roster[i];
+    if (f0[i * 6 + 5] <= 0.5 && r.id !== state.sel) continue;
+    const p = R.project(L(i * 6), L(i * 6 + 1), 2.6);
+    if (p.behind) continue;
+    seen.add(r.id);
+    let el = tagEls.get(r.id);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'tag';
+      el.innerHTML = `#${esc(P[r.id].jersey)} ${esc(shortNm(r.id))}<small></small>`;
+      tagBox.append(el);
+      tagEls.set(r.id, el);
+    }
+    el.style.left = `${p.x}px`;
+    el.style.top = `${p.y}px`;
+    const mph = `${(L(i * 6 + 3) * MPH).toFixed(1)} mph`;
+    if (el.lastElementChild.textContent !== mph) el.lastElementChild.textContent = mph;
+  }
+  for (const [id, el] of tagEls) if (!seen.has(id)) { el.remove(); tagEls.delete(id); }
+  return f0;
 }
 
 // ------------------------------------------------------------ physics
@@ -224,8 +271,14 @@ function renderPhysics(f) {
 }
 
 // ------------------------------------------------------------- drives
+function renderFilter() {
+  const counts = { all: game.plays.length, scoring: scoringIdx.size, key: keyIdx.size };
+  const opts = [['all', 'All Plays'], ['scoring', 'Scoring'], ['key', 'Key Plays']];
+  $('#filterbar').innerHTML = opts.map(([v, label]) =>
+    `<button data-filter="${v}" class="${state.filter === v ? 'on' : ''}">${label}<span>${counts[v]}</span></button>`).join('');
+}
 function renderDrives() {
-  const box = $('#tab-drives');
+  const box = $('#drivelist');
   box.innerHTML = game.drives.map((d) => {
     const t = T[d.team];
     const scored = /TD|FG|Touchdown|Field Goal/i.test(d.result || '');
@@ -233,8 +286,10 @@ function renderDrives() {
     for (let i = d.first; i <= d.last; i++) {
       const S = game.plays[i];
       const ok = !!recs[i];
+      if (!matches(i)) continue;
       rows.push(`<button class="pl ${ok ? '' : 'admin'}" data-i="${i}" ${ok ? '' : 'disabled'}><span class="dd">Q${S.q} ${esc(S.clock)}<br>${esc(S.downText || '')}</span><span class="txt">${esc(S.text)}</span></button>`);
     }
+    if (!rows.length) return '';
     return `<div class="drive"><div class="drive-h" style="--team:${t.alt}"><span>${esc(t.abbr)} · ${esc(d.desc || '')}</span><span class="res ${scored ? 'score' : ''}">${esc(d.result || '')}</span></div>${rows.join('')}</div>`;
   }).join('');
 }
@@ -370,6 +425,16 @@ function drawWP() {
   g.strokeStyle = css.getPropertyValue('--firstdown');
   g.lineWidth = 1;
   g.beginPath(); g.moveTo(cx, 0); g.lineTo(cx, h); g.stroke();
+  // when a filter is active, mark the plays it keeps
+  if (state.filter !== 'all') {
+    g.fillStyle = css.getPropertyValue('--firstdown');
+    for (let i = 0; i < game.plays.length; i++) {
+      if (!matches(i)) continue;
+      g.beginPath();
+      g.arc(X(i), Y(game.plays[i].homeWp ?? 0.5), 2.2, 0, 7);
+      g.fill();
+    }
+  }
 }
 wpC.addEventListener('click', (e) => {
   const r = wpC.getBoundingClientRect();
@@ -400,6 +465,15 @@ document.querySelectorAll('.cams button').forEach((b) => (b.onclick = () => {
 }));
 document.querySelectorAll('.tabs button').forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 $('#tab-drives').addEventListener('click', (e) => { const b = e.target.closest('.pl'); if (b && !b.disabled) { load(+b.dataset.i); state.playing = true; drawWP(); } });
+$('#filterbar').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-filter]');
+  if (!b) return;
+  state.filter = b.dataset.filter;
+  renderFilter();
+  renderDrives();
+  load(matches(state.i) ? state.i : (playable(state.i, 1) ?? playable(state.i, -1) ?? simIdx[0]));
+  drawWP();
+});
 $('#tab-roster').addEventListener('click', (e) => {
   const t = e.target.closest('[data-team]');
   if (t) { rosterTeam = t.dataset.team; renderRoster(); return; }
@@ -452,6 +526,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+renderFilter();
 renderDrives();
 renderRoster();
 const hash = /^#p(\d+)$/.exec(location.hash);
