@@ -1019,7 +1019,10 @@ export function simulatePlay(game, S, ctx = {}) {
       if (r && r !== qb) {
         q.mode = 'cover_man';
         q.ai.man = r;
-        q.ai.cushion = S.coverage === 'man' ? 2.0 : S.coverage === 'blitz' ? 4.0 : 5.5;
+        // What If Lab sets S.coverage; the Film Room leaves it undefined, so the
+        // slot-based default must survive the fallback or every non-corner
+        // defender gains two yards of cushion and the reconstruction drifts.
+        q.ai.cushion = S.coverage === 'man' ? 2.0 : S.coverage === 'blitz' ? 4.0 : ['LCB', 'RCB'].includes(q.slot) ? 5.5 : 3.5;
       } else {
         q.mode = S.coverage === 'blitz' && q.slot === 'SS' ? 'rush' : 'zone';
         q.ai.zonePt = q.slot === 'FS' ? at(Math.max(14, air + 6), 7) : q.slot === 'SS' ? at(Math.max(13, air + 5), -7) : at(7, lOfY(q.p.y / YD));
