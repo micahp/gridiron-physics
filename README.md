@@ -58,3 +58,13 @@ See [docs/RATINGS.md](docs/RATINGS.md) for what is and isn't publicly known abou
 This is a reconstruction, not tracking data. ESPN gives outcomes, not coordinates. Formations, routes, assignments and every player's path between the anchors are generated, then played out by the physics. Ball spots, catch points, tacklers, kick distances and results are real. A play the real game had and the sim abstracts: the two-point conversion is shown in text only.
 
 Data © ESPN and nflverse contributors. three.js is MIT-licensed (`web/vendor/THREE_LICENSE`). NFL team names and logos belong to their owners; this is an unaffiliated research project.
+
+## What If Lab (experimental)
+
+Open [`what-if.html`](what-if.html) after running `npm run serve` and visit `http://localhost:8080/what-if.html`.
+
+This fourth-quarter, 3rd-and-3, down-four scenario reuses the existing Gridiron Physics `simulatePlay()` and Three.js `Renderer`. Choose Cover 2, Man or Blitz; press **Run the Slant**; use a reproducible seed, cameras and replay controls. Outcomes can be completions, incompletions, sacks or interceptions. Motion runs through the same 120 Hz physics engine used by Film Room.
+
+**Honesty:** All scenario outcomes and probability values are hand-authored illustrative fixtures, not trained Legendary Picks forecasts or a real historical play. The outcome is sampled *before* playback, and the existing physical director steers the players toward it. This is a visualization prototype, not a validated autonomous football model. The roster and physical parameter estimates are adapted from the original reconstructed game.
+
+`node --test test/what-if.mjs` tests the model script, deterministic seeds and normalization. `npm test` still validates the existing reconstruction. No existing Film Room page was replaced.
