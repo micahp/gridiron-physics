@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What If · Gridiron Physics</title>
+  <meta name="theme-color" content="#0b1016">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="web/what-if.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="masthead">
+      <div class="brand"><span class="brand-emblem">GP</span><span>GRIDIRON <b>PHYSICS</b></span></div>
+      <div class="navlinks"><a href="./">FILM ROOM</a><span class="nav-current">WHAT IF LAB</span></div>
+      <div class="experiment">EXPERIMENT / 001</div>
+    </header>
+    <section class="scoreboard" aria-label="Hypothetical game situation">
+      <div class="score-team"><span class="team-abbr">SEA</span><strong>21</strong></div>
+      <div class="score-center"><span class="q">Q4</span><strong>2:14</strong><span class="separator">/</span><strong class="down-label">3RD &amp; 3</strong></div>
+      <div class="score-team home"><span class="team-abbr">DEN</span><strong>17</strong><span class="possession">●</span></div>
+      <div class="spot">DEN BALL · SEA 28</div>
+    </section>
+    <div class="workspace">
+      <section class="field-column">
+        <div class="field-shell">
+          <canvas id="view" aria-label="Physics replay of a hypothetical third down slant"></canvas>
+          <div class="field-overlay-top"><span class="live-marker">WHAT IF / SIMULATED</span><span class="phase" id="phase">LOADING FIELD</span></div>
+          <div class="field-bottom"><span id="field-caption">Q4 · 3rd &amp; 3 · Slant</span><span class="field-credit">GRIDIRON PHYSICS ENGINE · 120 HZ</span></div>
+        </div>
+        <div class="transport" aria-label="Play controls">
+          <button id="pause" class="transport-play" type="button" title="Pause or resume" aria-label="Pause or resume">❚❚</button>
+          <button id="restart" type="button" title="Restart replay">↺ REPLAY</button>
+          <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Scrub replay" />
+          <span class="time" id="time">0.0s</span>
+          <select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+        </div>
+        <div class="camera-bar"><span>CAMERA</span><button type="button" data-cam="all22" class="selected">ALL-22</button><button type="button" data-cam="broadcast">BROADCAST</button><button type="button" data-cam="top">CHALKBOARD</button><button type="button" data-cam="follow">FOLLOW</button><button type="button" data-cam="free">FREE</button></div>
+        <section class="event-card" aria-label="Replay events">
+          <div class="section-kicker">01 / PHYSICS REPLAY</div>
+          <div id="events" class="event-list">Simulating…</div>
+        </section>
+      </section>
+      <aside class="side-panel">
+        <div class="eyebrow">YOU'RE THE PLAY CALLER</div>
+        <h1>THIRD &amp; <em>THREE.</em><br>YOUR CALL.</h1>
+        <p class="lead">Fourth quarter. Down four. One snap to keep the drive alive. What happens when you call the slant?</p>
+        <div class="context-grid"><div><span>OFFENSE</span><b>DENVER</b></div><div><span>PLAY CONCEPT</span><b>QUICK SLANT</b></div><div><span>FORMATION</span><b>SHOTGUN · 11</b></div><div><span>TO GAIN</span><b>3 YARDS</b></div></div>
+        <section class="picker" aria-label="Defensive look">
+          <div class="section-kicker">02 / PICK THE DEFENSE</div>
+          <div class="defenses" role="group" aria-label="Defensive looks">
+            <button type="button" data-defense="zone" class="active">COVER 2</button>
+            <button type="button" data-defense="man">MAN</button>
+            <button type="button" data-defense="blitz">BLITZ</button>
+          </div>
+          <p class="help">Change the coverage to see a different illustrative outcome distribution and defensive behavior.</p>
+        </section>
+        <section class="probabilities">
+          <div class="section-row"><div class="section-kicker">03 / OUTCOME MODEL</div><span class="demo-tag">ILLUSTRATIVE</span></div>
+          <p class="model-note">Hand-authored demonstration probabilities. <strong>Not</strong> a trained Legendary Picks forecast and not validated against NFL results.</p>
+          <div id="probability-rows" class="prob-bars"></div>
+          <div class="prob-footer"><span id="model-look">COVER 2</span><span>PROBABILITIES SUM TO 100%</span></div>
+        </section>
+        <section class="outcome" aria-live="polite">
+          <div class="section-row"><div class="section-kicker">04 / SAMPLED PLAY</div><span class="sample-tag" id="sample-kind">—</span></div>
+          <div class="result-number" id="result-number">—</div>
+          <div class="result-summary" id="result-summary">Choose a defensive look and run the play.</div>
+          <div class="result-details" id="result-details"></div>
+        </section>
+        <div class="launch">
+          <label for="seed">REPLAY SEED</label><input type="number" id="seed" min="0" step="1" value="101" aria-label="Simulation seed" />
+          <button id="run" type="button">RUN THE SLANT <span>→</span></button>
+          <button id="another" class="ghost" type="button">NEW RANDOM OUTCOME ↗</button>
+        </div>
+        <p class="disclaimer"><strong>What is real?</strong> Roster data, physical parameter estimates and the 120 Hz motion/collision engine come from Gridiron Physics. This game situation, probabilities and selected result are hypothetical. The physics director stages the sampled outcome rather than independently predicting it.</p>
+      </aside>
+    </div>
+  </div>
+  <script type="module" src="web/what-if.js"></script>
+</body>
+</html>
