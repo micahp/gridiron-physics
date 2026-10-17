@@ -959,14 +959,14 @@ export function simulatePlay(game, S, ctx = {}) {
       }
       if (s === 'TE' && heavy) continue;
       r.mode = 'route';
-      r.ai.path = routeFor(s, f0, l0, s === 'TE' ? rand.pick(['seam', 'curl', 'flat']) : rand.pick(kinds));
+      r.ai.path = routeFor(s, f0, l0, S.concept === 'slant' ? (s === 'TE' ? 'seam' : s === 'WR2' ? 'go' : 'slant') : s === 'TE' ? rand.pick(['seam', 'curl', 'flat']) : rand.pick(kinds));
       r.ai.wp = 0;
     }
     let tCatch;
     if (tgt) {
       const S0 = { ...tgt.p };
       const f0 = fOf(S0);
-      const stemF = air <= 1.5 ? f0 : Math.max(f0 + 1.5, air * (Math.abs(cp.l - lOfY(S0.y / YD)) > 8 ? 0.55 : 0.8));
+      const stemF = S.concept === 'slant' ? Math.max(f0 + 2, Math.min(air * 0.55, 4)) : air <= 1.5 ? f0 : Math.max(f0 + 1.5, air * (Math.abs(cp.l - lOfY(S0.y / YD)) > 8 ? 0.55 : 0.8));
       const path = [];
       if (air > 1.5) path.push(at(stemF, lOfY(S0.y / YD)));
       path.push(C);
@@ -1019,9 +1019,9 @@ export function simulatePlay(game, S, ctx = {}) {
       if (r && r !== qb) {
         q.mode = 'cover_man';
         q.ai.man = r;
-        q.ai.cushion = ['LCB', 'RCB'].includes(q.slot) ? 5.5 : 3.5;
+        q.ai.cushion = S.coverage === 'man' ? 2.0 : S.coverage === 'blitz' ? 4.0 : 5.5;
       } else {
-        q.mode = 'zone';
+        q.mode = S.coverage === 'blitz' && q.slot === 'SS' ? 'rush' : 'zone';
         q.ai.zonePt = q.slot === 'FS' ? at(Math.max(14, air + 6), 7) : q.slot === 'SS' ? at(Math.max(13, air + 5), -7) : at(7, lOfY(q.p.y / YD));
       }
     }
