@@ -8,7 +8,7 @@ This document supersedes the experiment priority in [the original Gridiron propo
 
 ## Decision
 
-Use the hockey recordings to establish a trustworthy movement research environment. At the same time, reconcile the NFL data Legendary Picks already has before adding another feed. Run an NBA acquisition audit next: its shot data and new tracking-derived metrics make it a strong candidate for conditional shot models, but a public statistics page does not establish access to the underlying trajectories.
+Use the hockey recordings to establish a trustworthy movement research environment. At the same time, reconcile the NFL data Legendary Picks already has before adding another feed. Audit the historical NBA SportVU movement archive next. It is a closer match to this research objective than shot summaries or provider model outputs.
 
 There is no single strongest sport across all objectives:
 
@@ -16,7 +16,7 @@ There is no single strongest sport across all objectives:
 |---|---|---|
 | Immediate movement research using data already obtained | Ten anonymized hockey games | Actual player/puck tracks are described in the existing experiment; quality and identity need work. |
 | Prospective football play generation | NFL PBP + participation + FTN + NGS summaries | Existing LP investment and rich action/context data; not continuous motion. |
-| Next scalable shot-probability research | NBA, subject to successful acquisition | Many repeated shots, shot locations and contextual summaries; new expected-shot metrics need access and historical-snapshot verification. |
+| Next NBA movement research | Historical SportVU archive | 636 archived game files; validate actual coverage and alignment before reserving independent games. |
 | Public ball-mechanics research | MLB Statcast | Directly documented pitch-motion parameters and contact measurements; existing LP importer aggregates much of this detail. |
 | Independent validation of a hockey improvement | Additional untouched games | The ten games have already been used repeatedly and cannot become fresh merely by changing the split. |
 
@@ -26,11 +26,11 @@ The shared ChatGPT URL could not be retrieved directly. The ten-game reference w
 
 ### Gridiron did not ingest the continuous NFL tracking implied by its animation
 
-The inspected Gridiron pipeline uses ESPN summaries, participants, rosters and depth charts, together with nflverse play-by-play, identifiers, combine and player statistics. In `pipeline/build_game.py`, formations depend on depth/role assignments and credited participants. In `src/sim/play.js`, movement is constructed around the known play result and endpoints. Ball launch is solved to an intended endpoint.
+The inspected Gridiron pipeline uses ESPN summaries, participants, rosters and depth charts, together with nflverse play-by-play, identifiers, combine and player statistics. In `pipeline/build_game.py`, formations depend on depth/role assignments and credited participants. In `engine/play.js`, movement is constructed around the known play result and endpoints. Ball launch is solved to an intended endpoint.
 
 Therefore the example contains real event context and synthetic movement. It does not establish that we already acquired full Next Gen Stats player and ball coordinates. A depth-chart formation is not an observed alignment. This corrects the assumption that the rendered paths can be reused as movement ground truth.
 
-Sources: [Gridiron pipeline](https://github.com/micahp/gridiron-physics/tree/main/pipeline), [simulation](https://github.com/micahp/gridiron-physics/tree/main/src/sim). The original review records inspected commit IDs.
+Sources: [Gridiron pipeline](https://github.com/micahp/gridiron-physics/tree/main/pipeline), [simulation](https://github.com/micahp/gridiron-physics/tree/main/engine). The original review records inspected commit IDs.
 
 ### The hockey experiment already exists
 
@@ -63,7 +63,41 @@ Amazon supplies technology in the [NFL tracking partnership](https://operations.
 
 LP references: [research index](https://github.com/micahp/legendarypicks/blob/dev/docs/INDEX-nfl-model-research-2026-10-12.md), [history loader](https://github.com/micahp/legendarypicks/blob/dev/backend/load_nfl_history.py), [NGS receiving importer](https://github.com/micahp/legendarypicks/blob/dev/backend/ingest_nfl_ngs_receiving.py). Earlier pressure/coverage tests not being retained for game-margin prediction does not prove those fields are useless for conditional play generation.
 
-## NBA: the opportunity is real, but distinguish three products
+## NFL team playbooks built from observed plays
+
+The intended first version is a playbook filled with plays each team actually ran in the previous season. Each entry references real game/play IDs and retains the observed personnel, formation and available action labels. This is an observed repertoire, not a claim to possess the team's internal coaching manual.
+
+Keep three layers separate:
+
+- **Observed play record:** source-backed facts about a historical snap, including explicit missing fields.
+- **Executable play template:** assignments and starting geometry needed by the simulator. Mark each element as observed, inferred or unknown; a recorded formation and target route do not identify every route or blocking responsibility. Multiple real calls may share the same recorded features, so do not invent exact concept names.
+- **Selection policy:** probabilities of choosing entries or observed play families given down, distance, field position, score, clock, available personnel and opponent context.
+
+The initial team repertoire should contain only source-backed historical plays/families. Any proposed new concept or coaching-change extension belongs in a separately labeled inferred repertoire, not silently in the observed set. Group repeated examples without discarding their source IDs, counts or situational frequencies.
+
+For the current example, Gridiron's README identifies Seattle at Denver on October 15, 2026, ESPN event 401872995. As checked October 22, the participation release stops at 2025; it cannot supply observed 2026 formations for that game. This does not block a prospective simulation: learn the repertoire from released 2025 records and select future calls without reading the real 2026 sequence. Separately verify whether FTN's current-season charting contains this game's rows before claiming enrichment. Its faster publication schedule does not imply availability of the full participation table.
+
+Use current as-of roster availability to assign players to historical roles, preserving personnel constraints and flagging substitutions. Coaching changes and unavailable players reduce confidence in old selection frequencies. Do not assume a departing player's identity transfers to the replacement or that the same coach remains in charge.
+
+The stored historical result is a training/evaluation label. Re-running the play must generate a new outcome; it must not inherit its actual gain, catch point, tackler, scorer or end spot. Preserve the existing reconstruction entry point separately.
+
+**First NFL implementation task:** an agent with both repositories should audit LP's actual participation coverage and player-ID joins, export versioned historical play records, and add a prospective repertoire loader/selector to Gridiron. Start with a bounded personnel/formation/play-type prediction experiment against a league-wide situational baseline before expanding all-22 assignments or the engine. A legal formation and deterministic seeded sample are integration checks, not predictive validation.
+
+For evaluation, freeze features, taxonomy, tuning and split before scoring. Score only observed labels, report missing-label coverage, use later untouched games and game-clustered uncertainty, and compare log loss/calibration with the baseline. Respect source publication dates: a season's participation records released after its postseason may be evaluation labels for that season, but cannot be inputs to forecasts supposedly issued during that season. A same-season rolling fit using those unreleased records is not deployment-faithful. Future models and ratings receive new versions; issued forecasts stay immutable.
+
+### How Madden's approach relates
+
+EA publicly describes a combination of observed football, football research and game design. Its [Madden 21 playbook notes](https://forums.ea.com/discussions/madden-nfl-franchise-discussion-en/madden-nfl-21-playbooks-and-ai-gameplay-updates/9058563) explain that new-coach/coordinator schemes are researched through film and interviews. Its [Madden 26 gameplay notes](https://www.ea.com/games/madden-nfl/madden-nfl-26/news/madden-26-gridiron-notes-gameplay-deep-dive) describe learning play-call tendencies from real NFL data and adding team-specific plays seen during the season. Its [beta feedback notes](https://www.ea.com/games/madden-nfl/madden-nfl-26/news/gridiron-notes-madden-26-closed-beta-feedback-updates) also acknowledge adding legacy formations for gameplay variety.
+
+These sources do not establish that teams supply EA their complete confidential playbooks for the upcoming season. Nor do they establish that EA relies only on the same public tables available to LP. The useful analogy is learning a team's observed repertoire and tendencies, researching coaching transitions, then updating with new evidence. LP's additional requirement is independently measured predictive accuracy rather than game authenticity alone.
+
+## NBA: raw movement first; derived metrics are secondary
+
+The relevant movement source is the [2015–16 SportVU archive](https://github.com/linouk23/NBA-Player-Movements). Inspection counted 636 compressed game files and confirmed parser fields for player/team IDs, player X/Y, ball position, quarter, game clock and shot clock. The [dataset card](https://huggingface.co/datasets/dcayton/nba_tracking_data_15_16) describes 25 Hz tracking. Archive presence and parser inspection do not validate every game's completeness or alignment. Audit samples, timestamps, duplicate frames and game/event joins before modeling; reserve untouched games before tuning. Current-season equivalent bulk access has not been established.
+
+This source is the NBA counterpart to the hockey movement recordings and NFL tracking samples. Prioritize it over the summary-metric acquisition proposed in the initial version. The following products are supplementary:
+
+
 
 1. **Event-level shot records:** attempts, location, clock, player and result. These support independently trained shot-quality and shot-selection models.
 2. **Tracking-derived summaries:** defender-distance, dribble and touch-time bins; passing/rebounding summaries. These describe observed play but do not reconstruct continuous motion.
@@ -127,8 +161,8 @@ Ratings should update only after games are verified and their source data is ava
 ## Order of work
 
 1. Hand off the hockey task now; preserve existing results and authorization.
-2. Reconcile NFL branch/schema/ingestion inventory, then prove current-season availability for each required feature.
-3. Complete the NBA sample-acquisition gate, including xFG/Gravity historical availability.
+2. Reconcile NFL historical participation and build the observed team repertoire and bounded selection experiment. Honor publication lags; current-season participation is not required.
+3. Audit NBA SportVU movement samples and reserve independent games. Treat xFG/Gravity as secondary.
 4. Acquire an independent hockey evaluation set before claiming improvement.
 5. Promote exactly one validated conditional component into LP only after it beats the statistical baseline on independent data.
 
