@@ -56,6 +56,8 @@ A future adapter should separate `policy -> forces/intents -> physics step -> ob
 
 ## 2. A prospective play generator
 
+**Updated playbook definition:** the initial team repertoire consists of plays that team actually ran in the prior available season, with source game/play IDs. Observed personnel, formation and action labels remain distinct from inferred assignments and coordinates needed to execute the play. Historical outcomes are labels, not forced results when re-running a play. See the [current direction document](PREDICTIVE-RESEARCH-DIRECTION-2026-10-22.md#nfl-team-playbooks-built-from-observed-plays) for the integration task, publication-lag constraints and Madden comparison. The absence of 2026 participation does not block selecting prospective plays from released 2025 history.
+
 Make the forecast cutoff explicit. A pregame forecast, pre-snap forecast and conditional in-play forecast have different permitted inputs.
 
 1. Freeze the as-of roster, availability, depth/usage distributions, player latent skills and uncertainty. Use canonical player IDs and source timestamps.
