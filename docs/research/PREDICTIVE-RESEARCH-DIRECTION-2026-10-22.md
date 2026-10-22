@@ -115,6 +115,33 @@ A live Gravity response was not obtained during this review. Bulk historical per
 
 For a future NBA experiment, compare a simple location/shot-type/player-prior model against one additional verified context source. Use chronological games and a later untouched period. Provider xFG can be a separate benchmark; comparing an imitation of provider xFG against that same xFG is not outcome validation. Pregame simulation must generate the future shot context; it cannot borrow the actual game's shot locations or defensive contests.
 
+## MLB: a fourth foundation for ball and base-advancement research
+
+MLB has usable public measurements for pitching, batted balls and game events. Outfield information also exists, but public averages and derived metrics must be distinguished from continuous trajectories.
+
+| Component | Identified source/data | What remains to verify |
+|---|---|---|
+| Pitch movement | Statcast release/plate positions, velocity and acceleration parameters | Coverage, coordinate conventions and measurement changes by season. |
+| Batted ball | Statcast exit velocity, launch angle, projected distance and hit-location coordinates | A chart coordinate is not automatically a measured landing/catch point; it does not encode a full flight path. |
+| Base occupancy and advancement | Play-by-play and Retrosheet event files describing advances, outs and scoring | Event records do not supply continuous runner paths or exact travel times between every base. |
+| Fielder starting positions | Baseball Savant situational positioning averages, including outfielders, with CSV export | These are averages, not verified per-play starting coordinates. |
+| Continuous defensive and runner movement | Tracked movement used by MLB Gameday 3D; a separate Sportradar Statcast event-tracking product | No public downloadable full-trajectory archive comparable to the NBA SportVU archive was verified in this review. |
+
+**Public ball/event foundation.** The [Statcast CSV dictionary](https://baseballsavant.mlb.com/csv-docs) documents the pitch and contact fields. [Retrosheet event documentation](https://www.retrosheet.org/eventfile.htm) and [CSV downloads](https://retrosheet.org/downloads/csvdownloads.html) provide a concrete source for historical play outcomes and runner advances. Treat those advances as evaluation labels for prospective simulation; do not force a simulated runner to reach the base recorded in the real play.
+
+**Outfield data is not absent.** [Baseball Savant's situational fielder-positioning tool](https://baseballsavant.mlb.com/visuals/fielder-positioning) exposes average starting positions, with situation filters and CSV export. These can inform starting-position distributions. They cannot validate an individual fielder's exact starting point or route.
+
+[MLB Gameday 3D](https://www.mlb.com/news/mlb-gameday-3d-guide) renders tracked ball, fielder and runner movement. Visualization access does not establish bulk research-data access.
+
+[Sportradar's MLB Event Tracking documentation](https://developer.sportradar.com/baseball/reference/mlb-event-tracking) identifies an access-controlled Statcast product. Its published schema includes metrics for batting, pitching, baserunning and fielders. Obtain and inspect an authorized sample before claiming it supplies time-indexed coordinates: a product called tracking can expose derived measurements without full trajectories. No provider was contacted and no payload was acquired.
+
+**ESPN is not the established tracking source.** A field diagram, hit marker or base-occupancy display demonstrates presentation of events. This review did not verify that ESPN exposes underlying continuous fielder/runner paths. Prefer the identified MLB/Statcast and historical event sources for acquisition.
+
+**Next MLB step:** audit a small set of complete games by joining raw Statcast rows to event records using stable game/play identifiers. Report missing contact measurements, runner-transition consistency and field-coordinate definitions. The inspected LP importer already aggregates Statcast by player/date; verify whether raw pitch/event rows are retained before building another ingestion path.
+
+Keep this an acquisition candidate alongside the hockey-first work. Public data supports a bounded pitch/contact or base-advancement study now, subject to sample validation. A complete defensive movement simulator still needs verified trajectories or explicitly inferred movement. Pitch parameters describing an already observed flight are useful for reconstruction and measurement checks; predicting before release requires generating those parameters without reading the future pitch.
+
+
 ## Other leagues: acquisition opportunities and limits
 
 | League | Source to investigate or reuse | Research value and limit |
