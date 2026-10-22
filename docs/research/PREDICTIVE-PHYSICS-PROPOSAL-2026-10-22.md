@@ -1,5 +1,8 @@
 # Gridiron Physics as a predictive research environment
 
+> **Updated research priority:** Read [Predictive research direction](PREDICTIVE-RESEARCH-DIRECTION-2026-10-22.md) and the [ten-game hockey agent task](HOCKEY-TEN-GAME-AGENT-TASK-2026-10-22.md) first. They supersede this document's recommendation to start with an NFL Big Data Bowl experiment. Start with the existing anonymized hockey tracking, reconcile LP's NFL data inventory, and audit NBA acquisition. The ten hockey games have already been analyzed and are development data, not a fresh independent holdout.
+
+
 Date: 2026-10-22
 Status: proposal only; no engine implementation, model adoption, or production change.
 
