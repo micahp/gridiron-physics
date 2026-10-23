@@ -56,6 +56,8 @@ for (const engine of ENGINE_IDS) {
   assert.ok(pileFumble.events.some((row) => row.type === 'scenario_impulse'), `${engine}: configured fumble impulse is applied`);
   assert.equal(pileFumble.outcome.football.status, 'loose_live_recovery_unresolved');
   assert.equal(pileFumble.diagnostics.finite, true);
+  const pileBallMaxSpeedMps = Math.max(...pileFumble.frames.map((frame) => Math.hypot(...frame.football.linearVelocityMps)));
+  assert.ok(pileBallMaxSpeedMps < 30, `${engine}: fumble ball force does not accumulate after each physics step`);
 
   const gangTackle = await runScenario(engine, shortFixture('gang-four-blockers-congested'), { playerGeometry: 'compound' });
   const carrierContacts = gangTackle.contacts.filter((row) => row.pairId.startsWith('carrier::'));
@@ -80,6 +82,7 @@ for (const engine of ENGINE_IDS) {
   assert.equal(compareSignatures(repeatA, repeatB), true, `${engine}: identical seed and fixture repeat within process`);
   summaries.push({ engine, simultaneousSackContacts: contactTimes, looseBall: fumble.outcome.football.status,
     pileFumbleImpulseCount: pileFumble.events.filter((row) => row.type === 'scenario_impulse').length,
+    pileBallMaxSpeedMps,
     opposingGangTackleContacts: gangContactTimesByGeometry, gangCarrierContactPairs: carrierContacts.length, scrumContacts: scrum.contacts.length,
     playerCount22Contacts: maxLine.contacts.length, repeatable: true });
 }

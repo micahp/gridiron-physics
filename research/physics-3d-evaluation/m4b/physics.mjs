@@ -75,9 +75,13 @@ function makeRapierWorld({ ground = true, gravity = -G, material = {}, solverIte
       .setRestitution(material.groundRestitution ?? 0.04), groundBody);
   }
   const players = [];
+  const forceBodies = [];
   const adapter = {
     engine: 'rapier3d-compat',
-    async addPlayer(spec, label) { const player = rapierHumanoid(world, spec, label, material, playerGeometry); players.push(player); return player; },
+    async addPlayer(spec, label) {
+      const player = rapierHumanoid(world, spec, label, material, playerGeometry);
+      players.push(player); forceBodies.push(player.body); return player;
+    },
     addBallisticBody({ p, v, angular = [0, 0, 0], yawRad = 0, mass = 10, shape = 'box', halfExtents = [0.3, 0.2, 0.25], label = 'ballistic-body', material: bodyMat = {} }) {
       const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...p).setRotation(rapierQuaternion(quat(yawRad))).setLinvel(...v).setAngvel(v3(angular))
         .setLinearDamping(bodyMat.linearDamping ?? 0).setAngularDamping(bodyMat.angularDamping ?? 0).setCanSleep(false));
@@ -87,11 +91,12 @@ function makeRapierWorld({ ground = true, gravity = -G, material = {}, solverIte
       colliderDesc.setMass(mass).setFriction(bodyMat.friction ?? material.groundFriction ?? 0.82)
         .setRestitution(bodyMat.restitution ?? material.groundRestitution ?? 0.04);
       const collider = world.createCollider(colliderDesc, body);
+      forceBodies.push(body);
       return { body, colliders: [collider], mass, label };
     },
     async step() {
       world.step();
-      for (const player of players) { player.body.resetForces(true); player.body.resetTorques(true); }
+      for (const body of forceBodies) { body.resetForces(true); body.resetTorques(true); }
     },
     state(player) { return rapierBodyState(player.body, player.label, player.mass); },
     grounded(player) {
