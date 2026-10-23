@@ -171,6 +171,7 @@ export const M4C_SCENARIOS = Object.freeze([...library.values()]);
 export const M4C_SCENARIO_BY_ID = new Map(M4C_SCENARIOS.map((scenario) => [scenario.id, scenario]));
 export const M4C_PRIORITY_IDS = Object.freeze([
   'gang-two-opposite-open', 'sack-simultaneous-two', 'possession-retained', 'possession-force-fumble',
+  'fumble-eight-pile-live-ball',
   'recovery-failed', 'recovery-secure', 'recovery-contested', 'tush-push-eight', 'short-yardage-22-player',
   'gang-three-upright', 'gang-staggered-three', 'sack-initiate-finish', 'sack-throw-window',
 ]);
