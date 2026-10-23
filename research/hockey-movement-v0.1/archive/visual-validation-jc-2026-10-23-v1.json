@@ -1,0 +1,112 @@
+{
+  "viewer": "research/hockey-movement-v0.1/viewer/",
+  "archive_id": "jc-2026-10-23-v1",
+  "versioned_archive": "scenario_archive-jc-2026-10-23-v1.json.gz",
+  "archive_sha256": "70fff270a0d89375857ed352a8038d1565ee07849ce8ea0c8e5557cd6288fa95",
+  "preregistration_sha256": "5ec697c63d80a1afe3ee2cb95b2c7a30ea633c0a9fb7ff9483983e2bd1501773",
+  "preregistration_commits": {
+    "legendarypicks": "748e0090d18ee4a6cac09aa57429d347f9d5efae",
+    "gridiron_physics": "7e55ba30f40f83c8c251abf450512d740c89a1fd"
+  },
+  "joint_coherence_results_sha256": "0bec6b2ad5430ee080b357b745c9c4f811bb80005aadfd52911e05d601b3624c",
+  "joint_coherence_evaluation_commit": "f147e67fa42b3f878674db6b9f018150934a37ed",
+  "legendarypicks_code_commit": "bc91d1610de5c99a0bdf396738e9d2f493c3d215",
+  "legendarypicks_evaluation_commit": "f147e67fa42b3f878674db6b9f018150934a37ed",
+  "gridiron_movement_engine_commit": "252ed6d95fbb6a9ac8db5a65aed920139777432a",
+  "gridiron_validation_commit": "c61d20b77ffeaadb651c49129ea669e8480a8e39",
+  "browser_version": "148.0.7778.96",
+  "page_errors": [],
+  "console_errors": [],
+  "panels": 4,
+  "scenario_count": 206,
+  "validated_scenario_id": "2025-10-11.Team.A.@.Team.D|P1|65745",
+  "validated_input_cutoff_image_id": "2025-10-11 Team A @ Team D_065745",
+  "validated_prediction_horizon_ordinal_steps_not_seconds": 45,
+  "validated_group_metric_steps_ordinal_increments_not_seconds": [
+    1,
+    45
+  ],
+  "uncertainty_status_at_step_15": {
+    "tracking_confidence": "not supplied by source",
+    "personnel_completeness": "unknown",
+    "identity_conflicts_quarantined": true,
+    "missing_xy_count": 0,
+    "conflicted_present": true
+  },
+  "in_browser_policy_max_path_difference_ft": 0,
+  "per_player_error_rows_at_step_15": 30,
+  "screenshots": [
+    "viewer-topdown.png",
+    "viewer-rink-side.png",
+    "viewer-topdown-step15.png",
+    "viewer-rink-side-step15.png"
+  ],
+  "clips": [
+    {
+      "category": "oriented_attack_end_puck_proximity",
+      "scenario_option": "aligned_teammate_movement_geometry / multiple_skaters_closing_on_puck_geometry / oriented_attack_end_puck_proximity / skater_separating_from_nearest_opponent · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_105298",
+      "file": "oriented-attack-end-puck-proximity.webm",
+      "bytes": 1855595,
+      "sha256": "7389eff34851620030514ca8812047abbf65951a3a31197312bde9faf316fcd4",
+      "duration_seconds": 33.84,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "opposite_end_puck_proximity",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "opposite-end-puck-proximity.webm",
+      "bytes": 2042139,
+      "sha256": "49a34bd6be69d1f831a7a2f3e1dc70ad4ae245353729d449a483c72d0aff9b1b",
+      "duration_seconds": 31.72,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "central_strip_geometry",
+      "scenario_option": "aligned_teammate_movement_geometry / central_strip_geometry / skater_separating_from_nearest_opponent · 2025-10-11.Team.A.@.Team.D · P2 · 2025-10-11 Team A @ Team D_184964",
+      "file": "central-strip-geometry.webm",
+      "bytes": 1870340,
+      "sha256": "34ac4f0dffcba4fb47ae17632e24ffba9df1e58745049ef4b5784c0161afbb3f",
+      "duration_seconds": 33.76,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "multiple_skaters_closing_on_puck_geometry",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "multiple-skaters-closing-on-puck-geometry.webm",
+      "bytes": 2376686,
+      "sha256": "10f8fb677056329c1ba99f49b55d4f219fab9aa9044108d0abd5646e5cacbcb4",
+      "duration_seconds": 38.04,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "skater_separating_from_nearest_opponent",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "skater-separating-from-nearest-opponent.webm",
+      "bytes": 2912517,
+      "sha256": "c2f7d29cf6b9c4c0ffab9355bff39636f4d62f2ff9e78bbdbc4a4245312e5ec9",
+      "duration_seconds": 46.92,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "aligned_teammate_movement_geometry",
+      "scenario_option": "aligned_teammate_movement_geometry / multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_101135",
+      "file": "aligned-teammate-movement-geometry.webm",
+      "bytes": 2496197,
+      "sha256": "8daf71a7b57264d26cf609c97536a9330c0f2f454799d63b42630154e8dcce11",
+      "duration_seconds": 45.04,
+      "preserved_from_previous_capture": false
+    },
+    {
+      "category": "tracking_missingness_or_identity_conflict",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "tracking-missingness-or-identity-conflict.webm",
+      "bytes": 1650037,
+      "sha256": "e4918cb3363e38771f304eb9f8b9c82f3ace006bef6400351329218f0f389e0b",
+      "duration_seconds": 25.52,
+      "preserved_from_previous_capture": false
+    }
+  ],
+  "categories_without_sample": [],
+  "visual_transform": "Observed rink XY; period-one attack-right transform only when orientation metadata exists",
+  "timebase": "ordinal Image Id increments; no validated seconds"
+}
