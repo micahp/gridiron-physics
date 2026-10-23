@@ -385,13 +385,17 @@ export function simulatePlay(game, S, ctx = {}) {
     }
   }
 
-  // Rating 50 is neutral; each 10 points moves the factor by 0.1, bounded to [0.5, 1.5].
-  const gripFactor = (r) => clamp(0.5 + ((r ?? 50) - 50) / 100, 0.5, 1.5);
+  // Hold factors centred on role populations of the 2026 NE-CHI engine ratings (in-sample, not validated):
+  // defenders (CB, LB, IDL, EDGE, S; n=77) TAK mean 68.818; ball carriers (RB, WR, TE, QB; n=52) max(BTK, ELU)
+  // mean 70.577. grip = TAK / TAK_CENTRE and resist = max(BTK, ELU) / RESIST_CENTRE, each bounded to [0.5, 1.5].
+  // Missing ratings give a factor of 1.
+  const TAK_CENTRE = 68.818, RESIST_CENTRE = 70.577;
+  const holdFactor = (r, centre) => clamp((r ?? centre) / centre, 0.5, 1.5);
 
   function startTackle(d, c) {
     st.tTackle = W.t;
-    const w = W.wrap(d, c, { fall: 0.5, grip: gripFactor(d.R?.TAK),
-      resist: gripFactor(Math.max(c.R?.BTK ?? 50, c.R?.ELU ?? 50)) });
+    const w = W.wrap(d, c, { fall: 0.5, grip: holdFactor(d.R?.TAK, TAK_CENTRE),
+      resist: holdFactor(Math.max(c.R?.BTK ?? RESIST_CENTRE, c.R?.ELU ?? RESIST_CENTRE), RESIST_CENTRE) });
     st.wrap = w;
     st.tackler = d;
     c.pose = POSE.WRAP;
