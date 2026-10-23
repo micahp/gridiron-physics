@@ -10,6 +10,7 @@ const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const TEAM_IDS = ['NE', 'CHI'];
 const SAMPLE_SIZE = 200;
 const PRESSURE_RADIUS_M = 2;
+const PRESSURE_SENSITIVITY_THRESHOLDS_M = [1.9, 1.95, 2, 2.05, 2.1, 2.2, 2.5, 3];
 const RUN_CLOSE_RADIUS_M = 3;
 const DEFENSIVE_FRONT = new Set(['LEDGE', 'LDT', 'RDT', 'REDGE']);
 const ATTEMPT_EVENT_TYPES = new Set(['wrapped', 'broken_tackle']);
@@ -134,7 +135,7 @@ function analyzePressure({ result, offenseId, defenseId, formation, seed, scenar
     for (const { player, index } of defenderIndexes) {
       const distance = distanceMeters(qb, fieldPosition(result, sample.index, index));
       if (!minimum || distance < minimum.distance_m) {
-        minimum = { distance_m: distance, time_seconds_after_snap: sample.time, defender_id: player.id, defender_slot: player.slot };
+        minimum = { distance_m: distance, time_seconds_after_snap: sample.time, frame_index: sample.index, defender_id: player.id, defender_slot: player.slot };
       }
       if (distance <= PRESSURE_RADIUS_M && (!firstPressure
         || sample.time < firstPressure.time_seconds_after_snap
@@ -160,8 +161,12 @@ function analyzePressure({ result, offenseId, defenseId, formation, seed, scenar
     terminal_outcome: outcome,
     terminal_reason: result.end.reason,
     live_window_end_seconds_after_snap: liveEndTime,
+    // The measured live window begins at the snap (t=0), even though result
+    // traces include pre-snap frames and result.t0 may be negative.
+    live_window_length_seconds: Math.max(0, liveEndTime),
     minimum_defender_to_qb_distance_m: minimum?.distance_m ?? null,
     minimum_distance_time_seconds_after_snap: minimum?.time_seconds_after_snap ?? null,
+    minimum_distance_frame_index: minimum?.frame_index ?? null,
     closest_defender_at_minimum: minimum ? { id: minimum.defender_id, slot: minimum.defender_slot } : null,
     pressured_within_2m: firstPressure !== null,
     time_to_first_defender_within_2m_seconds: firstPressure?.time_seconds_after_snap ?? null,
@@ -190,6 +195,14 @@ function summarizePressure(records) {
     }
   }
   const times = records.map((record) => record.time_to_first_defender_within_2m_seconds).filter(Number.isFinite);
+  const distances = records.map((record) => record.minimum_defender_to_qb_distance_m).filter(Number.isFinite);
+  const minimumDistanceTimes = records.map((record) => record.minimum_distance_time_seconds_after_snap).filter(Number.isFinite);
+  const minimumDistanceFrames = records.map((record) => record.minimum_distance_frame_index).filter(Number.isFinite);
+  const liveWindowLengths = records.map((record) => record.live_window_length_seconds).filter(Number.isFinite);
+  const thresholdSensitivity = PRESSURE_SENSITIVITY_THRESHOLDS_M.map((thresholdM) => {
+    const count = distances.filter((distance) => distance <= thresholdM).length;
+    return { threshold_m: thresholdM, count, denominator: distances.length, rate: distances.length ? count / distances.length : null };
+  });
   return {
     n: records.length,
     terminal_outcome_counts: Object.fromEntries(TERMINAL_PASS_OUTCOMES.map((name) => [name,
@@ -200,6 +213,22 @@ function summarizePressure(records) {
     time_to_pressure_seconds_among_pressured: distribution(times),
     right_censored_no_pressure_count: records.length - times.length,
     minimum_defender_to_qb_distance_m: distribution(records.map((record) => record.minimum_defender_to_qb_distance_m).filter(Number.isFinite)),
+    threshold_sensitivity: thresholdSensitivity,
+    closest_approach_min_p10_median_m: {
+      n: distances.length,
+      min: distances.length ? Math.min(...distances) : null,
+      p10: quantile(distances, 0.1),
+      median: quantile(distances, 0.5),
+    },
+    sampled_window_timing_diagnostic: {
+      interpretation: 'sampled minimum-distance frame and live-window duration; not time-to-pressure development',
+      minimum_distance_frame_index: distribution(minimumDistanceFrames),
+      minimum_distance_time_seconds_after_snap: distribution(minimumDistanceTimes),
+      live_window_length_seconds: distribution(liveWindowLengths),
+      seconds_from_minimum_distance_frame_to_window_end: distribution(records
+        .filter((record) => Number.isFinite(record.minimum_distance_time_seconds_after_snap))
+        .map((record) => Math.max(0, record.live_window_end_seconds_after_snap - record.minimum_distance_time_seconds_after_snap))),
+    },
     pressured_dropbacks_with_rusher_shed_before_pressure: records.filter((record) => record.rusher_shed_block_before_pressure === true).length,
     unpressured_dropbacks_with_rusher_shed_before_live_window_end: records.filter((record) => record.rusher_shed_during_unpressured_live_window === true).length,
     explicit_pressure_event_count: records.reduce((sum, record) => sum + record.explicit_pressure_events, 0),
@@ -379,6 +408,25 @@ export function buildPressureAndRunTailProbe({ n = SAMPLE_SIZE } = {}) {
       ne_zero_sacks_one_sided_95_percent_exact_upper_rate: exactZeroEventUpperBound(n),
       zero_sacks_trials_required_for_one_sided_95_percent_upper_below_3_percent: trialsToPutUpperBoundBelow(0.03),
       confidence_method: 'exact zero-success binomial upper bound: 1 - (1 - confidence)^(1/n)',
+    },
+    structural_sack_diagnostic: {
+      interpretation: 'sack counts are a geometry/blocking cap first, a rate second; a sampled proximity threshold is not proof of a pressure event',
+      geometric_distance_floor_m: 1.9,
+      minimum_distance_by_offense: Object.fromEntries(TEAM_IDS.map((id) => [id, {
+        minimum_defender_to_qb_distance_m: pressureCells[id].closest_approach_min_p10_median_m.min,
+        p10_m: pressureCells[id].closest_approach_min_p10_median_m.p10,
+        median_m: pressureCells[id].closest_approach_min_p10_median_m.median,
+        plays_below_floor: pressureCells[id].records
+          .filter((record) => record.minimum_defender_to_qb_distance_m < 1.9)
+          .map((record) => ({
+            seed: record.seed,
+            minimum_distance_m: record.minimum_defender_to_qb_distance_m,
+            time_seconds_after_snap: record.minimum_distance_time_seconds_after_snap,
+            terminal_outcome: record.terminal_outcome,
+            terminal_reason: record.terminal_reason,
+          })),
+      }])),
+      note: 'Interpret the geometry alongside the per-play records and engine collision/contact gates; do not infer calibrated sack rates from this sample.',
     },
     run_tail_method: {
       long_run_threshold_yards: 10,
