@@ -17,9 +17,10 @@ const SEED = Number(process.argv[2] ?? 41027);
 const SCREENSHOT_SCENARIOS = ['gang-two-opposite-open', 'gang-staggered-three', 'gang-three-upright',
   'sack-simultaneous-two', 'sack-initiate-finish', 'sack-throw-window', 'possession-retained',
   'possession-force-fumble', 'recovery-failed', 'recovery-secure', 'recovery-contested',
+  'fumble-eight-pile-live-ball', 'tush-push-eight', 'short-yardage-22-player',
+  'grip-escape-one-held', 'grip-break-multiple-forward'];
+const VIDEO_SCENARIOS = ['gang-two-opposite-open', 'sack-simultaneous-two', 'possession-retained',
   'fumble-eight-pile-live-ball', 'tush-push-eight', 'short-yardage-22-player'];
-const VIDEO_SCENARIOS = ['gang-two-opposite-open', 'sack-simultaneous-two', 'fumble-eight-pile-live-ball',
-  'tush-push-eight', 'short-yardage-22-player'];
 const CAMERAS = ['all22', 'sideline', 'closeup'];
 const ENGINES = ['rapier3d-compat', 'jolt-physics-js'];
 const FPS = 12;

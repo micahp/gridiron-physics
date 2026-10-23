@@ -134,14 +134,18 @@ function percentile(values, p) {
 export async function runScenario(engine, scenario, { playerGeometry = 'compound', recordFrames = true, recordStride = 1,
   behaviorVersion = 'm4b', timestepSeconds = DT, solverIterations = 8, joltCollisionSteps = 1, playerScale = 1,
   rapierContactSkinM = 0, materialOverrides = {}, balanceControllerEnabled = true, balanceTorqueScale = 1,
-  playerMassScale = 1, playerDriveScale = 1, gripStrengthScale = 1, gripStiffnessScale = 1,
+  playerMassScale = 1, playerTeamMassScales = {}, playerDriveScale = 1, gripStrengthScale = 1, gripStiffnessScale = 1,
   ballControlEnabled = true } = {}) {
   const startedAt = performance.now();
   const heapBeforeBytes = process.memoryUsage().heapUsed;
   const dt = timestepSeconds;
-  if (!(dt > 0) || !(playerScale > 0) || !(playerMassScale > 0)) throw new Error('timestepSeconds, playerScale, and playerMassScale must be positive');
+  if (!(dt > 0) || !(playerScale > 0) || !(playerMassScale > 0)
+    || Object.values(playerTeamMassScales).some((scale) => !(scale > 0))) {
+    throw new Error('timestepSeconds, playerScale, and all player mass scales must be positive');
+  }
   const materials = { ...MATERIALS, ...(scenario.groundMaterial?.friction !== undefined ? { groundFriction: scenario.groundMaterial.friction } : {}), ...materialOverrides };
-  const playerSpecs = scenario.players.map((spec) => ({ ...spec, mass: spec.mass * playerMassScale }));
+  const playerSpecs = scenario.players.map((spec) => ({ ...spec,
+    mass: spec.mass * playerMassScale * (playerTeamMassScales[spec.team] ?? 1) }));
   const world = await createPhysics(engine, { ...materials, material: materials, ground: true, gravity: -GRAVITY,
     solverIterations, timestep: dt, joltCollisionSteps, playerGeometry, playerScale, rapierContactSkinM });
   const players = new Map();
@@ -794,7 +798,7 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
       solverIterations: engine === 'rapier3d-compat' ? solverIterations : 'package default; not exposed by tested JS wrapper',
       joltCollisionSteps: engine === 'jolt-physics-js' ? joltCollisionSteps : 'not applicable', playerScale,
       rapierContactSkinM: engine === 'rapier3d-compat' ? rapierContactSkinM : 'unsupported by tested Jolt JS shape API',
-      materialOverrides, balanceControllerEnabled, balanceTorqueScale, playerMassScale, playerDriveScale,
+      materialOverrides, balanceControllerEnabled, balanceTorqueScale, playerMassScale, playerTeamMassScales, playerDriveScale,
       gripStrengthScale, gripStiffnessScale, ballControlEnabled }, playerGeometryDescription: playerGeometry === 'single-capsule'
       ? 'single dynamic capsule; not an articulated player' : 'five fixed shapes on one rigid body; not an articulated player',
     timestepSeconds: dt, recordedFrameStrideTicks: frameStride, gravityMps2: GRAVITY_VECTOR, durationSeconds: steps * dt, stepsCompleted,

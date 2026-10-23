@@ -32,6 +32,10 @@ const variants = [
   { id: 'high-traction', scenario: 'gang-two-opposite-open', options: { materialOverrides: { playerFriction: 1.10, groundFriction: 1.10 } } },
   { id: 'player-mass-0.9', scenario: 'gang-two-opposite-open', options: { playerMassScale: 0.9 } },
   { id: 'player-mass-1.1', scenario: 'gang-two-opposite-open', options: { playerMassScale: 1.1 } },
+  { id: 'carrier-light-defender-heavy', scenario: 'gang-two-opposite-open', options: { playerTeamMassScales: { offense: 0.85, defense: 1.15 } } },
+  { id: 'carrier-heavy-defender-light', scenario: 'gang-two-opposite-open', options: { playerTeamMassScales: { offense: 1.15, defense: 0.85 } } },
+  { id: 'grip-strength-low', scenario: 'grip-escape-one-held', options: { gripStrengthScale: 0.5 } },
+  { id: 'grip-strength-high', scenario: 'grip-escape-one-held', options: { gripStrengthScale: 8.0 } },
   { id: 'one-defender', scenario: 'gang-two-opposite-open', defenderCount: 1, options: {} },
   { id: 'two-defenders', scenario: 'gang-two-opposite-open', defenderCount: 2, options: {} },
   { id: 'football-control-off', scenario: 'possession-retained', options: { ballControlEnabled: false } },
@@ -69,6 +73,10 @@ for (const variant of variants) for (const engine of ENGINE_IDS) {
   if (variant.separationM) initialSeparation(scenario, variant.separationM);
   if (variant.defenderCount) scenario.players = [scenario.players[0], ...scenario.players.slice(1, 1 + variant.defenderCount)];
   const result = await runScenario(engine, scenario, { behaviorVersion: 'm4c', recordFrames: false, ...variant.options });
+  if (variant.id === 'grip-strength-low' || variant.id === 'grip-strength-high') {
+    const weakGrip = result.outcome.wrapResults.find((row) => row.holderId === 'defender-left');
+    assert.equal(weakGrip.released, variant.id === 'grip-strength-low', `${engine}: grip strength changes the overload outcome`);
+  }
   const row = { variantId: variant.id, input: { scenarioId: variant.scenario, seed,
     initialPlayers: scenario.players, scenarioBall: scenario.carriedBall ?? scenario.looseBall ?? null,
     spawnSeparationAdjustmentM: variant.separationM ?? 0, defenderCount: variant.defenderCount ?? null,

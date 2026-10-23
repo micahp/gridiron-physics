@@ -65,6 +65,26 @@ simultaneous.players = [
 simultaneous.carriedBall = cradle({ gripCapacityN: 3800 });
 save(simultaneous);
 
+const gripEscape = structuredClone(simultaneous);
+gripEscape.id = 'grip-escape-one-held';
+gripEscape.title = 'Runner escapes one grip while a second defender maintains control';
+gripEscape.durationSeconds = 1.2;
+gripEscape.players.find((row) => row.id === 'carrier').balanceScale = 0.8;
+gripEscape.players.find((row) => row.id === 'carrier').drive = { forceN: [1400, 0, 0], startSeconds: 0.1, endSeconds: 1.1 };
+gripEscape.players.find((row) => row.id === 'defender-left').wrap.capacityN = 650;
+gripEscape.players.find((row) => row.id === 'defender-right').wrap.capacityN = 10000;
+save(gripEscape);
+
+const gripBreakMultiple = structuredClone(simultaneous);
+gripBreakMultiple.id = 'grip-break-multiple-forward';
+gripBreakMultiple.title = 'Runner breaks two grips and continues forward';
+gripBreakMultiple.durationSeconds = 1.4;
+gripBreakMultiple.players.find((row) => row.id === 'carrier').balanceScale = 0.8;
+gripBreakMultiple.players.find((row) => row.id === 'carrier').drive = { forceN: [1000, 0, 0], startSeconds: 0.1, endSeconds: 1.4 };
+gripBreakMultiple.players.find((row) => row.id === 'defender-left').wrap.capacityN = 650;
+gripBreakMultiple.players.find((row) => row.id === 'defender-right').wrap.capacityN = 650;
+save(gripBreakMultiple);
+
 const sharedSack = instantiateScenario('sack-simultaneous-two');
 sharedSack.players = [
   player('quarterback', 'offense', [0, 0.845, 0], [0.1, 0, 0], { mass: 102, role: 'quarterback', balanceScale: 0 }),
@@ -174,6 +194,7 @@ export const M4C_PRIORITY_IDS = Object.freeze([
   'fumble-eight-pile-live-ball',
   'recovery-failed', 'recovery-secure', 'recovery-contested', 'tush-push-eight', 'short-yardage-22-player',
   'gang-three-upright', 'gang-staggered-three', 'sack-initiate-finish', 'sack-throw-window',
+  'grip-escape-one-held', 'grip-break-multiple-forward',
 ]);
 
 export function instantiateM4CScenario(id, seed = 41027, overrides = {}) {

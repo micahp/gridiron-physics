@@ -20,7 +20,7 @@ const configs = [
 const required = [
   'gang-two-opposite-open', 'gang-staggered-three', 'sack-simultaneous-two', 'sack-throw-window',
   'possession-retained', 'possession-force-fumble', 'recovery-failed', 'recovery-secure', 'recovery-contested',
-  'tush-push-eight', 'fumble-eight-pile-live-ball',
+  'tush-push-eight', 'fumble-eight-pile-live-ball', 'grip-escape-one-held', 'grip-break-multiple-forward',
 ];
 
 function hasContact(result, a, b) {
@@ -42,6 +42,22 @@ function validateOutcome(id, result) {
     assert.notEqual(fallback().fellAtSeconds, null, `${id}: runner reached a sustained physical fall state`);
     assert.ok(result.outcome.defenderContributionLedger.filter((row) => row.contactPairSamples > 0).length >= 2,
       `${id}: both defenders have contribution records`);
+  } else if (id === 'grip-escape-one-held') {
+    assert.ok(hasContact(result, 'carrier', 'defender-left') && hasContact(result, 'carrier', 'defender-right'),
+      `${id}: both defenders physically contacted the runner`);
+    assert.equal(result.outcome.wrapResults.find((row) => row.holderId === 'defender-left').released, true,
+      `${id}: the weaker grip physically released`);
+    assert.equal(result.outcome.wrapResults.find((row) => row.holderId === 'defender-right').released, false,
+      `${id}: the second grip remained engaged`);
+    assert.ok(result.outcome.activeWrapHoldersAtEnd.includes('defender-right'), `${id}: one defender still holds the runner`);
+  } else if (id === 'grip-break-multiple-forward') {
+    assert.ok(hasContact(result, 'carrier', 'defender-left') && hasContact(result, 'carrier', 'defender-right'),
+      `${id}: both defenders physically contacted the runner`);
+    assert.ok(result.outcome.wrapResults.length >= 2 && result.outcome.wrapResults.every((row) => row.released),
+      `${id}: both force-limited grips physically released`);
+    assert.equal(fallback().fellAtSeconds, null, `${id}: runner remained upright after escaping both grips`);
+    assert.ok(result.outcome.rawProgress.finalCarrierPositionXM > 0.5,
+      `${id}: runner continued forward under the configured drive after release`);
   } else if (id === 'gang-staggered-three') {
     for (const defender of ['first-hit', 'second-hit', 'third-hit']) assert.ok(hasContact(result, 'carrier', defender), `${id}: ${defender} physically contacted carrier`);
     assert.notEqual(fallback().fellAtSeconds, null, `${id}: runner reached a sustained physical fall state`);
