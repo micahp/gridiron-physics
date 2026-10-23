@@ -16,6 +16,11 @@ assert.equal(initial.players[0].x, -2, 'step must not mutate input');
 const frame = recordMovementFrame(next, { model: 'test' });
 assert.equal(replayMovement({ frames: [frame] })[0].provenance.model, 'test');
 assert.equal(hockeyFeatures(initial, initial.players[0]).length, 23);
+assert.deepEqual(hockeyFeatures(initial, initial.players[0]),
+  hockeyFeatures({ ...initial, players: [...initial.players].reverse() }, initial.players[0]),
+  'interaction features must be invariant to player-array order');
+assert.equal(hockeyResearchConfig.timebaseValidated, false);
+assert.equal('dtSeconds' in hockeyResearchConfig, false);
 const model = { mean: [0, 0, 0, 0], scale: [1, 1, 1, 1],
   coefficients: [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]], featureVersion: 'v0.1-test' };
 const hockeyPolicy = createHockeyMovementPolicy(model);
@@ -29,4 +34,10 @@ const hockeyState = initializeMovementScene({ observationStep: 0, puck: { x: 0, 
 const puckNext = stepHockeyMovement(hockeyState, proposeMovement(hockeyState, policy));
 assert.equal(puckNext.puck.x, 1, 'puck helper advances by ordinal displacement');
 assert.equal(puckNext.stepUnit, 'image_id_increment');
+const repeat = stepHockeyMovement(hockeyState, proposeMovement(hockeyState, policy));
+assert.deepEqual(repeat.players.map(({ id, x, y }) => ({ id, x, y })),
+  puckNext.players.map(({ id, x, y }) => ({ id, x, y })), 'fixed inputs reproduce fixed outputs');
+const recorded = recordMovementFrame(puckNext, { source: 'test' });
+recorded.players[0].history[0].x = 999;
+assert.notEqual(puckNext.players[0].history[0].x, 999, 'recorded transforms are detached copies');
 console.log('movement interface tests passed');

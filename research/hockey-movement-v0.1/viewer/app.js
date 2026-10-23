@@ -79,8 +79,10 @@ function drawView(view,step){
   }
   if($('distances').checked){const ps=Object.entries(source);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){
     const a=displayXY(...ps[i][1]),b=displayXY(...ps[j][1]),d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(d<15)view.add(mkLine([new THREE.Vector3(a[0],a[1],.6),new THREE.Vector3(b[0],b[1],.6)],0xf7cb5b,.5));}}
-  const uncertain=current.observed&&(current.observed.missing_xy_count||current.observed.conflicted_present);
-  const badge=view.container.querySelector('.uncertainty-badge');badge.textContent=$('uncertainty').checked&&uncertain?`TRACKING UNCERTAINTY · ${current.observed.missing_xy_count||0} missing XY row(s) · identity conflict present`:'';
+  const uncertain=current.observed&&(current.observed.tracking_uncertainty_category||current.observed.missing_xy_count||current.observed.conflicted_present);
+  const badge=view.container.querySelector('.uncertainty-badge');badge.textContent=$('uncertainty').checked&&uncertain?
+    (current.observed.tracking_uncertainty_category?'TRACKING UNCERTAINTY · cutoff has missingness or identity-conflict flag':
+      `TRACKING UNCERTAINTY · ${current.observed.missing_xy_count||0} missing XY row(s) · identity conflict present`):'';
 }
 
 function drawErrors(step){
@@ -96,7 +98,7 @@ function draw(){if(!scenario)return;const step=Number($('scrub').value);for(cons
 
 function setCamera(mode){for(const v of panels){if(mode==='top'){v.camera.position.set(0,0,190);v.camera.up.set(0,1,0);v.controls.enabled=false}else if(mode==='side'){v.camera.position.set(0,-145,100);v.camera.up.set(0,0,1);v.controls.enabled=false}else{v.camera.position.set(0,-145,135);v.camera.up.set(0,0,1);v.controls.enabled=true}v.camera.lookAt(0,0,0);v.controls.target.set(0,0,0);v.controls.update()}}
 
-function provenance(){const meta={scenario_id:scenario.scenario_id,category:scenario.category,label:scenario.label,game:scenario.game,period:scenario.period,
+function provenance(){const meta={scenario_id:scenario.scenario_id,categories:scenario.categories,label:scenario.label,game:scenario.game,period:scenario.period,
   input_cutoff:scenario.cutoff_image_id,prediction_horizon_ordinal_steps:scenario.horizon_ordinal_steps,seed:scenario.random_seed,
   git_commit:archive.git_commit,source_manifest_sha256:scenario.source_manifest_sha256,source_hashes:archive.source_hashes,
   model_version:scenario.model_version,timebase_validated:scenario.timebase_validated,identity_conflicts_quarantined:scenario.identity_conflicts_quarantined,
@@ -136,7 +138,7 @@ async function start(){
     const response=await fetch(`../archive/${entry.archive_file}`);if(!response.ok)throw new Error(`archive HTTP ${response.status}`);archive=JSON.parse(await decompress(await response.arrayBuffer()));
     if(archive.legendarypicks_git_commit!==entry.legendarypicks_git_commit)throw new Error('Manifest/source commit mismatch');
     const scenarios=Object.entries(archive.scenarios);if(!scenarios.length)throw new Error('No scenario recordings in archive');
-    $('scenario').innerHTML=scenarios.map(([k,s])=>`<option value="${k}">${k.replaceAll('_',' ')} · ${s.game} · ${s.period}</option>`).join('');
+    $('scenario').innerHTML=scenarios.map(([k,s])=>`<option value="${k}">${s.categories?.join(' / ')||'sampled state'} · ${s.game} · ${s.period} · ${s.cutoff_image_id}</option>`).join('');
     $('scenario').addEventListener('change',()=>{scenario=archive.scenarios[$('scenario').value];enginePaths=null;$('scrub').value=0;$('scrub').max=scenario.horizon_ordinal_steps;
       $('transform').disabled=scenario.period!=='P1'||!scenario.period_one_goalie_right_team;provenance();draw()});
     $('scenario').dispatchEvent(new Event('change'));$('status').textContent=`Loaded ${scenarios.length} versioned observed scenarios. Ten development games only.`;
