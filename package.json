@@ -13,7 +13,9 @@
     "eval:physics3d:test": "node research/physics-3d-evaluation/test-headless.mjs",
     "eval:physics3d:browser": "node research/physics-3d-evaluation/browser-test.mjs",
     "eval:physics3d:sweep": "node research/physics-3d-evaluation/sweep.mjs",
-    "eval:physics3d:sweep:test": "node research/physics-3d-evaluation/test-sweep.mjs"
+    "eval:physics3d:sweep:test": "node research/physics-3d-evaluation/test-sweep.mjs",
+    "eval:physics3d:contact": "node research/physics-3d-evaluation/contact-mechanism.mjs",
+    "eval:physics3d:contact:test": "node research/physics-3d-evaluation/test-contact-mechanism.mjs"
   },
   "license": "MIT",
   "devDependencies": {
