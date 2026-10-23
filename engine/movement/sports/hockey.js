@@ -31,13 +31,16 @@ export function hockeyFeatures(state, player) {
     ? player.history.slice(-6) : [...(player.history ?? []), { x: player.x, y: player.y }].slice(-6);
   const points = positions.length ? positions : [{ x: player.x, y: player.y }];
   const meanT = (points.length - 1) / 2;
-  let denom = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+  const meanTSquared = points.reduce((sum, _point, i) => sum + (i - meanT) ** 2, 0) / points.length;
+  let denom = 0, quadDenom = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
   for (let i = 0; i < points.length; i++) {
-    const t = i - meanT; denom += t * t; sx += t * points[i].x; sy += t * points[i].y;
-    sxx += t * t * points[i].x; sxy += t * t * points[i].y;
+    const t = i - meanT, centeredTSquared = t * t - meanTSquared;
+    denom += t * t; quadDenom += centeredTSquared ** 2;
+    sx += t * points[i].x; sy += t * points[i].y;
+    sxx += centeredTSquared * points[i].x; sxy += centeredTSquared * points[i].y;
   }
   const vx = denom ? sx / denom : 0, vy = denom ? sy / denom : 0;
-  const ax = denom ? 2 * (sxx / denom) : 0, ay = denom ? 2 * (sxy / denom) : 0;
+  const ax = quadDenom ? 2 * (sxx / quadDenom) : 0, ay = quadDenom ? 2 * (sxy / quadDenom) : 0;
   const puck = state.puck;
   const puckMissing = !puck || !Number.isFinite(puck.x) || !Number.isFinite(puck.y);
   const priorPuck = state.puckHistory?.at(-2);

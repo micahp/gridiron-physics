@@ -19,6 +19,16 @@ assert.equal(hockeyFeatures(initial, initial.players[0]).length, 23);
 assert.deepEqual(hockeyFeatures(initial, initial.players[0]),
   hockeyFeatures({ ...initial, players: [...initial.players].reverse() }, initial.players[0]),
   'interaction features must be invariant to player-array order');
+const polynomialHistory = Array.from({ length: 6 }, (_, t) => ({
+  x: 30 + 0.7 * t + 0.25 * t * t,
+  y: -8 - 0.3 * t + 0.1 * t * t,
+}));
+const polynomialPlayer = { id: 'poly', team: 'Home', ...polynomialHistory.at(-1), history: polynomialHistory };
+const polynomialFeatures = hockeyFeatures({ players: [polynomialPlayer], puck: null, puckHistory: [] }, polynomialPlayer);
+for (const [index, expected] of [[0, 1.95], [1, 0.2], [2, 0.5], [3, 0.2]]) {
+  assert.ok(Math.abs(polynomialFeatures[index] - expected) < 1e-10,
+    `kinematic feature ${index} should match the six-point least-squares basis`);
+}
 assert.equal(hockeyResearchConfig.timebaseValidated, false);
 assert.equal('dtSeconds' in hockeyResearchConfig, false);
 const model = { mean: [0, 0, 0, 0], scale: [1, 1, 1, 1],
