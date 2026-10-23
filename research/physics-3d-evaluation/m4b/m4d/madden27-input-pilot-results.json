@@ -1,0 +1,587 @@
+{
+  "schemaVersion": 1,
+  "experiment": "M4d Madden 27 player-input pilot",
+  "sourceCommit": "M4c baseline 8ead484e08de6acdc934f33fe279347713dc289e",
+  "sourceScenario": "possession-retained from m4c-scenario-library-v5",
+  "ratingsSnapshot": {
+    "schemaVersion": 1,
+    "game": "Madden NFL 27",
+    "ratingsSnapshot": "Week 6",
+    "accessedAt": "2026-10-23",
+    "source": "EA SPORTS official player ratings database",
+    "profiles": [
+      {
+        "id": "saquon-barkley",
+        "name": "Saquon Barkley",
+        "team": "Philadelphia Eagles",
+        "position": "HB",
+        "sourceUrl": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/saquon-barkley/13085",
+        "height": "6'0\" / 183cm",
+        "weightLb": 227,
+        "weightKgDisplayed": 103,
+        "ratings": {
+          "STR": 81,
+          "BTK": 84,
+          "TRK": 84,
+          "CAR": 96,
+          "TKL": 28,
+          "HTP": 17
+        }
+      },
+      {
+        "id": "zack-baun",
+        "name": "Zack Baun",
+        "team": "Philadelphia Eagles",
+        "position": "WILL",
+        "sourceUrl": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/zack-baun/21142",
+        "height": "6'2\" / 188cm",
+        "weightLb": 225,
+        "weightKgDisplayed": 102,
+        "ratings": {
+          "STR": 80,
+          "BTK": 46,
+          "TRK": 34,
+          "CAR": 61,
+          "TKL": 93,
+          "HTP": 87
+        }
+      }
+    ]
+  },
+  "mapping": {
+    "weight": "Use the rounded kilogram value displayed on the official EA player page as rigid-body mass.",
+    "strength": "Pass Madden STR unchanged into the existing simulation strength field, which affects the balance controller.",
+    "unusedRatings": "BTK, TRK, CAR, TKL, and HTP are captured as source data but not mapped to physics parameters.",
+    "caveat": "This is an input-sensitivity pilot. EA does not publish a conversion from ratings to rigid-body forces or grip parameters; this mapping is not calibrated or validated."
+  },
+  "results": [
+    {
+      "configuration": "m4c-generic-control",
+      "repeat": 1,
+      "scenarioId": "m4d-m4c-generic-control",
+      "engine": "rapier3d-compat",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 98,
+          "defender": 106
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.11666666666666667,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 434.8508920970474,
+        "maximumAppliedLoadN": 434.8508920970474,
+        "terminalSeparationM": 0.07406361654776364
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 98,
+        "maxTiltDeg": 3.871803402032001,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.2562045454978943
+      },
+      "defender": {
+        "massKg": 106,
+        "maxTiltDeg": 5.1361648003797535,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.0805946588516235
+      },
+      "penetration": {
+        "maximumDepthM": 0.11205920577049255,
+        "p95PerStepMaximumM": 0.09454275667667389,
+        "durationWeightedMeanM": 0.0480588460470447
+      }
+    },
+    {
+      "configuration": "m4c-generic-control",
+      "repeat": 2,
+      "scenarioId": "m4d-m4c-generic-control",
+      "engine": "rapier3d-compat",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 98,
+          "defender": 106
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.11666666666666667,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 434.8508920970474,
+        "maximumAppliedLoadN": 434.8508920970474,
+        "terminalSeparationM": 0.07406361654776364
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 98,
+        "maxTiltDeg": 3.871803402032001,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.2562045454978943
+      },
+      "defender": {
+        "massKg": 106,
+        "maxTiltDeg": 5.1361648003797535,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.0805946588516235
+      },
+      "penetration": {
+        "maximumDepthM": 0.11205920577049255,
+        "p95PerStepMaximumM": 0.09454275667667389,
+        "durationWeightedMeanM": 0.0480588460470447
+      }
+    },
+    {
+      "configuration": "m4c-generic-control",
+      "repeat": 1,
+      "scenarioId": "m4d-m4c-generic-control",
+      "engine": "jolt-physics-js",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 98,
+          "defender": 106
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.09166666666666666,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 1574.1271052867992,
+        "maximumAppliedLoadN": 1574.1271052867992,
+        "terminalSeparationM": 0.04610456760689703
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 98,
+        "maxTiltDeg": 4.362967558296435,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.33724135160446167
+      },
+      "defender": {
+        "massKg": 106,
+        "maxTiltDeg": 6.762769815062848,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.004406452178955
+      },
+      "penetration": {
+        "maximumDepthM": 0.07298675179481506,
+        "p95PerStepMaximumM": 0.05500793531537056,
+        "durationWeightedMeanM": 0.009296980870303085
+      }
+    },
+    {
+      "configuration": "m4c-generic-control",
+      "repeat": 2,
+      "scenarioId": "m4d-m4c-generic-control",
+      "engine": "jolt-physics-js",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 98,
+          "defender": 106
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.09166666666666666,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 1574.1271052867992,
+        "maximumAppliedLoadN": 1574.1271052867992,
+        "terminalSeparationM": 0.04610456760689703
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 98,
+        "maxTiltDeg": 4.362967558296435,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.33724135160446167
+      },
+      "defender": {
+        "massKg": 106,
+        "maxTiltDeg": 6.762769815062848,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.004406452178955
+      },
+      "penetration": {
+        "maximumDepthM": 0.07298675179481506,
+        "p95PerStepMaximumM": 0.05500793531537056,
+        "durationWeightedMeanM": 0.009296980870303085
+      }
+    },
+    {
+      "configuration": "ea-listed-weights",
+      "repeat": 1,
+      "scenarioId": "m4d-ea-listed-weights",
+      "engine": "rapier3d-compat",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.11666666666666667,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 419.382909523819,
+        "maximumAppliedLoadN": 419.382909523819,
+        "terminalSeparationM": 0.07443242831119135
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 4.242521918734137,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.26372259855270386
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 4.485473682534514,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.0876193046569824
+      },
+      "penetration": {
+        "maximumDepthM": 0.12215477228164673,
+        "p95PerStepMaximumM": 0.09765263125300389,
+        "durationWeightedMeanM": 0.05036279155562329
+      }
+    },
+    {
+      "configuration": "ea-listed-weights",
+      "repeat": 2,
+      "scenarioId": "m4d-ea-listed-weights",
+      "engine": "rapier3d-compat",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.11666666666666667,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 419.382909523819,
+        "maximumAppliedLoadN": 419.382909523819,
+        "terminalSeparationM": 0.07443242831119135
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 4.242521918734137,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.26372259855270386
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 4.485473682534514,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.0876193046569824
+      },
+      "penetration": {
+        "maximumDepthM": 0.12215477228164673,
+        "p95PerStepMaximumM": 0.09765263125300389,
+        "durationWeightedMeanM": 0.05036279155562329
+      }
+    },
+    {
+      "configuration": "ea-listed-weights",
+      "repeat": 1,
+      "scenarioId": "m4d-ea-listed-weights",
+      "engine": "jolt-physics-js",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.09166666666666666,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 1571.3131016269122,
+        "maximumAppliedLoadN": 1571.3131016269122,
+        "terminalSeparationM": 0.03735973547934327
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 4.407277073190773,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.3487389087677002
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 5.231977786570884,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.0227471590042114
+      },
+      "penetration": {
+        "maximumDepthM": 0.07310698926448822,
+        "p95PerStepMaximumM": 0.05453933142125606,
+        "durationWeightedMeanM": 0.007726227064992486
+      }
+    },
+    {
+      "configuration": "ea-listed-weights",
+      "repeat": 2,
+      "scenarioId": "m4d-ea-listed-weights",
+      "engine": "jolt-physics-js",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 80,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.09166666666666666,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 1571.3131016269122,
+        "maximumAppliedLoadN": 1571.3131016269122,
+        "terminalSeparationM": 0.03735973547934327
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 4.407277073190773,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.3487389087677002
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 5.231977786570884,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.0227471590042114
+      },
+      "penetration": {
+        "maximumDepthM": 0.07310698926448822,
+        "p95PerStepMaximumM": 0.05453933142125606,
+        "durationWeightedMeanM": 0.007726227064992486
+      }
+    },
+    {
+      "configuration": "ea-listed-weights-and-str",
+      "repeat": 1,
+      "scenarioId": "m4d-ea-listed-weights-and-str",
+      "engine": "rapier3d-compat",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 81,
+          "defender": 80
+        }
+      },
+      "physicalContact": false,
+      "firstContactTimeSeconds": null,
+      "wrap": null,
+      "retainedPossessionAfterContact": false,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 3.9609418618335455,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.20495040714740753
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 8.742873505574094,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.241669774055481
+      },
+      "penetration": {
+        "maximumDepthM": 0.12889821827411652,
+        "p95PerStepMaximumM": 0.10616615414619446,
+        "durationWeightedMeanM": 0.030399411454393704
+      }
+    },
+    {
+      "configuration": "ea-listed-weights-and-str",
+      "repeat": 2,
+      "scenarioId": "m4d-ea-listed-weights-and-str",
+      "engine": "rapier3d-compat",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 81,
+          "defender": 80
+        }
+      },
+      "physicalContact": false,
+      "firstContactTimeSeconds": null,
+      "wrap": null,
+      "retainedPossessionAfterContact": false,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 3.9609418618335455,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.20495040714740753
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 8.742873505574094,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.241669774055481
+      },
+      "penetration": {
+        "maximumDepthM": 0.12889821827411652,
+        "p95PerStepMaximumM": 0.10616615414619446,
+        "durationWeightedMeanM": 0.030399411454393704
+      }
+    },
+    {
+      "configuration": "ea-listed-weights-and-str",
+      "repeat": 1,
+      "scenarioId": "m4d-ea-listed-weights-and-str",
+      "engine": "jolt-physics-js",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 81,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.09166666666666666,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 1572.63381472777,
+        "maximumAppliedLoadN": 1572.63381472777,
+        "terminalSeparationM": 0.0404299943688271
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 4.4015483505013835,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.3535027801990509
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 5.069322229589296,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.028671383857727
+      },
+      "penetration": {
+        "maximumDepthM": 0.07311481237411499,
+        "p95PerStepMaximumM": 0.05452853143215179,
+        "durationWeightedMeanM": 0.006900749395230224
+      }
+    },
+    {
+      "configuration": "ea-listed-weights-and-str",
+      "repeat": 2,
+      "scenarioId": "m4d-ea-listed-weights-and-str",
+      "engine": "jolt-physics-js",
+      "seed": 41027,
+      "appliedInputs": {
+        "massKg": {
+          "runner": 103,
+          "defender": 102
+        },
+        "strength": {
+          "runner": 81,
+          "defender": 80
+        }
+      },
+      "physicalContact": true,
+      "firstContactTimeSeconds": 0.09166666666666666,
+      "wrap": {
+        "released": false,
+        "capacityN": 1600,
+        "maximumRequestedLoadN": 1572.63381472777,
+        "maximumAppliedLoadN": 1572.63381472777,
+        "terminalSeparationM": 0.0404299943688271
+      },
+      "retainedPossessionAfterContact": true,
+      "footballControllerAtEnd": "runner",
+      "runner": {
+        "massKg": 103,
+        "maxTiltDeg": 4.4015483505013835,
+        "fellAtSeconds": null,
+        "finalPositionXM": 0.3535027801990509
+      },
+      "defender": {
+        "massKg": 102,
+        "maxTiltDeg": 5.069322229589296,
+        "fellAtSeconds": null,
+        "finalPositionXM": 1.028671383857727
+      },
+      "penetration": {
+        "maximumDepthM": 0.07311481237411499,
+        "p95PerStepMaximumM": 0.05452853143215179,
+        "durationWeightedMeanM": 0.006900749395230224
+      }
+    }
+  ]
+}

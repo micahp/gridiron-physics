@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "game": "Madden NFL 27",
+  "ratingsSnapshot": "Week 6",
+  "accessedAt": "2026-10-23",
+  "source": "EA SPORTS official player ratings database",
+  "profiles": [
+    {
+      "id": "saquon-barkley",
+      "name": "Saquon Barkley",
+      "team": "Philadelphia Eagles",
+      "position": "HB",
+      "sourceUrl": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/saquon-barkley/13085",
+      "height": "6'0\" / 183cm",
+      "weightLb": 227,
+      "weightKgDisplayed": 103,
+      "ratings": {
+        "STR": 81,
+        "BTK": 84,
+        "TRK": 84,
+        "CAR": 96,
+        "TKL": 28,
+        "HTP": 17
+      }
+    },
+    {
+      "id": "zack-baun",
+      "name": "Zack Baun",
+      "team": "Philadelphia Eagles",
+      "position": "WILL",
+      "sourceUrl": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/zack-baun/21142",
+      "height": "6'2\" / 188cm",
+      "weightLb": 225,
+      "weightKgDisplayed": 102,
+      "ratings": {
+        "STR": 80,
+        "BTK": 46,
+        "TRK": 34,
+        "CAR": 61,
+        "TKL": 93,
+        "HTP": 87
+      }
+    }
+  ]
+}
