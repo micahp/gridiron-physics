@@ -5,6 +5,7 @@ import { copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { gunzipSync } from 'node:zlib';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '../../..');
@@ -15,6 +16,7 @@ if (!entry) throw new Error('No registered scenario archive');
 const archiveBytes = await readFile(join(archiveDir, entry.archive_file));
 const digest = createHash('sha256').update(archiveBytes).digest('hex');
 if (digest !== entry.archive_sha256) throw new Error('Registered scenario archive SHA-256 mismatch');
+const archivePayload = JSON.parse(gunzipSync(archiveBytes).toString('utf8'));
 
 const playwrightModule = process.env.PLAYWRIGHT_MODULE || '/root/legendarypicks/node_modules/playwright';
 const require = createRequire(join('/root/legendarypicks', 'package.json'));
@@ -48,17 +50,42 @@ const p1Scenario = scenarioOptions.find((o) => {
   return text.includes('2025-') && text.includes('p1');
 }) || scenarioOptions[0];
 await page.locator('#scenario').selectOption(p1Scenario.value);
+const scenarioData = archivePayload.scenarios[p1Scenario.value];
+const focusTeam = scenarioData.period_one_goalie_right_team;
+if (scenarioData.period === 'P1' && focusTeam) await page.locator('#focus-team').selectOption(focusTeam);
+const modelSelectors = page.locator('.panel-head select');
+if (await modelSelectors.count() !== 4) throw new Error('Expected four independently selectable replay panes');
+await modelSelectors.nth(0).selectOption('M1');
+await modelSelectors.nth(0).selectOption('Observed');
+for (const id of ['vectors', 'distances']) {
+  const toggle = page.locator(`#${id}`);
+  await toggle.check();
+  if (!(await toggle.isChecked())) throw new Error(`${id} overlay did not enable`);
+  await toggle.uncheck();
+}
+const scrub = page.locator('#scrub');
+await page.locator('#play').click();
+await page.waitForTimeout(300);
+const playedStep = Number(await scrub.inputValue());
+if (playedStep < 1) throw new Error('Play did not advance the observation index');
+await page.locator('#pause').click();
+await page.waitForTimeout(250);
+const pausedStep = Number(await scrub.inputValue());
+if (pausedStep !== playedStep) throw new Error('Pause did not hold the observation index');
+await scrub.evaluate((element) => { element.value = '0'; element.dispatchEvent(new Event('input', { bubbles: true })); });
 await page.locator('#camera').selectOption('side');
 await page.waitForTimeout(250);
 await page.locator('#camera').selectOption('top');
 const transformDisabled = await page.locator('#transform').isDisabled();
 if (p1Scenario.text.includes('P1') && transformDisabled) throw new Error('Period-one attack-direction transform is unexpectedly disabled');
+if (!transformDisabled) await page.locator('#transform').selectOption('attack-right');
 await page.locator('#run-policy').click();
 await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('Max path difference'), null, { timeout: 60_000 });
 const parityText = await page.locator('#status').textContent();
 const parity = Number(parityText.match(/difference from Python archive: ([0-9.]+) ft/)?.[1]);
 if (!Number.isFinite(parity) || parity > 0.05) throw new Error(`Gridiron policy replay does not match the versioned rollout: ${parityText}`);
 await page.screenshot({ path: join(outputDir, 'viewer-topdown.png'), fullPage: true });
+if (!transformDisabled) await page.locator('#transform').selectOption('raw');
 await page.locator('#camera').selectOption('side');
 await page.screenshot({ path: join(outputDir, 'viewer-rink-side.png'), fullPage: true });
 await testContext.close();
