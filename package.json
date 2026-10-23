@@ -25,7 +25,12 @@
     "eval:m4b": "node research/physics-3d-evaluation/m4b/benchmark.mjs",
     "eval:m4b:sweep": "node research/physics-3d-evaluation/m4b/stress-sweep.mjs",
     "eval:m4b:test": "node research/physics-3d-evaluation/m4b/test.mjs",
-    "eval:m4b:capture": "node research/physics-3d-evaluation/m4b/capture.mjs"
+    "eval:m4b:capture": "node research/physics-3d-evaluation/m4b/capture.mjs",
+    "eval:m1b:regression": "node research/physics-3d-evaluation/m4b/m1b-regression-test.mjs",
+    "eval:m4c:test": "node research/physics-3d-evaluation/m4b/m4c-test.mjs",
+    "eval:m4c:sensitivity": "node research/physics-3d-evaluation/m4b/m4c-sensitivity.mjs",
+    "eval:m4c:archive": "node research/physics-3d-evaluation/m4b/m4c-benchmark.mjs",
+    "eval:m4c:capture": "node research/physics-3d-evaluation/m4b/m4c-capture.mjs"
   },
   "license": "MIT",
   "devDependencies": {

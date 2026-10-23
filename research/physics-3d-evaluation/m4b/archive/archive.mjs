@@ -161,6 +161,12 @@ function makeRig(canvasId) {
     clearDebug();
     if ($('debug').checked) {
       for (const actor of actors.values()) actor.root.traverse((node) => { if (node.userData.collider) node.visible = true; });
+      for (const [id, state] of Object.entries(frame.players ?? {})) {
+        const actor = actors.get(id); if (!actor) continue;
+        const origin = new THREE.Vector3(...state.centerOfMassM).add(new THREE.Vector3(0, 0.12, 0));
+        const forward = new THREE.Vector3(1, 0, 0).applyQuaternion(actor.root.quaternion).normalize();
+        debugGroup.add(new THREE.ArrowHelper(forward, origin, 0.55, '#f4f6ff', 0.13, 0.07));
+      }
       for (const contact of [...(frame.contacts ?? []), ...(frame.ballContacts ?? []), ...(frame.groundContacts ?? [])]) for (const point of contact.pointsM ?? []) {
         const marker = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffe078' }));
         marker.position.set(...point); debugGroup.add(marker);
@@ -184,6 +190,17 @@ function makeRig(canvasId) {
           new THREE.Vector3(...grip.runnerAnchorM), new THREE.Vector3(...grip.holderAnchorM),
         ]), new THREE.LineBasicMaterial({ color: '#57e1ed' }));
         debugGroup.add(line);
+      }
+      for (const control of frame.possessionControls ?? []) for (const point of control.controlPoints ?? []) {
+        if (!point.playerAnchorM || !point.ballAnchorM) continue;
+        const playerPoint = new THREE.Vector3(...point.playerAnchorM);
+        const ballPoint = new THREE.Vector3(...point.ballAnchorM);
+        const left = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: '#76f4ad' }));
+        const right = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffd36e' }));
+        left.position.copy(playerPoint); right.position.copy(ballPoint);
+        debugGroup.add(left, right);
+        debugGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([playerPoint, ballPoint]),
+          new THREE.LineBasicMaterial({ color: '#82f0c2' })));
       }
     } else for (const actor of actors.values()) actor.root.traverse((node) => { if (node.userData.collider) node.visible = false; });
     setCamera(selectedCamera);
@@ -279,7 +296,8 @@ function statusFor(replay, frame) {
   const grounded = frame.groundContacts?.length ?? 0;
   return `${replay.record.category} · ${replay.record.scenarioTitle}\n` +
     `${replay.record.engine} · ${replay.record.simulationVersion} · commit ${replay.record.sourceCommit.slice(0, 10)}\n` +
-    `t=${frame.timeSeconds.toFixed(3)} s · ${Object.keys(frame.players).length} player proxies · ${contactCount} player contacts · ${grounded} ground contacts`;
+    `t=${frame.timeSeconds.toFixed(3)} s · ${Object.keys(frame.players).length} player proxies · ${contactCount} player contacts · ${grounded} ground contacts\n` +
+    `football: ${frame.football?.status ?? 'absent'} · controlled by ${frame.football?.controlPlayers?.join(', ') || 'none'}`;
 }
 
 $('load').addEventListener('click', loadComparison);

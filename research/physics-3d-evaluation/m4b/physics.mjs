@@ -44,7 +44,7 @@ function rapierBodyState(body, label, mass) {
   };
 }
 
-function rapierHumanoid(world, spec, label, material = {}, playerGeometry = 'compound') {
+function rapierHumanoid(world, spec, label, material = {}, playerGeometry = 'compound', playerScale = 1, contactSkinM = 0) {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
     .setTranslation(...spec.p).setRotation(rapierQuaternion(quat(spec.yawRad ?? 0)))
     .setLinvel(...(spec.v ?? [0, 0, 0])).setAngvel(v3(spec.angular ?? [0, 0, 0]))
@@ -54,16 +54,19 @@ function rapierHumanoid(world, spec, label, material = {}, playerGeometry = 'com
     ? [{ part: 'player-capsule', shape: 'capsule', pos: [0, 0, 0], halfHeight: 0.55, radius: 0.27, massShare: 1 }]
     : BODY_LAYOUT;
   const colliders = layout.map((part) => {
-    const desc = part.shape === 'sphere' ? RAPIER.ColliderDesc.ball(part.radius) : RAPIER.ColliderDesc.capsule(part.halfHeight, part.radius);
+    const desc = part.shape === 'sphere' ? RAPIER.ColliderDesc.ball(part.radius * playerScale)
+      : RAPIER.ColliderDesc.capsule(part.halfHeight * playerScale, part.radius * playerScale);
     const partRotation = part.axis === 'x' ? { x: 0, y: 0, z: Math.SQRT1_2, w: Math.SQRT1_2 } : rapierQuaternion([0, 0, 0, 1]);
-    desc.setTranslation(...part.pos).setRotation(partRotation).setMass(spec.mass * part.massShare)
+    desc.setTranslation(...part.pos.map((value) => value * playerScale)).setRotation(partRotation).setMass(spec.mass * part.massShare)
       .setFriction(spec.friction ?? material.playerFriction ?? 0.72).setRestitution(spec.restitution ?? material.playerRestitution ?? 0.04);
+    if (contactSkinM > 0) desc.setContactSkin(contactSkinM);
     return world.createCollider(desc, body);
   });
   return { label, spec, mass: spec.mass, body, colliders };
 }
 
-function makeRapierWorld({ ground = true, gravity = -G, material = {}, solverIterations = 8, timestep = DT, playerGeometry = 'compound' } = {}) {
+function makeRapierWorld({ ground = true, gravity = -G, material = {}, solverIterations = 8, timestep = DT,
+  playerGeometry = 'compound', playerScale = 1, rapierContactSkinM = 0 } = {}) {
   const world = new RAPIER.World({ x: 0, y: gravity, z: 0 });
   world.timestep = timestep;
   world.integrationParameters.numSolverIterations = solverIterations;
@@ -79,7 +82,7 @@ function makeRapierWorld({ ground = true, gravity = -G, material = {}, solverIte
   const adapter = {
     engine: 'rapier3d-compat',
     async addPlayer(spec, label) {
-      const player = rapierHumanoid(world, spec, label, material, playerGeometry);
+      const player = rapierHumanoid(world, spec, label, material, playerGeometry, playerScale, rapierContactSkinM);
       players.push(player); forceBodies.push(player.body); return player;
     },
     addBallisticBody({ p, v, angular = [0, 0, 0], yawRad = 0, mass = 10, shape = 'box', halfExtents = [0.3, 0.2, 0.25], label = 'ballistic-body', material: bodyMat = {} }) {
@@ -193,7 +196,8 @@ function joltMakeShape(J, settings) {
   if (!result.IsValid()) throw new Error(`Jolt shape creation failed: ${result.GetError()}`);
   const shape = result.Get(); shape.AddRef(); result.Clear(); settings.Release(); return shape;
 }
-function joltWorld({ ground = true, gravity = -G, material = {}, solverIterations = 8, timestep = DT, playerGeometry = 'compound' } = {}) {
+function joltWorld({ ground = true, gravity = -G, material = {}, solverIterations = 8, timestep = DT,
+  playerGeometry = 'compound', playerScale = 1, joltCollisionSteps = 1 } = {}) {
   const J = joltModule;
   const staticLayer = 0, movingLayer = 1;
   const pairFilter = new J.ObjectLayerPairFilterTable(2);
@@ -274,12 +278,13 @@ function joltWorld({ ground = true, gravity = -G, material = {}, solverIteration
   const players = [];
   const createCompoundPlayer = (spec, label) => {
     let shape;
-    if (playerGeometry === 'single-capsule') shape = joltMakeShape(J, new J.CapsuleShapeSettings(0.55, 0.27, null));
+    if (playerGeometry === 'single-capsule') shape = joltMakeShape(J, new J.CapsuleShapeSettings(0.55 * playerScale, 0.27 * playerScale, null));
     else {
       const compound = new J.StaticCompoundShapeSettings();
       for (const part of BODY_LAYOUT) {
-        const child = part.shape === 'sphere' ? new J.SphereShapeSettings(part.radius, null) : new J.CapsuleShapeSettings(part.halfHeight, part.radius, null);
-        const pos = new J.Vec3(...part.pos);
+        const child = part.shape === 'sphere' ? new J.SphereShapeSettings(part.radius * playerScale, null)
+          : new J.CapsuleShapeSettings(part.halfHeight * playerScale, part.radius * playerScale, null);
+        const pos = new J.Vec3(...part.pos.map((value) => value * playerScale));
         const rot = part.axis === 'x' ? J.Quat.prototype.sRotation(J.Vec3.prototype.sAxisZ(), Math.PI / 2) : J.Quat.prototype.sIdentity();
         compound.AddShapeShapeSettings(pos, rot, child, 0); J.destroy(pos); J.destroy(rot);
       }
@@ -303,7 +308,7 @@ function joltWorld({ ground = true, gravity = -G, material = {}, solverIteration
       });
       Object.assign(body, { label, colliders: null }); bodyLabels.set(body.id.ToString(), body.label); return body;
     },
-    async step() { frameContacts = new Map(); jolt.Step(timestep, 1); },
+    async step() { frameContacts = new Map(); jolt.Step(timestep, joltCollisionSteps); },
     state(player) {
       const p = player.body.GetPosition(), q = player.body.GetRotation(), v = player.body.GetLinearVelocity(), av = player.body.GetAngularVelocity();
       const motion = player.body.GetMotionProperties();
