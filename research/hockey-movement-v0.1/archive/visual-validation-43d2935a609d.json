@@ -1,0 +1,89 @@
+{
+  "viewer": "research/hockey-movement-v0.1/viewer/",
+  "versioned_archive": "scenario_archive-bc91d1610de5.json.gz",
+  "archive_sha256": "a036d9edd981905646f5efce0b0c340b3fcd7bacaef8037b18e9350395fcacce",
+  "legendarypicks_code_commit": "bc91d1610de5c99a0bdf396738e9d2f493c3d215",
+  "gridiron_movement_engine_commit": "252ed6d95fbb6a9ac8db5a65aed920139777432a",
+  "gridiron_validation_commit": "43d2935a609de38eb74f82aac50655cc9a14b574",
+  "browser_version": "148.0.7778.96",
+  "page_errors": [],
+  "console_errors": [],
+  "panels": 4,
+  "scenario_count": 206,
+  "in_browser_policy_max_path_difference_ft": 0,
+  "per_player_error_rows_at_step_15": 30,
+  "screenshots": [
+    "viewer-topdown.png",
+    "viewer-rink-side.png",
+    "viewer-topdown-step15.png",
+    "viewer-rink-side-step15.png"
+  ],
+  "clips": [
+    {
+      "category": "oriented_attack_end_puck_proximity",
+      "scenario_option": "aligned_teammate_movement_geometry / multiple_skaters_closing_on_puck_geometry / oriented_attack_end_puck_proximity / skater_separating_from_nearest_opponent · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_105298",
+      "file": "oriented-attack-end-puck-proximity.webm",
+      "bytes": 1417418,
+      "sha256": "366377560ca0e43a24fcc1b2d76a8ef1ab4775ea40bca5df48f45cfa271e2291",
+      "duration_seconds": 22.76,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "opposite_end_puck_proximity",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "opposite-end-puck-proximity.webm",
+      "bytes": 1593885,
+      "sha256": "bf672212177f8a7b8b96a8e107a065483a4641098a374a6c270d580bec882dcc",
+      "duration_seconds": 22.48,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "central_strip_geometry",
+      "scenario_option": "aligned_teammate_movement_geometry / central_strip_geometry / skater_separating_from_nearest_opponent · 2025-10-11.Team.A.@.Team.D · P2 · 2025-10-11 Team A @ Team D_184964",
+      "file": "central-strip-geometry.webm",
+      "bytes": 1127409,
+      "sha256": "586cbcba4c10eb99277b04b7be9087bb394e9558488339e61c31ed814cd0b9d0",
+      "duration_seconds": 19.04,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "multiple_skaters_closing_on_puck_geometry",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "multiple-skaters-closing-on-puck-geometry.webm",
+      "bytes": 1367665,
+      "sha256": "b331b0bc0089f24f879791be2a2fad815e7ba70899cf02946e77acc3c1cd6923",
+      "duration_seconds": 20.12,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "skater_separating_from_nearest_opponent",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "skater-separating-from-nearest-opponent.webm",
+      "bytes": 1265236,
+      "sha256": "c689dc7bf6eb962ed18fbbd09dca686d7ec7c19d559a466ca8f45844f8116c14",
+      "duration_seconds": 19.92,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "aligned_teammate_movement_geometry",
+      "scenario_option": "aligned_teammate_movement_geometry / multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_101135",
+      "file": "aligned-teammate-movement-geometry.webm",
+      "bytes": 1216941,
+      "sha256": "c5a2d6ea366ed34682a6382ef0dcafdc9a48e24160ae07187ba40aba124e744b",
+      "duration_seconds": 19.96,
+      "preserved_from_previous_capture": true
+    },
+    {
+      "category": "tracking_missingness_or_identity_conflict",
+      "scenario_option": "multiple_skaters_closing_on_puck_geometry / opposite_end_puck_proximity / skater_separating_from_nearest_opponent / tracking_missingness_or_identity_conflict · 2025-10-11.Team.A.@.Team.D · P1 · 2025-10-11 Team A @ Team D_065745",
+      "file": "tracking-missingness-or-identity-conflict.webm",
+      "bytes": 1480699,
+      "sha256": "58bd0fb613dda949297ab79e556ece5b049cb49cbe2a004d36e30082dba0fbf3",
+      "duration_seconds": 21.84,
+      "preserved_from_previous_capture": true
+    }
+  ],
+  "categories_without_sample": [],
+  "visual_transform": "Observed rink XY; period-one attack-right transform only when orientation metadata exists",
+  "timebase": "ordinal Image Id increments; no validated seconds"
+}
