@@ -23,8 +23,9 @@ are intentionally absent. The puck helper is a constant ordinal-displacement ext
 `createHockeyMovementPolicy` loads a fold-specific ridge model serialized by the Legendary Picks
 research script. It uses six position observations, puck-relative geometry, and distance-weighted
 teammate/opponent summaries. `createHockeyConstraints` applies learned displacement, displacement
-change, turn, rink-boundary, and soft pair-spacing limits in 2D. The spacing limit is an empirical
-center-distance proxy, not player geometry, contact, or a validated collision mechanic. Call
+change, turn, and rink-boundary limits, then makes two pair-spacing projection passes in 2D. This
+empirical center-distance floor can leave residual violations; it is not player geometry, contact,
+or a validated collision mechanic. Call
 `stepHockeyMovement` for hockey scenes so the documented ordinal puck helper is applied alongside
 player movement.
 
