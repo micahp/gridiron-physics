@@ -14,6 +14,7 @@ Hold ratio (diagnostic only, uncalibrated): gripFactor(tackler TAK) / gripFactor
 gripFactor(r) = clamp(0.5 + (r - 50) / 100, 0.5, 1.5). The original engine implies a ratio of exactly 1.
 """
 
+import argparse
 import csv
 import hashlib
 import json
@@ -24,6 +25,12 @@ import statistics as st
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 RESULTS = os.path.join(ROOT, 'research/madden27-tackle-hold-probe/results.json')
+FACTOR_MODES = {
+    # original: neutral at rating 50 (the frozen engine's hold factors)
+    'original50': (50.0, 50.0),
+    # role: centred on the defenders' TAK mean and the carriers' max(BTK, ELU) mean (in-sample)
+    'role': (68.818, 70.577),
+}
 PROFILES = os.path.join(ROOT, 'research/madden27-tackle-hold-probe/profiles-week6.json')
 SNAPSHOT = os.path.join(ROOT, 'data/teams/matchup-2026-10-22.json')
 YD_TO_M = 0.9144
@@ -39,8 +46,13 @@ def sha256(path):
     return h.hexdigest()
 
 
-def grip(r):
-    return min(1.5, max(0.5, 0.5 + (r - 50) / 100))
+MODE = {'tak': 50.0, 'resist': 50.0}
+
+
+def grip(r, centre=None):
+    if centre is None:
+        return min(1.5, max(0.5, 0.5 + (r - 50) / 100))
+    return min(1.5, max(0.5, r / centre))
 
 
 def boot_ci(xs):
@@ -55,6 +67,16 @@ def boot_ci(xs):
 
 
 def main():
+    global RESULTS, HERE
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--results', default=RESULTS)
+    ap.add_argument('--out-dir', default=HERE)
+    ap.add_argument('--factor-mode', default='original50', choices=sorted(FACTOR_MODES))
+    args = ap.parse_args()
+    RESULTS = os.path.abspath(args.results)
+    HERE = os.path.abspath(args.out_dir)
+    os.makedirs(HERE, exist_ok=True)
+    tak_c, res_c = FACTOR_MODES[args.factor_mode]
     res = json.load(open(RESULTS))
     snap = json.load(open(SNAPSHOT))
     prof = json.load(open(PROFILES))
@@ -74,7 +96,7 @@ def main():
         o_rows = pair['original']['perSeed']
         s_rows = pair['ratingScaled']['perSeed']
         btk, elu = carrier_btk_elu[cond]
-        resist = grip(max(btk, elu))
+        resist = None
         tk_mix = {}
         paired, ratios = [], []
         flips = 0
@@ -85,7 +107,7 @@ def main():
             tk_mix[tid] = tk_mix.get(tid, 0) + (1 if rs.get('tackled') else 0)
             tak_val = 89 if (cond in ('madden27-tkl-only', 'madden27-tkl-and-btk') and tid == bush_id) else tak.get(tid)
             if rs.get('tackled') and ro.get('tackled'):
-                hold = grip(tak_val) / resist if tak_val is not None else None
+                hold = grip(tak_val, tak_c if args.factor_mode != 'original50' else None) / (grip(max(btk, elu), res_c if args.factor_mode != 'original50' else None)) if tak_val is not None else None
                 diff = rs['dragYd'] - ro['dragYd']
                 paired.append(diff)
                 ratios.append(hold)

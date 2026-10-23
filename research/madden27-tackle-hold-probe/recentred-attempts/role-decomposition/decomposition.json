@@ -1,0 +1,205 @@
+{
+  "source": {
+    "results_sha256": "e2de1046d6612d445aaaa0ad3fe1d92e9efe2988c87b5d4b49c2816a981897e1",
+    "profiles_sha256": "30bbac028ab5d9cc56d3633edd892f199f03c2942418cd036725c8e65c74346a",
+    "snapshot_sha256": "8d23885500e7c51cc1e21a2520baa959aa626524804910f461ecb3b5cd95c9ad"
+  },
+  "conditions": {
+    "project-estimated-contact-ratings": {
+      "seeds": 200,
+      "tackles_original": 197,
+      "tackles_scaled": 197,
+      "selection_flips": 0,
+      "paired_tackled_seeds": 197,
+      "paired_travel_diff_yd_mean": 0.0229949708140439,
+      "paired_travel_diff_yd_bootstrap95": [
+        0.019941714795736972,
+        0.025852490165496077
+      ],
+      "paired_travel_diff_m_mean": 0.021026601312361743,
+      "hold_ratio_mean": 0.9466498526428716,
+      "hold_ratio_below_1_share": 0.9035532994923858,
+      "slope_diff_on_hold_minus_1": -0.3570065526788076,
+      "corr_diff_hold_minus_1": -0.6809058517359107,
+      "tackler_mix_scaled": [
+        {
+          "tackler_id": "00-0041085",
+          "name": "Keyshaun Elliott",
+          "tackles": 112
+        },
+        {
+          "tackler_id": "00-0034320",
+          "name": "Kentavius Street",
+          "tackles": 41
+        },
+        {
+          "tackler_id": "00-0031583",
+          "name": "Grady Jarrett",
+          "tackles": 15
+        },
+        {
+          "tackler_id": "00-0039840",
+          "name": "Austin Booker",
+          "tackles": 10
+        },
+        {
+          "tackler_id": "00-0035357",
+          "name": "Cam Lewis",
+          "tackles": 6
+        },
+        {
+          "tackler_id": "00-0035525",
+          "name": "Devin Bush",
+          "tackles": 6
+        }
+      ]
+    },
+    "madden27-tkl-only": {
+      "seeds": 200,
+      "tackles_original": 197,
+      "tackles_scaled": 197,
+      "selection_flips": 0,
+      "paired_tackled_seeds": 197,
+      "paired_travel_diff_yd_mean": 0.022271605835105332,
+      "paired_travel_diff_yd_bootstrap95": [
+        0.018859252001476427,
+        0.025561526187937857
+      ],
+      "paired_travel_diff_m_mean": 0.020365156375620315,
+      "hold_ratio_mean": 0.9491158001606099,
+      "hold_ratio_below_1_share": 0.9035532994923858,
+      "slope_diff_on_hold_minus_1": -0.33884434489620313,
+      "corr_diff_hold_minus_1": -0.730223741694238,
+      "tackler_mix_scaled": [
+        {
+          "tackler_id": "00-0041085",
+          "name": "Keyshaun Elliott",
+          "tackles": 112
+        },
+        {
+          "tackler_id": "00-0034320",
+          "name": "Kentavius Street",
+          "tackles": 41
+        },
+        {
+          "tackler_id": "00-0031583",
+          "name": "Grady Jarrett",
+          "tackles": 15
+        },
+        {
+          "tackler_id": "00-0039840",
+          "name": "Austin Booker",
+          "tackles": 10
+        },
+        {
+          "tackler_id": "00-0035357",
+          "name": "Cam Lewis",
+          "tackles": 6
+        },
+        {
+          "tackler_id": "00-0035525",
+          "name": "Devin Bush",
+          "tackles": 6
+        }
+      ]
+    },
+    "madden27-btk-only": {
+      "seeds": 200,
+      "tackles_original": 196,
+      "tackles_scaled": 196,
+      "selection_flips": 0,
+      "paired_tackled_seeds": 196,
+      "paired_travel_diff_yd_mean": 0.0460352937800685,
+      "paired_travel_diff_yd_bootstrap95": [
+        0.04158986818368493,
+        0.05024191258834049
+      ],
+      "paired_travel_diff_m_mean": 0.04209467263249464,
+      "hold_ratio_mean": 0.888289111981453,
+      "hold_ratio_below_1_share": 0.9693877551020408,
+      "slope_diff_on_hold_minus_1": -0.46161598623066236,
+      "corr_diff_hold_minus_1": -0.5579897545260417,
+      "tackler_mix_scaled": [
+        {
+          "tackler_id": "00-0041085",
+          "name": "Keyshaun Elliott",
+          "tackles": 108
+        },
+        {
+          "tackler_id": "00-0034320",
+          "name": "Kentavius Street",
+          "tackles": 43
+        },
+        {
+          "tackler_id": "00-0031583",
+          "name": "Grady Jarrett",
+          "tackles": 15
+        },
+        {
+          "tackler_id": "00-0039840",
+          "name": "Austin Booker",
+          "tackles": 10
+        },
+        {
+          "tackler_id": "00-0035357",
+          "name": "Cam Lewis",
+          "tackles": 8
+        },
+        {
+          "tackler_id": "00-0035525",
+          "name": "Devin Bush",
+          "tackles": 6
+        }
+      ]
+    },
+    "madden27-tkl-and-btk": {
+      "seeds": 200,
+      "tackles_original": 196,
+      "tackles_scaled": 196,
+      "selection_flips": 0,
+      "paired_tackled_seeds": 196,
+      "paired_travel_diff_yd_mean": 0.04540150873914338,
+      "paired_travel_diff_yd_bootstrap95": [
+        0.04056983198493836,
+        0.049886207905057524
+      ],
+      "paired_travel_diff_m_mean": 0.041515139591072704,
+      "hold_ratio_mean": 0.8906146452540392,
+      "hold_ratio_below_1_share": 0.9693877551020408,
+      "slope_diff_on_hold_minus_1": -0.40632582662876526,
+      "corr_diff_hold_minus_1": -0.5984176973843958,
+      "tackler_mix_scaled": [
+        {
+          "tackler_id": "00-0041085",
+          "name": "Keyshaun Elliott",
+          "tackles": 108
+        },
+        {
+          "tackler_id": "00-0034320",
+          "name": "Kentavius Street",
+          "tackles": 43
+        },
+        {
+          "tackler_id": "00-0031583",
+          "name": "Grady Jarrett",
+          "tackles": 15
+        },
+        {
+          "tackler_id": "00-0039840",
+          "name": "Austin Booker",
+          "tackles": 10
+        },
+        {
+          "tackler_id": "00-0035357",
+          "name": "Cam Lewis",
+          "tackles": 8
+        },
+        {
+          "tackler_id": "00-0035525",
+          "name": "Devin Bush",
+          "tackles": 6
+        }
+      ]
+    }
+  }
+}
