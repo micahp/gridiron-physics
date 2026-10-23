@@ -1,0 +1,76 @@
+{
+  "completed": true,
+  "massSweepRuns": 92,
+  "strengthSweepRuns": 198,
+  "contactSplitCandidates": [
+    {
+      "scenarioId": "possession-retained",
+      "configId": "madden-masses-103-102kg",
+      "engines": [
+        {
+          "engine": "rapier3d-compat",
+          "firstContactByPair": {
+            "impact-defender::runner": 0.11666666666666667
+          },
+          "focusPair": {
+            "minimumSurfaceGapM": -0.00012,
+            "firstOpportunityTimeSeconds": 0.075,
+            "firstAnalyticOverlapTimeSeconds": 0.5333333333333333,
+            "firstPhysicalContactTimeSeconds": 0.11666666666666667,
+            "opportunityStepCount": 280,
+            "physicalContactStepCount": 125,
+            "opportunitySummary": {
+              "pairId": "impact-defender::runner",
+              "bodies": [
+                "runner",
+                "impact-defender"
+              ],
+              "firstOpportunityTimeSeconds": 0.075,
+              "closestSurfaceGapM": -0.00011614024897022013,
+              "sampledOpportunitySteps": 280,
+              "physicalContactObserved": true,
+              "opportunityDurationSeconds": 2.3333333333333335,
+              "firstPhysicalContactTimeSeconds": 0.11666666666666667,
+              "physicalContactCount": 1
+            }
+          },
+          "failures": [
+            "p95 penetration 0.09765263125300389 m > 0.05 m",
+            "weighted mean penetration 0.05036279155562329 m > 0.025 m"
+          ]
+        },
+        {
+          "engine": "jolt-physics-js",
+          "firstContactByPair": {
+            "impact-defender::runner": 0.09166666666666666
+          },
+          "focusPair": {
+            "minimumSurfaceGapM": -0.00985,
+            "firstOpportunityTimeSeconds": 0.075,
+            "firstAnalyticOverlapTimeSeconds": 0.08333333333333333,
+            "firstPhysicalContactTimeSeconds": 0.09166666666666666,
+            "opportunityStepCount": 280,
+            "physicalContactStepCount": 239,
+            "opportunitySummary": {
+              "pairId": "impact-defender::runner",
+              "bodies": [
+                "runner",
+                "impact-defender"
+              ],
+              "firstOpportunityTimeSeconds": 0.075,
+              "closestSurfaceGapM": -0.00985343472504091,
+              "sampledOpportunitySteps": 280,
+              "physicalContactObserved": true,
+              "opportunityDurationSeconds": 2.3333333333333335,
+              "firstPhysicalContactTimeSeconds": 0.09166666666666666,
+              "physicalContactCount": 3
+            }
+          },
+          "failures": [
+            "p95 penetration 0.05453933142125606 m > 0.05 m"
+          ]
+        }
+      ]
+    }
+  ]
+}

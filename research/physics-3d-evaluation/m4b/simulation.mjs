@@ -300,9 +300,16 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
       requestedLoadN: load.requestedLoadN, capacityN: grip.capacityN };
   });
 
-  const recordFrame = (tick, contacts, ballContacts, groundContacts, appliedForces, appliedTorques, constraints) => {
+  const recordFrame = (tick, contacts, ballContacts, groundContacts, appliedForces, appliedTorques, constraints,
+    pairStepDiagnostics = null, controllerTorqueRequests = {}, gripLoadInputs = [], possessionGripLoadInputs = []) => {
     if (!recordFrames || (tick !== 0 && tick !== steps && tick % frameStride !== 0)) return;
     const states = snapshotStates();
+    const pairSurfaceGaps = pairStepDiagnostics ?? playerSpecs.flatMap((aSpec, i) => playerSpecs.slice(i + 1).map((bSpec) => {
+      const minimumSurfaceGapM = minimumBodySurfaceGap(states.get(aSpec.id), states.get(bSpec.id), playerGeometry, playerScale);
+      return { pairId: [aSpec.id, bSpec.id].sort().join('::'), bodies: [aSpec.id, bSpec.id], minimumSurfaceGapM,
+        contactOpportunity: minimumSurfaceGapM <= CONTACT_OPPORTUNITY_GAP_M, physicalContact: false,
+        maximumPenetrationDepthM: null, physicalContactDetection: 'initial pre-solver sample' };
+    }));
     const playerRows = Object.fromEntries([...states].map(([id, state]) => [id, {
       positionM: state.positionM, centerOfMassM: state.centerOfMassM, linearVelocityMps: state.linearVelocityMps,
       angularVelocityRadPerSec: state.angularVelocityRadPerSec, rotation: state.rotation, tiltDeg: tiltDeg(state.rotation),
@@ -339,9 +346,11 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
         linearVelocityMps: ballState.linearVelocityMps, angularVelocityRadPerSec: ballState.angularVelocityRadPerSec,
         rotation: ballState.rotation, status: ballStatus, controlledBy: possessionByPlayer.size === 1 ? [...possessionByPlayer.keys()][0] : null,
         controlPlayers: [...possessionByPlayer.keys()] } : null,
-      contacts, ballContacts, groundContacts, possessionControls,
+      contacts, ballContacts, groundContacts, possessionControls, pairSurfaceGaps,
       forcesNByPlayer: appliedForces, torquesNmByPlayer: appliedTorques,
-      grips: constraints, diagnostics: { mechanicalEnergyByBodyJ: energy, totalMechanicalEnergyJ: energy.reduce((sum, row) => sum + row.totalMechanicalJ, 0),
+      controllerTorqueRequestsNmByPlayer: controllerTorqueRequests,
+      grips: constraints, gripLoadInputs, possessionGripLoadInputs,
+      diagnostics: { mechanicalEnergyByBodyJ: energy, totalMechanicalEnergyJ: energy.reduce((sum, row) => sum + row.totalMechanicalJ, 0),
         momentumByBody, totalLinearMomentumKgMps: sumMomentum('linearMomentumKgMps'),
         totalAngularMomentumAboutOriginKgM2PerSec: sumMomentum('angularMomentumAboutOriginKgM2PerSec'),
         knownForceInputs: { gravityForceNByBody, appliedForceRecordsByBody: appliedForces, appliedTorqueRecordsByBody: appliedTorques,
@@ -354,7 +363,8 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
   recordFrame(0, [], [], [], {}, {}, []);
   for (let tick = 0; tick < steps; tick++) {
     const timeSeconds = tick * dt;
-    const appliedForces = {}, appliedTorques = {};
+    const appliedForces = {}, appliedTorques = {}, controllerTorqueRequests = {};
+    const gripLoadInputs = [], possessionGripLoadInputs = [];
     const stepContactPenetrations = [];
     const preStates = snapshotStates();
     const preBallState = ball ? world.state(ball) : null;
@@ -377,6 +387,7 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
       const spec = playerSpecs.find((row) => row.id === id);
       const state = preStates.get(id);
       const torque = balanceControllerEnabled ? scale(forceControllerTorque(state, spec.strength ?? 80, spec.balanceScale ?? 0.8, world.grounded(body)), balanceTorqueScale) : [0, 0, 0];
+      controllerTorqueRequests[id] = torque;
       if (length(torque) > 0.01) pushTorque(body, id, torque, appliedTorques);
       const drive = spec.drive;
       if (drive && timeSeconds >= (drive.startSeconds ?? 0) && timeSeconds < (drive.endSeconds ?? scenario.durationSeconds)) {
@@ -389,15 +400,23 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
       if (!grip.active) continue;
       const runnerState = preStates.get(carrierId), holderState = preStates.get(grip.holderId);
       const load = gripLoad(grip, runnerState, holderState);
+      const stepGripLoad = { holderId: grip.holderId, activeBeforeStep: grip.active, separationM: load.separationM,
+        requestedLoadN: load.requestedLoadN, capacityN: grip.capacityN, appliedForceN: 0, applied: false, released: false,
+        loadSource: 'explicit spring-damper force law; not solver constraint force' };
       grip.maximumRequestedLoadN = Math.max(grip.maximumRequestedLoadN, load.requestedLoadN);
       grip.overloadTicks = load.requestedLoadN > grip.capacityN || load.separationM > grip.extensionLimitM ? grip.overloadTicks + 1 : 0;
       if (grip.overloadTicks >= grip.releaseOverloadTicks) {
         grip.active = false;
+        stepGripLoad.released = true;
+        gripLoadInputs.push(stepGripLoad);
         events.push({ type: 'wrap_proxy_released', timeSeconds, players: [carrierId, grip.holderId], requestedLoadN: load.requestedLoadN,
           capacityN: grip.capacityN, separationM: load.separationM, reason: load.separationM > grip.extensionLimitM ? 'extension_limit' : 'configured_load_limit' });
         continue;
       }
       const force = capVector(load.requestedForceN, grip.capacityN);
+      stepGripLoad.appliedForceN = length(force);
+      stepGripLoad.applied = true;
+      gripLoadInputs.push(stepGripLoad);
       grip.maximumAppliedLoadN = Math.max(grip.maximumAppliedLoadN, length(force));
       const ledger = contributionLedger.get(grip.holderId);
       if (ledger) {
@@ -423,6 +442,9 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
         });
         const requestedLoadN = requestedForces.reduce((sum, row) => sum + length(row.force), 0);
         const maximumExtensionM = Math.max(...requestedForces.map((row) => length(sub(row.ownerPoint, row.ballPoint))));
+        const stepPossessionGripLoad = { holderId: grip.holderId, activeBeforeStep: grip.active, requestedLoadN,
+          maximumExtensionM, capacityN: grip.capacityN, appliedLoadN: 0, overloadTicks: grip.overloadTicks,
+          released: false, loadSource: 'two-point spring-damper force law; not solver constraint force' };
         grip.maximumRequestedLoadN = Math.max(grip.maximumRequestedLoadN, requestedLoadN);
         grip.maximumExtensionM = Math.max(grip.maximumExtensionM, maximumExtensionM);
         const history = possessionHistory.get(grip.holderId);
@@ -431,6 +453,9 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
           ? grip.overloadTicks + 1 : 0;
         if (grip.overloadTicks >= grip.releaseOverloadTicks) {
           grip.active = false;
+          stepPossessionGripLoad.released = true;
+          stepPossessionGripLoad.overloadTicks = grip.overloadTicks;
+          possessionGripLoadInputs.push(stepPossessionGripLoad);
           releases.push({ holderId: grip.holderId, requestedLoadN, maximumExtensionM, overloadTicks: grip.overloadTicks,
             overloadDurationSeconds: grip.overloadTicks * dt,
             reason: maximumExtensionM > grip.extensionLimitM ? 'cradle_extension_limit' : 'attachment_force_capacity_exceeded' });
@@ -445,6 +470,9 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
           pushForce(players.get(grip.holderId), grip.holderId, scale(force, -1), row.ownerPoint,
             'equal-and-opposite two-point football cradle', appliedForces);
         }
+        stepPossessionGripLoad.appliedLoadN = appliedLoadN;
+        stepPossessionGripLoad.overloadTicks = grip.overloadTicks;
+        possessionGripLoadInputs.push(stepPossessionGripLoad);
         grip.maximumAppliedLoadN = Math.max(grip.maximumAppliedLoadN, appliedLoadN);
       }
       for (const release of releases) {
@@ -481,6 +509,7 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
     const frameContacts = [];
     const frameBallContacts = [];
     const postStates = snapshotStates();
+    const pairStepDiagnostics = [];
     const now = new Set();
     const opportunitiesNow = new Set();
     for (let i = 0; i < playerSpecs.length; i++) for (let j = i + 1; j < playerSpecs.length; j++) {
@@ -488,6 +517,13 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
       const a = players.get(aSpec.id), b = players.get(bSpec.id);
       const pairId = [aSpec.id, bSpec.id].sort().join('::');
       const surfaceGapM = minimumBodySurfaceGap(postStates.get(aSpec.id), postStates.get(bSpec.id), playerGeometry, playerScale);
+      const pairDiagnostic = { pairId, bodies: [aSpec.id, bSpec.id], minimumSurfaceGapM: surfaceGapM,
+        contactOpportunity: surfaceGapM <= CONTACT_OPPORTUNITY_GAP_M, physicalContact: false,
+        maximumPenetrationDepthM: null, normalImpulseNs: null,
+        physicalContactDetection: engine === 'rapier3d-compat'
+          ? 'Rapier active contact-pair snapshot after fixed step'
+          : 'Jolt body touching state after fixed step' };
+      pairStepDiagnostics.push(pairDiagnostic);
       if (surfaceGapM <= CONTACT_OPPORTUNITY_GAP_M) {
         opportunitiesNow.add(pairId);
         const opportunity = contactOpportunityByPair.get(pairId) ?? {
@@ -504,6 +540,9 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
       }
       const contact = contactSnapshot(a, b);
       if (!contact.touching) continue;
+      pairDiagnostic.physicalContact = true;
+      pairDiagnostic.maximumPenetrationDepthM = contact.maximumPenetrationDepthM;
+      pairDiagnostic.normalImpulseNs = contact.normalImpulseNs;
       now.add(pairId);
       const preA = preStates.get(aSpec.id), preB = preStates.get(bSpec.id);
       const postA = postStates.get(aSpec.id), postB = postStates.get(bSpec.id);
@@ -747,7 +786,8 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
     penetrationSamples.push({ tick: tick + 1, timeSeconds: (tick + 1) * dt,
       maximumPenetrationM: stepMaximumPenetrationM, activeContactPairs: stepContactPenetrations.length,
       contactPenetrationsM: stepContactPenetrations });
-    recordFrame(tick + 1, frameContacts, frameBallContacts, groundContacts, appliedForces, appliedTorques, framesGrips);
+    recordFrame(tick + 1, frameContacts, frameBallContacts, groundContacts, appliedForces, appliedTorques, framesGrips,
+      pairStepDiagnostics, controllerTorqueRequests, gripLoadInputs, possessionGripLoadInputs);
   }
 
   const activeAtEnd = [...gripByHolder.values()].filter((row) => row.active).map((row) => row.holderId);

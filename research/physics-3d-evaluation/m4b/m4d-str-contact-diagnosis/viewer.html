@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>M4d STR contact diagnosis · synchronized replay</title>
+  <style>
+    :root { color-scheme: dark; font: 15px/1.45 system-ui, sans-serif; background:#10151c; color:#e5edf5 }
+    body { margin:0 auto; padding:22px; max-width:1500px }
+    h1 { font-size:1.35rem; margin:0 0 12px }
+    .controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:12px 0 16px }
+    select,button,input { font:inherit; color:inherit; background:#1e2936; border:1px solid #455568; border-radius:6px; padding:7px 10px }
+    input[type=range] { flex:1; min-width:240px; padding:0 }
+    .engine-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px }
+    .panel { min-width:0; background:#17202a; border:1px solid #354454; border-radius:9px; padding:12px }
+    .panel h2 { font-size:1rem; margin:0 0 8px }
+    canvas { display:block; width:100%; height:460px; background:#0b1117; border-radius:6px }
+    .stats { min-height:5.4em; white-space:pre-wrap; font:12px/1.55 ui-monospace,monospace; color:#c5d2df; padding-top:9px }
+    #status { color:#9db3c8; font-size:.88rem; min-height:1.4em }
+    .legend { color:#a9b8c8; font-size:.82rem; margin:8px 0 }
+    @media (max-width:800px) { .engine-grid { grid-template-columns:1fr } canvas { height:360px } }
+  </style>
+</head>
+<body>
+  <h1>M4d STR contact diagnosis · synchronized Rapier / Jolt replay</h1>
+  <div class="controls">
+    <label>Scenario and input <select id="run"></select></label>
+    <button id="play">Play</button>
+    <label>Tick <input id="tick" type="range" min="0" max="1" value="0"></label>
+    <span id="time">0 / 0</span>
+  </div>
+  <div class="legend">Gold = carrier · blue = offense · red = defense · orange line = ≤0.10 m opportunity · bright line = engine-reported contact · circles show rigid player proxy centers in the x/z plane.</div>
+  <div class="engine-grid">
+    <section class="panel"><h2>Rapier 0.21.0</h2><canvas id="rapier"></canvas><div class="stats" id="rapier-stats"></div></section>
+    <section class="panel"><h2>Jolt 1.1.0</h2><canvas id="jolt"></canvas><div class="stats" id="jolt-stats"></div></section>
+  </div>
+  <p id="status">Loading replay index…</p>
+<script>
+const $ = (id) => document.getElementById(id);
+const engines = ['rapier3d-compat', 'jolt-physics-js'];
+const canvasIds = { 'rapier3d-compat':'rapier', 'jolt-physics-js':'jolt' };
+let index, entry, traces = {}, playing = false, animation;
+const cache = new Map();
+const focusId = (pair) => pair.slice().sort().join('::');
+async function loadTrace(relative) {
+  if (cache.has(relative)) return cache.get(relative);
+  const response = await fetch(relative);
+  if (!response.ok) throw new Error(`Trace fetch failed: ${relative} (${response.status})`);
+  const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
+  const data = await new Response(stream).json();
+  cache.set(relative, data);
+  return data;
+}
+function entries() { return Object.values(index.scenarios); }
+function draw(engine, frame, trace, tick) {
+  const canvas = $(canvasIds[engine]);
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * ratio); canvas.height = Math.round(rect.height * ratio);
+  const ctx = canvas.getContext('2d'); ctx.scale(ratio, ratio);
+  const w = rect.width, h = rect.height;
+  ctx.fillStyle = '#0b1117'; ctx.fillRect(0,0,w,h);
+  const states = frame.players;
+  const values = Object.values(states).map((p) => p.positionM);
+  if (!values.length) return;
+  let minX = Math.min(...values.map((p)=>p[0])), maxX = Math.max(...values.map((p)=>p[0]));
+  let minZ = Math.min(...values.map((p)=>p[2])), maxZ = Math.max(...values.map((p)=>p[2]));
+  const margin = 55; minX -= 1.2; maxX += 1.2; minZ -= 1.2; maxZ += 1.2;
+  const scale = Math.min((w - margin*2) / Math.max(1,maxX-minX), (h-margin*2) / Math.max(1,maxZ-minZ));
+  const point = (p) => [margin + (p[0]-minX)*scale, h-margin-(p[2]-minZ)*scale];
+  ctx.strokeStyle='#263442'; ctx.lineWidth=1;
+  for(let x=Math.ceil(minX);x<=maxX;x++) { const a=point([x,0,minZ]),b=point([x,0,maxZ]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke(); }
+  for(let z=Math.ceil(minZ);z<=maxZ;z++) { const a=point([minX,0,z]),b=point([maxX,0,z]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke(); }
+  const gapRows = frame.pairSurfaceGaps || [];
+  for (const pair of gapRows) {
+    const [a,b] = pair.bodies, pa=states[a]?.positionM, pb=states[b]?.positionM;
+    if(!pa||!pb) continue;
+    if(!pair.physicalContact && !pair.contactOpportunity) continue;
+    const p1=point(pa),p2=point(pb);ctx.beginPath();ctx.moveTo(...p1);ctx.lineTo(...p2);
+    ctx.strokeStyle=pair.physicalContact?'#ff4f52':'#f0a33a';ctx.lineWidth=pair.physicalContact?3:1.5;
+    if(!pair.physicalContact) ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
+  }
+  const carrier = entry.players[0]?.id;
+  for (const [id,state] of Object.entries(states)) {
+    const [x,y]=point(state.positionM);const meta=entry.players.find((p)=>p.id===id);
+    ctx.beginPath();ctx.arc(x,y,Math.max(8,0.23*scale),0,Math.PI*2);
+    ctx.fillStyle=id===carrier?'#f1cb59':meta?.team==='defense'?'#ef6269':'#66a8e8';ctx.fill();
+    ctx.strokeStyle='#e8edf1';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#edf3f8';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText(id,x,y-13);
+  }
+  const pair = gapRows.find((row)=>row.pairId===focusId(entry.focusPair));
+  const sample = trace.penetration.samples[Math.max(0,tick-1)];
+  const peakTorque = Object.entries(frame.controllerTorqueRequestsNmByPlayer||{}).map(([id,v])=>`${id}:${Math.hypot(...v).toFixed(1)}Nm`).join('  ');
+  const loads = [...(frame.gripLoadInputs||[]).map((r)=>`wrap ${r.holderId}:${r.requestedLoadN.toFixed(0)}N`),
+    ...(frame.possessionGripLoadInputs||[]).map((r)=>`ball ${r.holderId}:${r.requestedLoadN.toFixed(0)}N`)].join('  ') || 'no active grip loads';
+  const contactCount = (frame.contacts||[]).length;
+  $(`${engine==='rapier3d-compat'?'rapier':'jolt'}-stats`).textContent =
+    `tick ${frame.tick} · ${(frame.timeSeconds||0).toFixed(4)} s · ${contactCount} player contact pair(s)\n`+
+    `${pair?.pairId||'focus pair'}: gap ${pair?.minimumSurfaceGapM.toFixed(4)??'n/a'} m · opportunity ${pair?.contactOpportunity?'yes':'no'} · physical ${pair?.physicalContact?'yes':'no'}\n`+
+    `max penetration ${sample?.maximumPenetrationM?.toFixed(4)??'0.0000'} m · torque request ${peakTorque}\n${loads}`;
+}
+async function selectRun() {
+  playing=false;cancelAnimationFrame(animation);traces={};entry=entries()[$('run').selectedIndex];
+  $('status').textContent=`Loading ${entry.scenarioId} / ${entry.configId}…`;
+  try {
+    for(const engine of engines) traces[engine]=await loadTrace(entry.engines[engine].trace);
+    const count=Math.min(...engines.map((e)=>traces[e].frames.length));
+    $('tick').max=String(Math.max(0,count-1));$('tick').value='0';render();
+    $('status').textContent=`${entry.description} · ${count} matched ticks at ${1/entry.timestepSeconds} Hz · focus pair ${entry.focusPair.join(' / ')}`;
+  } catch(error) {$('status').textContent=error.message;console.error(error);}
+}
+function render() {
+  const tick=Number($('tick').value);$('time').textContent=`${tick} / ${$('tick').max}`;
+  for(const engine of engines) if(traces[engine]) draw(engine,traces[engine].frames[Math.min(tick,traces[engine].frames.length-1)],traces[engine],tick);
+}
+function playStep() {
+  if(!playing)return;
+  const slider=$('tick');slider.value=String(Number(slider.value)+1);
+  if(Number(slider.value)>=Number(slider.max)){playing=false;$('play').textContent='Play';render();return;}
+  render();animation=requestAnimationFrame(playStep);
+}
+async function init() {
+  const response=await fetch('replay-index.json');index=await response.json();
+  const select=$('run');
+  for(const item of entries()) {const option=document.createElement('option');option.textContent=`${item.scenarioId} · ${item.configId}`;select.append(option);}
+  select.addEventListener('change',selectRun);$('tick').addEventListener('input',render);
+  $('play').addEventListener('click',()=>{playing=!playing;$('play').textContent=playing?'Pause':'Play';if(playing)playStep();});
+  window.addEventListener('resize',render);await selectRun();
+}
+init().catch((error)=>{$('status').textContent=error.message;console.error(error);});
+</script>
+</body>
+</html>

@@ -1,0 +1,6720 @@
+{
+  "schemaVersion": 1,
+  "description": "Synchronized Rapier/Jolt full-rate M4c replays; frames match by tick at 120 Hz.",
+  "scenarios": {
+    "possession-retained::baseline": {
+      "scenarioId": "possession-retained",
+      "configId": "baseline",
+      "factor": "baseline",
+      "description": "Fixture input unchanged; strength defaults made explicit at 80 for all players.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__baseline__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__baseline__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-carrier--2kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-carrier--2kg",
+      "factor": "mass-only",
+      "description": "runner mass -2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-carrier--2kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-carrier--2kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-carrier--1kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-carrier--1kg",
+      "factor": "mass-only",
+      "description": "runner mass -1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 97,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-carrier--1kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-carrier--1kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-carrier--0.5kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-carrier--0.5kg",
+      "factor": "mass-only",
+      "description": "runner mass -0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 97.5,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-carrier--0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-carrier--0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-carrier-+0.5kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-carrier-+0.5kg",
+      "factor": "mass-only",
+      "description": "runner mass +0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98.5,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-carrier-plus0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-carrier-plus0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-carrier-+1kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-carrier-+1kg",
+      "factor": "mass-only",
+      "description": "runner mass +1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 99,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-carrier-plus1kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-carrier-plus1kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-carrier-+2kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-carrier-+2kg",
+      "factor": "mass-only",
+      "description": "runner mass +2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 100,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-carrier-plus2kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-carrier-plus2kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-carrier-+4kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-carrier-+4kg",
+      "factor": "mass-only",
+      "description": "runner mass +4 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 102,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-carrier-plus4kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-carrier-plus4kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-lead-tackler--2kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-lead-tackler--2kg",
+      "factor": "mass-only",
+      "description": "impact-defender mass -2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 104,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-lead-tackler--2kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-lead-tackler--2kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-lead-tackler--1kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-lead-tackler--1kg",
+      "factor": "mass-only",
+      "description": "impact-defender mass -1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 105,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-lead-tackler--1kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-lead-tackler--1kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-lead-tackler--0.5kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-lead-tackler--0.5kg",
+      "factor": "mass-only",
+      "description": "impact-defender mass -0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 105.5,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-lead-tackler--0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-lead-tackler--0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-lead-tackler-+0.5kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-lead-tackler-+0.5kg",
+      "factor": "mass-only",
+      "description": "impact-defender mass +0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106.5,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-lead-tackler-+1kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-lead-tackler-+1kg",
+      "factor": "mass-only",
+      "description": "impact-defender mass +1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 107,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus1kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus1kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-lead-tackler-+2kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-lead-tackler-+2kg",
+      "factor": "mass-only",
+      "description": "impact-defender mass +2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 108,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus2kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus2kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::mass-lead-tackler-+4kg": {
+      "scenarioId": "possession-retained",
+      "configId": "mass-lead-tackler-+4kg",
+      "factor": "mass-only",
+      "description": "impact-defender mass +4 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 110,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus4kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__mass-lead-tackler-plus4kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::madden-masses-103-102kg": {
+      "scenarioId": "possession-retained",
+      "configId": "madden-masses-103-102kg",
+      "factor": "mass-only-target",
+      "description": "Runner mass 103 kg and impact-defender mass 102 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__madden-masses-103-102kg__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__madden-masses-103-102kg__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "gang-two-opposite-open::baseline": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "baseline",
+      "factor": "baseline",
+      "description": "Fixture input unchanged; strength defaults made explicit at 80 for all players.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__baseline__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__baseline__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-carrier--2kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-carrier--2kg",
+      "factor": "mass-only",
+      "description": "carrier mass -2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 88,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier--2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier--2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-carrier--1kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-carrier--1kg",
+      "factor": "mass-only",
+      "description": "carrier mass -1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 89,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier--1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier--1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-carrier--0.5kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-carrier--0.5kg",
+      "factor": "mass-only",
+      "description": "carrier mass -0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 89.5,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier--0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier--0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-carrier-+0.5kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-carrier-+0.5kg",
+      "factor": "mass-only",
+      "description": "carrier mass +0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90.5,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-carrier-+1kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-carrier-+1kg",
+      "factor": "mass-only",
+      "description": "carrier mass +1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 91,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-carrier-+2kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-carrier-+2kg",
+      "factor": "mass-only",
+      "description": "carrier mass +2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 92,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-carrier-+4kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-carrier-+4kg",
+      "factor": "mass-only",
+      "description": "carrier mass +4 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 94,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus4kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-carrier-plus4kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-lead-tackler--2kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-lead-tackler--2kg",
+      "factor": "mass-only",
+      "description": "defender-left mass -2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 104,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler--2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler--2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-lead-tackler--1kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-lead-tackler--1kg",
+      "factor": "mass-only",
+      "description": "defender-left mass -1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 105,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler--1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler--1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-lead-tackler--0.5kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-lead-tackler--0.5kg",
+      "factor": "mass-only",
+      "description": "defender-left mass -0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 105.5,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler--0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler--0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-lead-tackler-+0.5kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-lead-tackler-+0.5kg",
+      "factor": "mass-only",
+      "description": "defender-left mass +0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106.5,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-lead-tackler-+1kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-lead-tackler-+1kg",
+      "factor": "mass-only",
+      "description": "defender-left mass +1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 107,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-lead-tackler-+2kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-lead-tackler-+2kg",
+      "factor": "mass-only",
+      "description": "defender-left mass +2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 108,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::mass-lead-tackler-+4kg": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "mass-lead-tackler-+4kg",
+      "factor": "mass-only",
+      "description": "defender-left mass +4 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 110,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus4kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__mass-lead-tackler-plus4kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::baseline": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "baseline",
+      "factor": "baseline",
+      "description": "Fixture input unchanged; strength defaults made explicit at 80 for all players.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__baseline__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__baseline__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-carrier--2kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-carrier--2kg",
+      "factor": "mass-only",
+      "description": "carrier mass -2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 94,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-carrier--2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-carrier--2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-carrier--1kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-carrier--1kg",
+      "factor": "mass-only",
+      "description": "carrier mass -1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 95,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-carrier--1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-carrier--1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-carrier--0.5kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-carrier--0.5kg",
+      "factor": "mass-only",
+      "description": "carrier mass -0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 95.5,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-carrier--0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-carrier--0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-carrier-+0.5kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-carrier-+0.5kg",
+      "factor": "mass-only",
+      "description": "carrier mass +0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96.5,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-carrier-+1kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-carrier-+1kg",
+      "factor": "mass-only",
+      "description": "carrier mass +1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 97,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-carrier-+2kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-carrier-+2kg",
+      "factor": "mass-only",
+      "description": "carrier mass +2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-carrier-+4kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-carrier-+4kg",
+      "factor": "mass-only",
+      "description": "carrier mass +4 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 100,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus4kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-carrier-plus4kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-lead-tackler--2kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-lead-tackler--2kg",
+      "factor": "mass-only",
+      "description": "first-hit mass -2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 104,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler--2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler--2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-lead-tackler--1kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-lead-tackler--1kg",
+      "factor": "mass-only",
+      "description": "first-hit mass -1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 105,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler--1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler--1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-lead-tackler--0.5kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-lead-tackler--0.5kg",
+      "factor": "mass-only",
+      "description": "first-hit mass -0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 105.5,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler--0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler--0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-lead-tackler-+0.5kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-lead-tackler-+0.5kg",
+      "factor": "mass-only",
+      "description": "first-hit mass +0.5 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106.5,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus0.5kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus0.5kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-lead-tackler-+1kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-lead-tackler-+1kg",
+      "factor": "mass-only",
+      "description": "first-hit mass +1 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 107,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus1kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus1kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-lead-tackler-+2kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-lead-tackler-+2kg",
+      "factor": "mass-only",
+      "description": "first-hit mass +2 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 108,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus2kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus2kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::mass-lead-tackler-+4kg": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "mass-lead-tackler-+4kg",
+      "factor": "mass-only",
+      "description": "first-hit mass +4 kg; all strengths 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 110,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus4kg__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__mass-lead-tackler-plus4kg__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "possession-retained::str-carrier-79.00": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-79.00",
+      "factor": "strength-only",
+      "description": "runner strength 79; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 79
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-79.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-79.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-79.50": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-79.50",
+      "factor": "strength-only",
+      "description": "runner strength 79.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 79.5
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-79.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-79.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-79.75": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-79.75",
+      "factor": "strength-only",
+      "description": "runner strength 79.75; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 79.75
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-79.75__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-79.75__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.10": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.10",
+      "factor": "strength-only",
+      "description": "runner strength 80.1; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.1
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.10__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.10__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.20": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.20",
+      "factor": "strength-only",
+      "description": "runner strength 80.2; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.2
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.20__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.20__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.30": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.30",
+      "factor": "strength-only",
+      "description": "runner strength 80.3; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.3
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.30__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.30__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.40": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.40",
+      "factor": "strength-only",
+      "description": "runner strength 80.4; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.4
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.40__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.40__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.50": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.50",
+      "factor": "strength-only",
+      "description": "runner strength 80.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.5
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.60": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.60",
+      "factor": "strength-only",
+      "description": "runner strength 80.6; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.6
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.60__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.60__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.70": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.70",
+      "factor": "strength-only",
+      "description": "runner strength 80.7; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.7
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.70__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.70__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.80": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.80",
+      "factor": "strength-only",
+      "description": "runner strength 80.8; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.8
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.80__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.80__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-80.90": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-80.90",
+      "factor": "strength-only",
+      "description": "runner strength 80.9; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80.9
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-80.90__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-80.90__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-81.00": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-81.00",
+      "factor": "strength-only",
+      "description": "runner strength 81; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 81
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-81.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-81.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-81.25": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-81.25",
+      "factor": "strength-only",
+      "description": "runner strength 81.25; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 81.25
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-81.25__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-81.25__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-81.50": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-81.50",
+      "factor": "strength-only",
+      "description": "runner strength 81.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 81.5
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-81.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-81.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-carrier-82.00": {
+      "scenarioId": "possession-retained",
+      "configId": "str-carrier-82.00",
+      "factor": "strength-only",
+      "description": "runner strength 82; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 82
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-carrier-82.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-carrier-82.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-79.00": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-79.00",
+      "factor": "strength-only",
+      "description": "impact-defender strength 79; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-79.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-79.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-79.50": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-79.50",
+      "factor": "strength-only",
+      "description": "impact-defender strength 79.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79.5
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-79.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-79.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-79.75": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-79.75",
+      "factor": "strength-only",
+      "description": "impact-defender strength 79.75; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79.75
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-79.75__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-79.75__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.10": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.10",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.1; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.1
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.10__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.10__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.20": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.20",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.2; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.2
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.20__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.20__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.30": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.30",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.3; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.3
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.30__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.30__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.40": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.40",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.4; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.4
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.40__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.40__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.50": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.50",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.5
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.60": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.60",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.6; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.6
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.60__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.60__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.70": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.70",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.7; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.7
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.70__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.70__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.80": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.80",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.8; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.8
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.80__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.80__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-80.90": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-80.90",
+      "factor": "strength-only",
+      "description": "impact-defender strength 80.9; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.9
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.90__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-80.90__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-81.00": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-81.00",
+      "factor": "strength-only",
+      "description": "impact-defender strength 81; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-81.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-81.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-81.25": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-81.25",
+      "factor": "strength-only",
+      "description": "impact-defender strength 81.25; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81.25
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-81.25__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-81.25__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-81.50": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-81.50",
+      "factor": "strength-only",
+      "description": "impact-defender strength 81.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81.5
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-81.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-81.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::str-lead-tackler-82.00": {
+      "scenarioId": "possession-retained",
+      "configId": "str-lead-tackler-82.00",
+      "factor": "strength-only",
+      "description": "impact-defender strength 82; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 98,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 82
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__str-lead-tackler-82.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__str-lead-tackler-82.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-79.00": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-79.00",
+      "factor": "strength-only",
+      "description": "carrier strength 79; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 79
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-79.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-79.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-79.50": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-79.50",
+      "factor": "strength-only",
+      "description": "carrier strength 79.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 79.5
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-79.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-79.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-79.75": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-79.75",
+      "factor": "strength-only",
+      "description": "carrier strength 79.75; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 79.75
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-79.75__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-79.75__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.10": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.10",
+      "factor": "strength-only",
+      "description": "carrier strength 80.1; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.1
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.10__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.10__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.20": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.20",
+      "factor": "strength-only",
+      "description": "carrier strength 80.2; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.2
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.20__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.20__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.30": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.30",
+      "factor": "strength-only",
+      "description": "carrier strength 80.3; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.3
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.30__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.30__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.40": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.40",
+      "factor": "strength-only",
+      "description": "carrier strength 80.4; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.4
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.40__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.40__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.50": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.50",
+      "factor": "strength-only",
+      "description": "carrier strength 80.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.5
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.60": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.60",
+      "factor": "strength-only",
+      "description": "carrier strength 80.6; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.6
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.60__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.60__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.70": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.70",
+      "factor": "strength-only",
+      "description": "carrier strength 80.7; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.7
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.70__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.70__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.80": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.80",
+      "factor": "strength-only",
+      "description": "carrier strength 80.8; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.8
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.80__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.80__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-80.90": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-80.90",
+      "factor": "strength-only",
+      "description": "carrier strength 80.9; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80.9
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.90__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-80.90__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-81.00": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-81.00",
+      "factor": "strength-only",
+      "description": "carrier strength 81; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 81
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-81.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-81.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-81.25": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-81.25",
+      "factor": "strength-only",
+      "description": "carrier strength 81.25; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 81.25
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-81.25__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-81.25__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-81.50": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-81.50",
+      "factor": "strength-only",
+      "description": "carrier strength 81.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 81.5
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-81.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-81.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-carrier-82.00": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-carrier-82.00",
+      "factor": "strength-only",
+      "description": "carrier strength 82; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 82
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-82.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-carrier-82.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-79.00": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-79.00",
+      "factor": "strength-only",
+      "description": "defender-left strength 79; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-79.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-79.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-79.50": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-79.50",
+      "factor": "strength-only",
+      "description": "defender-left strength 79.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79.5
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-79.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-79.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-79.75": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-79.75",
+      "factor": "strength-only",
+      "description": "defender-left strength 79.75; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79.75
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-79.75__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-79.75__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.10": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.10",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.1; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.1
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.10__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.10__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.20": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.20",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.2; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.2
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.20__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.20__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.30": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.30",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.3; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.3
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.30__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.30__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.40": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.40",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.4; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.4
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.40__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.40__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.50": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.50",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.5
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.60": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.60",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.6; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.6
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.60__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.60__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.70": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.70",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.7; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.7
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.70__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.70__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.80": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.80",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.8; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.8
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.80__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.80__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-80.90": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-80.90",
+      "factor": "strength-only",
+      "description": "defender-left strength 80.9; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.9
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.90__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-80.90__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-81.00": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-81.00",
+      "factor": "strength-only",
+      "description": "defender-left strength 81; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-81.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-81.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-81.25": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-81.25",
+      "factor": "strength-only",
+      "description": "defender-left strength 81.25; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81.25
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-81.25__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-81.25__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-81.50": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-81.50",
+      "factor": "strength-only",
+      "description": "defender-left strength 81.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81.5
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-81.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-81.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-two-opposite-open::str-lead-tackler-82.00": {
+      "scenarioId": "gang-two-opposite-open",
+      "configId": "str-lead-tackler-82.00",
+      "factor": "strength-only",
+      "description": "defender-left strength 82; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "defender-left"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 90,
+          "strength": 80
+        },
+        {
+          "id": "defender-left",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 82
+        },
+        {
+          "id": "defender-right",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-82.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-two-opposite-open__str-lead-tackler-82.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-79.00": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-79.00",
+      "factor": "strength-only",
+      "description": "carrier strength 79; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 79
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-79.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-79.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-79.50": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-79.50",
+      "factor": "strength-only",
+      "description": "carrier strength 79.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 79.5
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-79.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-79.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-79.75": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-79.75",
+      "factor": "strength-only",
+      "description": "carrier strength 79.75; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 79.75
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-79.75__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-79.75__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.10": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.10",
+      "factor": "strength-only",
+      "description": "carrier strength 80.1; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.1
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.10__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.10__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.20": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.20",
+      "factor": "strength-only",
+      "description": "carrier strength 80.2; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.2
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.20__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.20__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.30": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.30",
+      "factor": "strength-only",
+      "description": "carrier strength 80.3; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.3
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.30__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.30__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.40": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.40",
+      "factor": "strength-only",
+      "description": "carrier strength 80.4; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.4
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.40__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.40__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.50": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.50",
+      "factor": "strength-only",
+      "description": "carrier strength 80.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.5
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.60": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.60",
+      "factor": "strength-only",
+      "description": "carrier strength 80.6; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.6
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.60__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.60__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.70": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.70",
+      "factor": "strength-only",
+      "description": "carrier strength 80.7; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.7
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.70__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.70__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.80": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.80",
+      "factor": "strength-only",
+      "description": "carrier strength 80.8; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.8
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.80__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.80__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-80.90": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-80.90",
+      "factor": "strength-only",
+      "description": "carrier strength 80.9; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80.9
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.90__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-80.90__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-81.00": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-81.00",
+      "factor": "strength-only",
+      "description": "carrier strength 81; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 81
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-81.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-81.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-81.25": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-81.25",
+      "factor": "strength-only",
+      "description": "carrier strength 81.25; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 81.25
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-81.25__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-81.25__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-81.50": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-81.50",
+      "factor": "strength-only",
+      "description": "carrier strength 81.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 81.5
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-81.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-81.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-carrier-82.00": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-carrier-82.00",
+      "factor": "strength-only",
+      "description": "carrier strength 82; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 82
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-carrier-82.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-carrier-82.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-79.00": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-79.00",
+      "factor": "strength-only",
+      "description": "first-hit strength 79; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-79.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-79.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-79.50": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-79.50",
+      "factor": "strength-only",
+      "description": "first-hit strength 79.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79.5
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-79.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-79.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-79.75": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-79.75",
+      "factor": "strength-only",
+      "description": "first-hit strength 79.75; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 79.75
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-79.75__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-79.75__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.10": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.10",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.1; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.1
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.10__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.10__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.20": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.20",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.2; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.2
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.20__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.20__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.30": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.30",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.3; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.3
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.30__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.30__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.40": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.40",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.4; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.4
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.40__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.40__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.50": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.50",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.5
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.60": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.60",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.6; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.6
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.60__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.60__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.70": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.70",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.7; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.7
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.70__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.70__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.80": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.80",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.8; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.8
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.80__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.80__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-80.90": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-80.90",
+      "factor": "strength-only",
+      "description": "first-hit strength 80.9; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80.9
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.90__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-80.90__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-81.00": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-81.00",
+      "factor": "strength-only",
+      "description": "first-hit strength 81; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-81.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-81.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-81.25": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-81.25",
+      "factor": "strength-only",
+      "description": "first-hit strength 81.25; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81.25
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-81.25__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-81.25__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-81.50": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-81.50",
+      "factor": "strength-only",
+      "description": "first-hit strength 81.5; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 81.5
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-81.50__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-81.50__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "gang-staggered-three::str-lead-tackler-82.00": {
+      "scenarioId": "gang-staggered-three",
+      "configId": "str-lead-tackler-82.00",
+      "factor": "strength-only",
+      "description": "first-hit strength 82; all masses and other strengths at fixture baseline.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "carrier",
+        "first-hit"
+      ],
+      "players": [
+        {
+          "id": "carrier",
+          "team": "offense",
+          "massKg": 96,
+          "strength": 80
+        },
+        {
+          "id": "first-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 82
+        },
+        {
+          "id": "second-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        },
+        {
+          "id": "third-hit",
+          "team": "defense",
+          "massKg": 106,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-82.00__rapier3d-compat.json.gz",
+          "frameCount": 901
+        },
+        "jolt-physics-js": {
+          "trace": "traces/gang-staggered-three__str-lead-tackler-82.00__jolt-physics-js.json.gz",
+          "frameCount": 901
+        }
+      }
+    },
+    "possession-retained::combined-madden-masses-103-102kg-runner-str-81": {
+      "scenarioId": "possession-retained",
+      "configId": "combined-madden-masses-103-102kg-runner-str-81",
+      "factor": "combined",
+      "description": "Only after isolated sweeps: runner 103 kg, impact-defender 102 kg, runner strength 81.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 81
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__combined-madden-masses-103-102kg-runner-str-81__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__combined-madden-masses-103-102kg-runner-str-81__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.10": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.10",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.1; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.1
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.10__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.10__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.20": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.20",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.2; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.2
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.20__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.20__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.30": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.30",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.3; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.3
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.30__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.30__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.40": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.40",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.4; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.4
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.40__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.40__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.50": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.50",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.5; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.5
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.60": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.60",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.6; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.6
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.60__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.60__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.70": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.70",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.7; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.7
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.70__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.70__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.80": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.80",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.8; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.8
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.80__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.80__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-80.90": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-80.90",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 80.9; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80.9
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.90__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-80.90__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-carrier-81.00": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-carrier-81.00",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; runner strength 81; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 81
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-81.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-carrier-81.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.10": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.10",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.1; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.1
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.10__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.10__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.20": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.20",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.2; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.2
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.20__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.20__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.30": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.30",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.3; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.3
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.30__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.30__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.40": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.40",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.4; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.4
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.40__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.40__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.50": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.50",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.5; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.5
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.50__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.50__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.60": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.60",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.6; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.6
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.60__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.60__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.70": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.70",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.7; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.7
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.70__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.70__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.80": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.80",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.8; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.8
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.80__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.80__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-80.90": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-80.90",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 80.9; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 80.9
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.90__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-80.90__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    },
+    "possession-retained::target-masses-str-lead-tackler-81.00": {
+      "scenarioId": "possession-retained",
+      "configId": "target-masses-str-lead-tackler-81.00",
+      "factor": "strength-only-at-target-masses",
+      "description": "Runner/impact-defender masses held at 103/102 kg; impact-defender strength 81; other strength 80.",
+      "seed": 41027,
+      "timestepSeconds": 0.008333333333333333,
+      "focusPair": [
+        "runner",
+        "impact-defender"
+      ],
+      "players": [
+        {
+          "id": "runner",
+          "team": "offense",
+          "massKg": 103,
+          "strength": 80
+        },
+        {
+          "id": "impact-defender",
+          "team": "defense",
+          "massKg": 102,
+          "strength": 81
+        }
+      ],
+      "engines": {
+        "rapier3d-compat": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-81.00__rapier3d-compat.json.gz",
+          "frameCount": 289
+        },
+        "jolt-physics-js": {
+          "trace": "traces/possession-retained__target-masses-str-lead-tackler-81.00__jolt-physics-js.json.gz",
+          "frameCount": 289
+        }
+      }
+    }
+  }
+}
