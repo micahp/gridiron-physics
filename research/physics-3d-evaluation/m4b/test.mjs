@@ -3,12 +3,13 @@ import { readFile } from 'node:fs/promises';
 import { SCENARIOS, VERSION_PROFILES, instantiateScenario } from './scenarios.mjs';
 import { ENGINE_IDS, compareSignatures, runScenario } from './simulation.mjs';
 
-assert.equal(SCENARIOS.length, 15);
+assert.equal(SCENARIOS.length, 16);
 assert.equal(new Set(SCENARIOS.map((row) => row.id)).size, SCENARIOS.length);
 assert.ok(SCENARIOS.every((row) => row.durationSeconds >= 7.5));
 assert.equal(SCENARIOS.find((row) => row.id === 'short-yardage-22-player').players.length, 22);
 assert.equal(SCENARIOS.find((row) => row.id === 'tush-push-eight').players.length, 8);
 assert.equal(SCENARIOS.find((row) => row.id === 'fumble-eight-pile-live-ball').players.length, 8);
+assert.equal(SCENARIOS.find((row) => row.id === 'fumble-eight-pile-ball-escapes').players.length, 8);
 assert.equal(VERSION_PROFILES['proxy-v1-single-capsule'].geometry, 'single-capsule');
 assert.equal(VERSION_PROFILES['proxy-v2-compound'].geometry, 'compound');
 assert.ok(SCENARIOS.some((row) => row.category === 'gang-tackle'));
@@ -59,6 +60,13 @@ for (const engine of ENGINE_IDS) {
   const pileBallMaxSpeedMps = Math.max(...pileFumble.frames.map((frame) => Math.hypot(...frame.football.linearVelocityMps)));
   assert.ok(pileBallMaxSpeedMps < 30, `${engine}: fumble ball force does not accumulate after each physics step`);
 
+  const escapingPile = await runScenario(engine, shortFixture('fumble-eight-pile-ball-escapes', 2), { playerGeometry: 'compound', recordStride: 15 });
+  assert.ok(escapingPile.events.some((row) => row.type === 'ball_released'));
+  assert.equal(escapingPile.outcome.football.status, 'loose_live_recovery_unresolved');
+  const ballDistanceFromNearestPlayerM = Math.min(...Object.values(escapingPile.frames.at(-1).players)
+    .map((player) => Math.hypot(...player.positionM.map((value, axis) => value - escapingPile.frames.at(-1).football.positionM[axis]))));
+  assert.ok(ballDistanceFromNearestPlayerM > 2, `${engine}: loose ball physically escapes the eight-player scrum`);
+
   const gangTackle = await runScenario(engine, shortFixture('gang-four-blockers-congested'), { playerGeometry: 'compound' });
   const carrierContacts = gangTackle.contacts.filter((row) => row.pairId.startsWith('carrier::'));
   assert.ok(carrierContacts.length >= 2, `${engine}: congested gang tackle has multiple physical carrier contacts`);
@@ -83,6 +91,7 @@ for (const engine of ENGINE_IDS) {
   summaries.push({ engine, simultaneousSackContacts: contactTimes, looseBall: fumble.outcome.football.status,
     pileFumbleImpulseCount: pileFumble.events.filter((row) => row.type === 'scenario_impulse').length,
     pileBallMaxSpeedMps,
+    escapedBallDistanceM: ballDistanceFromNearestPlayerM,
     opposingGangTackleContacts: gangContactTimesByGeometry, gangCarrierContactPairs: carrierContacts.length, scrumContacts: scrum.contacts.length,
     playerCount22Contacts: maxLine.contacts.length, repeatable: true });
 }
@@ -93,7 +102,8 @@ try {
     const commit = index.activeProfileCommits?.[version];
     if (!commit) continue;
     const summary = JSON.parse(await readFile(new URL(`./results/${version}/${commit.slice(0, 10)}/summary.json`, import.meta.url), 'utf8'));
-    assert.equal(summary.scenarioResults.length, SCENARIOS.length * ENGINE_IDS.length);
+    const archivedScenarioCount = new Set(summary.scenarioResults.map((row) => row.scenarioId)).size;
+    assert.equal(summary.scenarioResults.length, archivedScenarioCount * ENGINE_IDS.length);
     assert.ok(summary.scenarioResults.every((row) => row.status === 'failed' || row.diagnostics.finite));
     assert.ok(summary.scenarioResults.every((row) => row.status === 'failed' || (row.outcome && row.contacts)));
     assert.ok(summary.scenarioResults.every((row) => row.status === 'failed' || row.runtime.wallTimeMs >= 0));

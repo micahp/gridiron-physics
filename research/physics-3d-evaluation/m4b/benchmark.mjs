@@ -18,8 +18,8 @@ const seed = Number(process.argv[3] ?? DEFAULT_SEED);
 if (!Number.isInteger(seed) || seed < 0) throw new Error(`Seed must be a nonnegative integer, got ${seed}`);
 const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
 const commitKey = sourceCommit.slice(0, 10);
-const scenarioVersion = 'm4b-scenario-library-v2';
-const archivedScenarioIds = new Set(['gang-two-opposite-open', 'sack-simultaneous-two', 'fumble-eight-pile-live-ball', 'tush-push-eight']);
+const scenarioVersion = 'm4b-scenario-library-v3';
+const archivedScenarioIds = new Set(['gang-two-opposite-open', 'sack-simultaneous-two', 'fumble-eight-pile-live-ball', 'fumble-eight-pile-ball-escapes', 'tush-push-eight']);
 const outputDirectory = path.join(RESULTS, profileId, commitKey);
 const stagingDirectory = path.join(RESULTS, `.m4b-staging-${profileId}-${commitKey}`);
 try { await access(outputDirectory); throw new Error(`Immutable archive already exists at ${outputDirectory}`); }

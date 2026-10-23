@@ -33,6 +33,17 @@ const pilePlayers = (count) => {
   return rows;
 };
 
+const escapePilePlayers = [
+  P('carrier', 'offense', [0, 0.845, 0], [1.2, 0, 0], { mass: 100, wrap: null }),
+  defender('pile-tackler', [-0.65, 0.845, 0], [2.5, 0, 0], { wrap: null }),
+  defender('pile-defender-2', [-0.75, 0.845, 0.52], [1.2, 0, -0.2], { wrap: null }),
+  P('pile-teammate-3', 'offense', [-0.75, 0.845, -0.52], [1.2, 0, 0.2], { mass: 96, wrap: null }),
+  defender('pile-defender-4', [-1.3, 0.845, 0.82], [1, 0, -0.35], { mass: 100, wrap: null }),
+  P('pile-teammate-5', 'offense', [-1.3, 0.845, -0.82], [1, 0, 0.35], { mass: 112, friction: 0.8, wrap: null }),
+  defender('pile-defender-6', [-1.9, 0.845, 0.32], [1.5, 0, 0], { mass: 90, wrap: null }),
+  P('pile-teammate-7', 'offense', [-1.9, 0.845, -0.32], [1.5, 0, 0], { mass: 110, friction: 0.8, wrap: null }),
+];
+
 export const VERSION_PROFILES = Object.freeze({
   'proxy-v1-single-capsule': {
     id: 'proxy-v1-single-capsule', title: 'M4b proxy v1 · single capsule', geometry: 'single-capsule',
@@ -130,6 +141,10 @@ export const SCENARIOS = [
     players: pilePlayers(8),
     carriedBall: { ...carryBall, localOffsetM: [0.43, 0.22, 0], springNPerM: 1450 },
     fumbleOnFirstContact: true, fumbleImpulseNs: [0.8, 1.1, 1.7],
+  },
+  {
+    id: 'fumble-eight-pile-ball-escapes', category: 'fumble-pileup', title: 'Eight-player scrum, loose ball escapes into open field', durationSeconds: 7.5,
+    players: escapePilePlayers, carriedBall: carryBall, fumbleOnFirstContact: true, fumbleImpulseNs: [2.5, 0.6, 0],
   },
   {
     id: 'tush-push-eight', category: 'short-yardage-scrum', title: 'QB sneak with line drive and two teammates behind', durationSeconds: 7.5,
