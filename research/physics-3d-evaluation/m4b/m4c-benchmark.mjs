@@ -64,6 +64,42 @@ for (const engine of ENGINE_IDS) for (const scenarioId of M4C_PRIORITY_IDS) {
     maxPenetrationM: result.penetration.maximumDepthM, runtimeMs: Math.round(result.runtime.wallTimeMs) }));
 }
 
+const m4bControlRecords = [];
+const m4bControlVersion = 'proxy-v2-compound';
+const m4bControlCommitKey = sourceCommit.slice(0, 10);
+for (const engine of ENGINE_IDS) {
+  const scenario = instantiateM4CScenario('possession-retained', seed);
+  const result = await runScenario(engine, scenario, { behaviorVersion: 'm4b', playerGeometry: 'compound',
+    recordFrames: true, recordStride: 1 });
+  const solverVersion = engine === 'rapier3d-compat'
+    ? packageJson.devDependencies['@dimforge/rapier3d-compat'] : packageJson.devDependencies['jolt-physics'];
+  const initialState = { players: scenario.players, football: scenario.carriedBall,
+    physicalInputs: { durationSeconds: scenario.durationSeconds, carrierId: scenario.carrierId },
+    physicsMaterials: PHYSICS_MATERIALS,
+    solverConfiguration: { rapierSolverIterations: 8,
+      joltCollisionSteps: 1, joltSolverIterations: 'package default; not exposed by tested JS wrapper' } };
+  const archiveMetadata = { milestone: 'M4c matched possession-retention control using M4b carry policy',
+    simulationVersion: m4bControlVersion, behaviorVersion: 'm4b', sourceCommit, solverVersion,
+    playerGeometry: 'compound', playerGeometryVersion: 'fixed-five-part-rigid-compound-v1',
+    controllerVersion: 'm4b-explicit-carry-cradle-v1', scenarioVersion, seed,
+    timestepSeconds: result.timestepSeconds, initialState,
+    physicalParameters: result.physicsParameters, recordedFrameStrideTicks: result.recordedFrameStrideTicks,
+    frameSampleRateHz: 120 / result.recordedFrameStrideTicks };
+  const filename = `possession-retained-seed-${seed}.json.gz`;
+  const relativeResultPath = `${m4bControlVersion}/${m4bControlCommitKey}/${seedKey}/${engine}/${filename}`;
+  const resultPath = path.join(RESULTS, relativeResultPath);
+  try { await access(resultPath); throw new Error(`Immutable archive file already exists: ${resultPath}`); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  await mkdir(path.dirname(resultPath), { recursive: true });
+  await writeFile(resultPath, gzipSync(Buffer.from(JSON.stringify({ archiveMetadata, initialState, replay: result })), { level: 9 }));
+  m4bControlRecords.push({ scenarioId: scenario.id, scenarioTitle: scenario.title, category: scenario.category, seed, engine,
+    status: 'completed', simulationVersion: m4bControlVersion, behaviorVersion: 'm4b', sourceCommit, solverVersion,
+    path: `../results/${relativeResultPath}`, replayRateHz: archiveMetadata.frameSampleRateHz,
+    replayFrameCount: result.frames.length, archivedAtFullPhysicsRate: true,
+    outcome: result.outcome, diagnostics: result.diagnostics, penetration: result.penetration,
+    contactOpportunities: result.contactOpportunities, runtime: result.runtime, events: result.events, contacts: result.contacts });
+}
+
 const summary = { schemaVersion: 1, milestone: 'M4c', simulationVersion: profile, sourceCommit, scenarioVersion, seed,
   runtime: { node: process.version, platform: process.platform, architecture: process.arch, cpu: os.cpus()[0]?.model,
     logicalCpuCount: os.cpus().length, wallTimeMs: performance.now() - startedAt, processRssBytes: process.memoryUsage().rss },
@@ -82,7 +118,9 @@ catch (error) { if (error.code !== 'ENOENT') throw error; previous = { records: 
 } }; }
 const rowByKey = new Map((previous.records ?? []).map((row) =>
   [`${row.scenarioId}|${row.engine}|${row.simulationVersion}|${row.seed}|${row.sourceCommit}`, row]));
-for (const row of records) rowByKey.set(`${row.scenarioId}|${row.engine}|${row.simulationVersion}|${row.seed}|${row.sourceCommit}`, row);
+for (const row of [...records, ...m4bControlRecords]) {
+  rowByKey.set(`${row.scenarioId}|${row.engine}|${row.simulationVersion}|${row.seed}|${row.sourceCommit}`, row);
+}
 const profiles = [...(previous.profiles ?? []).filter((row) => row.id !== profile.id), profile];
 const manifest = { ...previous, schemaVersion: 1, milestone: 'M4b/M4c research replay archive', generatedAt: new Date().toISOString(),
   profiles, activeProfileCommits: { ...(previous.activeProfileCommits ?? {}), [profile.id]: sourceCommit },

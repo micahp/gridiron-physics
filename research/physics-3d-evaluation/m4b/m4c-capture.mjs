@@ -51,11 +51,21 @@ try {
   const index = JSON.parse(await readFile(INDEX, 'utf8'));
   const commits = { m4c: index.activeProfileCommits?.[M4C], m4b: index.activeProfileCommits?.[M4B] };
   if (!commits.m4c || !commits.m4b) throw new Error('Run M4b and M4c archive commands before visual capture.');
+  const m4bComparisonCommits = Object.fromEntries(VIDEO_SCENARIOS.map((scenarioId) => {
+    if (scenarioId !== 'possession-retained') return [scenarioId, commits.m4b];
+    const rows = index.records.filter((row) => row.scenarioId === scenarioId && row.seed === SEED
+      && row.simulationVersion === M4B && row.behaviorVersion === 'm4b');
+    const sourceCommit = rows[0]?.sourceCommit;
+    if (!sourceCommit || ENGINES.some((engine) => !rows.some((row) => row.engine === engine))) {
+      throw new Error('Missing full-rate M4b-policy replay for the matched possession-retention fixture.');
+    }
+    return [scenarioId, sourceCommit];
+  }));
   for (const scenarioId of SCREENSHOT_SCENARIOS) for (const engine of ENGINES) {
     if (!getRecord(index, scenarioId, engine, M4C, commits.m4c)) throw new Error(`Missing M4c screenshot replay: ${scenarioId}/${engine}`);
   }
   for (const scenarioId of VIDEO_SCENARIOS) for (const engine of ENGINES) {
-    if (!getRecord(index, scenarioId, engine, M4B, commits.m4b)) throw new Error(`Missing M4b comparison replay: ${scenarioId}/${engine}`);
+    if (!getRecord(index, scenarioId, engine, M4B, m4bComparisonCommits[scenarioId])) throw new Error(`Missing M4b comparison replay: ${scenarioId}/${engine}`);
   }
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
   const port = server.address().port;
@@ -95,9 +105,11 @@ try {
   })();
   const videoRows = new Map();
   for (const scenarioId of VIDEO_SCENARIOS) for (const engine of ENGINES) {
+    const leftVersion = `${M4B}|${m4bComparisonCommits[scenarioId]}`;
+    const rightVersion = `${M4C}|${commits.m4c}`;
     await page.evaluate(async (value) => window.__m4bArchive.loadSelection(value), { scenarioId, seed: SEED,
-      leftEngine: engine, rightEngine: engine, leftVersion: `${M4B}|${commits.m4b}`,
-      rightVersion: `${M4C}|${commits.m4c}`, camera: 'sideline' });
+      leftEngine: engine, rightEngine: engine, leftVersion,
+      rightVersion, camera: 'sideline' });
     const duration = await page.evaluate(() => Math.min(window.__m4bArchive.current.leftReplay.payload.replay.durationSeconds,
       window.__m4bArchive.current.rightReplay.payload.replay.durationSeconds));
     const frameCount = Math.floor(duration * FPS) + 1;
@@ -106,14 +118,14 @@ try {
       await page.evaluate((time) => window.__m4bArchive.drawAt(time), Math.min(duration, frame / FPS));
       await page.locator('.viewers').screenshot({ path: path.join(frameDirectory, `frame-${String(frame).padStart(5, '0')}.png`), animations: 'disabled' });
     }
-    const filename = `${engine}-${commits.m4b.slice(0, 10)}-vs-${commits.m4c.slice(0, 10)}-seed-${SEED}-sideline.webm`;
+    const filename = `${engine}-${m4bComparisonCommits[scenarioId].slice(0, 10)}-vs-${commits.m4c.slice(0, 10)}-seed-${SEED}-sideline.webm`;
     const destination = path.join(HERE, 'videos', 'm4c', scenarioId, filename);
     await ensureNew(destination); await mkdir(path.dirname(destination), { recursive: true });
     execFileSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-framerate', String(FPS), '-i',
       path.join(frameDirectory, 'frame-%05d.png'), '-c:v', 'libvpx-vp9', '-deadline', 'realtime', '-cpu-used', '5',
       '-b:v', '900k', '-pix_fmt', 'yuv420p', '-an', destination], { stdio: 'pipe' });
     const relative = `../videos/m4c/${scenarioId}/${filename}`;
-    videoRows.set(`${scenarioId}|${engine}|${M4B}|${commits.m4b}`, relative);
+    videoRows.set(`${scenarioId}|${engine}|${M4B}|${m4bComparisonCommits[scenarioId]}`, relative);
     videoRows.set(`${scenarioId}|${engine}|${M4C}|${commits.m4c}`, relative);
   }
 
@@ -127,7 +139,7 @@ try {
   index.generatedAt = new Date().toISOString();
   index.m4cVisualArtifacts = { sourceCommit: commits.m4c, fixedCameraTimeSeconds: 0.8, screenshotCameras: CAMERAS,
     comparisonVideoCamera: 'sideline', comparisonVideoFps: FPS, comparisonVideoCodec: 'VP9 WebM',
-    screenshotScenarioIds: SCREENSHOT_SCENARIOS, comparisonScenarioIds: VIDEO_SCENARIOS };
+    screenshotScenarioIds: SCREENSHOT_SCENARIOS, comparisonScenarioIds: VIDEO_SCENARIOS, m4bComparisonCommits };
   await writeFile(INDEX, `${JSON.stringify(index, null, 2)}\n`);
   if (errors.length) throw new Error(`Browser reported errors:\n${errors.join('\n')}`);
   console.log(JSON.stringify({ screenshotCount: screenshotRows.size * CAMERAS.length,
