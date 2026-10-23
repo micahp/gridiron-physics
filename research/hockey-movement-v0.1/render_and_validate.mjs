@@ -13,6 +13,7 @@ const archiveDir = join(here, 'archive');
 const manifest = JSON.parse(await readFile(join(archiveDir, 'manifest.json'), 'utf8'));
 const entry = manifest.archives.at(-1);
 if (!entry) throw new Error('No registered scenario archive');
+if (entry.archive_id !== 'jc-2026-10-23-v1') throw new Error(`Expected the immutable JC archive, found ${entry.archive_id || 'no archive ID'}`);
 const archiveBytes = await readFile(join(archiveDir, entry.archive_file));
 const digest = createHash('sha256').update(archiveBytes).digest('hex');
 if (digest !== entry.archive_sha256) throw new Error('Registered scenario archive SHA-256 mismatch');
@@ -22,7 +23,7 @@ const playwrightModule = process.env.PLAYWRIGHT_MODULE || '/root/legendarypicks/
 const require = createRequire(join('/root/legendarypicks', 'package.json'));
 const { chromium } = require(playwrightModule);
 const baseUrl = process.argv[2] || 'http://127.0.0.1:8099/research/hockey-movement-v0.1/viewer/';
-const outputDir = join(archiveDir, 'clips', entry.legendarypicks_git_commit.slice(0, 12));
+const outputDir = join(archiveDir, 'clips', entry.archive_id);
 const videoTemp = join(outputDir, 'tmp');
 await mkdir(outputDir, { recursive: true });
 await rm(videoTemp, { recursive: true, force: true });
@@ -70,10 +71,29 @@ const p1Scenario = scenarioOptions.find((o) => {
 }) || scenarioOptions[0];
 await page.locator('#scenario').selectOption(p1Scenario.value);
 const scenarioData = archivePayload.scenarios[p1Scenario.value];
+if (!archivePayload.joint_coherence?.scenario_ids?.includes(p1Scenario.value)) throw new Error('Selected visual scenario is outside the frozen JC population');
 const focusTeam = scenarioData.period_one_goalie_right_team;
 if (scenarioData.period === 'P1' && focusTeam) await page.locator('#focus-team').selectOption(focusTeam);
 const modelSelectors = page.locator('.panel-head select');
 if (await modelSelectors.count() !== 4) throw new Error('Expected four independently selectable replay panes');
+await page.locator('#scrub').evaluate((element) => { element.value = '1'; element.dispatchEvent(new Event('input', { bubbles: true })); });
+const firstGroupFrame = scenarioData.frames.find((frame) => frame.step === 1)?.joint_coherence;
+if (!firstGroupFrame?.eligible) throw new Error('Selected JC visual scenario has no eligible +1 group measurement');
+if (await page.locator('#group-metrics .group-metric-table tbody tr').count() !== 3) throw new Error('JC group panel did not display all three models');
+const groupPanelText = await page.locator('#group-metrics').innerText();
+if (!groupPanelText.includes('Scored at +1 ordinal increment (not seconds)') || !groupPanelText.includes(firstGroupFrame.models.M0.centroid_pooled_error_ft.toFixed(2))) {
+  throw new Error('JC group panel does not match the frozen +1 measurement');
+}
+await page.locator('#scrub').evaluate((element) => { element.value = '45'; element.dispatchEvent(new Event('input', { bubbles: true })); });
+const finalGroupFrame = scenarioData.frames.find((frame) => frame.step === 45)?.joint_coherence;
+if (!finalGroupFrame || await page.locator('#group-metrics .group-metric-table tbody tr').count() !== 3) throw new Error('JC group panel failed to scrub to +45');
+const outsideScenario = scenarioOptions.find((option) => !archivePayload.joint_coherence.scenario_ids.includes(option.value));
+if (!outsideScenario) throw new Error('No category-only scenario available to check the unavailable state');
+await page.locator('#scenario').selectOption(outsideScenario.value);
+await page.locator('#scrub').evaluate((element) => { element.value = '1'; element.dispatchEvent(new Event('input', { bubbles: true })); });
+if (!(await page.locator('#group-metrics').innerText()).includes('not in the frozen 200-start JC evaluation')) throw new Error('Unscored category scenario did not show an explicit unavailable state');
+await page.locator('#scenario').selectOption(p1Scenario.value);
+await page.locator('#scrub').evaluate((element) => { element.value = '0'; element.dispatchEvent(new Event('input', { bubbles: true })); });
 await modelSelectors.nth(0).selectOption('M1');
 await modelSelectors.nth(0).selectOption('Observed');
 for (const id of ['trails', 'vectors', 'distances', 'uncertainty']) {
@@ -177,12 +197,20 @@ for (const category of frozenCategories) {
 await rm(videoTemp, { recursive: true, force: true });
 if (pageErrors.length || errors.length) throw new Error(JSON.stringify({ pageErrors, consoleErrors: errors }, null, 2));
 if (clips.length < 3) throw new Error(`Too few representative replay clips rendered: ${clips.length}`);
+if (unavailable.length) throw new Error(`Missing required JC visual categories: ${unavailable.join(', ')}`);
 const gridironCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
 const result = {
   viewer: 'research/hockey-movement-v0.1/viewer/',
+  archive_id: entry.archive_id,
   versioned_archive: entry.archive_file,
   archive_sha256: entry.archive_sha256,
+  preregistration_sha256: archivePayload.joint_coherence.preregistration_sha256,
+  preregistration_commits: archivePayload.joint_coherence.preregistration_commits,
+  joint_coherence_results_sha256: archivePayload.joint_coherence.results_sha256,
+  joint_coherence_evaluation_commit: archivePayload.joint_coherence.evaluation_commit,
+  source_prediction_archive_sha256: archivePayload.source_hashes.scenario_archive,
   legendarypicks_code_commit: entry.legendarypicks_git_commit,
+  legendarypicks_evaluation_commit: archivePayload.joint_coherence.evaluation_commit,
   gridiron_movement_engine_commit: entry.gridiron_movement_engine_commit,
   gridiron_validation_commit: gridironCommit,
   browser_version: browserVersion,
@@ -190,6 +218,17 @@ const result = {
   console_errors: errors,
   panels,
   scenario_count: scenarioCount,
+  validated_scenario_id: p1Scenario.value,
+  validated_input_cutoff_image_id: scenarioData.cutoff_image_id,
+  validated_prediction_horizon_ordinal_steps_not_seconds: scenarioData.horizon_ordinal_steps,
+  validated_group_metric_steps_ordinal_increments_not_seconds: [1, 45],
+  uncertainty_status_at_step_15: {
+    tracking_confidence: scenarioData.tracking_confidence,
+    personnel_completeness: scenarioData.personnel_completeness,
+    identity_conflicts_quarantined: scenarioData.identity_conflicts_quarantined,
+    missing_xy_count: scenarioData.frames.find((frame) => frame.step === 15)?.observed?.missing_xy_count ?? null,
+    conflicted_present: scenarioData.frames.find((frame) => frame.step === 15)?.observed?.conflicted_present ?? null,
+  },
   in_browser_policy_max_path_difference_ft: parity,
   per_player_error_rows_at_step_15: errorRows,
   screenshots: ['viewer-topdown.png', 'viewer-rink-side.png', 'viewer-topdown-step15.png', 'viewer-rink-side-step15.png'],
@@ -198,6 +237,6 @@ const result = {
   visual_transform: 'Observed rink XY; period-one attack-right transform only when orientation metadata exists',
   timebase: 'ordinal Image Id increments; no validated seconds',
 };
-const manifestPath = join(archiveDir, `visual-validation-${gridironCommit.slice(0, 12)}.json`);
+const manifestPath = join(archiveDir, `visual-validation-${entry.archive_id}.json`);
 await writeFile(manifestPath, JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
 console.log(JSON.stringify(result, null, 2));

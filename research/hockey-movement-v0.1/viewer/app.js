@@ -94,13 +94,45 @@ function drawErrors(step){
   $('errors').innerHTML=`<div class="error-list">${rows.slice(0,100).map(r=>`<div class="error-row"><span>${r.team||'—'} · ${r.id.split('|').at(-1)} · ${r.model}</span><span>${r.error.toFixed(2)} ft</span></div>`).join('')}${rows.length?`<p>Shown only where a future observed label exists. ${rows.length} model/player comparisons.</p>`:'No observed position labels at this step.'}<p class="${f.observed?.missing_xy_count||f.observed?.conflicted_present?'missing':''}">Missing XY rows: ${f.observed?.missing_xy_count??'not observed'} · conflicted identity present: ${f.observed?.conflicted_present??'not observed'}</p></div>`;
 }
 
-function draw(){if(!scenario)return;const step=Number($('scrub').value);for(const p of panels)drawView(p,step);drawErrors(step);const f=frameAt(step);$('frame-label').textContent=`${step} ordinal steps · ${f.image_id||scenario.cutoff_image_id} · cutoff ${scenario.cutoff_image_id}`}
+function metric(value){return Number.isFinite(value)?value.toFixed(2):'—'}
+
+function drawGroupMetrics(step){
+  const host=$('group-metrics');
+  const meta=archive.joint_coherence;
+  if(!meta?.scenario_ids?.includes(scenario.scenario_id)){
+    host.innerHTML='<p class="group-metric-unavailable">This scenario was not in the frozen 200-start JC evaluation.</p>';
+    return;
+  }
+  if(step===0){
+    host.innerHTML='<p class="group-metric-status">Cutoff state. Group scores begin at +1 ordinal increment (not seconds).</p><p class="group-metric-meta">No future positions are scored at the input cutoff.</p>';
+    return;
+  }
+  const score=frameAt(step)?.joint_coherence;
+  if(!score){host.innerHTML='<p class="group-metric-unavailable">JC record unavailable for this step.</p>';return}
+  const c=score.counts||{};
+  const coverage=`Common skaters H/A ${c.common_home_skaters??'—'}/${c.common_away_skaters??'—'}; within-team pairs H/A ${c.home_within_team_pairs??'—'}/${c.away_within_team_pairs??'—'}; all pairs ${c.all_unique_pairs??'—'}.`;
+  if(!score.eligible){
+    host.innerHTML=`<p class="group-metric-status">Not eligible at +${step} ordinal increment (not seconds): ${score.exclusion_reason||'group eligibility rule not met'}.</p><p class="group-metric-meta">${coverage} Missing labels are not imputed. Frozen result SHA-256: ${meta.results_sha256.slice(0,16)}…</p>`;
+    return;
+  }
+  const rows=['M0','M1','M2'].map(name=>{
+    const m=score.models?.[name];
+    if(!m)return `<tr><th>${name}</th><td colspan="4">Unavailable</td></tr>`;
+    const signed=m.nearest_opponent_signed_gaps_by_quantile_ft||{};
+    const q=['0.1','0.25','0.5','0.75','0.9'].map(k=>metric(signed[k])).join(' / ');
+    return `<tr><th>${name}</th><td>${metric(m.centroid_pooled_error_ft)}<br>H/A ${metric(m.centroid_home_error_ft)} / ${metric(m.centroid_away_error_ft)}</td><td>${metric(m.team_spacing_error_ft)}<br>signed H/A ${metric(m.team_spacing_signed_home_bias_ft)} / ${metric(m.team_spacing_signed_away_bias_ft)}</td><td>${metric(m.pair_distance_error_mean_ft)} / ${metric(m.pair_distance_error_p90_ft)}<br>n=${c.all_unique_pairs??'—'}</td><td>${metric(m.nearest_opponent_quantile_gap_ft)}<br>signed q10/25/50/75/90 ${q}</td></tr>`;
+  }).join('');
+  host.innerHTML=`<p class="group-metric-status">Scored at +${step} ordinal increment (not seconds) · ${coverage}</p><p class="group-metric-meta">Errors and signed biases are rink-coordinate feet. Centroid cell is pooled, then Home/Away. JC result SHA-256 ${meta.results_sha256.slice(0,16)}… · evaluation commit ${meta.evaluation_commit.slice(0,12)}.</p><div class="group-metric-scroll"><table class="group-metric-table"><thead><tr><th>Model</th><th>Centroid error, ft</th><th>Spacing error / signed, ft</th><th>All-pair mean / P90, ft</th><th>Nearest-opponent gap / signed quantiles, ft</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function draw(){if(!scenario)return;const step=Number($('scrub').value);for(const p of panels)drawView(p,step);drawErrors(step);drawGroupMetrics(step);const f=frameAt(step);$('frame-label').textContent=`${step} ordinal steps · ${f.image_id||scenario.cutoff_image_id} · cutoff ${scenario.cutoff_image_id}`}
 
 function setCamera(mode){for(const v of panels){if(mode==='top'){v.camera.position.set(0,0,190);v.camera.up.set(0,1,0);v.controls.enabled=false}else if(mode==='side'){v.camera.position.set(0,-145,100);v.camera.up.set(0,0,1);v.controls.enabled=false}else{v.camera.position.set(0,-145,135);v.camera.up.set(0,0,1);v.controls.enabled=true}v.camera.lookAt(0,0,0);v.controls.target.set(0,0,0);v.controls.update()}}
 
 function provenance(){const meta={scenario_id:scenario.scenario_id,categories:scenario.categories,label:scenario.label,game:scenario.game,period:scenario.period,
   input_cutoff:scenario.cutoff_image_id,prediction_horizon_ordinal_steps:scenario.horizon_ordinal_steps,seed:scenario.random_seed,
-  git_commit:archive.git_commit,source_manifest_sha256:scenario.source_manifest_sha256,source_hashes:archive.source_hashes,
+  git_commit:archive.git_commit,archive_id:archive.joint_coherence?.archive_id,source_manifest_sha256:scenario.source_manifest_sha256,source_hashes:archive.source_hashes,
+  joint_coherence:archive.joint_coherence?{milestone:'JC',preregistration_sha256:archive.joint_coherence.preregistration_sha256,results_sha256:archive.joint_coherence.results_sha256,evaluation_commit:archive.joint_coherence.evaluation_commit}:null,
   model_version:scenario.model_version,timebase_validated:scenario.timebase_validated,identity_conflicts_quarantined:scenario.identity_conflicts_quarantined,
     period_one_goalie_right_team:scenario.period_one_goalie_right_team,display_transform:$('transform').value,focus_team:$('focus-team').value,
     policy_configuration:scenario.policy_config,constraints:scenario.constraints};
