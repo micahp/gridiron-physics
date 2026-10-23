@@ -1,0 +1,6965 @@
+{
+  "seeds": 200,
+  "offsets": [
+    -10,
+    -5,
+    5,
+    10
+  ],
+  "engine_used_attributes": [
+    "AGI",
+    "AWR",
+    "BSH",
+    "BTK",
+    "CIT",
+    "CTH",
+    "ELU",
+    "FMV",
+    "KPW",
+    "PBK",
+    "PMV",
+    "RBK",
+    "STR",
+    "TAK",
+    "THA",
+    "THP"
+  ],
+  "null_test": {
+    "ACC": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "BCV": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "CAR": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "IBL": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "INJ": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "JMP": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "KAC": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "MCV": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "POW": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "PRC": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "PRS": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "PUR": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "RET": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "RTE": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "SPC": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "SPD": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "STA": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "TRK": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    },
+    "ZCV": {
+      "seeds": 200,
+      "plays_with_any_change": 0,
+      "offset": 10,
+      "player": "00-0035676"
+    }
+  },
+  "examples": [
+    {
+      "label": "Drake Maye, throwing accuracy (THA)",
+      "scenario": "pass_ne_at_chi",
+      "player_id": "00-0039851",
+      "player_name": "Drake Maye",
+      "placed": {
+        "side": "offense",
+        "slot": "QB"
+      },
+      "attribute": "THA",
+      "baseline": {
+        "throws": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "catch": {
+          "total": 133,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "drop": {
+          "total": 67,
+          "plays_with_event": 67,
+          "share": 0.335,
+          "ci95": [
+            0.2732398096874265,
+            0.4029793722656195
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "shed": {
+          "total": 275,
+          "plays_with_event": 150,
+          "share": 0.75,
+          "ci95": [
+            0.6856577652038048,
+            0.8049192318370347
+          ]
+        },
+        "tackle_attempts": {
+          "total": 208,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "tackle_success": {
+          "total": 132,
+          "plays_with_event": 132,
+          "share": 0.66,
+          "ci95": [
+            0.5918836703220929,
+            0.7220856077840445
+          ]
+        },
+        "broken_tackle": {
+          "total": 76,
+          "plays_with_event": 46,
+          "share": 0.23,
+          "ci95": [
+            0.1770925624139232,
+            0.2930842807819702
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 96,
+          "rating_baseline": 91,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 133,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "drop": {
+              "total": 67,
+              "plays_with_event": 67,
+              "share": 0.335,
+              "ci95": [
+                0.2732398096874265,
+                0.4029793722656195
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 150,
+              "share": 0.75,
+              "ci95": [
+                0.6856577652038048,
+                0.8049192318370347
+              ]
+            },
+            "tackle_attempts": {
+              "total": 208,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "tackle_success": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "broken_tackle": {
+              "total": 76,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        },
+        "10": {
+          "value": 99,
+          "rating_baseline": 91,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 133,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "drop": {
+              "total": 67,
+              "plays_with_event": 67,
+              "share": 0.335,
+              "ci95": [
+                0.2732398096874265,
+                0.4029793722656195
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 150,
+              "share": 0.75,
+              "ci95": [
+                0.6856577652038048,
+                0.8049192318370347
+              ]
+            },
+            "tackle_attempts": {
+              "total": 208,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "tackle_success": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "broken_tackle": {
+              "total": 76,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        },
+        "-10": {
+          "value": 81,
+          "rating_baseline": 91,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "drop": {
+              "total": 68,
+              "plays_with_event": 68,
+              "share": 0.34,
+              "ci95": [
+                0.2779143922159556,
+                0.40811632967790723
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 273,
+              "plays_with_event": 149,
+              "share": 0.745,
+              "ci95": [
+                0.6803694869280502,
+                0.8003959701719726
+              ]
+            },
+            "tackle_attempts": {
+              "total": 207,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "tackle_success": {
+              "total": 131,
+              "plays_with_event": 131,
+              "share": 0.655,
+              "ci95": [
+                0.5867546071792236,
+                0.7174031309860971
+              ]
+            },
+            "broken_tackle": {
+              "total": 76,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.005,
+          "mean_rush_yards": null
+        },
+        "-5": {
+          "value": 86,
+          "rating_baseline": 91,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "drop": {
+              "total": 68,
+              "plays_with_event": 68,
+              "share": 0.34,
+              "ci95": [
+                0.2779143922159556,
+                0.40811632967790723
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 273,
+              "plays_with_event": 149,
+              "share": 0.745,
+              "ci95": [
+                0.6803694869280502,
+                0.8003959701719726
+              ]
+            },
+            "tackle_attempts": {
+              "total": 207,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "tackle_success": {
+              "total": 131,
+              "plays_with_event": 131,
+              "share": 0.655,
+              "ci95": [
+                0.5867546071792236,
+                0.7174031309860971
+              ]
+            },
+            "broken_tackle": {
+              "total": 76,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.005,
+          "mean_rush_yards": null
+        }
+      },
+      "baseline_mean_rush_yards": null
+    },
+    {
+      "label": "Drake Maye, throwing power (THP)",
+      "scenario": "pass_ne_at_chi",
+      "player_id": "00-0039851",
+      "player_name": "Drake Maye",
+      "placed": {
+        "side": "offense",
+        "slot": "QB"
+      },
+      "attribute": "THP",
+      "baseline": {
+        "throws": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "catch": {
+          "total": 133,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "drop": {
+          "total": 67,
+          "plays_with_event": 67,
+          "share": 0.335,
+          "ci95": [
+            0.2732398096874265,
+            0.4029793722656195
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "shed": {
+          "total": 275,
+          "plays_with_event": 150,
+          "share": 0.75,
+          "ci95": [
+            0.6856577652038048,
+            0.8049192318370347
+          ]
+        },
+        "tackle_attempts": {
+          "total": 208,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "tackle_success": {
+          "total": 132,
+          "plays_with_event": 132,
+          "share": 0.66,
+          "ci95": [
+            0.5918836703220929,
+            0.7220856077840445
+          ]
+        },
+        "broken_tackle": {
+          "total": 76,
+          "plays_with_event": 46,
+          "share": 0.23,
+          "ci95": [
+            0.1770925624139232,
+            0.2930842807819702
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 98,
+          "rating_baseline": 93,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 116,
+              "plays_with_event": 116,
+              "share": 0.58,
+              "ci95": [
+                0.5107194625547862,
+                0.6462651764982825
+              ]
+            },
+            "drop": {
+              "total": 84,
+              "plays_with_event": 84,
+              "share": 0.42,
+              "ci95": [
+                0.3537348235017175,
+                0.48928053744521394
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 245,
+              "plays_with_event": 144,
+              "share": 0.72,
+              "ci95": [
+                0.6540756858222899,
+                0.7776320715736488
+              ]
+            },
+            "tackle_attempts": {
+              "total": 170,
+              "plays_with_event": 116,
+              "share": 0.58,
+              "ci95": [
+                0.5107194625547862,
+                0.6462651764982825
+              ]
+            },
+            "tackle_success": {
+              "total": 116,
+              "plays_with_event": 116,
+              "share": 0.58,
+              "ci95": [
+                0.5107194625547862,
+                0.6462651764982825
+              ]
+            },
+            "broken_tackle": {
+              "total": 54,
+              "plays_with_event": 38,
+              "share": 0.19,
+              "ci95": [
+                0.14167093792456506,
+                0.250013585744794
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.485,
+          "any_output_change_rate": 0.68,
+          "mean_rush_yards": null
+        },
+        "10": {
+          "value": 99,
+          "rating_baseline": 93,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 122,
+              "plays_with_event": 122,
+              "share": 0.61,
+              "ci95": [
+                0.5409361758928832,
+                0.6749177028050861
+              ]
+            },
+            "drop": {
+              "total": 78,
+              "plays_with_event": 78,
+              "share": 0.39,
+              "ci95": [
+                0.325082297194914,
+                0.45906382410711677
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 251,
+              "plays_with_event": 146,
+              "share": 0.73,
+              "ci95": [
+                0.664564384587978,
+                0.7867664526895944
+              ]
+            },
+            "tackle_attempts": {
+              "total": 176,
+              "plays_with_event": 122,
+              "share": 0.61,
+              "ci95": [
+                0.5409361758928832,
+                0.6749177028050861
+              ]
+            },
+            "tackle_success": {
+              "total": 122,
+              "plays_with_event": 122,
+              "share": 0.61,
+              "ci95": [
+                0.5409361758928832,
+                0.6749177028050861
+              ]
+            },
+            "broken_tackle": {
+              "total": 54,
+              "plays_with_event": 42,
+              "share": 0.21,
+              "ci95": [
+                0.15928329527863416,
+                0.271647388153992
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.425,
+          "any_output_change_rate": 0.625,
+          "mean_rush_yards": null
+        },
+        "-10": {
+          "value": 83,
+          "rating_baseline": 93,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 120,
+              "plays_with_event": 120,
+              "share": 0.6,
+              "ci95": [
+                0.5308354385001253,
+                0.6653953603162106
+              ]
+            },
+            "drop": {
+              "total": 80,
+              "plays_with_event": 80,
+              "share": 0.4,
+              "ci95": [
+                0.3346046396837895,
+                0.46916456149987484
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 258,
+              "plays_with_event": 147,
+              "share": 0.735,
+              "ci95": [
+                0.6698229773344888,
+                0.7913193998839003
+              ]
+            },
+            "tackle_attempts": {
+              "total": 207,
+              "plays_with_event": 120,
+              "share": 0.6,
+              "ci95": [
+                0.5308354385001253,
+                0.6653953603162106
+              ]
+            },
+            "tackle_success": {
+              "total": 120,
+              "plays_with_event": 120,
+              "share": 0.6,
+              "ci95": [
+                0.5308354385001253,
+                0.6653953603162106
+              ]
+            },
+            "broken_tackle": {
+              "total": 87,
+              "plays_with_event": 60,
+              "share": 0.3,
+              "ci95": [
+                0.24074644243406385,
+                0.3667919599332645
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.425,
+          "any_output_change_rate": 0.68,
+          "mean_rush_yards": null
+        },
+        "-5": {
+          "value": 88,
+          "rating_baseline": 93,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 130,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "drop": {
+              "total": 70,
+              "plays_with_event": 70,
+              "share": 0.35,
+              "ci95": [
+                0.28728715939415395,
+                0.41836664238134236
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 261,
+              "plays_with_event": 158,
+              "share": 0.79,
+              "ci95": [
+                0.7283526118460081,
+                0.8407167047213658
+              ]
+            },
+            "tackle_attempts": {
+              "total": 220,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "tackle_success": {
+              "total": 130,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "broken_tackle": {
+              "total": 90,
+              "plays_with_event": 66,
+              "share": 0.33,
+              "ci95": [
+                0.26857320614303315,
+                0.3978344358691961
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.365,
+          "any_output_change_rate": 0.645,
+          "mean_rush_yards": null
+        }
+      },
+      "baseline_mean_rush_yards": null
+    },
+    {
+      "label": "Rome Odunze, catching (CTH)",
+      "scenario": "catch_chi_at_ne",
+      "player_id": "00-0039919",
+      "player_name": "Rome Odunze",
+      "placed": {
+        "side": "offense",
+        "slot": "WR1"
+      },
+      "attribute": "CTH",
+      "baseline": {
+        "throws": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "catch": {
+          "total": 112,
+          "plays_with_event": 112,
+          "share": 0.56,
+          "ci95": [
+            0.4907154834956251,
+            0.6270229957941764
+          ]
+        },
+        "drop": {
+          "total": 88,
+          "plays_with_event": 88,
+          "share": 0.44,
+          "ci95": [
+            0.3729770042058236,
+            0.509284516504375
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "shed": {
+          "total": 275,
+          "plays_with_event": 139,
+          "share": 0.695,
+          "ci95": [
+            0.6280132012185453,
+            0.7546368564733095
+          ]
+        },
+        "tackle_attempts": {
+          "total": 186,
+          "plays_with_event": 112,
+          "share": 0.56,
+          "ci95": [
+            0.4907154834956251,
+            0.6270229957941764
+          ]
+        },
+        "tackle_success": {
+          "total": 112,
+          "plays_with_event": 112,
+          "share": 0.56,
+          "ci95": [
+            0.4907154834956251,
+            0.6270229957941764
+          ]
+        },
+        "broken_tackle": {
+          "total": 74,
+          "plays_with_event": 50,
+          "share": 0.25,
+          "ci95": [
+            0.19508076816296532,
+            0.3143422347961952
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 72,
+          "rating_baseline": 67,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 117,
+              "plays_with_event": 117,
+              "share": 0.585,
+              "ci95": [
+                0.5157378707263818,
+                0.6510583082675037
+              ]
+            },
+            "drop": {
+              "total": 83,
+              "plays_with_event": 83,
+              "share": 0.415,
+              "ci95": [
+                0.3489416917324964,
+                0.48426212927361817
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 281,
+              "plays_with_event": 143,
+              "share": 0.715,
+              "ci95": [
+                0.648845269187895,
+                0.773050948267227
+              ]
+            },
+            "tackle_attempts": {
+              "total": 192,
+              "plays_with_event": 117,
+              "share": 0.585,
+              "ci95": [
+                0.5157378707263818,
+                0.6510583082675037
+              ]
+            },
+            "tackle_success": {
+              "total": 117,
+              "plays_with_event": 117,
+              "share": 0.585,
+              "ci95": [
+                0.5157378707263818,
+                0.6510583082675037
+              ]
+            },
+            "broken_tackle": {
+              "total": 75,
+              "plays_with_event": 51,
+              "share": 0.255,
+              "ci95": [
+                0.19960402982802747,
+                0.3196305130719498
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.025,
+          "any_output_change_rate": 0.025,
+          "mean_rush_yards": null
+        },
+        "10": {
+          "value": 77,
+          "rating_baseline": 67,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 130,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "drop": {
+              "total": 70,
+              "plays_with_event": 70,
+              "share": 0.35,
+              "ci95": [
+                0.28728715939415395,
+                0.41836664238134236
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 298,
+              "plays_with_event": 149,
+              "share": 0.745,
+              "ci95": [
+                0.6803694869280502,
+                0.8003959701719726
+              ]
+            },
+            "tackle_attempts": {
+              "total": 211,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "tackle_success": {
+              "total": 130,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "broken_tackle": {
+              "total": 81,
+              "plays_with_event": 57,
+              "share": 0.285,
+              "ci95": [
+                0.22694905173277297,
+                0.3511547308121051
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.09,
+          "any_output_change_rate": 0.09,
+          "mean_rush_yards": null
+        },
+        "-10": {
+          "value": 57,
+          "rating_baseline": 67,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 91,
+              "plays_with_event": 91,
+              "share": 0.455,
+              "ci95": [
+                0.38748099090226035,
+                0.5242151496303886
+              ]
+            },
+            "drop": {
+              "total": 109,
+              "plays_with_event": 109,
+              "share": 0.545,
+              "ci95": [
+                0.4757848503696115,
+                0.6125190090977398
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 245,
+              "plays_with_event": 128,
+              "share": 0.64,
+              "ci95": [
+                0.5714139956562682,
+                0.7033091226866021
+              ]
+            },
+            "tackle_attempts": {
+              "total": 149,
+              "plays_with_event": 91,
+              "share": 0.455,
+              "ci95": [
+                0.38748099090226035,
+                0.5242151496303886
+              ]
+            },
+            "tackle_success": {
+              "total": 91,
+              "plays_with_event": 91,
+              "share": 0.455,
+              "ci95": [
+                0.38748099090226035,
+                0.5242151496303886
+              ]
+            },
+            "broken_tackle": {
+              "total": 58,
+              "plays_with_event": 40,
+              "share": 0.2,
+              "ci95": [
+                0.15045120743928825,
+                0.26085639611170436
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.105,
+          "any_output_change_rate": 0.105,
+          "mean_rush_yards": null
+        },
+        "-5": {
+          "value": 62,
+          "rating_baseline": 67,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 103,
+              "plays_with_event": 103,
+              "share": 0.515,
+              "ci95": [
+                0.44610724474630287,
+                0.5833273750761476
+              ]
+            },
+            "drop": {
+              "total": 97,
+              "plays_with_event": 97,
+              "share": 0.485,
+              "ci95": [
+                0.4166726249238525,
+                0.5538927552536972
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 257,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "tackle_attempts": {
+              "total": 171,
+              "plays_with_event": 103,
+              "share": 0.515,
+              "ci95": [
+                0.44610724474630287,
+                0.5833273750761476
+              ]
+            },
+            "tackle_success": {
+              "total": 103,
+              "plays_with_event": 103,
+              "share": 0.515,
+              "ci95": [
+                0.44610724474630287,
+                0.5833273750761476
+              ]
+            },
+            "broken_tackle": {
+              "total": 68,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.045,
+          "any_output_change_rate": 0.045,
+          "mean_rush_yards": null
+        }
+      },
+      "baseline_mean_rush_yards": null
+    },
+    {
+      "label": "NE left cornerback, interception odds (CIT, defender side)",
+      "scenario": "catch_chi_at_ne",
+      "player_id": "00-0039147",
+      "player_name": "Christian Gonzalez",
+      "placed": {
+        "side": "defense",
+        "slot": "LCB"
+      },
+      "attribute": "CIT",
+      "baseline": {
+        "throws": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "catch": {
+          "total": 112,
+          "plays_with_event": 112,
+          "share": 0.56,
+          "ci95": [
+            0.4907154834956251,
+            0.6270229957941764
+          ]
+        },
+        "drop": {
+          "total": 88,
+          "plays_with_event": 88,
+          "share": 0.44,
+          "ci95": [
+            0.3729770042058236,
+            0.509284516504375
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "shed": {
+          "total": 275,
+          "plays_with_event": 139,
+          "share": 0.695,
+          "ci95": [
+            0.6280132012185453,
+            0.7546368564733095
+          ]
+        },
+        "tackle_attempts": {
+          "total": 186,
+          "plays_with_event": 112,
+          "share": 0.56,
+          "ci95": [
+            0.4907154834956251,
+            0.6270229957941764
+          ]
+        },
+        "tackle_success": {
+          "total": 112,
+          "plays_with_event": 112,
+          "share": 0.56,
+          "ci95": [
+            0.4907154834956251,
+            0.6270229957941764
+          ]
+        },
+        "broken_tackle": {
+          "total": 74,
+          "plays_with_event": 50,
+          "share": 0.25,
+          "ci95": [
+            0.19508076816296532,
+            0.3143422347961952
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 53,
+          "rating_baseline": 48,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "drop": {
+              "total": 88,
+              "plays_with_event": 88,
+              "share": 0.44,
+              "ci95": [
+                0.3729770042058236,
+                0.509284516504375
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 139,
+              "share": 0.695,
+              "ci95": [
+                0.6280132012185453,
+                0.7546368564733095
+              ]
+            },
+            "tackle_attempts": {
+              "total": 186,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "tackle_success": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "broken_tackle": {
+              "total": 74,
+              "plays_with_event": 50,
+              "share": 0.25,
+              "ci95": [
+                0.19508076816296532,
+                0.3143422347961952
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        },
+        "10": {
+          "value": 58,
+          "rating_baseline": 48,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "drop": {
+              "total": 88,
+              "plays_with_event": 88,
+              "share": 0.44,
+              "ci95": [
+                0.3729770042058236,
+                0.509284516504375
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 139,
+              "share": 0.695,
+              "ci95": [
+                0.6280132012185453,
+                0.7546368564733095
+              ]
+            },
+            "tackle_attempts": {
+              "total": 186,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "tackle_success": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "broken_tackle": {
+              "total": 74,
+              "plays_with_event": 50,
+              "share": 0.25,
+              "ci95": [
+                0.19508076816296532,
+                0.3143422347961952
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        },
+        "-10": {
+          "value": 38,
+          "rating_baseline": 48,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "drop": {
+              "total": 88,
+              "plays_with_event": 88,
+              "share": 0.44,
+              "ci95": [
+                0.3729770042058236,
+                0.509284516504375
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 139,
+              "share": 0.695,
+              "ci95": [
+                0.6280132012185453,
+                0.7546368564733095
+              ]
+            },
+            "tackle_attempts": {
+              "total": 186,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "tackle_success": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "broken_tackle": {
+              "total": 74,
+              "plays_with_event": 50,
+              "share": 0.25,
+              "ci95": [
+                0.19508076816296532,
+                0.3143422347961952
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        },
+        "-5": {
+          "value": 43,
+          "rating_baseline": 48,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "drop": {
+              "total": 88,
+              "plays_with_event": 88,
+              "share": 0.44,
+              "ci95": [
+                0.3729770042058236,
+                0.509284516504375
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 139,
+              "share": 0.695,
+              "ci95": [
+                0.6280132012185453,
+                0.7546368564733095
+              ]
+            },
+            "tackle_attempts": {
+              "total": 186,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "tackle_success": {
+              "total": 112,
+              "plays_with_event": 112,
+              "share": 0.56,
+              "ci95": [
+                0.4907154834956251,
+                0.6270229957941764
+              ]
+            },
+            "broken_tackle": {
+              "total": 74,
+              "plays_with_event": 50,
+              "share": 0.25,
+              "ci95": [
+                0.19508076816296532,
+                0.3143422347961952
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        }
+      },
+      "baseline_mean_rush_yards": null
+    },
+    {
+      "label": "TreVeyon Henderson, break tackle (BTK)",
+      "scenario": "run_ne_at_chi",
+      "player_id": "00-0040734",
+      "player_name": "TreVeyon Henderson",
+      "placed": {
+        "side": "offense",
+        "slot": "RB"
+      },
+      "attribute": "BTK",
+      "baseline": {
+        "throws": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "drop": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 1878,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "shed": {
+          "total": 349,
+          "plays_with_event": 167,
+          "share": 0.835,
+          "ci95": [
+            0.7773410172613647,
+            0.8800321587733603
+          ]
+        },
+        "tackle_attempts": {
+          "total": 305,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "tackle_success": {
+          "total": 199,
+          "plays_with_event": 199,
+          "share": 0.995,
+          "ci95": [
+            0.9722256001302286,
+            0.999116854010634
+          ]
+        },
+        "broken_tackle": {
+          "total": 106,
+          "plays_with_event": 63,
+          "share": 0.315,
+          "ci95": [
+            0.25462218077944276,
+            0.38235084141033604
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 77,
+          "rating_baseline": 72,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1891,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 361,
+              "plays_with_event": 166,
+              "share": 0.83,
+              "ci95": [
+                0.7718399896049648,
+                0.8757216464889435
+              ]
+            },
+            "tackle_attempts": {
+              "total": 307,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 198,
+              "plays_with_event": 198,
+              "share": 0.99,
+              "ci95": [
+                0.9642775148038205,
+                0.9972533993962251
+              ]
+            },
+            "broken_tackle": {
+              "total": 109,
+              "plays_with_event": 65,
+              "share": 0.325,
+              "ci95": [
+                0.2639146705018621,
+                0.39268143156955027
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.015,
+          "mean_rush_yards": 2.3806981638812847
+        },
+        "10": {
+          "value": 82,
+          "rating_baseline": 72,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1906,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 368,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 312,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 198,
+              "plays_with_event": 198,
+              "share": 0.99,
+              "ci95": [
+                0.9642775148038205,
+                0.9972533993962251
+              ]
+            },
+            "broken_tackle": {
+              "total": 114,
+              "plays_with_event": 69,
+              "share": 0.345,
+              "ci95": [
+                0.2825968690139029,
+                0.41324539282077655
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.055,
+          "mean_rush_yards": 2.7281163702158646
+        },
+        "-10": {
+          "value": 62,
+          "rating_baseline": 72,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1878,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 349,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 305,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 199,
+              "plays_with_event": 199,
+              "share": 0.995,
+              "ci95": [
+                0.9722256001302286,
+                0.999116854010634
+              ]
+            },
+            "broken_tackle": {
+              "total": 106,
+              "plays_with_event": 63,
+              "share": 0.315,
+              "ci95": [
+                0.25462218077944276,
+                0.38235084141033604
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": 2.06526054637041
+        },
+        "-5": {
+          "value": 67,
+          "rating_baseline": 72,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1878,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 349,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 305,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 199,
+              "plays_with_event": 199,
+              "share": 0.995,
+              "ci95": [
+                0.9722256001302286,
+                0.999116854010634
+              ]
+            },
+            "broken_tackle": {
+              "total": 106,
+              "plays_with_event": 63,
+              "share": 0.315,
+              "ci95": [
+                0.25462218077944276,
+                0.38235084141033604
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": 2.06526054637041
+        }
+      },
+      "baseline_mean_rush_yards": 2.06526054637041
+    },
+    {
+      "label": "TreVeyon Henderson, elusiveness (ELU)",
+      "scenario": "run_ne_at_chi",
+      "player_id": "00-0040734",
+      "player_name": "TreVeyon Henderson",
+      "placed": {
+        "side": "offense",
+        "slot": "RB"
+      },
+      "attribute": "ELU",
+      "baseline": {
+        "throws": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "drop": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 1878,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "shed": {
+          "total": 349,
+          "plays_with_event": 167,
+          "share": 0.835,
+          "ci95": [
+            0.7773410172613647,
+            0.8800321587733603
+          ]
+        },
+        "tackle_attempts": {
+          "total": 305,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "tackle_success": {
+          "total": 199,
+          "plays_with_event": 199,
+          "share": 0.995,
+          "ci95": [
+            0.9722256001302286,
+            0.999116854010634
+          ]
+        },
+        "broken_tackle": {
+          "total": 106,
+          "plays_with_event": 63,
+          "share": 0.315,
+          "ci95": [
+            0.25462218077944276,
+            0.38235084141033604
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 81,
+          "rating_baseline": 76,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1892,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 359,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 302,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 198,
+              "plays_with_event": 198,
+              "share": 0.99,
+              "ci95": [
+                0.9642775148038205,
+                0.9972533993962251
+              ]
+            },
+            "broken_tackle": {
+              "total": 104,
+              "plays_with_event": 68,
+              "share": 0.34,
+              "ci95": [
+                0.2779143922159556,
+                0.40811632967790723
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.015,
+          "any_output_change_rate": 1,
+          "mean_rush_yards": 2.7338814522660617
+        },
+        "10": {
+          "value": 86,
+          "rating_baseline": 76,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1988,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 430,
+              "plays_with_event": 170,
+              "share": 0.85,
+              "ci95": [
+                0.7939430617334484,
+                0.892864734123727
+              ]
+            },
+            "tackle_attempts": {
+              "total": 344,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 194,
+              "plays_with_event": 194,
+              "share": 0.97,
+              "ci95": [
+                0.9361048802675267,
+                0.9861798741692518
+              ]
+            },
+            "broken_tackle": {
+              "total": 150,
+              "plays_with_event": 82,
+              "share": 0.41,
+              "ci95": [
+                0.34415559179081295,
+                0.4792366892744849
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.025,
+          "any_output_change_rate": 1,
+          "mean_rush_yards": 4.4625225321580055
+        },
+        "-10": {
+          "value": 66,
+          "rating_baseline": 76,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1855,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 339,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 293,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "broken_tackle": {
+              "total": 93,
+              "plays_with_event": 58,
+              "share": 0.29,
+              "ci95": [
+                0.2315392689125782,
+                0.3563760535731166
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.05,
+          "mean_rush_yards": 1.6118348463099617
+        },
+        "-5": {
+          "value": 71,
+          "rating_baseline": 76,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1855,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 339,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 293,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "broken_tackle": {
+              "total": 93,
+              "plays_with_event": 58,
+              "share": 0.29,
+              "ci95": [
+                0.2315392689125782,
+                0.3563760535731166
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.05,
+          "mean_rush_yards": 1.6118348463099617
+        }
+      },
+      "baseline_mean_rush_yards": 2.06526054637041
+    },
+    {
+      "label": "CHI MLB, tackling (TAK)",
+      "scenario": "run_ne_at_chi",
+      "player_id": "00-0035525",
+      "player_name": "Devin Bush",
+      "placed": {
+        "side": "defense",
+        "slot": "MLB"
+      },
+      "attribute": "TAK",
+      "baseline": {
+        "throws": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "drop": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 1878,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "shed": {
+          "total": 349,
+          "plays_with_event": 167,
+          "share": 0.835,
+          "ci95": [
+            0.7773410172613647,
+            0.8800321587733603
+          ]
+        },
+        "tackle_attempts": {
+          "total": 305,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "tackle_success": {
+          "total": 199,
+          "plays_with_event": 199,
+          "share": 0.995,
+          "ci95": [
+            0.9722256001302286,
+            0.999116854010634
+          ]
+        },
+        "broken_tackle": {
+          "total": 106,
+          "plays_with_event": 63,
+          "share": 0.315,
+          "ci95": [
+            0.25462218077944276,
+            0.38235084141033604
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 88,
+          "rating_baseline": 83,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1872,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 342,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 303,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "broken_tackle": {
+              "total": 103,
+              "plays_with_event": 63,
+              "share": 0.315,
+              "ci95": [
+                0.25462218077944276,
+                0.38235084141033604
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.005,
+          "mean_rush_yards": 1.7535739137327377
+        },
+        "10": {
+          "value": 93,
+          "rating_baseline": 83,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1865,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 338,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 300,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "broken_tackle": {
+              "total": 100,
+              "plays_with_event": 63,
+              "share": 0.315,
+              "ci95": [
+                0.25462218077944276,
+                0.38235084141033604
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.005,
+          "any_output_change_rate": 0.01,
+          "mean_rush_yards": 1.6324743077709556
+        },
+        "-10": {
+          "value": 73,
+          "rating_baseline": 83,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1880,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 350,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 306,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 199,
+              "plays_with_event": 199,
+              "share": 0.995,
+              "ci95": [
+                0.9722256001302286,
+                0.999116854010634
+              ]
+            },
+            "broken_tackle": {
+              "total": 107,
+              "plays_with_event": 63,
+              "share": 0.315,
+              "ci95": [
+                0.25462218077944276,
+                0.38235084141033604
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0.005,
+          "mean_rush_yards": 2.064609347436259
+        },
+        "-5": {
+          "value": 78,
+          "rating_baseline": 83,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1878,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 349,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 305,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 199,
+              "plays_with_event": 199,
+              "share": 0.995,
+              "ci95": [
+                0.9722256001302286,
+                0.999116854010634
+              ]
+            },
+            "broken_tackle": {
+              "total": 106,
+              "plays_with_event": 63,
+              "share": 0.315,
+              "ci95": [
+                0.25462218077944276,
+                0.38235084141033604
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": 2.06526054637041
+        }
+      },
+      "baseline_mean_rush_yards": 2.06526054637041
+    },
+    {
+      "label": "NE left tackle, pass blocking (PBK)",
+      "scenario": "pass_ne_at_chi",
+      "player_id": "00-0031330",
+      "player_name": "Morgan Moses",
+      "placed": {
+        "side": "offense",
+        "slot": "LT"
+      },
+      "attribute": "PBK",
+      "baseline": {
+        "throws": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "catch": {
+          "total": 133,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "drop": {
+          "total": 67,
+          "plays_with_event": 67,
+          "share": 0.335,
+          "ci95": [
+            0.2732398096874265,
+            0.4029793722656195
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "shed": {
+          "total": 275,
+          "plays_with_event": 150,
+          "share": 0.75,
+          "ci95": [
+            0.6856577652038048,
+            0.8049192318370347
+          ]
+        },
+        "tackle_attempts": {
+          "total": 208,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "tackle_success": {
+          "total": 132,
+          "plays_with_event": 132,
+          "share": 0.66,
+          "ci95": [
+            0.5918836703220929,
+            0.7220856077840445
+          ]
+        },
+        "broken_tackle": {
+          "total": 76,
+          "plays_with_event": 46,
+          "share": 0.23,
+          "ci95": [
+            0.1770925624139232,
+            0.2930842807819702
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 84,
+          "rating_baseline": 79,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 130,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "drop": {
+              "total": 70,
+              "plays_with_event": 70,
+              "share": 0.35,
+              "ci95": [
+                0.28728715939415395,
+                0.41836664238134236
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 248,
+              "plays_with_event": 147,
+              "share": 0.735,
+              "ci95": [
+                0.6698229773344888,
+                0.7913193998839003
+              ]
+            },
+            "tackle_attempts": {
+              "total": 208,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "tackle_success": {
+              "total": 130,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "broken_tackle": {
+              "total": 78,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.045,
+          "any_output_change_rate": 0.215,
+          "mean_rush_yards": null
+        },
+        "10": {
+          "value": 89,
+          "rating_baseline": 79,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 130,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "drop": {
+              "total": 70,
+              "plays_with_event": 70,
+              "share": 0.35,
+              "ci95": [
+                0.28728715939415395,
+                0.41836664238134236
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 233,
+              "plays_with_event": 146,
+              "share": 0.73,
+              "ci95": [
+                0.664564384587978,
+                0.7867664526895944
+              ]
+            },
+            "tackle_attempts": {
+              "total": 207,
+              "plays_with_event": 130,
+              "share": 0.65,
+              "ci95": [
+                0.5816333576186576,
+                0.712712840605846
+              ]
+            },
+            "tackle_success": {
+              "total": 129,
+              "plays_with_event": 129,
+              "share": 0.645,
+              "ci95": [
+                0.5765198448160798,
+                0.7080148134676072
+              ]
+            },
+            "broken_tackle": {
+              "total": 78,
+              "plays_with_event": 44,
+              "share": 0.22,
+              "ci95": [
+                0.16816453539463405,
+                0.2823892279196257
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.055,
+          "any_output_change_rate": 0.285,
+          "mean_rush_yards": null
+        },
+        "-10": {
+          "value": 69,
+          "rating_baseline": 79,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 126,
+              "plays_with_event": 126,
+              "share": 0.63,
+              "ci95": [
+                0.5612250134987606,
+                0.6938750249624759
+              ]
+            },
+            "drop": {
+              "total": 74,
+              "plays_with_event": 74,
+              "share": 0.37,
+              "ci95": [
+                0.3061249750375241,
+                0.43877498650123936
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 302,
+              "plays_with_event": 155,
+              "share": 0.775,
+              "ci95": [
+                0.7122575346140798,
+                0.8273771621308439
+              ]
+            },
+            "tackle_attempts": {
+              "total": 186,
+              "plays_with_event": 126,
+              "share": 0.63,
+              "ci95": [
+                0.5612250134987606,
+                0.6938750249624759
+              ]
+            },
+            "tackle_success": {
+              "total": 126,
+              "plays_with_event": 126,
+              "share": 0.63,
+              "ci95": [
+                0.5612250134987606,
+                0.6938750249624759
+              ]
+            },
+            "broken_tackle": {
+              "total": 60,
+              "plays_with_event": 39,
+              "share": 0.195,
+              "ci95": [
+                0.14605441564505764,
+                0.25544164796511815
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.235,
+          "any_output_change_rate": 0.495,
+          "mean_rush_yards": null
+        },
+        "-5": {
+          "value": 74,
+          "rating_baseline": 79,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 127,
+              "plays_with_event": 127,
+              "share": 0.635,
+              "ci95": [
+                0.5663157405897017,
+                0.6985958378123518
+              ]
+            },
+            "drop": {
+              "total": 73,
+              "plays_with_event": 73,
+              "share": 0.365,
+              "ci95": [
+                0.3014041621876483,
+                0.4336842594102984
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 274,
+              "plays_with_event": 149,
+              "share": 0.745,
+              "ci95": [
+                0.6803694869280502,
+                0.8003959701719726
+              ]
+            },
+            "tackle_attempts": {
+              "total": 189,
+              "plays_with_event": 127,
+              "share": 0.635,
+              "ci95": [
+                0.5663157405897017,
+                0.6985958378123518
+              ]
+            },
+            "tackle_success": {
+              "total": 127,
+              "plays_with_event": 127,
+              "share": 0.635,
+              "ci95": [
+                0.5663157405897017,
+                0.6985958378123518
+              ]
+            },
+            "broken_tackle": {
+              "total": 62,
+              "plays_with_event": 41,
+              "share": 0.205,
+              "ci95": [
+                0.15486094831106376,
+                0.26625819518074556
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.25,
+          "any_output_change_rate": 0.445,
+          "mean_rush_yards": null
+        }
+      },
+      "baseline_mean_rush_yards": null
+    },
+    {
+      "label": "CHI left edge, pass rush (PMV)",
+      "scenario": "pass_ne_at_chi",
+      "player_id": "00-0039840",
+      "player_name": "Austin Booker",
+      "placed": {
+        "side": "defense",
+        "slot": "LEDGE"
+      },
+      "attribute": "PMV",
+      "baseline": {
+        "throws": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "catch": {
+          "total": 133,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "drop": {
+          "total": 67,
+          "plays_with_event": 67,
+          "share": 0.335,
+          "ci95": [
+            0.2732398096874265,
+            0.4029793722656195
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 200,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "shed": {
+          "total": 275,
+          "plays_with_event": 150,
+          "share": 0.75,
+          "ci95": [
+            0.6856577652038048,
+            0.8049192318370347
+          ]
+        },
+        "tackle_attempts": {
+          "total": 208,
+          "plays_with_event": 133,
+          "share": 0.665,
+          "ci95": [
+            0.5970206277343806,
+            0.7267601903125736
+          ]
+        },
+        "tackle_success": {
+          "total": 132,
+          "plays_with_event": 132,
+          "share": 0.66,
+          "ci95": [
+            0.5918836703220929,
+            0.7220856077840445
+          ]
+        },
+        "broken_tackle": {
+          "total": 76,
+          "plays_with_event": 46,
+          "share": 0.23,
+          "ci95": [
+            0.1770925624139232,
+            0.2930842807819702
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 93,
+          "rating_baseline": 88,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 133,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "drop": {
+              "total": 67,
+              "plays_with_event": 67,
+              "share": 0.335,
+              "ci95": [
+                0.2732398096874265,
+                0.4029793722656195
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 150,
+              "share": 0.75,
+              "ci95": [
+                0.6856577652038048,
+                0.8049192318370347
+              ]
+            },
+            "tackle_attempts": {
+              "total": 208,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "tackle_success": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "broken_tackle": {
+              "total": 76,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        },
+        "10": {
+          "value": 98,
+          "rating_baseline": 88,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 133,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "drop": {
+              "total": 67,
+              "plays_with_event": 67,
+              "share": 0.335,
+              "ci95": [
+                0.2732398096874265,
+                0.4029793722656195
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 283,
+              "plays_with_event": 154,
+              "share": 0.77,
+              "ci95": [
+                0.7069157192180299,
+                0.8229074375860769
+              ]
+            },
+            "tackle_attempts": {
+              "total": 204,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "tackle_success": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "broken_tackle": {
+              "total": 72,
+              "plays_with_event": 45,
+              "share": 0.225,
+              "ci95": [
+                0.17262283786915622,
+                0.28774246538592035
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.02,
+          "any_output_change_rate": 0.125,
+          "mean_rush_yards": null
+        },
+        "-10": {
+          "value": 78,
+          "rating_baseline": 88,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 133,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "drop": {
+              "total": 67,
+              "plays_with_event": 67,
+              "share": 0.335,
+              "ci95": [
+                0.2732398096874265,
+                0.4029793722656195
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 150,
+              "share": 0.75,
+              "ci95": [
+                0.6856577652038048,
+                0.8049192318370347
+              ]
+            },
+            "tackle_attempts": {
+              "total": 208,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "tackle_success": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "broken_tackle": {
+              "total": 76,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        },
+        "-5": {
+          "value": 83,
+          "rating_baseline": 88,
+          "table": {
+            "throws": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "catch": {
+              "total": 133,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "drop": {
+              "total": 67,
+              "plays_with_event": 67,
+              "share": 0.335,
+              "ci95": [
+                0.2732398096874265,
+                0.4029793722656195
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 200,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "shed": {
+              "total": 275,
+              "plays_with_event": 150,
+              "share": 0.75,
+              "ci95": [
+                0.6856577652038048,
+                0.8049192318370347
+              ]
+            },
+            "tackle_attempts": {
+              "total": 208,
+              "plays_with_event": 133,
+              "share": 0.665,
+              "ci95": [
+                0.5970206277343806,
+                0.7267601903125736
+              ]
+            },
+            "tackle_success": {
+              "total": 132,
+              "plays_with_event": 132,
+              "share": 0.66,
+              "ci95": [
+                0.5918836703220929,
+                0.7220856077840445
+              ]
+            },
+            "broken_tackle": {
+              "total": 76,
+              "plays_with_event": 46,
+              "share": 0.23,
+              "ci95": [
+                0.1770925624139232,
+                0.2930842807819702
+              ]
+            }
+          },
+          "outcome_flip_rate": 0,
+          "any_output_change_rate": 0,
+          "mean_rush_yards": null
+        }
+      },
+      "baseline_mean_rush_yards": null
+    },
+    {
+      "label": "CHI left edge, block-shedding (BSH) on run plays",
+      "scenario": "run_ne_at_chi",
+      "player_id": "00-0039840",
+      "player_name": "Austin Booker",
+      "placed": {
+        "side": "defense",
+        "slot": "LEDGE"
+      },
+      "attribute": "BSH",
+      "baseline": {
+        "throws": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "drop": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "interception": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pass_breakup": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "incomplete": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "catch_window_opportunities": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "sack": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "pressure": {
+          "total": 0,
+          "plays_with_event": 0,
+          "share": 0,
+          "ci95": [
+            0,
+            0.018846005918320894
+          ]
+        },
+        "run_block_engage": {
+          "total": 1878,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "shed": {
+          "total": 349,
+          "plays_with_event": 167,
+          "share": 0.835,
+          "ci95": [
+            0.7773410172613647,
+            0.8800321587733603
+          ]
+        },
+        "tackle_attempts": {
+          "total": 305,
+          "plays_with_event": 200,
+          "share": 1,
+          "ci95": [
+            0.9811539940816791,
+            1
+          ]
+        },
+        "tackle_success": {
+          "total": 199,
+          "plays_with_event": 199,
+          "share": 0.995,
+          "ci95": [
+            0.9722256001302286,
+            0.999116854010634
+          ]
+        },
+        "broken_tackle": {
+          "total": 106,
+          "plays_with_event": 63,
+          "share": 0.315,
+          "ci95": [
+            0.25462218077944276,
+            0.38235084141033604
+          ]
+        }
+      },
+      "by_offset": {
+        "5": {
+          "value": 82,
+          "rating_baseline": 77,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1857,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 364,
+              "plays_with_event": 173,
+              "share": 0.865,
+              "ci95": [
+                0.8107074954488287,
+                0.9055349202307972
+              ]
+            },
+            "tackle_attempts": {
+              "total": 291,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 199,
+              "plays_with_event": 199,
+              "share": 0.995,
+              "ci95": [
+                0.9722256001302286,
+                0.999116854010634
+              ]
+            },
+            "broken_tackle": {
+              "total": 92,
+              "plays_with_event": 64,
+              "share": 0.32,
+              "ci95": [
+                0.2592642960770526,
+                0.38752026605354306
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.01,
+          "any_output_change_rate": 0.99,
+          "mean_rush_yards": 1.7457746037670732
+        },
+        "10": {
+          "value": 87,
+          "rating_baseline": 77,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1881,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 370,
+              "plays_with_event": 167,
+              "share": 0.835,
+              "ci95": [
+                0.7773410172613647,
+                0.8800321587733603
+              ]
+            },
+            "tackle_attempts": {
+              "total": 304,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 199,
+              "plays_with_event": 199,
+              "share": 0.995,
+              "ci95": [
+                0.9722256001302286,
+                0.999116854010634
+              ]
+            },
+            "broken_tackle": {
+              "total": 105,
+              "plays_with_event": 64,
+              "share": 0.32,
+              "ci95": [
+                0.2592642960770526,
+                0.38752026605354306
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.01,
+          "any_output_change_rate": 0.99,
+          "mean_rush_yards": 1.634097193142299
+        },
+        "-10": {
+          "value": 67,
+          "rating_baseline": 77,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1934,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 366,
+              "plays_with_event": 155,
+              "share": 0.775,
+              "ci95": [
+                0.7122575346140798,
+                0.8273771621308439
+              ]
+            },
+            "tackle_attempts": {
+              "total": 327,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 194,
+              "plays_with_event": 194,
+              "share": 0.97,
+              "ci95": [
+                0.9361048802675267,
+                0.9861798741692518
+              ]
+            },
+            "broken_tackle": {
+              "total": 133,
+              "plays_with_event": 73,
+              "share": 0.365,
+              "ci95": [
+                0.3014041621876483,
+                0.4336842594102984
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.025,
+          "any_output_change_rate": 0.995,
+          "mean_rush_yards": 3.4425766497264374
+        },
+        "-5": {
+          "value": 72,
+          "rating_baseline": 77,
+          "table": {
+            "throws": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "drop": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "interception": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pass_breakup": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "incomplete": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "catch_window_opportunities": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "sack": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "pressure": {
+              "total": 0,
+              "plays_with_event": 0,
+              "share": 0,
+              "ci95": [
+                0,
+                0.018846005918320894
+              ]
+            },
+            "run_block_engage": {
+              "total": 1926,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "shed": {
+              "total": 367,
+              "plays_with_event": 162,
+              "share": 0.81,
+              "ci95": [
+                0.7499864142552062,
+                0.8583290620754351
+              ]
+            },
+            "tackle_attempts": {
+              "total": 312,
+              "plays_with_event": 200,
+              "share": 1,
+              "ci95": [
+                0.9811539940816791,
+                1
+              ]
+            },
+            "tackle_success": {
+              "total": 196,
+              "plays_with_event": 196,
+              "share": 0.98,
+              "ci95": [
+                0.9497121344948062,
+                0.9921956998236058
+              ]
+            },
+            "broken_tackle": {
+              "total": 116,
+              "plays_with_event": 71,
+              "share": 0.355,
+              "ci95": [
+                0.29198518653239286,
+                0.4234801551839203
+              ]
+            }
+          },
+          "outcome_flip_rate": 0.015,
+          "any_output_change_rate": 0.995,
+          "mean_rush_yards": 3.2368070789933885
+        }
+      },
+      "baseline_mean_rush_yards": 2.06526054637041
+    }
+  ]
+}

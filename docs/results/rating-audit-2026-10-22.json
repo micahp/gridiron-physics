@@ -1,0 +1,955 @@
+{
+  "attributes": [
+    {
+      "attr": "ACC",
+      "cls": "physical",
+      "used": false,
+      "basis": "imputed-possible",
+      "src": "10-yd time t10 from the 40 through the sprint model (ratings.py:494); ACC_CURVE interp minus 0.6/yr past 29 (ratings.py:501)",
+      "engine": [],
+      "effect": "acceleration (documented as separate from top speed)",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 70.8,
+          "sd": 10.1
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 73.3,
+          "sd": 8.5
+        },
+        "placeholder_share": 0,
+        "evidence_share_conf_ge_0_5": 0.46
+      }
+    },
+    {
+      "attr": "AGI",
+      "cls": "physical",
+      "used": true,
+      "basis": "imputed-possible",
+      "src": "z of 3-cone and shuttle (league pool, ratings.py:503–505) → 72 + 11z − 0.5/yr past 29 (ratings.py:506); physics alat uses the same z (ratings.py:525)",
+      "engine": [
+        "play.js:496"
+      ],
+      "effect": "cutting and avoidance; physics alat = max(4.5, 7.2 + 1.1·agi_z) comes from the drills directly (ratings.py:525)",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 71.5,
+          "sd": 9.5
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 73.4,
+          "sd": 8.4
+        },
+        "placeholder_share": 0,
+        "evidence_share_conf_ge_0_5": 0.22
+      }
+    },
+    {
+      "attr": "AWR",
+      "cls": "decision",
+      "used": true,
+      "basis": "usage",
+      "src": "experience curve and draft prior (ratings.py:552); blended with playing-time share (ratings.py:557); QB blend with sack, INT and EPA (ratings.py:571)",
+      "engine": [
+        "play.js:1224",
+        "play.js:1233"
+      ],
+      "effect": "decision quality: interception and catch odds",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 62.6,
+          "sd": 12.3
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 65.1,
+          "sd": 11.8
+        },
+        "placeholder_share": 0.02,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "BCV",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "RB: repa, first downs, YPC (ratings.py:576); QB: rush (ratings.py:572); others: placeholder 48 (ratings.py:563–565)",
+      "engine": [],
+      "effect": "ball-carrier vision (documented)",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 48.4,
+          "sd": 7.6
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 49.1,
+          "sd": 8.1
+        },
+        "placeholder_share": 0.89,
+        "evidence_share_conf_ge_0_5": 0.04
+      }
+    },
+    {
+      "attr": "BSH",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "EDGE/IDL/LB: TFL and tackles per game with STR adjustment (ratings.py:623); CB/S: 0.6·STR + 10 (ratings.py:626)",
+      "engine": [
+        "play.js:260",
+        "play.js:858"
+      ],
+      "effect": "defender block-shedding against run blocks",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 50,
+          "sd": 11.3
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 50.2,
+          "sd": 11.7
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0.18
+      }
+    },
+    {
+      "attr": "BTK",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "RB: YPC, first downs, YAC with mass adjustment (ratings.py:578); WR/TE: 0.5·ELU + 0.5·STR + 6·mass z (ratings.py:594)",
+      "engine": [
+        "play.js:359",
+        "play.js:368",
+        "play.js:374"
+      ],
+      "effect": "breaking tackles",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 49.5,
+          "sd": 7.6
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 49.8,
+          "sd": 7.9
+        },
+        "placeholder_share": 0.73,
+        "evidence_share_conf_ge_0_5": 0.02
+      }
+    },
+    {
+      "attr": "CAR",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "QB: constant 70 (ratings.py:573); RB: fumble rate (ratings.py:580); WR/TE: fumble rate (ratings.py:596); all others: placeholder 48 (ratings.py:563–565)",
+      "engine": [],
+      "effect": "ball security (documented)",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 54,
+          "sd": 13.1
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 54.7,
+          "sd": 13.1
+        },
+        "placeholder_share": 0.69,
+        "evidence_share_conf_ge_0_5": 0.02
+      }
+    },
+    {
+      "attr": "CIT",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "WR/TE: catch over expected and first downs, adjusted by JMP (ratings.py:591); all others keep the placeholder 48 (ratings.py:563–565)",
+      "engine": [
+        "play.js:1223"
+      ],
+      "effect": "documented nowhere; the engine uses it as a defender interception term",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 50.7,
+          "sd": 10.5
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 50.6,
+          "sd": 9.6
+        },
+        "placeholder_share": 0.8,
+        "evidence_share_conf_ge_0_5": 0.07
+      }
+    },
+    {
+      "attr": "CTH",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "WR: catch over expected, base 74 (ratings.py:589); TE: base 68 (ratings.py:589); RB: base 66 (ratings.py:581); CB/S/LB: MCV − 14 (ratings.py:632); others: placeholder 48",
+      "engine": [
+        "play.js:1232"
+      ],
+      "effect": "catch probability when the ball is in the window",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 53.2,
+          "sd": 13.1
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 53.7,
+          "sd": 12.1
+        },
+        "placeholder_share": 0.42,
+        "evidence_share_conf_ge_0_5": 0.08
+      }
+    },
+    {
+      "attr": "ELU",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "QB: 0.5·AGI + 0.5·rush production (ratings.py:574); RB: 0.45·AGI + 0.55·explosive and YAC (ratings.py:577); WR/TE: 0.5·AGI + 0.5·YAC (ratings.py:593)",
+      "engine": [
+        "play.js:359",
+        "play.js:368",
+        "play.js:374",
+        "play.js:496"
+      ],
+      "effect": "avoiding tacklers; tackle odds use max(BTK, ELU)",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 53.2,
+          "sd": 12
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 53.8,
+          "sd": 12
+        },
+        "placeholder_share": 0.69,
+        "evidence_share_conf_ge_0_5": 0.1
+      }
+    },
+    {
+      "attr": "FMV",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "EDGE/IDL/LB: rush production with AGI adjustment (ratings.py:622); others: placeholder 48",
+      "engine": [
+        "play.js:260",
+        "play.js:688",
+        "play.js:858"
+      ],
+      "effect": "finesse pass-rush and block-shedding",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 49.2,
+          "sd": 13.1
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 49.2,
+          "sd": 12.6
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0.18
+      }
+    },
+    {
+      "attr": "IBL",
+      "cls": "skill",
+      "used": false,
+      "basis": "placeholder",
+      "src": "RB: equal to RBK (ratings.py:585); TE/WR: equal to RBK (ratings.py:600); OL: mean of PBK and RBK (ratings.py:610); others: placeholder 48",
+      "engine": [],
+      "effect": "inline blocking (documented nowhere in the engine)",
+      "validation": "none; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 56.3,
+          "sd": 13.4
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 55,
+          "sd": 14.1
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "INJ",
+      "cls": "physical-health",
+      "used": false,
+      "basis": "placeholder",
+      "src": "constant 85 for every player (ratings.py:560)",
+      "engine": [],
+      "effect": "injury risk; no injury model in the engine",
+      "validation": "none; constant",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 85,
+          "sd": 0
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 85,
+          "sd": 0
+        },
+        "placeholder_share": 0,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "JMP",
+      "cls": "physical",
+      "used": false,
+      "basis": "measured",
+      "src": "vertical jump through JMP_CURVE (ratings.py:510); feeds CIT and SPC adjustments (ratings.py:591–592); reach uses the vertical drill directly (ratings.py:527)",
+      "engine": [],
+      "effect": "leaping; feeds CIT and SPC adjustments (ratings.py:591–592); reach uses the vertical drill directly (ratings.py:527)",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 74.2,
+          "sd": 10.4
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 75.7,
+          "sd": 9.6
+        },
+        "placeholder_share": 0,
+        "evidence_share_conf_ge_0_5": 0.39
+      }
+    },
+    {
+      "attr": "KAC",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "K: field goal and PAT percentages (ratings.py:637); P: inside-20 and net (ratings.py:641)",
+      "engine": [],
+      "effect": "kick accuracy (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 47.4,
+          "sd": 6.6
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 47.4,
+          "sd": 5.2
+        },
+        "placeholder_share": 0.97,
+        "evidence_share_conf_ge_0_5": 0.03
+      }
+    },
+    {
+      "attr": "KPW",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "K: long field goals (ratings.py:638); P: gross punting (ratings.py:640)",
+      "engine": [
+        "play.js:1324",
+        "play.js:1357"
+      ],
+      "effect": "kick hang time",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 47.4,
+          "sd": 6.8
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 47.5,
+          "sd": 6.1
+        },
+        "placeholder_share": 0.97,
+        "evidence_share_conf_ge_0_5": 0.03
+      }
+    },
+    {
+      "attr": "MCV",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "CB/S/LB: coverage production with SPD adjustment (ratings.py:629); EDGE/IDL: 30 + 0.2·SPD (ratings.py:634)",
+      "engine": [],
+      "effect": "man coverage (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 51.5,
+          "sd": 12.4
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 53.3,
+          "sd": 12.5
+        },
+        "placeholder_share": 0.56,
+        "evidence_share_conf_ge_0_5": 0.2
+      }
+    },
+    {
+      "attr": "PBK",
+      "cls": "skill",
+      "used": true,
+      "basis": "imputed-possible",
+      "src": "OL: tools and draft/experience, confidence 0 (ratings.py:606–608); RB: RBK + 2 (ratings.py:584); WR/TE: blocking base − 4 (ratings.py:599); QB and others: placeholder 48 (ratings.py:563–565)",
+      "engine": [
+        "play.js:259",
+        "play.js:859",
+        "play.js:1634"
+      ],
+      "effect": "pass blocking; line 1634 reads the QB's PBK for sack odds, not the blocker's",
+      "validation": "none in repo; line 1634 is a defect (see report)",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 55.4,
+          "sd": 12.9
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 54.1,
+          "sd": 13.5
+        },
+        "placeholder_share": 0.55,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "PMV",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "EDGE/IDL/LB: rush production with STR adjustment (ratings.py:621); CB/S: constant 35 (ratings.py:625); others: placeholder 48 (ratings.py:563–565)",
+      "engine": [
+        "play.js:260",
+        "play.js:688",
+        "play.js:858",
+        "play.js:1634"
+      ],
+      "effect": "pass rush and sack odds; block-shedding",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 48.7,
+          "sd": 12.6
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 48.5,
+          "sd": 11.8
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0.18
+      }
+    },
+    {
+      "attr": "POW",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "defenders: 0.45·STR + 0.3·SPD + production + 10·mass z − 5 (ratings.py:617); others: placeholder 48 (ratings.py:563–565)",
+      "engine": [],
+      "effect": "power (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 52.8,
+          "sd": 11.5
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 52.9,
+          "sd": 11
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0.28
+      }
+    },
+    {
+      "attr": "PRC",
+      "cls": "decision",
+      "used": false,
+      "basis": "production",
+      "src": "defenders: 0.6·AWR + 0.4·production (ratings.py:618); other positions: equal to AWR (ratings.py:558)",
+      "engine": [],
+      "effect": "pursuit (undocumented; mostly a copy of AWR)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 63.3,
+          "sd": 11.3
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 65.7,
+          "sd": 10.8
+        },
+        "placeholder_share": 0.02,
+        "evidence_share_conf_ge_0_5": 0.31
+      }
+    },
+    {
+      "attr": "PRS",
+      "cls": "skill",
+      "used": false,
+      "basis": "placeholder",
+      "src": "LB/CB/S: 0.5·MCV + 0.5·STR + 8 (ratings.py:631); others: placeholder 48 (ratings.py:563–565)",
+      "engine": [],
+      "effect": "press coverage (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 51.7,
+          "sd": 10.4
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 53.2,
+          "sd": 10.6
+        },
+        "placeholder_share": 0.69,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "PUR",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "defenders: 0.5·SPD + production (tackles, TFL) (ratings.py:616); others: placeholder 48 (ratings.py:563–565)",
+      "engine": [],
+      "effect": "pursuit (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 58.4,
+          "sd": 14.9
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 60.7,
+          "sd": 15.5
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0.31
+      }
+    },
+    {
+      "attr": "RBK",
+      "cls": "skill",
+      "used": true,
+      "basis": "imputed-possible",
+      "src": "OL: tools (ratings.py:609); TE/WR: 46 + 0.35·STR + 14·mass z (+14 for TE) (ratings.py:598); RB/FB: 40 + 0.4·STR + 12·mass z (+25 for FB) (ratings.py:583)",
+      "engine": [
+        "play.js:259",
+        "play.js:859"
+      ],
+      "effect": "run blocking",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 56.1,
+          "sd": 13.1
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 54.9,
+          "sd": 13.9
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "RET",
+      "cls": "skill",
+      "used": false,
+      "basis": "formula",
+      "src": "RB: 0.5·SPD + 0.5·ELU (ratings.py:586); WR: 0.55·SPD + 0.45·ELU (ratings.py:601); defenders: 0.6·SPD + 0.4·AGI − 10 (ratings.py:635)",
+      "engine": [],
+      "effect": "returns (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 63.9,
+          "sd": 15
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 66.1,
+          "sd": 14.3
+        },
+        "placeholder_share": 0.27,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "RTE",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "RB: CTH − 8 (ratings.py:582); WR/TE: target share, first downs and yards per target with AGI adjustment (ratings.py:590)",
+      "engine": [],
+      "effect": "route running; the probe scenarios assign routes, so this is never read",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 51.3,
+          "sd": 10.7
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 50.9,
+          "sd": 9.3
+        },
+        "placeholder_share": 0.73,
+        "evidence_share_conf_ge_0_5": 0.08
+      }
+    },
+    {
+      "attr": "SPC",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "WR/TE: deep production and catch over expected with JMP adjustment (ratings.py:592)",
+      "engine": [],
+      "effect": "undocumented in RATINGS.md",
+      "validation": "none; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 50.8,
+          "sd": 10.5
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 50.7,
+          "sd": 9.8
+        },
+        "placeholder_share": 0.8,
+        "evidence_share_conf_ge_0_5": 0.06
+      }
+    },
+    {
+      "attr": "SPD",
+      "cls": "physical",
+      "used": false,
+      "basis": "measured-or-imputed-40",
+      "src": "40 time through SPD_CURVE (ratings.py:499), minus age penalty, minus 2 for QB (ratings.py:500)",
+      "engine": [],
+      "effect": "the displayed speed; the simulator uses vmax from the 40 directly (ratings.py:518–519), not this rating",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 77.1,
+          "sd": 12.2
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 80,
+          "sd": 10
+        },
+        "placeholder_share": 0,
+        "evidence_share_conf_ge_0_5": 0.46
+      }
+    },
+    {
+      "attr": "STA",
+      "cls": "physical-health",
+      "used": false,
+      "basis": "formula",
+      "src": "92 − 0.8·(age − 29)+ − 6 for IDL/OT/IOL (ratings.py:559)",
+      "engine": [],
+      "effect": "stamina; the engine has no fatigue model",
+      "validation": "none; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 89.9,
+          "sd": 3.1
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 90.4,
+          "sd": 2.8
+        },
+        "placeholder_share": 0,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "STR",
+      "cls": "physical",
+      "used": true,
+      "basis": "measured-or-imputed-bench",
+      "src": "measured bench z: 58 + 9·bench z + 0.11·(weight − 230) (ratings.py:509); drive force uses the same z (ratings.py:523)",
+      "engine": [
+        "play.js:259",
+        "play.js:260"
+      ],
+      "effect": "strength in engagements; also sets drive force",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 59.7,
+          "sd": 11.9
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 57.3,
+          "sd": 12
+        },
+        "placeholder_share": 0.03,
+        "evidence_share_conf_ge_0_5": 0.24
+      }
+    },
+    {
+      "attr": "TAK",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "defenders: tackles, forced fumbles, TFL with mass adjustment (ratings.py:615); others: placeholder 48 (ratings.py:563–565)",
+      "engine": [
+        "play.js:362",
+        "play.js:368",
+        "play.js:374"
+      ],
+      "effect": "tackle odds (defender TAK minus carrier max(BTK, ELU))",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 55.8,
+          "sd": 11.9
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 57.4,
+          "sd": 12.1
+        },
+        "placeholder_share": 0.54,
+        "evidence_share_conf_ge_0_5": 0.31
+      }
+    },
+    {
+      "attr": "THA",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "QB: CPOE, yards per attempt, interception rate, EPA (ratings.py:569); non-QB: placeholder 48 (ratings.py:563–565)",
+      "engine": [
+        "play.js:1198"
+      ],
+      "effect": "throw error scale (100 − THA)/100 at the aim point",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 47.3,
+          "sd": 6.5
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 47.8,
+          "sd": 5.8
+        },
+        "placeholder_share": 0.96,
+        "evidence_share_conf_ge_0_5": 0.01
+      }
+    },
+    {
+      "attr": "THP",
+      "cls": "skill",
+      "used": true,
+      "basis": "production",
+      "src": "QB: air yards, deep completions, YPA with broad jump adjustment (ratings.py:570); non-QB: placeholder 48 (ratings.py:563–565)",
+      "engine": [
+        "play.js:1042",
+        "play.js:1696"
+      ],
+      "effect": "throw speed: 24 + 0.2·(THP − 75) m/s",
+      "validation": "none in repo",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 47.5,
+          "sd": 7.5
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 48.3,
+          "sd": 7.7
+        },
+        "placeholder_share": 0.96,
+        "evidence_share_conf_ge_0_5": 0.01
+      }
+    },
+    {
+      "attr": "TRK",
+      "cls": "skill",
+      "used": false,
+      "basis": "formula",
+      "src": "RB: 0.5·STR + 0.5·BTK + 12·mass z (ratings.py:579); WR/TE: 0.6·STR + 14·mass z + 25 (ratings.py:595)",
+      "engine": [],
+      "effect": "trucking (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 46.6,
+          "sd": 6.2
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 46.5,
+          "sd": 7.6
+        },
+        "placeholder_share": 0.75,
+        "evidence_share_conf_ge_0_5": 0
+      }
+    },
+    {
+      "attr": "ZCV",
+      "cls": "skill",
+      "used": false,
+      "basis": "production",
+      "src": "LB/CB/S: zone coverage production with AWR adjustment (ratings.py:630); EDGE/IDL: 30 + 0.2·SPD (ratings.py:634)",
+      "engine": [],
+      "effect": "zone coverage (documented)",
+      "validation": "none in repo; not read by engine",
+      "stats": {
+        "NE": {
+          "n": 84,
+          "mean": 51.6,
+          "sd": 12.5
+        },
+        "CHI": {
+          "n": 82,
+          "mean": 53.5,
+          "sd": 12.6
+        },
+        "placeholder_share": 0.57,
+        "evidence_share_conf_ge_0_5": 0.2
+      }
+    }
+  ],
+  "generated_unused": [
+    "ACC",
+    "BCV",
+    "CAR",
+    "IBL",
+    "INJ",
+    "JMP",
+    "KAC",
+    "MCV",
+    "POW",
+    "PRC",
+    "PRS",
+    "PUR",
+    "RET",
+    "RTE",
+    "SPC",
+    "SPD",
+    "STA",
+    "TRK",
+    "ZCV"
+  ],
+  "engine_used": [
+    "AGI",
+    "AWR",
+    "BSH",
+    "BTK",
+    "CIT",
+    "CTH",
+    "ELU",
+    "FMV",
+    "KPW",
+    "PBK",
+    "PMV",
+    "RBK",
+    "STR",
+    "TAK",
+    "THA",
+    "THP"
+  ],
+  "imputation": {
+    "NE": {
+      "players": 84,
+      "forty": 50,
+      "bench": 64,
+      "vertical": 55,
+      "broad_jump": 57,
+      "cone": 72,
+      "shuttle": 70
+    },
+    "CHI": {
+      "players": 82,
+      "forty": 40,
+      "bench": 62,
+      "vertical": 47,
+      "broad_jump": 50,
+      "cone": 61,
+      "shuttle": 59
+    }
+  }
+}
