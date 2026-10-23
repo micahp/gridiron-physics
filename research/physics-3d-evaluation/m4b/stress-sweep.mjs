@@ -126,7 +126,7 @@ for (const engine of ENGINE_IDS) for (const scenario of cases) {
 
   if (scenario.id === 'sweep-speed-4') {
     try {
-      const repeated = await runScenario(engine, structuredClone(scenario), { playerGeometry: profile.geometry, recordFrames: false });
+      const repeated = await runScenario(engine, structuredClone(scenario), { playerGeometry: profile.geometry, recordFrames: true, recordStride: 30 });
       repeatability.push({ engine, scenarioId: scenario.id, exactWithinProcess: compareSignatures(result, repeated), repeats: 2 });
     } catch (error) { repeatability.push({ engine, scenarioId: scenario.id, exactWithinProcess: false, failure: error.message }); }
   }
