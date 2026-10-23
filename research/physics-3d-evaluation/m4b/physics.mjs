@@ -18,6 +18,11 @@ export const length = (a) => Math.hypot(...a);
 export const normalize = (a) => scale(a, 1 / (length(a) || 1));
 export const qNormalize = (q) => scale(q, 1 / (Math.hypot(...q) || 1));
 export const qConjugate = ([x, y, z, w]) => [-x, -y, -z, w];
+export function qMultiply(a, b) {
+  const [x1, y1, z1, w1] = a, [x2, y2, z2, w2] = b;
+  return qNormalize([w1*x2 + x1*w2 + y1*z2 - z1*y2, w1*y2 - x1*z2 + y1*w2 + z1*x2,
+    w1*z2 + x1*y2 - y1*x2 + z1*w2, w1*w2 - x1*x2 - y1*y2 - z1*z2]);
+}
 export function qRotate(v, qIn) {
   const [x, y, z, w] = qNormalize(qIn), u = [x, y, z];
   const t = scale(cross(u, v), 2);
@@ -330,11 +335,14 @@ function joltWorld({ ground = true, gravity = -G, material = {}, solverIteration
       const dv = new J.Vec3(...scale(impulse, 1 / player.mass)); bodyInterface.AddLinearVelocity(player.id, dv); J.destroy(dv);
       if (point) {
         const state = this.state(player), angularImpulse = cross(sub(point, state.centerOfMassM), impulse);
-        const inverseInertia = player.body.GetMotionProperties().GetInverseInertiaDiagonal();
-        const local = qRotate(angularImpulse, qConjugate(state.rotation));
-        const deltaOmega = local.map((v, i) => v * joltReadVec(inverseInertia)[i]);
-        const worldDelta = qRotate(deltaOmega, state.rotation);
-        const da = new J.Vec3(...worldDelta); bodyInterface.AddAngularVelocity(player.id, da); J.destroy(da);
+        const motion = player.body.GetMotionProperties();
+        const inverseInertia = joltReadVec(motion.GetInverseInertiaDiagonal());
+        const principalRotation = qMultiply(state.rotation, joltReadQuat(motion.GetInertiaRotation()));
+        const local = qRotate(angularImpulse, qConjugate(principalRotation));
+        const deltaOmega = local.map((v, i) => v * inverseInertia[i]);
+        const worldDelta = qRotate(deltaOmega, principalRotation);
+        const newAngularVelocity = add(state.angularVelocityRadPerSec, worldDelta);
+        const omega = new J.Vec3(...newAngularVelocity); bodyInterface.SetAngularVelocity(player.id, omega); J.destroy(omega);
       }
     },
     setVelocity(player, linearVelocity, angularVelocity = null) {

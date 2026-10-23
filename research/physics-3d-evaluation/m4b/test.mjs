@@ -39,6 +39,15 @@ for (const engine of ENGINE_IDS) {
   assert.equal(fumble.diagnostics.finite, true);
   assert.ok(fumble.frames.some((frame) => frame.football?.status === 'loose_fumble'));
 
+  const pileFumble = await runScenario(engine, shortFixture('fumble-eight-pile-live-ball'), { playerGeometry: 'compound' });
+  assert.ok(pileFumble.events.some((row) => row.type === 'scenario_impulse'), `${engine}: configured fumble impulse is applied`);
+  assert.equal(pileFumble.outcome.football.status, 'loose_live_recovery_unresolved');
+  assert.equal(pileFumble.diagnostics.finite, true);
+
+  const gangTackle = await runScenario(engine, shortFixture('gang-four-blockers-congested'), { playerGeometry: 'compound' });
+  const carrierContacts = gangTackle.contacts.filter((row) => row.pairId.startsWith('carrier::'));
+  assert.ok(carrierContacts.length >= 2, `${engine}: congested gang tackle has multiple physical carrier contacts`);
+
   const scrum = await runScenario(engine, shortFixture('tush-push-eight', 1.6), { playerGeometry: 'compound' });
   assert.equal(scrum.diagnostics.playerCount, 8);
   assert.ok(scrum.contacts.length > 0, `${engine}: short-yardage scrum includes body contact`);
@@ -57,7 +66,9 @@ for (const engine of ENGINE_IDS) {
   const repeatB = await runScenario(engine, repeatScenario, { playerGeometry: 'single-capsule', recordStride: 30 });
   assert.equal(compareSignatures(repeatA, repeatB), true, `${engine}: identical seed and fixture repeat within process`);
   summaries.push({ engine, simultaneousSackContacts: contactTimes, looseBall: fumble.outcome.football.status,
-    scrumContacts: scrum.contacts.length, playerCount22Contacts: maxLine.contacts.length, repeatable: true });
+    pileFumbleImpulseCount: pileFumble.events.filter((row) => row.type === 'scenario_impulse').length,
+    gangCarrierContactPairs: carrierContacts.length, scrumContacts: scrum.contacts.length,
+    playerCount22Contacts: maxLine.contacts.length, repeatable: true });
 }
 
 try {
