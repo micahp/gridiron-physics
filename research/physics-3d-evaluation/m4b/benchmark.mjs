@@ -8,7 +8,7 @@ import { DEFAULT_SEED, SCENARIOS, VERSION_PROFILES, instantiateScenario } from '
 import { compareSignatures, ENGINE_IDS, PHYSICS_MATERIALS, runScenario } from './simulation.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, '../../../..');
+const REPO = path.resolve(HERE, '../../..');
 const RESULTS = path.join(HERE, 'results');
 const packageJson = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'));
 const profileId = process.argv[2] ?? 'proxy-v1-single-capsule';

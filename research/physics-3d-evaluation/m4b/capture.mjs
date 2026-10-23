@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, '../../../..');
+const REPO = path.resolve(HERE, '../../..');
 const RESULTS = path.join(HERE, 'results');
 const INDEX = path.join(RESULTS, 'archive-index.json');
 const SEED = Number(process.argv[2] ?? 41027);

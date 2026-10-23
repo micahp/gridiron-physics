@@ -7,7 +7,7 @@ import { DEFAULT_SEED, VERSION_PROFILES } from './scenarios.mjs';
 import { compareSignatures, ENGINE_IDS, runScenario } from './simulation.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, '../../../..');
+const REPO = path.resolve(HERE, '../../..');
 const RESULTS = path.join(HERE, 'results', 'sweeps');
 const profileId = process.argv[2] ?? 'proxy-v1-single-capsule';
 const profile = VERSION_PROFILES[profileId];
