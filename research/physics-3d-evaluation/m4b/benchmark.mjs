@@ -137,6 +137,7 @@ const manifest = {
   profiles, cameras,
   scenarioCatalog: SCENARIOS.map(({ players, carriedBall, ...scenario }) => ({ ...scenario, playerCount: players.length, carriedBall: Boolean(carriedBall) })),
   activeProfileCommits: { ...(previous.activeProfileCommits ?? {}), [profile.id]: sourceCommit },
+  stressSweeps: previous.stressSweeps ?? [],
   failures: [...failuresByKey.values()],
   records: [...rowsByKey.values()].sort((a, b) => a.scenarioId.localeCompare(b.scenarioId) || a.engine.localeCompare(b.engine)
     || a.simulationVersion.localeCompare(b.simulationVersion) || a.sourceCommit.localeCompare(b.sourceCommit)),

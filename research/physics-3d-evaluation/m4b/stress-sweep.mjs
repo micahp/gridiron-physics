@@ -98,7 +98,7 @@ const rows = [];
 const repeatability = [];
 for (const engine of ENGINE_IDS) for (const scenario of cases) {
   let result;
-  try { result = await runScenario(engine, structuredClone(scenario), { playerGeometry: profile.geometry, recordFrames: false }); }
+  try { result = await runScenario(engine, structuredClone(scenario), { playerGeometry: profile.geometry, recordFrames: true, recordStride: 30 }); }
   catch (error) {
     rows.push({ scenarioId: scenario.id, title: scenario.title, inputSweep: scenario.inputSweep, engine,
       simulationVersion: profile.id, sourceCommit, seed, status: 'failed', initialState: scenario.players,
@@ -109,10 +109,17 @@ for (const engine of ENGINE_IDS) for (const scenario of cases) {
   const contactStarts = result.events.filter((event) => event.type === 'player_contact_started');
   rows.push({ scenarioId: result.scenarioId, title: result.scenarioTitle, inputSweep: scenario.inputSweep,
     engine, simulationVersion: profile.id, sourceCommit, seed, status: 'completed', durationSeconds: result.durationSeconds,
+    initialState: { players: scenario.players, football: scenario.carriedBall ?? null, durationSeconds: scenario.durationSeconds },
     players: result.diagnostics.playerCount, contactPairs: result.contacts.length, contactEpisodes: contactStarts.length,
     maxPenetrationDepthM: result.diagnostics.maximumPenetrationDepthM,
     finite: result.diagnostics.finite, nonFinitePaths: result.diagnostics.nonFinitePaths,
     outcome: result.outcome, events: result.events, contacts: result.contacts, runtime: result.runtime,
+    sampledTransforms: result.frames.map((frame) => ({ tick: frame.tick, timeSeconds: frame.timeSeconds,
+      players: Object.fromEntries(Object.entries(frame.players).map(([id, state]) => [id, { positionM: state.positionM,
+        rotation: state.rotation, linearVelocityMps: state.linearVelocityMps, angularVelocityRadPerSec: state.angularVelocityRadPerSec }])),
+      football: frame.football ? { positionM: frame.football.positionM, rotation: frame.football.rotation,
+        linearVelocityMps: frame.football.linearVelocityMps, angularVelocityRadPerSec: frame.football.angularVelocityRadPerSec,
+        status: frame.football.status, controlledBy: frame.football.controlledBy } : null })),
     memoryHeapAfterBytes: result.diagnostics.memoryHeapAfterBytes });
   console.log(JSON.stringify({ engine, scenarioId: result.scenarioId, players: result.diagnostics.playerCount,
     contacts: result.contacts.length, finite: result.diagnostics.finite, runtimeMs: Number(result.runtime.wallTimeMs.toFixed(1)) }));
@@ -138,5 +145,14 @@ const sweep = { schemaVersion: 1, milestone: 'M4b extreme-condition contact swee
   results: rows };
 await mkdir(outputDirectory, { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(sweep)}\n`, { flag: 'wx' });
+const manifestPath = path.join(HERE, 'results', 'archive-index.json');
+const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+const stressSweeps = new Map((manifest.stressSweeps ?? []).map((row) => [`${row.simulationVersion}|${row.sourceCommit}|${row.seed}`, row]));
+stressSweeps.set(`${profile.id}|${sourceCommit}|${seed}`, { simulationVersion: profile.id, sourceCommit, seed,
+  path: `../results/sweeps/${profile.id}/${commitKey}/stress-sweep.json`, cases: cases.length, engineRuns: rows.length,
+  finiteRuns: rows.filter((row) => row.finite).length, repeatability, status: 'completed' });
+manifest.stressSweeps = [...stressSweeps.values()];
+manifest.generatedAt = new Date().toISOString();
+await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(JSON.stringify({ outputPath, inputCount: cases.length, runCount: rows.length,
   nonFiniteRuns: rows.filter((row) => !row.finite).length, repeatability, wallTimeMs: sweep.runtime.wallTimeMs }, null, 2));
