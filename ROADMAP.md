@@ -197,6 +197,26 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Latest research correction:** [Gridiron physics commit `edd4057`](https://github.com/micahp/gridiron-physics/commit/edd4057d97af61700fdec9bca3433f9065bf63d1) extends contact testing to 900 ticks and withdraws the prior Jolt “energy diverted into defender motion” attribution: the limited normal-impulse ledger **cannot identify** the mechanism. Contact-free tackle-scale gravity controls measured max per-step / cumulative energy drift **Rapier 0.090421 / 4.222032 J**, **Jolt 0.360987 / 16.963764 J**, exceeding the earlier 0.05 J-per-step hypothesis. These values apply to the controlled free-fall configurations, **not** full player-contact energy conservation.
 
+### M4b result — 2026-10-23: multi-contact archive complete; football mechanism gates still open
+
+**Evidence:** [M4b report](https://github.com/micahp/gridiron-physics/blob/f7a346fbba76601a1f6cd6e3ef9713a0f8d4ce8b/research/physics-3d-evaluation/m4b/REPORT.md) and [commit `f7a346f`](https://github.com/micahp/gridiron-physics/commit/f7a346fbba76601a1f6cd6e3ef9713a0f8d4ce8b) on `research/m4b-multiplayer-contact-archive`. **No production solver change or engine adoption.** The branch and `research/m1b-physical-tackling-grip-balance` have diverged, so isolate/adapt the valuable mechanisms before integration rather than merging the entire experimental branch history.
+
+**Observed:** 16 controlled 7.5-second scenarios, two rigid proxy body profiles, Rapier/Jolt, 64 current replay files, 41-input sweeps / **164 stress runs** with zero nonfinite states. The versioned Three.js archive supports synchronized replay across solver/profile/commit and three fixed cameras, with 60 referenced screenshots and 10 VP9 videos. Runs and failures remain archived. Local viewer: `npm run serve` then `http://localhost:8080/research/physics-3d-evaluation/m4b/archive/`.
+
+**Causal-contact boundaries:** Opposing two-defender tackle and compound two-rusher quarterback contact each physically occur within one 120-Hz step; the latter has **no completed sack**. Some three-defender and staged-sack fixtures have **no body contact**. A compound eight-player pile releases a dynamic football, but configured impulses/contact-triggered release are **not force-derived grip failure**, and secure possession/recovery is **unimplemented**. An eight-player tush push and 22-player line produce contacts, but snap reception, official spot and first-down outcome remain unresolved. No articulated player bodies or hands.
+
+**Numerical concern:** Maximum reported player-proxy penetration is **0.300 m (Rapier capsule)**, **0.307 m (Jolt capsule)**, **0.250 m (compound)**. This is too large to ignore in crowded contact, even though simulation stays finite; record maximum **and duration/distribution** of penetration before/after solver/controller changes. Neither solver has been validated against NFL tackle, joint or pileup behavior.
+
+**Next gated tasks:**
+- [ ] Converge M1b balance/grip event vocabulary and M4b many-body archive on **one research adapter** without production changes; replay historical fixtures exactly for regression.
+- [ ] Fix no-contact intended interaction cases, with explicit per-fixture physical opportunity assertions and passed/failed/inconclusive criteria.
+- [ ] Diagnose deep penetration under line/pile loads; compare timestep, collider sizing, solver iterations, effective material, balance/drive force and spawn geometry using the same scenes on both engines. Do not simply clip positions to hide overlap.
+- [ ] Create a **physically derived** ball release: contact force/constraint loading causes cradle or hand-proxy attachment failure. Demonstrate both retained and lost possession, then an *actual secure recovery* requiring sustained hand/ball control, versus deflection and failed recovery.
+- [ ] Make a completed joint sack and credible short-yardage ball possession/forward progress possible before adopting football outcome labels; retain separately attributed physical contributors versus official grading.
+- [ ] Preserve pinned screenshot/video/replay archive per code/solver version; control artifact sizes and validate archive integrity. No solver promotion until mechanism + numerics + independently calibrated outcomes pass.
+
+**Decision:** M4b **research infrastructure completed**; **physical football mechanisms still partially missing**. Do not promote either solver or claim NFL predictive validity.
+
 ### M5. Rare events and special teams
 
 **Goal:** The engine can eventually produce both ordinary and exceptional outcomes for football reasons.
