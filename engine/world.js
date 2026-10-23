@@ -234,7 +234,10 @@ export class World {
   wrap(tackler, carrier, opts = {}) {
     if (this.wraps.some((w) => w.tackler === tackler)) return;
     if (tackler.engaged) this.disengage(this.engagements.find((e) => e.a === tackler || e.b === tackler));
-    const w = { tackler, carrier, t0: this.t, fall: opts.fall ?? 0.45, target: opts.target || null, done: false };
+    // grip: tackler's hold strength (from TAK); resist: carrier's resistance to being held (from BTK/ELU).
+    // Both default to 1, which reproduces the rating-free engine exactly.
+    const w = { tackler, carrier, t0: this.t, fall: opts.fall ?? 0.45, target: opts.target || null, done: false,
+      grip: opts.grip ?? 1, resist: opts.resist ?? 1 };
     // perfectly inelastic hit at the moment of the wrap: shared momentum
     const M = tackler.m + carrier.m;
     const vx = (tackler.m * tackler.v.x + carrier.m * carrier.v.x) / M;
@@ -271,7 +274,7 @@ export class World {
       c.ext.x -= (f * dx) / d;
       c.ext.y -= (f * dy) / d;
       // the tackler's weight hanging on the carrier: strong drag
-      const drag = 0.6 * t.m * G * 0.5;
+      const drag = 0.6 * t.m * G * 0.5 * (w.grip / w.resist);
       const cs = c.speed;
       if (cs > 0.05) {
         c.ext.x -= (drag * c.v.x) / cs;

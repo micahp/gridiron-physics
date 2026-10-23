@@ -385,9 +385,13 @@ export function simulatePlay(game, S, ctx = {}) {
     }
   }
 
+  // Rating 50 is neutral; each 10 points moves the factor by 0.1, bounded to [0.5, 1.5].
+  const gripFactor = (r) => clamp(0.5 + ((r ?? 50) - 50) / 100, 0.5, 1.5);
+
   function startTackle(d, c) {
     st.tTackle = W.t;
-    const w = W.wrap(d, c, { fall: 0.5 });
+    const w = W.wrap(d, c, { fall: 0.5, grip: gripFactor(d.R?.TAK),
+      resist: gripFactor(Math.max(c.R?.BTK ?? 50, c.R?.ELU ?? 50)) });
     st.wrap = w;
     st.tackler = d;
     c.pose = POSE.WRAP;
