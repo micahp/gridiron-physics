@@ -41,6 +41,25 @@ version. Models trained on recorded future positions must only be evaluated from
 after the cutoff, the caller feeds only generated states back to the policy. Recorded observed frames
 and generated frames have separate provenance and visual styles.
 
+## Future play-generator boundary
+
+The following fields describe the handoff a future predictive play generator would need. They are
+not a claim that this ten-game adapter has verified or implemented every field.
+
+| Interface area | Future input/output contract | v0.1 evidence and limit |
+|---|---|---|
+| Initial state | Sport, game/period, observation index, coordinate frame, timebase and quality flags; player and puck state at the cutoff; source provenance | Game-period track IDs, XY, six past XY observations, puck XY/history when visible, and missing/conflict flags are available. No validated subsecond timebase or full lineup is known. |
+| Player attributes | Stable verified identity, team/role, optional handedness, body geometry, and calibrated movement profile, each with provenance and eligibility | Current IDs are game-period scoped; cross-game athlete identity and reliable player-specific movement estimates are unavailable. No player ability or body-size ratings are invented. |
+| Policy/action inputs | A policy receives the same cutoff state for all agents and emits one intent per player; future action policies may consume verified role, possession, play call, or tactical intent | v0.1 emits deterministic displacements from past XY plus current puck/player geometry. Possession, event joins, play calls, and goalie roles are excluded. |
+| Constraints | Sport configuration owns geometry, coordinate transforms, locomotion, body geometry, contact, and ball/puck rules; a controller may apply only supported projectors | Hockey currently applies observed 2D rink bounds and training-fold ordinal limits. There are no validated timed locomotion, body-contact, reachability, or puck-flight mechanics. |
+| Outputs | Simultaneous movement intents, stepped joint state, and a provenance-bearing transform frame; a future stochastic generator must also record its seed and sampled scenario | v0.1 is deterministic for a fixed state/model. It records player and puck XY plus input/model/source metadata; the puck is only an ordinal helper. |
+| Uncertainty | A predictive distribution or calibrated per-agent/scene uncertainty attached to generated frames, with calibration population and horizon | The controller does not emit stochastic positions or uncertainty. The evaluator reports a cross-fitted +15 ordinal-step radial error calibration; it does not establish uncertainty for long free-running rollouts. |
+
+All emitted states should retain observation cutoff, model and sport-config versions, random seed when
+used, source hashes, missingness/identity flags, and whether the frame is observed or generated. A
+future action policy must not be given target-game future coordinates or labels. The generic stepping
+API is the execution boundary; sport-specific policies and constraints remain separate.
+
 ## Extension boundary
 
 Sport configuration owns rink/field geometry, coordinate transforms, locomotion limits, body
