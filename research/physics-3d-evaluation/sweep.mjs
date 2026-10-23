@@ -11,6 +11,12 @@ const ENGINE_RUNNERS = {
   'rapier3d-compat': runRapierTackle,
   'jolt-physics-js': runJoltTackle,
 };
+const NO_CONTACT_SCENARIO = {
+  id: 'no-contact-control',
+  duration: 1.5,
+  carrier: { p: [60, 0.845, 0], v: [0, 0, 0], mass: 96, strength: 80 },
+  defender: { p: [0, 0.845, 0], v: [0, 0, 0], mass: 108, strength: 88 },
+};
 
 const isFiniteTree = (value) => {
   if (typeof value === 'number') return Number.isFinite(value);
@@ -60,6 +66,35 @@ export async function runContactSweepCell(engine, approachAngleDeg, closingSpeed
   };
 }
 
+export async function runNoContactControl(versions) {
+  const results = [];
+  for (const [engine, runner] of Object.entries(ENGINE_RUNNERS)) {
+    const physicsResult = await runner(NO_CONTACT_SCENARIO, SEED);
+    results.push({
+      engine,
+      engineVersion: versions[engine],
+      contactOccurred: physicsResult.contact.occurred,
+      carrierPeakTiltDeg: physicsResult.maxTiltDeg.carrier,
+      defenderPeakTiltDeg: physicsResult.maxTiltDeg.defender,
+      carrierFellAt55Deg: physicsResult.falling.carrier,
+      defenderFellAt55Deg: physicsResult.falling.defender,
+      finite: physicsResult.finite,
+      physicsResult,
+    });
+  }
+  return {
+    label: 'No-contact control: stationary players on the same ground plane and collision proxy; controlled research input, not a tackle model or NFL validation.',
+    scenarioId: NO_CONTACT_SCENARIO.id,
+    seed: SEED,
+    durationSeconds: NO_CONTACT_SCENARIO.duration,
+    fixedTimestepSeconds: DT,
+    carrier: { position: NO_CONTACT_SCENARIO.carrier.p, velocity: NO_CONTACT_SCENARIO.carrier.v, massKg: NO_CONTACT_SCENARIO.carrier.mass },
+    defender: { position: NO_CONTACT_SCENARIO.defender.p, velocity: NO_CONTACT_SCENARIO.defender.v, massKg: NO_CONTACT_SCENARIO.defender.mass },
+    fallingThresholdDeg: 55,
+    results,
+  };
+}
+
 export async function runContactSweep() {
   const versions = await engineVersions();
   const cells = [];
@@ -88,6 +123,7 @@ export async function runContactSweep() {
       cells: disagreeingCells,
     };
   };
+  const control = await runNoContactControl(versions);
   return {
     generatedAt: new Date().toISOString(),
     label: 'Controlled research inputs with a five-collider collision proxy; not a tackle model, not a prediction, and not validation against NFL data.',
@@ -118,6 +154,7 @@ export async function runContactSweep() {
       carrier: disagreement('carrierFellAt55Deg'),
       defender: disagreement('defenderFellAt55Deg'),
     },
+    control,
     cells,
   };
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T03:20:06.842Z",
+  "generatedAt": "2026-10-23T03:34:07.777Z",
   "label": "Controlled research inputs with a five-collider collision proxy; not a tackle model, not a prediction, and not validation against NFL data.",
   "runtime": {
     "node": "v22.22.0",
@@ -49,6 +49,200 @@
       "share": 0,
       "cells": []
     }
+  },
+  "control": {
+    "label": "No-contact control: stationary players on the same ground plane and collision proxy; controlled research input, not a tackle model or NFL validation.",
+    "scenarioId": "no-contact-control",
+    "seed": 20261022,
+    "durationSeconds": 1.5,
+    "fixedTimestepSeconds": 0.008333333333333333,
+    "carrier": {
+      "position": [
+        60,
+        0.845,
+        0
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "massKg": 96
+    },
+    "defender": {
+      "position": [
+        0,
+        0.845,
+        0
+      ],
+      "velocity": [
+        0,
+        0,
+        0
+      ],
+      "massKg": 108
+    },
+    "fallingThresholdDeg": 55,
+    "results": [
+      {
+        "engine": "rapier3d-compat",
+        "engineVersion": "0.21.0",
+        "contactOccurred": false,
+        "carrierPeakTiltDeg": 0,
+        "defenderPeakTiltDeg": 8.373217636258603,
+        "carrierFellAt55Deg": false,
+        "defenderFellAt55Deg": false,
+        "finite": true,
+        "physicsResult": {
+          "engine": "rapier3d-compat",
+          "scenario": "no-contact-control",
+          "seed": 20261022,
+          "policy": "initial approach velocities only; no post-launch motor force",
+          "contact": {
+            "occurred": false
+          },
+          "players": {
+            "carrier": {
+              "position": [
+                60,
+                -9.981473922729492,
+                0
+              ],
+              "velocity": [
+                0,
+                -14.279865264892578,
+                0
+              ],
+              "tiltDeg": 0,
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ]
+            },
+            "defender": {
+              "position": [
+                0.12247968465089798,
+                0.8336925506591797,
+                -6.959776328585576e-7
+              ],
+              "velocity": [
+                0.33272987604141235,
+                -0.03650378808379173,
+                -0.0000023720758690615185
+              ],
+              "tiltDeg": 8.373217636258603,
+              "rotation": [
+                -4.162957907283271e-7,
+                -2.4163105294405796e-8,
+                -0.07300510257482529,
+                0.9973316192626953
+              ]
+            }
+          },
+          "engineMassKg": {
+            "carrier": 96,
+            "defender": 108
+          },
+          "maxTiltDeg": {
+            "carrier": 0,
+            "defender": 8.373217636258603
+          },
+          "falling": {
+            "carrier": false,
+            "defender": false
+          },
+          "finite": true
+        }
+      },
+      {
+        "engine": "jolt-physics-js",
+        "engineVersion": "1.1.0",
+        "contactOccurred": false,
+        "carrierPeakTiltDeg": 0,
+        "defenderPeakTiltDeg": 4.818892632622031,
+        "carrierFellAt55Deg": false,
+        "defenderFellAt55Deg": false,
+        "finite": true,
+        "physicsResult": {
+          "engine": "jolt-physics-js",
+          "scenario": "no-contact-control",
+          "seed": 20261022,
+          "policy": "initial approach velocities only; no post-launch motor force",
+          "contact": {
+            "occurred": false
+          },
+          "players": {
+            "carrier": {
+              "position": [
+                60,
+                -10.03145980834961,
+                0
+              ],
+              "velocity": [
+                0,
+                -14.279812812805176,
+                0
+              ],
+              "angularVelocity": [
+                0,
+                0,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "tiltDeg": 0,
+              "mass": 96,
+              "engineMassKg": 95.99999713897714
+            },
+            "defender": {
+              "position": [
+                0.07059149444103241,
+                0.8379152417182922,
+                0.0000013247836250229739
+              ],
+              "velocity": [
+                0.1763075739145279,
+                -0.010695642791688442,
+                0.0000029854211334168212
+              ],
+              "angularVelocity": [
+                0.0000036720825846714433,
+                4.168540357341044e-8,
+                -0.2167116105556488
+              ],
+              "rotation": [
+                7.902759193711972e-7,
+                4.014096433024861e-8,
+                -0.0420403778553009,
+                0.9991159439086914
+              ],
+              "tiltDeg": 4.818892632622031,
+              "mass": 108,
+              "engineMassKg": 107.9999991953373
+            }
+          },
+          "engineMassKg": {
+            "carrier": 95.99999713897714,
+            "defender": 107.9999991953373
+          },
+          "maxTiltDeg": {
+            "carrier": 0,
+            "defender": 4.818892632622031
+          },
+          "falling": {
+            "carrier": false,
+            "defender": false
+          },
+          "finite": true
+        }
+      }
+    ]
   },
   "cells": [
     {

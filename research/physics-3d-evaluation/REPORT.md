@@ -58,9 +58,9 @@ Approach velocities are explicit policy outputs. There is no random tackle-succe
 
 ### Tackle results
 
-Measured on an AMD EPYC x64 host, Node 22.22, four logical CPUs. Contact time is the first solver frame with body-body contact. Rapier reports its solver contact point and summed contact impulse. Jolt's JS path here detects body contact, estimates surface contact from the body centers and a proxy ellipsoid, and estimates impulse from the carrier momentum change at first contact with gravity removed. Jolt's impulse estimate can include simultaneous ground/support impulses, so these impulse magnitudes are not a calibrated cross-engine comparison. The recorded player momentum is diagnostic only; it is not a conservation audit because ground reactions, motor forces, and other external impulses are not included in a complete system balance.
+Measured on an AMD EPYC x64 host, Node 22.22, four logical CPUs. Contact time is the first solver frame with body-body contact. Rapier reports its solver contact point and summed contact impulse. Jolt's JS path here detects body contact, estimates surface contact from the body centers and a proxy ellipsoid, and estimates carrier momentum change at first contact with gravity removed. This Jolt value is a momentum-change estimate, not a contact impulse; it can include simultaneous ground/support impulses and must not be compared in magnitude with Rapier's solver impulse. The recorded player momentum is diagnostic only; it is not a conservation audit because ground reactions, motor forces, and other external impulses are not included in a complete system balance.
 
-| Scenario | Rapier contact time | Rapier contact impulse | Rapier fall (carrier/defender) | Jolt contact time | Jolt impulse estimate | Jolt fall (carrier/defender) |
+| Scenario | Rapier contact time | Rapier contact impulse | Rapier fall (carrier/defender) | Jolt contact time | Jolt momentum-change estimate, includes ground/support | Jolt fall (carrier/defender) |
 |---|---:|---:|---|---:|---:|---|
 | Head-on | 0.217 s | 243 N·s | no / no | 0.200 s | 237 N·s | no / no |
 | Side tackle | 0.208 s | 65 N·s | yes / yes | 0.200 s | 75 N·s | yes / yes |
@@ -70,15 +70,15 @@ Measured on an AMD EPYC x64 host, Node 22.22, four logical CPUs. Contact time is
 | Glancing impact | 0.092 s | 69 N·s | yes / yes | 0.092 s | 43 N·s | yes / yes |
 | Escape attempt with strength motor | 0.208 s | 196 N·s | yes / yes | 0.200 s | 244 N·s | yes / yes |
 
-The complete contact points, impulses, momenta, player transforms, final angular velocities, tilt peaks, and finite-value flags are in [`results.json`](./results.json). Engine results diverge in whether the same contact geometry produces a fall. That is evidence of sensitivity to geometry, solver settings, and contact/friction calibration, not evidence that either one currently predicts NFL tackles.
+The complete contact points, impulse measures, momenta, player transforms, final angular velocities, tilt peaks, and finite-value flags are in [`results.json`](./results.json). Across the seven scenarios, one of 14 body-level fall classifications differs: in `high-speed`, the carrier does not fall in Rapier but does fall in Jolt. The other 13 classifications agree. The 12-cell contact-geometry sweep adds 24 body-level classifications and no further disagreement, making the combined record 1 of 38 classifications. This small controlled record is not evidence that either engine predicts NFL tackles.
 
 ### Contact-geometry sweep
 
 **Controlled research inputs with a collision proxy; not a tackle model, not a prediction, and not validation against NFL data.** The sweep covers 4 approach headings × 3 closing speeds for each engine (12 cells per engine). The defender is stationary, faces downfield-opposite (-x), and has mass 108 kg. The 96 kg carrier starts 2 m away, travels into the defender, and is yaw-aligned with its velocity. Angle is the carrier travel heading relative to the defender's forward axis: 0° is head-on and 90° is side-on. Thus this varies body-relative approach orientation and arm-proxy orientation; it does not claim to sample every anatomical contact point. All cells use the same five-collider proxy, 1/120 s step, existing solver settings, 1.5 s duration, and 55° peak-tilt fall threshold. The carrier has only its initial velocity; no outcome draw, motor, or forced fall is used.
 
-Each cell records contact occurrence/time, the engine-specific impulse value, peak carrier and defender tilt, both fall flags, final body state, and a recursive finite-state flag in [`results-sweep.json`](./results-sweep.json). The artifact also stores paired fall-disagreement counts, shares, and cell lists. `R/J` means Rapier/Jolt. Rapier's impulse is its summed solver contact impulse; Jolt's is the carrier momentum-change estimate at first body contact and can include ground/support impulses. These magnitudes are not calibrated cross-engine equivalents.
+Each cell records contact occurrence/time, the engine-specific impulse measure, peak carrier and defender tilt, both fall flags, final body state, and a recursive finite-state flag in [`results-sweep.json`](./results-sweep.json). The artifact also stores paired fall-disagreement counts, shares, and cell lists. `R/J` means Rapier/Jolt. Rapier's impulse is its summed solver contact impulse. Jolt's column is a carrier momentum-change estimate that includes ground/support impulses, not a contact impulse. At 0°, 30°, and 90°, that estimate stays around 259–286 N·s across 4–8 m/s, so it must not be read as a contact impulse or compared in magnitude with Rapier's solver impulse. The 60°/8 m/s cell is lower (181.8 N·s), another reason not to interpret this estimate as an impact measurement.
 
-| Approach | Closing speed (m/s) | Contact R/J | Time R/J (s) | Impulse R/J (N·s) | Peak tilt R carrier/defender; J carrier/defender (°) | Fall R carrier/defender | Fall J carrier/defender |
+| Approach | Closing speed (m/s) | Contact R/J | Time R/J (s) | Rapier solver impulse / Jolt momentum-change estimate, includes ground/support (N·s) | Peak tilt R carrier/defender; J carrier/defender (°) | Fall R carrier/defender | Fall J carrier/defender |
 |---:|---:|---|---:|---:|---|---|---|
 | 0° | 4 | yes / yes | 0.342 / 0.325 | 193.0 / 285.7 | 86.4/89.3; 86.4/89.3 | yes / yes | yes / yes |
 | 0° | 6 | yes / yes | 0.233 / 0.225 | 231.3 / 258.8 | 90.0/89.2; 64.1/88.9 | yes / yes | yes / yes |
@@ -93,7 +93,13 @@ Each cell records contact occurrence/time, the engine-specific impulse value, pe
 | 90° | 6 | yes / yes | 0.233 / 0.225 | 211.0 / 258.5 | 90.0/90.0; 65.1/91.0 | yes / yes | yes / yes |
 | 90° | 8 | yes / yes | 0.183 / 0.175 | 309.3 / 282.7 | 96.3/90.0; 91.2/90.1 | yes / yes | yes / yes |
 
-**Fall-classification disagreement across the 12 paired cells:** carrier 0/12 (0%; no cells); defender 0/12 (0%; no cells). Both engines classify both players as fallen in every cell. Tilt and impulse values differ, but the binary 55° threshold is saturated throughout this grid; this sweep therefore finds no fall-classification disagreement and does not establish general engine agreement.
+**Fall-classification disagreement across the 12 paired cells:** carrier 0/12 (0%; no cells); defender 0/12 (0%; no cells). Both engines classify both players as fallen in every cell.
+
+**No-contact control:** The carrier was parked at x=60 m and the defender at the origin; both had zero velocity. The control used the same 1.5 s duration, five-collider proxy, 1/120 s step, masses, seed, and fall threshold. It recorded no contact and no fall for either engine. Carrier peak tilt was 0° in both; defender peak tilt was 8.373° in Rapier and 4.819° in Jolt. This confirms the sweep's falls are contact-induced rather than spontaneous toppling in the stationary control.
+
+Each player here is a single freely rotating rigid body on the ground plane with no upright or balance controller. Once contact tips a body past the tipping point, it can roll flat; all contacting cells cross 55°. The binary fall threshold is therefore structurally non-discriminating within this proxy sweep: it cannot answer which contact conditions produce a fall. Peak tilt is the only usable continuous discriminator in these records, and it remains a proxy measurement.
+
+Across the 12 paired cells, Jolt minus Rapier carrier peak tilt averages −10.15° (range −32.02° to +11.03°). Defender peak tilt is much closer: mean +0.14°, range −3.64° to +4.45° (maximum absolute difference 4.45°). The solvers agree closely on defender tilt and disagree substantially on carrier tilt. Jolt's carrier tilt is also non-monotonic with closing speed: at 6 m/s the 0°/30°/60°/90° values are 64.11°/71.68°/57.96°/65.10°, each below its corresponding 4 m/s value (about 86.4°). At 8 m/s they are 90.15°/102.93°/67.65°/91.18°; the 60° value is a further exception to a simple ordering. This is unexplained and may be a solver or tilt-measurement artifact. Do not use Jolt tilt claims until this behavior is understood; do not smooth these results.
 
 ### Pass and ball contact
 
