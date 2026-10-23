@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
-import { copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -25,15 +25,26 @@ const baseUrl = process.argv[2] || 'http://127.0.0.1:8099/research/hockey-moveme
 const outputDir = join(archiveDir, 'clips', entry.legendarypicks_git_commit.slice(0, 12));
 const videoTemp = join(outputDir, 'tmp');
 await mkdir(outputDir, { recursive: true });
+await rm(videoTemp, { recursive: true, force: true });
 await mkdir(videoTemp, { recursive: true });
 
-const browser = await chromium.launch({ headless: true, args: [
+const launchArgs = [
   '--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader',
-] });
+] ;
+const browser = await chromium.launch({ headless: true, args: launchArgs });
 const browserVersion = browser.version();
 const errors = [];
 const pageErrors = [];
 const viewport = { width: 1280, height: 900 };
+async function screenshotIfMissing(page, path) {
+  try {
+    const existing = await stat(path);
+    if (existing.size <= 0) throw new Error(`Existing screenshot is empty: ${path}`);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    await page.screenshot({ path, fullPage: true });
+  }
+}
 const testContext = await browser.newContext({ viewport });
 const page = await testContext.newPage();
 page.on('pageerror', (error) => pageErrors.push(String(error)));
@@ -85,11 +96,12 @@ await page.waitForFunction(() => document.querySelector('#status')?.textContent?
 const parityText = await page.locator('#status').textContent();
 const parity = Number(parityText.match(/difference from Python archive: ([0-9.]+) ft/)?.[1]);
 if (!Number.isFinite(parity) || parity > 0.05) throw new Error(`Gridiron policy replay does not match the versioned rollout: ${parityText}`);
-await page.screenshot({ path: join(outputDir, 'viewer-topdown.png'), fullPage: true });
+await screenshotIfMissing(page, join(outputDir, 'viewer-topdown.png'));
 if (!transformDisabled) await page.locator('#transform').selectOption('raw');
 await page.locator('#camera').selectOption('side');
-await page.screenshot({ path: join(outputDir, 'viewer-rink-side.png'), fullPage: true });
+await screenshotIfMissing(page, join(outputDir, 'viewer-rink-side.png'));
 await testContext.close();
+await browser.close();
 
 const frozenCategories = [
   'oriented_attack_end_puck_proximity',
@@ -105,7 +117,19 @@ const unavailable = [];
 for (const category of frozenCategories) {
   const option = scenarioOptions.find((row) => row.text.includes(category));
   if (!option) { unavailable.push(category); continue; }
-  const context = await browser.newContext({ viewport, recordVideo: { dir: videoTemp, size: viewport } });
+  const slug = category.replaceAll(/[^a-z0-9-]+/gi, '-').replace(/^-|-$/g, '');
+  const output = join(outputDir, `${slug}.webm`);
+  try {
+    const existing = await stat(output);
+    if (existing.size <= 0) throw new Error(`Existing clip is empty: ${output}`);
+    clips.push({ category, scenario_option: option.text, file: basename(output), bytes: existing.size,
+      sha256: createHash('sha256').update(await readFile(output)).digest('hex'), preserved_from_previous_capture: true });
+    continue;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  const clipBrowser = await chromium.launch({ headless: true, args: launchArgs });
+  const context = await clipBrowser.newContext({ viewport, recordVideo: { dir: videoTemp, size: viewport } });
   const clipPage = await context.newPage();
   clipPage.on('pageerror', (error) => pageErrors.push(String(error)));
   clipPage.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
@@ -121,14 +145,15 @@ for (const category of frozenCategories) {
   const video = clipPage.video();
   await context.close();
   const temporary = await video.path();
-  const slug = category.replaceAll(/[^a-z0-9-]+/gi, '-').replace(/^-|-$/g, '');
-  const output = join(outputDir, `${slug}.webm`);
   await copyFile(temporary, output);
+  await unlink(temporary);
+  await clipBrowser.close();
   const bytes = await stat(output);
   clips.push({ category, scenario_option: option.text, file: basename(output), bytes: bytes.size,
-    sha256: createHash('sha256').update(await readFile(output)).digest('hex'), duration_seconds_estimate: 46 * 0.09 });
+    sha256: createHash('sha256').update(await readFile(output)).digest('hex'), duration_seconds_estimate: 46 * 0.09,
+    preserved_from_previous_capture: false });
 }
-await browser.close();
+await rm(videoTemp, { recursive: true, force: true });
 if (pageErrors.length || errors.length) throw new Error(JSON.stringify({ pageErrors, consoleErrors: errors }, null, 2));
 if (clips.length < 3) throw new Error(`Too few representative replay clips rendered: ${clips.length}`);
 const gridironCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
