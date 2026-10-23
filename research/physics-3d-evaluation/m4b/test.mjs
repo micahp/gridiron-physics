@@ -24,6 +24,19 @@ function shortFixture(id, durationSeconds = 1.35) {
 
 const summaries = [];
 for (const engine of ENGINE_IDS) {
+  const gangContactTimesByGeometry = {};
+  for (const geometry of ['single-capsule', 'compound']) {
+    const opposingGangTackle = await runScenario(engine, shortFixture('gang-two-opposite-open'), { playerGeometry: geometry });
+    const carrierContactTimes = ['carrier::defender-left', 'carrier::defender-right'].map((pairId) => {
+      const contact = opposingGangTackle.contacts.find((row) => row.pairId === pairId);
+      assert.ok(contact, `${engine}/${geometry}: ${pairId} records physical contact`);
+      return contact.firstTimeSeconds;
+    });
+    assert.ok(Math.abs(carrierContactTimes[0] - carrierContactTimes[1]) <= 1 / 120,
+      `${engine}/${geometry}: opposing defenders make simultaneous physical contact`);
+    gangContactTimesByGeometry[geometry] = carrierContactTimes;
+  }
+
   const simultaneousSack = await runScenario(engine, shortFixture('sack-simultaneous-two'), { playerGeometry: 'compound' });
   const quarterbackContacts = simultaneousSack.contacts.filter((row) => row.pairId.startsWith('quarterback::'));
   assert.equal(quarterbackContacts.length, 2, `${engine}: both rushers make physical quarterback contact`);
@@ -67,7 +80,7 @@ for (const engine of ENGINE_IDS) {
   assert.equal(compareSignatures(repeatA, repeatB), true, `${engine}: identical seed and fixture repeat within process`);
   summaries.push({ engine, simultaneousSackContacts: contactTimes, looseBall: fumble.outcome.football.status,
     pileFumbleImpulseCount: pileFumble.events.filter((row) => row.type === 'scenario_impulse').length,
-    gangCarrierContactPairs: carrierContacts.length, scrumContacts: scrum.contacts.length,
+    opposingGangTackleContacts: gangContactTimesByGeometry, gangCarrierContactPairs: carrierContacts.length, scrumContacts: scrum.contacts.length,
     playerCount22Contacts: maxLine.contacts.length, repeatable: true });
 }
 

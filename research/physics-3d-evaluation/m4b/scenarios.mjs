@@ -47,9 +47,9 @@ export const VERSION_PROFILES = Object.freeze({
 export const SCENARIOS = [
   {
     id: 'gang-two-opposite-open', category: 'gang-tackle', title: 'Two defenders, opposing angles, open field', durationSeconds: 7.5,
-    players: [P('carrier', 'offense', [0, 0.845, 0], [2.2, 0, 0], { mass: 96, wrap: null }),
-      defender('defender-left', [1.55, 0.845, -1.28], [-0.65, 0, 1.85], { wrap: wrap(3000) }),
-      defender('defender-right', [1.55, 0.845, 1.28], [-0.65, 0, -1.85], { wrap: wrap(3000) })],
+    players: [P('carrier', 'offense', [0, 0.845, 0], [2.5, 0, 0], { mass: 96, wrap: null }),
+      defender('defender-left', [0.75, 0.845, -0.65], [-1.2, 0, 1.1], { wrap: wrap(3000) }),
+      defender('defender-right', [0.75, 0.845, 0.65], [-1.2, 0, -1.1], { wrap: wrap(3000) })],
     carriedBall: carryBall,
   },
   {
