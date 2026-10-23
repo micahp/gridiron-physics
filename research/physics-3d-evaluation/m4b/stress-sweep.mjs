@@ -15,7 +15,8 @@ if (!profile) throw new Error(`Unknown simulation version: ${profileId}`);
 const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
 const commitKey = sourceCommit.slice(0, 10);
 const seed = Number(process.argv[3] ?? DEFAULT_SEED);
-const outputDirectory = path.join(RESULTS, profileId, commitKey);
+const seedKey = `seed-${seed}`;
+const outputDirectory = path.join(RESULTS, profileId, commitKey, seedKey);
 const outputPath = path.join(outputDirectory, 'stress-sweep.json');
 try { await access(outputPath); throw new Error(`Refusing to overwrite immutable sweep archive: ${outputPath}`); }
 catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -150,7 +151,7 @@ const manifestPath = path.join(HERE, 'results', 'archive-index.json');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const stressSweeps = new Map((manifest.stressSweeps ?? []).map((row) => [`${row.simulationVersion}|${row.sourceCommit}|${row.seed}`, row]));
 stressSweeps.set(`${profile.id}|${sourceCommit}|${seed}`, { simulationVersion: profile.id, sourceCommit, seed,
-  path: `../results/sweeps/${profile.id}/${commitKey}/stress-sweep.json`, cases: cases.length, engineRuns: rows.length,
+  path: `../results/sweeps/${profile.id}/${commitKey}/${seedKey}/stress-sweep.json`, cases: cases.length, engineRuns: rows.length,
   finiteRuns: rows.filter((row) => row.finite).length, repeatability, status: 'completed' });
 manifest.stressSweeps = [...stressSweeps.values()];
 manifest.generatedAt = new Date().toISOString();

@@ -73,7 +73,7 @@ try {
     const selection = { scenarioId, seed: SEED, leftEngine: engine, rightEngine: engine,
       leftVersion: `${version}|${profileCommits[version]}`, rightVersion: `${version}|${profileCommits[version]}`, camera: 'sideline' };
     await page.evaluate(async (value) => window.__m4bArchive.loadSelection(value), selection);
-    const profileFolder = `${scenarioId}/${engine}/${version}-${profileCommits[version].slice(0, 10)}`;
+    const profileFolder = `${scenarioId}/${engine}/${version}-${profileCommits[version].slice(0, 10)}/seed-${SEED}`;
     const paths = {};
     for (const camera of CAMERAS) {
       await page.evaluate(({ camera: cameraValue }) => {
@@ -119,7 +119,7 @@ try {
       const framePath = path.join(frameDirectory, `frame-${String(frame).padStart(5, '0')}.png`);
       await page.locator('.viewers').screenshot({ path: framePath, animations: 'disabled' });
     }
-    const videoName = `${engine}-${profileCommits[VERSIONS[0]].slice(0, 10)}-vs-${profileCommits[VERSIONS[1]].slice(0, 10)}-sideline.webm`;
+    const videoName = `${engine}-${profileCommits[VERSIONS[0]].slice(0, 10)}-vs-${profileCommits[VERSIONS[1]].slice(0, 10)}-seed-${SEED}-sideline.webm`;
     const destination = path.join(HERE, 'videos', scenarioId, videoName);
     await ensureNewArtifact(destination);
     await mkdir(path.dirname(destination), { recursive: true });

@@ -20,8 +20,9 @@ const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, enc
 const commitKey = sourceCommit.slice(0, 10);
 const scenarioVersion = 'm4b-scenario-library-v3';
 const archivedScenarioIds = new Set(['gang-two-opposite-open', 'sack-simultaneous-two', 'fumble-eight-pile-live-ball', 'fumble-eight-pile-ball-escapes', 'tush-push-eight']);
-const outputDirectory = path.join(RESULTS, profileId, commitKey);
-const stagingDirectory = path.join(RESULTS, `.m4b-staging-${profileId}-${commitKey}`);
+const seedKey = `seed-${seed}`;
+const outputDirectory = path.join(RESULTS, profileId, commitKey, seedKey);
+const stagingDirectory = path.join(RESULTS, `.m4b-staging-${profileId}-${commitKey}-${seedKey}`);
 try { await access(outputDirectory); throw new Error(`Immutable archive already exists at ${outputDirectory}`); }
 catch (error) { if (error.code !== 'ENOENT') throw error; }
 try { await access(stagingDirectory); throw new Error(`Interrupted staging archive exists at ${stagingDirectory}; inspect it before rerunning.`); }
@@ -43,7 +44,7 @@ for (const engine of ENGINE_IDS) {
       result = await runScenario(engine, scenario, { playerGeometry: profile.geometry, recordFrames: true, recordStride: fullRate ? 1 : 6 });
     } catch (error) {
       const filename = `${scenario.id}-seed-${seed}-failure.json.gz`;
-      const relativeResultPath = `${profile.id}/${commitKey}/${engine}/${filename}`;
+      const relativeResultPath = `${profile.id}/${commitKey}/${seedKey}/${engine}/${filename}`;
       const failurePath = path.join(stagingDirectory, engine, filename);
       const archiveMetadata = { milestone: 'M4b', simulationVersion: profile.id, playerGeometry: profile.geometry, sourceCommit, solverVersion, seed,
         scenarioVersion, timestepSeconds: 1 / 120, initialState: { players: scenario.players, football: scenario.carriedBall ?? null },
@@ -74,7 +75,7 @@ for (const engine of ENGINE_IDS) {
     };
     const payload = { archiveMetadata, initialState: archiveMetadata.initialState, replay: result };
     const filename = `${scenario.id}-seed-${seed}.json.gz`;
-    const relativeResultPath = `${profile.id}/${commitKey}/${engine}/${filename}`;
+    const relativeResultPath = `${profile.id}/${commitKey}/${seedKey}/${engine}/${filename}`;
     const resultPath = path.join(stagingDirectory, engine, filename);
     await mkdir(path.dirname(resultPath), { recursive: true });
     await writeFile(resultPath, gzipSync(Buffer.from(JSON.stringify(payload)), { level: 9 }));

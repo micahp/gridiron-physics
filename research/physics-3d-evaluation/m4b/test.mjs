@@ -104,7 +104,14 @@ try {
   for (const version of Object.keys(VERSION_PROFILES)) {
     const commit = index.activeProfileCommits?.[version];
     if (!commit) continue;
-    const summary = JSON.parse(await readFile(new URL(`./results/${version}/${commit.slice(0, 10)}/summary.json`, import.meta.url), 'utf8'));
+    const activeRecord = index.records.find((row) => row.simulationVersion === version && row.sourceCommit === commit);
+    assert.ok(activeRecord, `${version}: active commit has an archive record`);
+    let summary = null;
+    for (const suffix of [`/seed-${activeRecord.seed}/summary.json`, '/summary.json']) {
+      try { summary = JSON.parse(await readFile(new URL(`./results/${version}/${commit.slice(0, 10)}${suffix}`, import.meta.url), 'utf8')); break; }
+      catch (error) { if (error.code !== 'ENOENT') throw error; }
+    }
+    assert.ok(summary, `${version}: active commit has a readable summary`);
     const archivedScenarioCount = new Set(summary.scenarioResults.map((row) => row.scenarioId)).size;
     assert.equal(summary.scenarioResults.length, archivedScenarioCount * ENGINE_IDS.length);
     assert.ok(summary.scenarioResults.every((row) => row.status === 'failed' || row.diagnostics.finite));
