@@ -140,7 +140,6 @@ if (!transformDisabled) await page.locator('#transform').selectOption('raw');
 await page.locator('#camera').selectOption('side');
 await screenshotIfMissing(page, join(outputDir, 'viewer-rink-side.png'));
 await testContext.close();
-await browser.close();
 
 const frozenCategories = [
   'oriented_attack_end_puck_proximity',
@@ -153,6 +152,8 @@ const frozenCategories = [
 ];
 const clips = [];
 const unavailable = [];
+// Reuse the validation browser and release one video context before the next.
+const clipBrowser = browser;
 for (const category of frozenCategories) {
   const option = scenarioOptions.find((row) => row.text.includes(category));
   if (!option) { unavailable.push(category); continue; }
@@ -168,7 +169,6 @@ for (const category of frozenCategories) {
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
-  const clipBrowser = await chromium.launch({ headless: true, args: launchArgs });
   const context = await clipBrowser.newContext({ viewport, recordVideo: { dir: videoTemp, size: viewport } });
   const clipPage = await context.newPage();
   clipPage.on('pageerror', (error) => pageErrors.push(String(error)));
@@ -187,13 +187,13 @@ for (const category of frozenCategories) {
   const temporary = await video.path();
   await copyFile(temporary, output);
   await unlink(temporary);
-  await clipBrowser.close();
   const bytes = await stat(output);
   clips.push({ category, scenario_option: option.text, file: basename(output), bytes: bytes.size,
     sha256: createHash('sha256').update(await readFile(output)).digest('hex'),
     duration_seconds: recordedDuration(output),
     preserved_from_previous_capture: false });
 }
+await clipBrowser.close();
 await rm(videoTemp, { recursive: true, force: true });
 if (pageErrors.length || errors.length) throw new Error(JSON.stringify({ pageErrors, consoleErrors: errors }, null, 2));
 if (clips.length < 3) throw new Error(`Too few representative replay clips rendered: ${clips.length}`);
