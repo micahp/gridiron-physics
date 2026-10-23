@@ -15,7 +15,9 @@
     "eval:physics3d:sweep": "node research/physics-3d-evaluation/sweep.mjs",
     "eval:physics3d:sweep:test": "node research/physics-3d-evaluation/test-sweep.mjs",
     "eval:physics3d:contact": "node research/physics-3d-evaluation/contact-mechanism.mjs",
-    "eval:physics3d:contact:test": "node research/physics-3d-evaluation/test-contact-mechanism.mjs"
+    "eval:physics3d:contact:test": "node research/physics-3d-evaluation/test-contact-mechanism.mjs",
+    "eval:physics3d:energy": "node research/physics-3d-evaluation/contact-energy.mjs",
+    "eval:physics3d:energy:test": "node research/physics-3d-evaluation/test-contact-energy.mjs"
   },
   "license": "MIT",
   "devDependencies": {
