@@ -217,6 +217,18 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Decision:** M4b **research infrastructure completed**; **physical football mechanisms still partially missing**. Do not promote either solver or claim NFL predictive validity.
 
+### Cross-sport movement research result — 2026-10-23: hockey v0.1 shared movement interface
+
+**Evidence:** [Legendary Picks ten-game hockey multi-agent movement report](https://github.com/micahp/legendarypicks/blob/e43c09fe7d1f955794717099f53be3392ee8e6ea/docs/research/NHL-MULTI-AGENT-MOVEMENT-REPORT-2026-10-23.md) and [Gridiron hockey controller/replay research](https://github.com/micahp/gridiron-physics/tree/896e71e533259b39df6223183ed2b052b9ab7487/research/hockey-movement-v0.1); research commits LP `e43c09f`, Gridiron `896e71e`. Both off main/development and production solvers unchanged.
+
+**Working infrastructure:** A separate sport-neutral `engine/movement/` API offers `initializeMovementScene`, `proposeMovement`, `stepMovement`, `recordMovementFrame` and `replayMovement`; hockey supplies rink geometry, independently learned policy and explicit ordinal 2D position constraints. A browser-validated Three.js four-panel viewer compares observed tracks with M0 independent, M1 interaction-aware and M2 interaction-plus-constraints policies. **206** archived scenes, **seven** reference clips, and exact reported archived-vs-browser policy path parity (**0.00000 ft**) demonstrate a reproducible research/UI seam without modifying the NFL solver or invoking Rapier/Jolt.
+
+**Failed model promotion gate:** Ten previously examined *anonymized high-calibre hockey* games, **200** rollout starts, prediction at +1/+5/+15/+30/+45 **ordinal Image Id increments (not seconds)**. Autonomous +45 position error M0 **13.575 ft**, M1 **12.178 ft**, M2 **12.170 ft**; but M1 worsened the +1 position error **0.200→0.205 ft**, violating the frozen rule. At +45, M1 also worsened **pair-distance error 7.929→8.554 ft** and **team spacing 5.615→6.674 ft**. M2 reduced boundary violations **0.069→0** and below-floor pairs **0.395→0.109 per scored state**, but its +45 position improvement relative to M1 was not established. Thus these policies do not establish coherent joint movement or physical dynamics and are **not adopted**.
+
+**Important scope:** There is **no documented subsecond timebase**, verified across-game athlete identities, reliable event/tracking alignment, physical contact labels, known puck possession or true 3D motion. The rink-side display is a camera rendering of 2D positions. Puck advancement is an explicitly nonphysical helper. There is no licensed NHL live-forecast upgrade or evidence that these ordinal controls map to football locomotion. Any shared code merge should be **an isolated infrastructure-only PR**, not a model or solver change.
+
+**Next cross-sport movement gate:** Analyze relative pair distances, defense/teammate spacing and coordinated cut/closing trajectories over the full rollout, not just individual end-position or global occupancy; evaluate a shared-state joint policy with correlated movement intents and a preregistered short-horizon **plus** pair-spacing success criterion. Preserve M0, archived negative findings and per-version viewers; don't use the ten inspected games as a new untouched validation set. Time-calibrated physical claims await independent timestamped, identity-validated tracking.
+
 ### M5. Rare events and special teams
 
 **Goal:** The engine can eventually produce both ordinary and exceptional outcomes for football reasons.
