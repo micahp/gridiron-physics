@@ -33,7 +33,7 @@ class View{
     this.renderer=new THREE.WebGLRenderer({canvas:this.canvas,antialias:true,alpha:false});this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     this.controls=new OrbitControls(this.camera,this.canvas);this.controls.enableDamping=true;this.controls.enablePan=true;this.controls.minDistance=75;this.controls.maxDistance=350;
     this.dynamic=[];this.resize=new ResizeObserver(()=>this.renderSize());this.resize.observe(this.canvas.parentElement);this.renderSize();
-    this.animate=()=>{this.controls.update();this.renderer.render(this.scene,this.camera);requestAnimationFrame(this.animate)};this.animate();
+    this.animate=()=>{this.controls.update();this.renderer.render(this.scene,this.camera);setTimeout(this.animate,50)};this.animate();
     this.container.querySelector('select').addEventListener('change',e=>{this.model=e.target.value;draw()});
   }
   renderSize(){const r=this.canvas.parentElement.getBoundingClientRect();this.renderer.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix()}
