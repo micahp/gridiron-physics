@@ -44,6 +44,9 @@ for (const engine of ENGINE_IDS) {
   const contactTimes = quarterbackContacts.map((row) => row.firstTimeSeconds);
   assert.ok(Math.max(...contactTimes) - Math.min(...contactTimes) <= 1 / 120, `${engine}: the two contacts are simultaneous within one physics step`);
   assert.ok(simultaneousSack.events.some((row) => row.type === 'player_contact_started' && row.pointsM.length > 0));
+  assert.ok(simultaneousSack.frames.every((frame) => Array.isArray(frame.diagnostics.totalLinearMomentumKgMps)
+    && Array.isArray(frame.diagnostics.totalAngularMomentumAboutOriginKgM2PerSec)
+    && frame.diagnostics.knownForceInputs.gravityForceNByBody), `${engine}: replay records momentum and named force inputs`);
   assert.equal(simultaneousSack.outcome.sack.officialHalfSackCredit.includes('not assigned'), true);
 
   const fumble = await runScenario(engine, shortFixture('fumble-two-recovery'), { playerGeometry: 'compound' });

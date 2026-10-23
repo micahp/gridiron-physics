@@ -119,7 +119,8 @@ for (const engine of ENGINE_IDS) for (const scenario of cases) {
         rotation: state.rotation, linearVelocityMps: state.linearVelocityMps, angularVelocityRadPerSec: state.angularVelocityRadPerSec }])),
       football: frame.football ? { positionM: frame.football.positionM, rotation: frame.football.rotation,
         linearVelocityMps: frame.football.linearVelocityMps, angularVelocityRadPerSec: frame.football.angularVelocityRadPerSec,
-        status: frame.football.status, controlledBy: frame.football.controlledBy } : null })),
+        status: frame.football.status, controlledBy: frame.football.controlledBy } : null, diagnostics: frame.diagnostics,
+      forcesNByPlayer: frame.forcesNByPlayer, torquesNmByPlayer: frame.torquesNmByPlayer, groundContacts: frame.groundContacts })),
     memoryHeapAfterBytes: result.diagnostics.memoryHeapAfterBytes });
   console.log(JSON.stringify({ engine, scenarioId: result.scenarioId, players: result.diagnostics.playerCount,
     contacts: result.contacts.length, finite: result.diagnostics.finite, runtimeMs: Number(result.runtime.wallTimeMs.toFixed(1)) }));

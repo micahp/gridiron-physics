@@ -1,5 +1,5 @@
 import {
-  add, createPhysics, cross, dot, length, normalize, qConjugate, qRotate, scale, sub, tiltDeg,
+  add, createPhysics, cross, dot, length, normalize, qConjugate, qMultiply, qRotate, scale, sub, tiltDeg,
   FIXED_TIMESTEP_SECONDS as DT, GRAVITY_MPS2 as GRAVITY,
 } from './physics.mjs';
 
@@ -189,12 +189,33 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
     const currentCarrier = states.get(carrierId);
     const energy = [...states].map(([id, state]) => ({ id, ...energyOf(state, world.energyProps(players.get(id))) }));
     if (ballState) energy.push({ id: 'football', ...energyOf(ballState, world.energyProps(ball)) });
+    const bodyStates = [...states].map(([id, state]) => [id, state, players.get(id)]);
+    if (ballState) bodyStates.push(['football', ballState, ball]);
+    const momentumByBody = bodyStates.map(([id, state, body]) => {
+      const properties = world.energyProps(body);
+      const linearMomentum = scale(state.linearVelocityMps, properties.massKg);
+      const principalOrientation = qMultiply(state.rotation, properties.inertiaLocalRotation);
+      const angularVelocityLocal = qRotate(state.angularVelocityRadPerSec, qConjugate(principalOrientation));
+      const spinMomentumLocal = angularVelocityLocal.map((value, axis) => value * properties.principalInertiaKgM2[axis]);
+      const spinMomentum = qRotate(spinMomentumLocal, principalOrientation);
+      const orbitalMomentum = cross(state.centerOfMassM, linearMomentum);
+      return { id, massKg: properties.massKg, linearMomentumKgMps: linearMomentum,
+        orbitalAngularMomentumKgM2PerSec: orbitalMomentum, spinAngularMomentumKgM2PerSec: spinMomentum,
+        angularMomentumAboutOriginKgM2PerSec: add(orbitalMomentum, spinMomentum) };
+    });
+    const sumMomentum = (field) => momentumByBody.reduce((sum, row) => add(sum, row[field]), [0, 0, 0]);
+    const gravityForceNByBody = Object.fromEntries(momentumByBody.map((row) => [row.id, scale(GRAVITY_VECTOR, row.massKg)]));
     sampledFrames.push(round({ tick, timeSeconds: tick * DT, players: playerRows,
       football: ballState ? { positionM: ballState.positionM, centerOfMassM: ballState.centerOfMassM,
         linearVelocityMps: ballState.linearVelocityMps, angularVelocityRadPerSec: ballState.angularVelocityRadPerSec,
         rotation: ballState.rotation, status: ballStatus, controlledBy: ballAttached ? ballAttachedToId : null } : null,
       contacts, ballContacts, groundContacts, forcesNByPlayer: appliedForces, torquesNmByPlayer: appliedTorques,
-      grips: constraints, diagnostics: { mechanicalEnergyByBodyJ: energy, totalMechanicalEnergyJ: energy.reduce((sum, row) => sum + row.totalMechanicalJ, 0) },
+      grips: constraints, diagnostics: { mechanicalEnergyByBodyJ: energy, totalMechanicalEnergyJ: energy.reduce((sum, row) => sum + row.totalMechanicalJ, 0),
+        momentumByBody, totalLinearMomentumKgMps: sumMomentum('linearMomentumKgMps'),
+        totalAngularMomentumAboutOriginKgM2PerSec: sumMomentum('angularMomentumAboutOriginKgM2PerSec'),
+        knownForceInputs: { gravityForceNByBody, appliedForceRecordsByBody: appliedForces, appliedTorqueRecordsByBody: appliedTorques,
+          groundContactBodies: groundContacts.map((row) => row.body) },
+        momentumInterpretation: 'Instantaneous system momentum; gravity, ground reactions, configured controllers, and scenario impulses are external inputs. Force records retain their source labels; equal-and-opposite wrap and carry proxies remain identifiable.' },
       rawProgress: { carrierPositionXM: currentCarrier.positionM[0], footballPositionXM: ballState?.positionM[0] ?? null,
         possessionControlled: ballAttached } }));
   };
@@ -445,6 +466,7 @@ export async function runScenario(engine, scenario, { playerGeometry = 'compound
       solverInstability: 'No universal instability threshold is asserted. Finite-value, contact penetration, and repeatability diagnostics are recorded separately.',
       solverImpulseAvailability: engine === 'rapier3d-compat' ? 'Rapier solver manifold normal impulses' : 'Jolt exposes manifold points and penetration here; solver impulses are unavailable through the tested JS wrapper',
       energyInterpretation: 'Kinetic and gravitational potential energies are sampled. Applied controller forces are serialized; friction, contacts, gravity, and force work are not collapsed into a false conservation claim.',
+      momentumInterpretation: 'System linear and angular momentum are sampled at replay frames. Gravity, ground reactions, controller forces, and configured scenario impulses are external inputs; momentum is not asserted to be conserved across them.',
       memoryHeapBeforeBytes: heapBeforeBytes, memoryHeapAfterBytes: process.memoryUsage().heapUsed,
       playerCount: players.size, maxObservedPlayerCount, framesRecorded: sampledFrames.length,
       activeWrapHoldersAtEnd: activeAtEnd, physicalLooseBallTouchCount: recoveryTouchEvents },
