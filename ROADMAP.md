@@ -169,6 +169,20 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Gate:** Two independently executed, reproducible drives complete with valid legal state, traceable player outcomes and no fabricated physics. Differences from statistically generated outcomes are recorded, not suppressed.
 
+### M4b. Adversarial many-body football physics and visual regression archive (new priority)
+
+**Requirement, 2026-10-23:** Before replacing the low-level player solver or claiming realistic tackling, stress-test the highest-contact situations in true 3D and keep a reviewable **visual archive for each tested version**. This runs as **isolated physics research** on the current `research/3d-physics-engine-evaluation` workstream, not a production migration.
+
+**Mandatory scenario fixtures:** (1) fumble with a truly loose 3D football and 2-v-2, 4-v-4 and crowded pileup/recovery attempts; (2) simultaneous 2-, 3-, and 4-defender tackles of a moving carrier with defenders approaching from multiple angles; (3) two-defender shared quarterback sack and a one-defender counterfactual; (4) tush push / short-yardage scrum with offensive and defensive lines and a quarterback/carrier being driven forward. Include near-miss, failed grip and recovered balance controls. Progress from simplified geometry to articulated contacts explicitly; never label mere torso contact a secure fumble recovery or a completed tackle.
+
+**Physical questions:** contact stacking, penetration, stability, friction and traction, balance/recovery, grip and release, forces/torques through multiple bodies, ball escape/occlusion and secure possession, frame-safe outcome attribution (half sack requires two defenders meaningfully contributing, not a random label), and ball spot/forward progress derived from the simulated sequence. Distinguish raw physical events from official scorer attribution. The presence of 22 bodies on a field is not a multi-body pileup benchmark.
+
+**Archive output:** Each versioned fixture has pinned seed, solver/version/WASM hash, code commit, player shape/controller/ratings/input snapshot, timestep, starting geometry, duration, contact/energy/constraint-event JSON, and **actual viewable browser replay/video** at fixed All-22, sideline and contact-close cameras. Three.js remains the viewer. A viewer index should choose fixture × solver × version and play/pause/scrub a deterministic recorded transform timeline with contact/constraint overlays. Preserve prior clips and representative golden frames; never overwrite a historical version in place. Keep manageable visual artifacts under a versioned research folder; use an explicitly linked versioned release/artifact store if video sizes are excessive. Programmatic tests should check event invariants and finite state; visual diffs are diagnostics, not an excuse to reject legitimate solver rendering changes.
+
+**Acceptance:** Every fixture runs headlessly and in Chromium with fixed seeds, every replay can be reopened at a pinned version, and contact outcomes are demonstrated or explicitly labeled unsupported. Benchmark warm/cold, memory and time-to-simulate full-contact intervals on both Rapier and Jolt where feasible. Do **not** choose a solver on the earlier 0.25-second low-contact proxy alone.
+
+**Latest research correction:** [Gridiron physics commit `edd4057`](https://github.com/micahp/gridiron-physics/commit/edd4057d97af61700fdec9bca3433f9065bf63d1) extends contact testing to 900 ticks and withdraws the prior Jolt “energy diverted into defender motion” attribution: the limited normal-impulse ledger **cannot identify** the mechanism. Contact-free tackle-scale gravity controls measured max per-step / cumulative energy drift **Rapier 0.090421 / 4.222032 J**, **Jolt 0.360987 / 16.963764 J**, exceeding the earlier 0.05 J-per-step hypothesis. These values apply to the controlled free-fall configurations, **not** full player-contact energy conservation.
+
 ### M5. Rare events and special teams
 
 **Goal:** The engine can eventually produce both ordinary and exceptional outcomes for football reasons.
@@ -274,7 +288,7 @@ The mean gap of **3.24 points per team** is “roughly one field goal,” **not*
 
 ## Next actions
 
-1. **Immediately:** Use the completed Rapier/Jolt feasibility report as baseline. Next test **physically resolved wrap/grip break, balance recovery and secure hand-ball catch**, alongside the controlled rating/seed diagnostic. Do not merge a solver on contact-only evidence.
+1. **Immediately:** Continue physically resolved wrap/grip break, balance recovery and secure hand-ball capture, **then prioritize M4b's many-body adversarial fixtures and pinned Three.js visual replay archive**. Do not merge a solver on contact-only evidence.
 2. **In parallel:** LP team fixes/diagnoses the statistical sequence engine's drive failures (clock/kneels, down-specific pass gains, fourth-down policy, red-zone TDs, turnover returns) without modifying the physics benchmark to make up the scoring gap.
 3. **Then:** Select a solver by evidence, integrate a minimal prospective play with real 3D contacts, run a complete **Patriots and Bears drive**, and compare those possessions to both real drives and the unchanged statistical baseline.
 4. **Only after that:** Expand to rare events, full games, player-stat coherence and prospective forecast tests.
