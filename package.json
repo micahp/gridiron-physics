@@ -8,7 +8,15 @@
     "data": "python3 pipeline/fetch.py && python3 pipeline/ratings.py && python3 pipeline/build_game.py",
     "build": "python3 pipeline/ratings.py && python3 pipeline/build_game.py",
     "test": "node test/validate.mjs --strict && node test/prototype.mjs && python3 test/test_prototype_data.py",
-    "serve": "python3 -m http.server 8080 --directory ."
+    "serve": "python3 -m http.server 8080 --directory .",
+    "eval:physics3d": "node research/physics-3d-evaluation/benchmark.mjs",
+    "eval:physics3d:test": "node research/physics-3d-evaluation/test-headless.mjs",
+    "eval:physics3d:browser": "node research/physics-3d-evaluation/browser-test.mjs"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@dimforge/rapier3d-compat": "0.21.0",
+    "jolt-physics": "1.1.0",
+    "playwright": "1.64.1"
+  }
 }

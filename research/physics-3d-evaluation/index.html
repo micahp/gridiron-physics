@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gridiron Physics · 3D solver comparison</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">
+    {"imports": {
+      "@dimforge/rapier3d-compat": "/node_modules/@dimforge/rapier3d-compat/dist/rapier.mjs",
+      "jolt-physics": "/node_modules/jolt-physics/dist/jolt-physics.wasm-compat.js"
+    }}
+  </script>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">Research prototype · no production solver changes</p>
+      <h1>3D contact comparison</h1>
+    </div>
+    <p class="notice">Rigid-body contacts and outcomes are engine-resolved. This prototype does not model verified NFL tackling or catching.</p>
+  </header>
+  <main>
+    <section class="controls" aria-label="Simulation controls">
+      <label>Engine<select id="engine"><option value="rapier">Rapier 3D</option><option value="jolt">Jolt Physics</option></select></label>
+      <label>Scenario<select id="scenario"></select></label>
+      <label>Seed<input id="seed" type="number" value="42"></label>
+      <button id="run">Run tackle</button>
+      <button id="pass">Run pass</button>
+      <button id="compare">Run both engines</button>
+    </section>
+    <section class="stage" aria-label="Three dimensional simulation view">
+      <canvas id="view"></canvas>
+      <div id="caption">Choose a scenario and run it to inspect the resolved 3D poses.</div>
+    </section>
+    <section class="results">
+      <h2>Run output</h2>
+      <pre id="output">Ready. Tackle policies provide initial velocities; only the escape case adds a stated post-contact drive.</pre>
+    </section>
+  </main>
+  <script type="module" src="./browser.js"></script>
+</body>
+</html>
