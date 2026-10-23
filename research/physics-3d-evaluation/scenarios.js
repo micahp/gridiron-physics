@@ -1,5 +1,7 @@
 export const DT = 1 / 120;
 export const PLAYER_HEIGHT = 1.82;
+export const CONTACT_SWEEP_ANGLES_DEG = [0, 30, 60, 90];
+export const CONTACT_SWEEP_SPEEDS_MPS = [4, 6, 8];
 
 // World axes: x = downfield, y = vertical, z = across the field.
 // The initial velocities are policy outputs for this controlled experiment;
@@ -13,6 +15,34 @@ export const TACKLE_SCENARIOS = [
   { id: 'glancing-impact', duration: 1.8, carrier: { p: [0, 0.845, 0], v: [4.3, 0, 0], mass: 96, strength: 80 }, defender: { p: [1.05, 0.845, 0.54], v: [-2.5, 0, -0.5], mass: 101, strength: 86 } },
   { id: 'escape-attempt-strength-drive', duration: 2.0, carrier: { p: [0, 0.845, 0], v: [3.2, 0, 0], mass: 106, strength: 92, postContactDrivePerStrengthN: 5.65 }, defender: { p: [1.95, 0.845, 0], v: [-2.7, 0, 0], mass: 84, strength: 76 } },
 ];
+
+// Controlled geometry sweep. The stationary defender faces -x. The carrier
+// starts 2 m away, travels directly into the defender at the requested speed,
+// and is yaw-aligned to its travel vector. Angle is carrier heading relative
+// to the defender's forward axis: 0° head-on; 90° side-on. Both players use
+// fixed 96/108 kg masses, the shared five-collider proxy, and no outcome draw.
+export function contactSweepScenario(approachAngleDeg, closingSpeedMps) {
+  const angleRad = approachAngleDeg * Math.PI / 180;
+  const dx = Math.cos(angleRad), dz = Math.sin(angleRad);
+  return {
+    id: `angle-${approachAngleDeg}-speed-${closingSpeedMps}`,
+    duration: 1.5,
+    carrier: {
+      p: [-2 * dx, 0.845, -2 * dz],
+      v: [closingSpeedMps * dx, 0, closingSpeedMps * dz],
+      mass: 96,
+      strength: 80,
+      yawRad: -angleRad,
+    },
+    defender: {
+      p: [0, 0.845, 0],
+      v: [0, 0, 0],
+      mass: 108,
+      strength: 88,
+      yawRad: Math.PI,
+    },
+  };
+}
 
 export const PASS_SCENARIO = {
   id: 'aerodynamic-pass-with-contested-target',

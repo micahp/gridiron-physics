@@ -23,8 +23,10 @@ function attachHumanoid(world, body, mass) {
 }
 
 function createPlayer(world, spec, label) {
+  const yaw = spec.yawRad ?? 0;
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
     .setTranslation(...spec.p)
+    .setRotation(quat(0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)))
     .setLinvel(...spec.v)
     .setLinearDamping(0.04)
     .setAngularDamping(0.18)

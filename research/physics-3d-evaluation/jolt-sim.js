@@ -45,10 +45,11 @@ function makeShape(J, shapeSettings) {
   return shape;
 }
 
-function addBody(w, shape, { p, v = [0, 0, 0], angular = [0, 0, 0], mass, dynamic, layer, friction = 0.82, restitution = 0.03 }) {
+function addBody(w, shape, { p, v = [0, 0, 0], angular = [0, 0, 0], yawRad = 0, mass, dynamic, layer, friction = 0.82, restitution = 0.03 }) {
   const { J } = w;
   const pos = new J.RVec3(...p);
-  const rot = J.Quat.prototype.sIdentity();
+  const yawAxis = new J.Vec3(0, 1, 0);
+  const rot = J.Quat.prototype.sRotation(yawAxis, yawRad);
   const settings = new J.BodyCreationSettings(shape, pos, rot, dynamic ? J.EMotionType_Dynamic : J.EMotionType_Static, layer);
   settings.mFriction = friction;
   settings.mRestitution = restitution;
@@ -66,7 +67,7 @@ function addBody(w, shape, { p, v = [0, 0, 0], angular = [0, 0, 0], mass, dynami
   const body = w.bodyInterface.CreateBody(settings);
   const id = body.GetID();
   w.bodyInterface.AddBody(id, J.EActivation_Activate);
-  J.destroy(settings); J.destroy(pos); J.destroy(rot);
+  J.destroy(settings); J.destroy(pos); J.destroy(rot); J.destroy(yawAxis);
   w.bodies.push({ body, id });
   return { body, id, mass };
 }
@@ -109,7 +110,7 @@ function makeHumanoid(w, spec) {
     J.destroy(pos); J.destroy(rotation);
   }
   const shape = makeShape(J, compound);
-  return addBody(w, shape, { p: spec.p, v: spec.v, mass: spec.mass, dynamic: true, layer: w.movingLayer });
+  return addBody(w, shape, { p: spec.p, v: spec.v, yawRad: spec.yawRad ?? 0, mass: spec.mass, dynamic: true, layer: w.movingLayer });
 }
 
 function readBody(w, body, mass) {

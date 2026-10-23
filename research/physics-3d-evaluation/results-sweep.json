@@ -1,0 +1,2815 @@
+{
+  "generatedAt": "2026-10-23T03:20:06.842Z",
+  "label": "Controlled research inputs with a five-collider collision proxy; not a tackle model, not a prediction, and not validation against NFL data.",
+  "runtime": {
+    "node": "v22.22.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC Processor (with IBPB)",
+    "engineVersions": {
+      "rapier3d-compat": "0.21.0",
+      "jolt-physics-js": "1.1.0"
+    }
+  },
+  "method": {
+    "approachAngleDefinition": "Carrier travel heading relative to the stationary defender forward axis; 0 degrees is head-on and 90 degrees is side-on. The carrier is yaw-aligned with its velocity and begins 2 m from the defender.",
+    "anglesDeg": [
+      0,
+      30,
+      60,
+      90
+    ],
+    "closingSpeedsMps": [
+      4,
+      6,
+      8
+    ],
+    "carrierClosingOnStationaryDefender": true,
+    "carrierMassKg": 96,
+    "defenderMassKg": 108,
+    "fixedTimestepSeconds": 0.008333333333333333,
+    "durationSeconds": 1.5,
+    "collidersPerPlayer": 5,
+    "fallingThresholdDeg": 55,
+    "outcomeRandomDraw": false,
+    "policy": "Initial approach velocity only; no post-contact motor, tackle-success draw, or forced fall.",
+    "cellCountPerEngine": 12,
+    "cellCountTotal": 24
+  },
+  "fallDisagreement": {
+    "carrier": {
+      "count": 0,
+      "totalCells": 12,
+      "share": 0,
+      "cells": []
+    },
+    "defender": {
+      "count": 0,
+      "totalCells": 12,
+      "share": 0,
+      "cells": []
+    }
+  },
+  "cells": [
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-0-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 0,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.3416666666666667,
+      "contactPoint": [
+        -0.22610458731651306,
+        0.7642208337783813,
+        -0.10759861767292023
+      ],
+      "impulseEstimateNs": 193.02608489990234,
+      "carrierPeakTiltDeg": 86.37335330902567,
+      "defenderPeakTiltDeg": 89.25565409684792,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-0-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 41,
+          "timeSeconds": 0.3416666666666667,
+          "position": [
+            -0.22610458731651306,
+            0.7642208337783813,
+            -0.10759861767292023
+          ],
+          "contactImpulseEstimateNs": 193.02608489990234,
+          "carrierMomentumImpulseNs": [
+            -238.92106819152832,
+            189.1983098487854,
+            7.024922984454406
+          ],
+          "momentumBefore": [
+            289.3156911805272,
+            -199.38115363335237,
+            0.00010262570799568493
+          ],
+          "momentumAfterGravityAdjusted": [
+            155.07845449447632,
+            -0.5634308393597589,
+            3.0207414776086807
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.6876241564750671,
+              0.2950206398963928,
+              -0.05150572583079338
+            ],
+            "velocity": [
+              -0.0192725732922554,
+              0.032082587480545044,
+              -0.14348164200782776
+            ],
+            "tiltDeg": 85.61422082338638,
+            "rotation": [
+              -0.05302513763308525,
+              -0.032861512154340744,
+              -0.6774603724479675,
+              0.7329093217849731
+            ]
+          },
+          "defender": {
+            "position": [
+              0.9826499223709106,
+              0.27330905199050903,
+              0.15258611738681793
+            ],
+            "velocity": [
+              -0.030775707215070724,
+              0.04189630597829819,
+              0.22023101150989532
+            ],
+            "tiltDeg": 87.72056891306902,
+            "rotation": [
+              0.6848207712173462,
+              0.7172701954841614,
+              0.10551762580871582,
+              -0.07355375587940216
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 86.37335330902567,
+          "defender": 89.25565409684792
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-0-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 0,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.23333333333333334,
+      "contactPoint": [
+        -0.20638525485992432,
+        1.1593140363693237,
+        -0.11055734008550644
+      ],
+      "impulseEstimateNs": 231.32169342041016,
+      "carrierPeakTiltDeg": 89.9882360876108,
+      "defenderPeakTiltDeg": 89.23834397972021,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-0-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 28,
+          "timeSeconds": 0.23333333333333334,
+          "position": [
+            -0.20638525485992432,
+            1.1593140363693237,
+            -0.11055734008550644
+          ],
+          "contactImpulseEstimateNs": 231.32169342041016,
+          "carrierMomentumImpulseNs": [
+            -293.1280746459961,
+            127.31359524536133,
+            13.398794073611498
+          ],
+          "momentumBefore": [
+            484.6999086923897,
+            -110.04157618264435,
+            0.00018955517028018676
+          ],
+          "momentumAfterGravityAdjusted": [
+            415.8819351196289,
+            23.997543386042118,
+            2.5777169466018677
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.2012014091014862,
+              0.2681586444377899,
+              0.841279923915863
+            ],
+            "velocity": [
+              -0.17079882323741913,
+              -0.25936123728752136,
+              1.045822262763977
+            ],
+            "tiltDeg": 88.2271968906375,
+            "rotation": [
+              0.6952028274536133,
+              0.7020172476768494,
+              0.03499816358089447,
+              0.15046578645706177
+            ]
+          },
+          "defender": {
+            "position": [
+              0.9777120351791382,
+              0.2726845443248749,
+              0.15732546150684357
+            ],
+            "velocity": [
+              -0.015126090496778488,
+              0.021501759067177773,
+              0.10882166773080826
+            ],
+            "tiltDeg": 87.78481373963376,
+            "rotation": [
+              0.6858566403388977,
+              0.7173271179199219,
+              0.10136240720748901,
+              -0.06905271857976913
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 89.9882360876108,
+          "defender": 89.23834397972021
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-0-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 0,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.175,
+      "contactPoint": [
+        -0.25555118918418884,
+        1.3714523315429688,
+        -0.15574638545513153
+      ],
+      "impulseEstimateNs": 178.68173217773438,
+      "carrierPeakTiltDeg": 90.39332805797275,
+      "defenderPeakTiltDeg": 89.25413866420055,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-0-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 21,
+          "timeSeconds": 0.175,
+          "position": [
+            -0.25555118918418884,
+            1.3714523315429688,
+            -0.15574638545513153
+          ],
+          "contactImpulseEstimateNs": 178.68173217773438,
+          "carrierMomentumImpulseNs": [
+            -323.2127380371094,
+            76.68355108308792,
+            1.910048458545134
+          ],
+          "momentumBefore": [
+            684.3507541883737,
+            -67.91298689086398,
+            0.00006826110101165739
+          ],
+          "momentumAfterGravityAdjusted": [
+            590.2522916793823,
+            38.19587905597687,
+            1.3394494950771332
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.358162522315979,
+              0.5177183151245117,
+              0.482157826423645
+            ],
+            "velocity": [
+              0.1945054829120636,
+              -1.5028252601623535,
+              1.0463217496871948
+            ],
+            "tiltDeg": 75.76556664133155,
+            "rotation": [
+              0.5110424160957336,
+              0.634537398815155,
+              -0.3404271900653839,
+              0.46936890482902527
+            ]
+          },
+          "defender": {
+            "position": [
+              0.8805596232414246,
+              0.26087576150894165,
+              0.08576660603284836
+            ],
+            "velocity": [
+              0.008927418850362301,
+              -0.05461175739765167,
+              0.11963926255702972
+            ],
+            "tiltDeg": 88.93556916339139,
+            "rotation": [
+              0.7004188895225525,
+              0.7121565937995911,
+              0.011180435307323933,
+              0.046060316264629364
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 90.39332805797275,
+          "defender": 89.25413866420055
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-30-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 30,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.3416666666666667,
+      "contactPoint": [
+        -0.14114664494991302,
+        0.7768596410751343,
+        -0.20487673580646515
+      ],
+      "impulseEstimateNs": 188.49625396728516,
+      "carrierPeakTiltDeg": 86.37114031014244,
+      "defenderPeakTiltDeg": 88.9191833696044,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-30-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 41,
+          "timeSeconds": 0.3416666666666667,
+          "position": [
+            -0.14114664494991302,
+            0.7768596410751343,
+            -0.20487673580646515
+          ],
+          "contactImpulseEstimateNs": 188.49625396728516,
+          "carrierMomentumImpulseNs": [
+            -204.3969783782959,
+            179.80916638183595,
+            -113.83857250213623
+          ],
+          "momentumBefore": [
+            253.0901281312108,
+            -195.04004340386018,
+            147.12007546825566
+          ],
+          "momentumAfterGravityAdjusted": [
+            142.31055164337158,
+            -5.691626536801458,
+            84.73455512523651
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.5741095542907715,
+              0.28809937834739685,
+              -0.34787508845329285
+            ],
+            "velocity": [
+              -0.09871195256710052,
+              -0.07069775462150574,
+              0.2408931404352188
+            ],
+            "tiltDeg": 86.28845563089347,
+            "rotation": [
+              0.16614755988121033,
+              -0.18901404738426208,
+              -0.6633462905883789,
+              0.7047272324562073
+            ]
+          },
+          "defender": {
+            "position": [
+              0.959648072719574,
+              0.283557653427124,
+              0.31855034828186035
+            ],
+            "velocity": [
+              0.1445334255695343,
+              0.018782611936330795,
+              -0.27651381492614746
+            ],
+            "tiltDeg": 86.72647702817785,
+            "rotation": [
+              0.6865440607070923,
+              0.6268088817596436,
+              -0.010291492566466331,
+              0.36832311749458313
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 86.37114031014244,
+          "defender": 88.9191833696044
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-30-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 30,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.23333333333333334,
+      "contactPoint": [
+        -0.12359103560447693,
+        1.163254737854004,
+        -0.19795161485671997
+      ],
+      "impulseEstimateNs": 232.5741729736328,
+      "carrierPeakTiltDeg": 90.0071639072222,
+      "defenderPeakTiltDeg": 88.99204867333233,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-30-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 28,
+          "timeSeconds": 0.23333333333333334,
+          "position": [
+            -0.12359103560447693,
+            1.163254737854004,
+            -0.19795161485671997
+          ],
+          "contactImpulseEstimateNs": 232.5741729736328,
+          "carrierMomentumImpulseNs": [
+            -260.4135932922363,
+            132.50756926345827,
+            -137.0529899597168
+          ],
+          "momentumBefore": [
+            423.86700769141316,
+            -108.91515711526154,
+            245.36179080727908
+          ],
+          "momentumAfterGravityAdjusted": [
+            361.19141578674316,
+            30.23342455816269,
+            212.26387882232666
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.626000165939331,
+              0.27905037999153137,
+              0.6130728125572205
+            ],
+            "velocity": [
+              -0.8016378283500671,
+              -0.16137990355491638,
+              0.7676124572753906
+            ],
+            "tiltDeg": 87.16858243400264,
+            "rotation": [
+              0.6694209575653076,
+              0.5863893032073975,
+              0.1648540496826172,
+              0.4252602159976959
+            ]
+          },
+          "defender": {
+            "position": [
+              0.7022577524185181,
+              0.2774486839771271,
+              0.7161540389060974
+            ],
+            "velocity": [
+              -0.25476136803627014,
+              -0.08347416669130325,
+              0.3995184004306793
+            ],
+            "tiltDeg": 87.31748896022127,
+            "rotation": [
+              0.4455234408378601,
+              0.7042431831359863,
+              0.5273595452308655,
+              -0.16565755009651184
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 90.0071639072222,
+          "defender": 88.99204867333233
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-30-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 30,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.175,
+      "contactPoint": [
+        -0.28816449642181396,
+        1.3998761177062988,
+        -0.1798272430896759
+      ],
+      "impulseEstimateNs": 184.97764587402344,
+      "carrierPeakTiltDeg": 91.90480913009907,
+      "defenderPeakTiltDeg": 89.27339803621122,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-30-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 21,
+          "timeSeconds": 0.175,
+          "position": [
+            -0.28816449642181396,
+            1.3998761177062988,
+            -0.1798272430896759
+          ],
+          "contactImpulseEstimateNs": 184.97764587402344,
+          "carrierMomentumImpulseNs": [
+            -229.16434478759766,
+            103.95346875,
+            -133.82276916503906
+          ],
+          "momentumBefore": [
+            592.5580143202096,
+            -67.91831411559542,
+            342.58600579444857
+          ],
+          "momentumAfterGravityAdjusted": [
+            583.8877801895142,
+            47.26617812258005,
+            337.5278606414795
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.6514444351196289,
+              0.7436758875846863,
+              0.09918694198131561
+            ],
+            "velocity": [
+              0.1818491816520691,
+              -0.12968556582927704,
+              -0.38061466813087463
+            ],
+            "tiltDeg": 90.20505959134233,
+            "rotation": [
+              -0.12726722657680511,
+              -0.2814318835735321,
+              -0.6968446969985962,
+              0.6473072171211243
+            ]
+          },
+          "defender": {
+            "position": [
+              0.9550861120223999,
+              0.25819098949432373,
+              0.4050085246562958
+            ],
+            "velocity": [
+              0.029794292524456978,
+              0.024340448901057243,
+              -0.07727176696062088
+            ],
+            "tiltDeg": 89.19166754682998,
+            "rotation": [
+              0.6816226840019226,
+              0.6893185973167419,
+              0.16833513975143433,
+              0.1785883903503418
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 91.90480913009907,
+          "defender": 89.27339803621122
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-60-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 60,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.3416666666666667,
+      "contactPoint": [
+        -0.022124789655208588,
+        0.7618815898895264,
+        -0.24767962098121643
+      ],
+      "impulseEstimateNs": 189.4335174560547,
+      "carrierPeakTiltDeg": 84.40420354397347,
+      "defenderPeakTiltDeg": 90.13362844697453,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-60-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 41,
+          "timeSeconds": 0.3416666666666667,
+          "position": [
+            -0.022124789655208588,
+            0.7618815898895264,
+            -0.24767962098121643
+          ],
+          "contactImpulseEstimateNs": 189.4335174560547,
+          "carrierMomentumImpulseNs": [
+            -102.67653179168701,
+            185.2073544960022,
+            -207.71258926391602
+          ],
+          "momentumBefore": [
+            143.75872249156237,
+            -198.23523383354768,
+            251.99227929515996
+          ],
+          "momentumAfterGravityAdjusted": [
+            84.84636068344116,
+            -3.8492404298409824,
+            135.85272574424744
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.1911347210407257,
+              0.3077741265296936,
+              -0.6879526972770691
+            ],
+            "velocity": [
+              0.13574951887130737,
+              -0.0059707676991820335,
+              -0.07652992755174637
+            ],
+            "tiltDeg": 84.37357918626172,
+            "rotation": [
+              0.11539206653833389,
+              -0.5615066289901733,
+              -0.6615616083145142,
+              0.48345762491226196
+            ]
+          },
+          "defender": {
+            "position": [
+              0.44193539023399353,
+              0.24991261959075928,
+              0.9002074003219604
+            ],
+            "velocity": [
+              -0.09482718259096146,
+              -0.0030794101767241955,
+              0.05217853561043739
+            ],
+            "tiltDeg": 89.99956906893335,
+            "rotation": [
+              0.17401576042175293,
+              0.6843723654747009,
+              0.685357391834259,
+              -0.1778714954853058
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 84.40420354397347,
+          "defender": 90.13362844697453
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-60-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 60,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.23333333333333334,
+      "contactPoint": [
+        -0.012219036929309368,
+        1.1627966165542603,
+        -0.2315933108329773
+      ],
+      "impulseEstimateNs": 219.97835540771484,
+      "carrierPeakTiltDeg": 89.98063958408403,
+      "defenderPeakTiltDeg": 90.00090387109182,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-60-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 28,
+          "timeSeconds": 0.23333333333333334,
+          "position": [
+            -0.012219036929309368,
+            1.1627966165542603,
+            -0.2315933108329773
+          ],
+          "contactImpulseEstimateNs": 219.97835540771484,
+          "carrierMomentumImpulseNs": [
+            -132.42472457885742,
+            130.87041039276124,
+            -260.69333267211914
+          ],
+          "momentumBefore": [
+            244.2067370004952,
+            -108.97508982400177,
+            424.9042102408728
+          ],
+          "momentumAfterGravityAdjusted": [
+            211.90121841430664,
+            28.078820674538612,
+            363.3610167503357
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.663299560546875,
+              0.2589320242404938,
+              -0.5823371410369873
+            ],
+            "velocity": [
+              0.5619103908538818,
+              0.21457575261592865,
+              -0.6602063179016113
+            ],
+            "tiltDeg": 89.12764034865768,
+            "rotation": [
+              -0.6515101790428162,
+              -0.6558350920677185,
+              -0.26061850786209106,
+              -0.27837538719177246
+            ]
+          },
+          "defender": {
+            "position": [
+              0.4442058801651001,
+              0.2499098926782608,
+              0.9009600877761841
+            ],
+            "velocity": [
+              0.15791328251361847,
+              0.001670229947194457,
+              -0.09256400913000107
+            ],
+            "tiltDeg": 89.99933921799915,
+            "rotation": [
+              0.18827737867832184,
+              0.6832391023635864,
+              0.6815760135650635,
+              -0.18218201398849487
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 89.98063958408403,
+          "defender": 90.00090387109182
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-60-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 60,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.175,
+      "contactPoint": [
+        -0.26484033465385437,
+        1.3699965476989746,
+        -0.15256530046463013
+      ],
+      "impulseEstimateNs": 121.92474365234375,
+      "carrierPeakTiltDeg": 92.73229967807767,
+      "defenderPeakTiltDeg": 90.00181228141881,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-60-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 21,
+          "timeSeconds": 0.175,
+          "position": [
+            -0.26484033465385437,
+            1.3699965476989746,
+            -0.15256530046463013
+          ],
+          "contactImpulseEstimateNs": 121.92474365234375,
+          "carrierMomentumImpulseNs": [
+            -114.07008361816406,
+            48.14666123199463,
+            -191.56338500976562
+          ],
+          "momentumBefore": [
+            341.9891666639596,
+            -66.95092214782198,
+            593.7587123984524
+          ],
+          "momentumAfterGravityAdjusted": [
+            309.47846388816833,
+            9.647328390598297,
+            534.0419383049011
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.9368659257888794,
+              0.5129104852676392,
+              0.47898492217063904
+            ],
+            "velocity": [
+              0.7611981630325317,
+              -0.11332184076309204,
+              0.12751568853855133
+            ],
+            "tiltDeg": 63.53390121638372,
+            "rotation": [
+              -0.251818984746933,
+              -0.730976939201355,
+              -0.46233439445495605,
+              -0.43417370319366455
+            ]
+          },
+          "defender": {
+            "position": [
+              0.562244713306427,
+              0.25001856684684753,
+              0.8880783915519714
+            ],
+            "velocity": [
+              0.08441957831382751,
+              -0.0012034339597448707,
+              -0.0496707484126091
+            ],
+            "tiltDeg": 89.99498965402337,
+            "rotation": [
+              0.2288251370191574,
+              0.6638068556785583,
+              0.6690256595611572,
+              -0.24372991919517517
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 92.73229967807767,
+          "defender": 90.00181228141881
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-90-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 90,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.3416666666666667,
+      "contactPoint": [
+        0.10353419184684753,
+        0.7762528657913208,
+        -0.22400996088981628
+      ],
+      "impulseEstimateNs": 203.68347930908203,
+      "carrierPeakTiltDeg": 89.72969618552114,
+      "defenderPeakTiltDeg": 85.54991904228038,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-90-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 41,
+          "timeSeconds": 0.3416666666666667,
+          "position": [
+            0.10353419184684753,
+            0.7762528657913208,
+            -0.22400996088981628
+          ],
+          "contactImpulseEstimateNs": 203.68347930908203,
+          "carrierMomentumImpulseNs": [
+            15.85067259084667,
+            200.56339056301118,
+            -251.82336330413818
+          ],
+          "momentumBefore": [
+            -1.7289539979049096,
+            -194.85409980034456,
+            294.45922112865605
+          ],
+          "momentumAfterGravityAdjusted": [
+            5.291583627462387,
+            14.470443602509798,
+            154.94234132766724
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.4029628336429596,
+              0.25271040201187134,
+              -0.6555740833282471
+            ],
+            "velocity": [
+              0.8312276601791382,
+              -0.3940006494522095,
+              0.11335683614015579
+            ],
+            "tiltDeg": 89.72969618552114,
+            "rotation": [
+              -0.0010280981659889221,
+              -0.7079535722732544,
+              -0.705436110496521,
+              0.03406544402241707
+            ]
+          },
+          "defender": {
+            "position": [
+              0.005117589142173529,
+              0.29564929008483887,
+              0.9690701961517334
+            ],
+            "velocity": [
+              0.4048077464103699,
+              -0.08140973001718521,
+              0.033405058085918427
+            ],
+            "tiltDeg": 85.54991904228038,
+            "rotation": [
+              -0.17939051985740662,
+              0.7051447033882141,
+              0.6549990773200989,
+              -0.2038780003786087
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 89.72969618552114,
+          "defender": 85.54991904228038
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-90-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 90,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.23333333333333334,
+      "contactPoint": [
+        0.10426268726587296,
+        1.1590741872787476,
+        -0.2065308392047882
+      ],
+      "impulseEstimateNs": 210.97489166259766,
+      "carrierPeakTiltDeg": 90.0046432146893,
+      "defenderPeakTiltDeg": 89.99997873953512,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-90-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 28,
+          "timeSeconds": 0.23333333333333334,
+          "position": [
+            0.10426268726587296,
+            1.1590741872787476,
+            -0.2065308392047882
+          ],
+          "contactImpulseEstimateNs": 210.97489166259766,
+          "carrierMomentumImpulseNs": [
+            17.17627744021047,
+            132.49198097991945,
+            -287.39778900146484
+          ],
+          "momentumBefore": [
+            -1.1118834839962801,
+            -110.040637767117,
+            485.81346622231814
+          ],
+          "momentumAfterGravityAdjusted": [
+            1.6501797437667847,
+            27.824246226668357,
+            418.1370506286621
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.9550762176513672,
+              0.2706398069858551,
+              -0.26814818382263184
+            ],
+            "velocity": [
+              0.73575758934021,
+              0.1661919355392456,
+              -0.3482297956943512
+            ],
+            "tiltDeg": 87.98975808673303,
+            "rotation": [
+              -0.6066802144050598,
+              -0.5445390939712524,
+              -0.33823075890541077,
+              -0.47012361884117126
+            ]
+          },
+          "defender": {
+            "position": [
+              0.22674798965454102,
+              0.27963218092918396,
+              0.9753798842430115
+            ],
+            "velocity": [
+              0.01681855320930481,
+              0.002476322930306196,
+              -0.0020797643810510635
+            ],
+            "tiltDeg": 87.11149595052791,
+            "rotation": [
+              0.20097237825393677,
+              0.7053462266921997,
+              0.6591007709503174,
+              0.16638243198394775
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 90.0046432146893,
+          "defender": 89.99997873953512
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "rapier3d-compat",
+      "engineVersion": "0.21.0",
+      "scenarioId": "angle-90-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 90,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.18333333333333332,
+      "contactPoint": [
+        0.11011003702878952,
+        1.2882752418518066,
+        -0.18143293261528015
+      ],
+      "impulseEstimateNs": 309.3237762451172,
+      "carrierPeakTiltDeg": 96.31041330244584,
+      "defenderPeakTiltDeg": 90.01286241067095,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "rapier3d-compat",
+        "scenario": "angle-90-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 22,
+          "timeSeconds": 0.18333333333333332,
+          "position": [
+            0.11011003702878952,
+            1.2882752418518066,
+            -0.18143293261528015
+          ],
+          "contactImpulseEstimateNs": 309.3237762451172,
+          "carrierMomentumImpulseNs": [
+            8.585293969867962,
+            129.4426683883667,
+            -363.5394973754883
+          ],
+          "momentumBefore": [
+            -0.8584940980954343,
+            -73.71050441850093,
+            683.147231626384
+          ],
+          "momentumAfterGravityAdjusted": [
+            -0.7827951908111572,
+            58.8926557738781,
+            633.1439266204834
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.7304490804672241,
+              0.284476101398468,
+              0.48810186982154846
+            ],
+            "velocity": [
+              0.7755653262138367,
+              0.05207012966275215,
+              -0.17475277185440063
+            ],
+            "tiltDeg": 86.64490587385698,
+            "rotation": [
+              -0.3034689128398895,
+              -0.7019314765930176,
+              -0.615341067314148,
+              -0.19119130074977875
+            ]
+          },
+          "defender": {
+            "position": [
+              -0.05254000425338745,
+              0.26264849305152893,
+              1.0546234846115112
+            ],
+            "velocity": [
+              -0.27676939964294434,
+              0.11329421401023865,
+              -0.05113871023058891
+            ],
+            "tiltDeg": 88.75745401186293,
+            "rotation": [
+              -0.05287113040685654,
+              0.7132277488708496,
+              0.6973967552185059,
+              -0.04635445028543472
+            ]
+          }
+        },
+        "engineMassKg": {
+          "carrier": 96,
+          "defender": 108
+        },
+        "maxTiltDeg": {
+          "carrier": 96.31041330244584,
+          "defender": 90.01286241067095
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-0-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 0,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.325,
+      "contactPoint": [
+        -0.4651328499644066,
+        0.7249330790204185,
+        0.000004061876894622277
+      ],
+      "impulseEstimateNs": 285.66194039259415,
+      "carrierPeakTiltDeg": 86.40381432573929,
+      "defenderPeakTiltDeg": 89.27506270110325,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-0-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 39,
+          "timeSeconds": 0.325,
+          "positionEstimate": [
+            -0.4651328499644066,
+            0.7249330790204185,
+            0.000004061876894622277
+          ],
+          "impulseEstimateNs": 285.66194039259415,
+          "carrierMomentumImpulseNs": [
+            -209.10285758972168,
+            194.62414116668702,
+            -0.42756497056507214
+          ],
+          "momentumBefore": [
+            282.2649768926203,
+            -179.3293674572924,
+            0.0000017579592395122745
+          ],
+          "momentumAfterGravityAdjusted": [
+            164.4730145931244,
+            24.58723661568761,
+            0.21895246021449566
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.6392190456390381,
+              0.2872839868068695,
+              0.00343341869302094
+            ],
+            "velocity": [
+              -0.009965282864868641,
+              0.01904519833624363,
+              0.07762229442596436
+            ],
+            "angularVelocity": [
+              0.2738458514213562,
+              -0.00003539292811183259,
+              0.03516160324215889
+            ],
+            "rotation": [
+              0.0029746689833700657,
+              0.00014196669508237392,
+              -0.68438321352005,
+              0.7291164994239807
+            ],
+            "tiltDeg": 86.37525536574441,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.9903699159622192,
+              0.25801408290863037,
+              -0.011875663883984089
+            ],
+            "velocity": [
+              -0.007267835550010204,
+              0.01749902404844761,
+              0.06412218511104584
+            ],
+            "angularVelocity": [
+              0.24878603219985962,
+              -5.053636953356033e-10,
+              0.02819831296801567
+            ],
+            "rotation": [
+              0.7022674679756165,
+              0.7118768692016602,
+              -0.0012792065972462296,
+              -0.007078699301928282
+            ],
+            "tiltDeg": 89.21860263039743,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 86.40381432573929,
+          "defender": 89.27506270110325
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-0-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 0,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.225,
+      "contactPoint": [
+        -0.32130226240241494,
+        0.8083178911668348,
+        0.00004030820335121767
+      ],
+      "impulseEstimateNs": 258.76610873835335,
+      "carrierPeakTiltDeg": 64.1090552995289,
+      "defenderPeakTiltDeg": 88.91646437500094,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-0-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 27,
+          "timeSeconds": 0.225,
+          "positionEstimate": [
+            -0.32130226240241494,
+            0.8083178911668348,
+            0.00004030820335121767
+          ],
+          "impulseEstimateNs": 258.76610873835335,
+          "carrierMomentumImpulseNs": [
+            -229.34889221191406,
+            119.82062620925903,
+            -1.414993843865659
+          ],
+          "momentumBefore": [
+            484.2702552303672,
+            -98.02546914929553,
+            -0.0000020993148979187026
+          ],
+          "momentumAfterGravityAdjusted": [
+            448.01117849349976,
+            30.715070695940405,
+            0.6489766985177994
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.01917387917637825,
+              0.5076473355293274,
+              -0.4025847613811493
+            ],
+            "velocity": [
+              0.015276805497705936,
+              -0.4115953743457794,
+              -0.9162338972091675
+            ],
+            "angularVelocity": [
+              -2.8492445945739746,
+              -1.096588373184204,
+              0.4425441324710846
+            ],
+            "rotation": [
+              -0.2535208463668823,
+              -0.04763896390795708,
+              -0.4662589132785797,
+              0.8462035059928894
+            ],
+            "tiltDeg": 64.1090552995289,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.9772129654884338,
+              0.2846514880657196,
+              -0.22836196422576904
+            ],
+            "velocity": [
+              -0.0036930132191628218,
+              -0.011398671194911003,
+              -0.24590611457824707
+            ],
+            "angularVelocity": [
+              -0.86332106590271,
+              -8.39696170373827e-8,
+              0.012975196354091167
+            ],
+            "rotation": [
+              0.6219086647033691,
+              0.6701168417930603,
+              -0.28959327936172485,
+              0.28338801860809326
+            ],
+            "tiltDeg": 86.63304179914053,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 64.1090552995289,
+          "defender": 88.91646437500094
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-0-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 0,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.175,
+      "contactPoint": [
+        -0.23303447591464127,
+        0.8287168084253742,
+        0.00011585106008554606
+      ],
+      "impulseEstimateNs": 282.8598997504064,
+      "carrierPeakTiltDeg": 90.15295932625853,
+      "defenderPeakTiltDeg": 89.34582628806128,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-0-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 21,
+          "timeSeconds": 0.175,
+          "positionEstimate": [
+            -0.23303447591464127,
+            0.8287168084253742,
+            0.00011585106008554606
+          ],
+          "impulseEstimateNs": 282.8598997504064,
+          "carrierMomentumImpulseNs": [
+            -269.4887237548828,
+            85.9238228302002,
+            -1.627060545518077
+          ],
+          "momentumBefore": [
+            683.1166959833354,
+            -59.598355744368746,
+            0.000002728675479901632
+          ],
+          "momentumAfterGravityAdjusted": [
+            673.8830165863037,
+            34.257609418451786,
+            1.651061363518238
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.6791655421257019,
+              0.7563331723213196,
+              -0.03022351674735546
+            ],
+            "velocity": [
+              -0.000017433620087103918,
+              0.00001650625745241996,
+              0.0004903388326056302
+            ],
+            "angularVelocity": [
+              0.000771659950260073,
+              0.000017651429516263306,
+              0.0000014402651231648633
+            ],
+            "rotation": [
+              0.16227783262729645,
+              0.009744003415107727,
+              -0.6700067520141602,
+              0.7243354916572571
+            ],
+            "tiltDeg": 87.16191267341493,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.9936904907226562,
+              0.2572745084762573,
+              -0.021473616361618042
+            ],
+            "velocity": [
+              -0.000003822317921731155,
+              0.000015025188076833729,
+              0.00014842623204458505
+            ],
+            "angularVelocity": [
+              0.00020923091506119817,
+              -0.000005748703642893815,
+              0.000021142588593647815
+            ],
+            "rotation": [
+              0.7025234699249268,
+              0.7115430235862732,
+              -0.009230710566043854,
+              -0.009061040356755257
+            ],
+            "tiltDeg": 89.26939390246436,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 90.15295932625853,
+          "defender": 89.34582628806128
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-30-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 30,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.325,
+      "contactPoint": [
+        -0.403112514610944,
+        0.7249101795351118,
+        -0.23202025447396635
+      ],
+      "impulseEstimateNs": 285.66975920666033,
+      "carrierPeakTiltDeg": 86.4019946259907,
+      "defenderPeakTiltDeg": 88.66634315224123,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-30-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 39,
+          "timeSeconds": 0.325,
+          "positionEstimate": [
+            -0.403112514610944,
+            0.7249101795351118,
+            -0.23202025447396635
+          ],
+          "impulseEstimateNs": 285.66975920666033,
+          "carrierMomentumImpulseNs": [
+            -181.71379280090332,
+            194.75647635269166,
+            -103.23383045196533
+          ],
+          "momentumBefore": [
+            244.06796303763986,
+            -179.3282688244799,
+            142.023162149099
+          ],
+          "momentumAfterGravityAdjusted": [
+            141.33578538894653,
+            24.35280768931657,
+            84.55147004127502
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.5544965267181396,
+              0.28824153542518616,
+              -0.3182409107685089
+            ],
+            "velocity": [
+              -0.034195054322481155,
+              -0.021044323220849037,
+              0.08049501478672028
+            ],
+            "angularVelocity": [
+              0.28408747911453247,
+              8.946605589699175e-8,
+              0.12068423628807068
+            ],
+            "rotation": [
+              0.17051951587200165,
+              -0.1945241242647171,
+              -0.6621946096420288,
+              0.7032651305198669
+            ],
+            "tiltDeg": 86.28217352250448,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.9181488156318665,
+              0.26373395323753357,
+              0.37705761194229126
+            ],
+            "velocity": [
+              0.29297327995300293,
+              -0.11917290836572647,
+              -0.42485517263412476
+            ],
+            "angularVelocity": [
+              -1.5944932699203491,
+              1.1609422756464483e-8,
+              -1.0995386838912964
+            ],
+            "rotation": [
+              0.6691879034042358,
+              0.70076984167099,
+              0.20137092471122742,
+              0.1433844417333603
+            ],
+            "tiltDeg": 88.66634315224123,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 86.4019946259907,
+          "defender": 88.66634315224123
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-30-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 30,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.225,
+      "contactPoint": [
+        -0.2784078773920204,
+        0.8083054592555796,
+        -0.1603747389075037
+      ],
+      "impulseEstimateNs": 258.70218340720027,
+      "carrierPeakTiltDeg": 71.68327935982359,
+      "defenderPeakTiltDeg": 89.27168640145614,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-30-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 27,
+          "timeSeconds": 0.225,
+          "positionEstimate": [
+            -0.2784078773920204,
+            0.8083054592555796,
+            -0.1603747389075037
+          ],
+          "impulseEstimateNs": 258.70218340720027,
+          "carrierMomentumImpulseNs": [
+            -198.2578582763672,
+            119.84775442886352,
+            -115.13972854614258
+          ],
+          "momentumBefore": [
+            419.1449958309531,
+            -98.01463159436389,
+            242.68595331443169
+          ],
+          "momentumAfterGravityAdjusted": [
+            387.15782833099365,
+            30.44189232480526,
+            225.73186111450195
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.2667432427406311,
+              0.43545544147491455,
+              -0.3892880082130432
+            ],
+            "velocity": [
+              0.7880978584289551,
+              -0.865498960018158,
+              -0.8227908611297607
+            ],
+            "angularVelocity": [
+              -2.6021664142608643,
+              -0.5773053169250488,
+              -1.8881484270095825
+            ],
+            "rotation": [
+              -0.30711156129837036,
+              -0.48946860432624817,
+              -0.4985456168651581,
+              0.6461852192878723
+            ],
+            "tiltDeg": 71.68327935982359,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.939653217792511,
+              0.26433104276657104,
+              0.35075223445892334
+            ],
+            "velocity": [
+              0.08394966274499893,
+              0.0519237294793129,
+              -0.20454831421375275
+            ],
+            "angularVelocity": [
+              -0.7701876163482666,
+              5.218218745994818e-9,
+              -0.3160957396030426
+            ],
+            "rotation": [
+              0.6844358444213867,
+              0.6837725043296814,
+              0.1389991194009781,
+              0.21138136088848114
+            ],
+            "tiltDeg": 88.59876999625556,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 71.68327935982359,
+          "defender": 89.27168640145614
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-30-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 30,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.175,
+      "contactPoint": [
+        -0.20192465664239545,
+        0.8287328647116202,
+        -0.11630216341904442
+      ],
+      "impulseEstimateNs": 282.7013471365148,
+      "carrierPeakTiltDeg": 102.93344204034965,
+      "defenderPeakTiltDeg": 89.2715252636223,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-30-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 21,
+          "timeSeconds": 0.175,
+          "positionEstimate": [
+            -0.20192465664239545,
+            0.8287328647116202,
+            -0.11630216341904442
+          ],
+          "impulseEstimateNs": 282.7013471365148,
+          "carrierMomentumImpulseNs": [
+            -232.6739501953125,
+            85.7402209739685,
+            -135.76265716552734
+          ],
+          "momentumBefore": [
+            591.4632536005229,
+            -59.605027649886324,
+            341.90419009699485
+          ],
+          "momentumAfterGravityAdjusted": [
+            582.9462518692017,
+            34.41510886591673,
+            338.78011178970337
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.39783021807670593,
+              0.4788820445537567,
+              0.5140470266342163
+            ],
+            "velocity": [
+              -0.4619513750076294,
+              -1.6641589403152466,
+              0.7719487547874451
+            ],
+            "angularVelocity": [
+              5.615338325500488,
+              -0.17831771075725555,
+              3.1908247470855713
+            ],
+            "rotation": [
+              0.780995786190033,
+              0.5185288190841675,
+              0.044216424226760864,
+              0.3452802300453186
+            ],
+            "tiltDeg": 102.93344204034965,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.9608964920043945,
+              0.27317848801612854,
+              0.29096484184265137
+            ],
+            "velocity": [
+              -0.03330383077263832,
+              -0.015717638656497,
+              0.08299527317285538
+            ],
+            "angularVelocity": [
+              0.30217623710632324,
+              0.0000011661512644423055,
+              0.12140246480703354
+            ],
+            "rotation": [
+              0.688999593257904,
+              0.6748305559158325,
+              0.07482938468456268,
+              0.25354257225990295
+            ],
+            "tiltDeg": 87.74424124218109,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 102.93344204034965,
+          "defender": 89.2715252636223
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-60-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 60,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.325,
+      "contactPoint": [
+        -0.23273744948281386,
+        0.7248680812211722,
+        -0.4026816912119399
+      ],
+      "impulseEstimateNs": 285.4595329908619,
+      "carrierPeakTiltDeg": 86.40229077931079,
+      "defenderPeakTiltDeg": 90.00002137644209,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-60-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 39,
+          "timeSeconds": 0.325,
+          "positionEstimate": [
+            -0.23273744948281386,
+            0.7248680812211722,
+            -0.4026816912119399
+          ],
+          "impulseEstimateNs": 285.4595329908619,
+          "carrierMomentumImpulseNs": [
+            -102.0966854095459,
+            194.5894004802704,
+            -182.2042179107666
+          ],
+          "momentumBefore": [
+            141.227302942425,
+            -179.32595711793692,
+            244.86132743230212
+          ],
+          "momentumAfterGravityAdjusted": [
+            83.50483238697052,
+            24.536008418396115,
+            142.32551336288452
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              -0.31956782937049866,
+              0.28772756457328796,
+              -0.553684413433075
+            ],
+            "velocity": [
+              0.148654967546463,
+              0.04499631002545357,
+              -0.10939620435237885
+            ],
+            "angularVelocity": [
+              -0.38448795676231384,
+              -0.00003154563091811724,
+              -0.5274571180343628
+            ],
+            "rotation": [
+              0.3435971438884735,
+              -0.372951477766037,
+              -0.5915793776512146,
+              0.6268031001091003
+            ],
+            "tiltDeg": 86.33345093257417,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.289452463388443,
+              0.2744542062282562,
+              0.9562984704971313
+            ],
+            "velocity": [
+              -0.1933264136314392,
+              0.06259872019290924,
+              0.06433797627687454
+            ],
+            "angularVelocity": [
+              0.23623937368392944,
+              -1.2582852093601105e-8,
+              0.7098676562309265
+            ],
+            "rotation": [
+              0.0729195773601532,
+              0.6733326315879822,
+              0.6884257197380066,
+              -0.2595689594745636
+            ],
+            "tiltDeg": 87.62122513723705,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 86.40229077931079,
+          "defender": 90.00002137644209
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-60-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 60,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.225,
+      "contactPoint": [
+        -0.16083281973681532,
+        0.8083014438282824,
+        -0.2781312645400232
+      ],
+      "impulseEstimateNs": 258.5921833178544,
+      "carrierPeakTiltDeg": 57.96330310095975,
+      "defenderPeakTiltDeg": 89.99981274044377,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-60-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 27,
+          "timeSeconds": 0.225,
+          "positionEstimate": [
+            -0.16083281973681532,
+            0.8083014438282824,
+            -0.2781312645400232
+          ],
+          "impulseEstimateNs": 258.5921833178544,
+          "carrierMomentumImpulseNs": [
+            -111.62278747558594,
+            119.79683966445923,
+            -200.1474151611328
+          ],
+          "momentumBefore": [
+            242.17225565761328,
+            -98.01214822644397,
+            419.6559469057403
+          ],
+          "momentumAfterGravityAdjusted": [
+            224.31133317947388,
+            30.374735245339572,
+            388.192045211792
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.11976201832294464,
+              0.560903012752533,
+              0.0052831945940852165
+            ],
+            "velocity": [
+              0.44880765676498413,
+              -0.07701200991868973,
+              -0.029965950176119804
+            ],
+            "angularVelocity": [
+              -0.10423152148723602,
+              -0.6832373738288879,
+              -1.4177154302597046
+            ],
+            "rotation": [
+              -0.012028233148157597,
+              -0.8624319434165955,
+              -0.48438018560409546,
+              0.1464320868253708
+            ],
+            "tiltDeg": 57.96330310095975,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.30591222643852234,
+              0.2642170190811157,
+              0.9553892612457275
+            ],
+            "velocity": [
+              0.06159353256225586,
+              -0.022734947502613068,
+              -0.018461110070347786
+            ],
+            "angularVelocity": [
+              -0.07006587088108063,
+              -7.94371658230375e-7,
+              -0.23375000059604645
+            ],
+            "rotation": [
+              0.10589078813791275,
+              0.6819561719894409,
+              0.690459132194519,
+              -0.21676981449127197
+            ],
+            "tiltDeg": 88.61865656865665,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 57.96330310095975,
+          "defender": 89.99981274044377
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-60-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 60,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.16666666666666666,
+      "contactPoint": [
+        -0.1421884472207034,
+        0.8284210164815888,
+        -0.24626082770853996
+      ],
+      "impulseEstimateNs": 181.75085857668174,
+      "carrierPeakTiltDeg": 67.65349023064363,
+      "defenderPeakTiltDeg": 86.36360974975638,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-60-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 20,
+          "timeSeconds": 0.16666666666666666,
+          "positionEstimate": [
+            -0.1421884472207034,
+            0.8284210164815888,
+            -0.24626082770853996
+          ],
+          "impulseEstimateNs": 181.75085857668174,
+          "carrierMomentumImpulseNs": [
+            -85.639892578125,
+            43.230988929748534,
+            -154.37054443359375
+          ],
+          "momentumBefore": [
+            342.38303485605866,
+            -53.607108273154154,
+            593.3608246166851
+          ],
+          "momentumAfterGravityAdjusted": [
+            329.82377457618713,
+            -1.1319806511998163,
+            567.1387767791748
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              1.6590145826339722,
+              0.5233542919158936,
+              1.2544503211975098
+            ],
+            "velocity": [
+              1.2491865158081055,
+              -1.4966450929641724,
+              1.3495792150497437
+            ],
+            "angularVelocity": [
+              1.69853937625885,
+              -4.392003059387207,
+              -6.442807197570801
+            ],
+            "rotation": [
+              -0.059879425913095474,
+              0.8111138939857483,
+              0.5144969820976257,
+              -0.27166441082954407
+            ],
+            "tiltDeg": 62.392332885991735,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.3989761471748352,
+              0.30124664306640625,
+              1.015797734260559
+            ],
+            "velocity": [
+              -0.024851545691490173,
+              0.0053205108270049095,
+              0.028988206759095192
+            ],
+            "angularVelocity": [
+              0.09757526218891144,
+              1.8269918911073546e-10,
+              0.08365100622177124
+            ],
+            "rotation": [
+              -0.2906076908111572,
+              0.14027994871139526,
+              0.6093986630439758,
+              -0.7242251634597778
+            ],
+            "tiltDeg": 84.9306833344189,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 67.65349023064363,
+          "defender": 86.36360974975638
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-90-speed-4",
+      "seed": 20261022,
+      "approachAngleDeg": 90,
+      "closingSpeedMps": 4,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.325,
+      "contactPoint": [
+        -0.0006086012335910156,
+        0.7247896359837699,
+        -0.46507807304452803
+      ],
+      "impulseEstimateNs": 285.3647893192624,
+      "carrierPeakTiltDeg": 86.40592300791945,
+      "defenderPeakTiltDeg": 90.0000101786157,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-90-speed-4",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 39,
+          "timeSeconds": 0.325,
+          "positionEstimate": [
+            -0.0006086012335910156,
+            0.7247896359837699,
+            -0.46507807304452803
+          ],
+          "impulseEstimateNs": 285.3647893192624,
+          "carrierMomentumImpulseNs": [
+            0.7460655325394328,
+            194.68987746047975,
+            -208.63450813293457
+          ],
+          "momentumBefore": [
+            -0.7951159940403159,
+            -179.33072930421622,
+            283.0613167511498
+          ],
+          "momentumAfterGravityAdjusted": [
+            -0.8854272365570068,
+            24.183223055912414,
+            165.46287560462952
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.003993505612015724,
+              0.28885704278945923,
+              -0.6395322680473328
+            ],
+            "velocity": [
+              -0.019572393968701363,
+              -0.004647707100957632,
+              0.002254642080515623
+            ],
+            "angularVelocity": [
+              0.007946083322167397,
+              -6.821712972282512e-9,
+              0.06897939741611481
+            ],
+            "rotation": [
+              0.4778701066970825,
+              -0.5241041779518127,
+              -0.4885707199573517,
+              0.5081867575645447
+            ],
+            "tiltDeg": 86.22275460995985,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              -0.012714961543679237,
+              0.2499917447566986,
+              0.9951167106628418
+            ],
+            "velocity": [
+              0.0034720825497061014,
+              0.000025723364160512574,
+              0.0000712247274350375
+            ],
+            "angularVelocity": [
+              0.0002862916444428265,
+              -5.646171308271164e-10,
+              -0.013956223614513874
+            ],
+            "rotation": [
+              -0.008112755604088306,
+              0.7070779204368591,
+              0.7070602774620056,
+              0.00639053201302886
+            ],
+            "tiltDeg": 90.00000604678343,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 86.40592300791945,
+          "defender": 90.0000101786157
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-90-speed-6",
+      "seed": 20261022,
+      "approachAngleDeg": 90,
+      "closingSpeedMps": 6,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.225,
+      "contactPoint": [
+        -0.00037297651539906025,
+        0.8082786903563801,
+        -0.32127202994110876
+      ],
+      "impulseEstimateNs": 258.48526870534977,
+      "carrierPeakTiltDeg": 65.09682022946424,
+      "defenderPeakTiltDeg": 91.04255369853246,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-90-speed-6",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 27,
+          "timeSeconds": 0.225,
+          "positionEstimate": [
+            -0.00037297651539906025,
+            0.8082786903563801,
+            -0.32127202994110876
+          ],
+          "impulseEstimateNs": 258.48526870534977,
+          "carrierMomentumImpulseNs": [
+            2.167051566959529,
+            119.84901900100708,
+            -229.01124572753906
+          ],
+          "momentumBefore": [
+            -0.5128252415072012,
+            -98.02348932141467,
+            484.7813436342559
+          ],
+          "momentumAfterGravityAdjusted": [
+            -1.0127831473946571,
+            29.94505569604039,
+            448.62036180496216
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.3320906460285187,
+              0.4983797073364258,
+              0.10081281512975693
+            ],
+            "velocity": [
+              0.7859350442886353,
+              -0.41787683963775635,
+              0.36446988582611084
+            ],
+            "angularVelocity": [
+              0.6455118060112,
+              -1.9379523992538452,
+              -3.6134297847747803
+            ],
+            "rotation": [
+              0.0015554707497358322,
+              -0.8417631983757019,
+              -0.538009762763977,
+              0.04447193816304207
+            ],
+            "tiltDeg": 65.09682022946424,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              -0.0220464039593935,
+              0.23755794763565063,
+              1.0015202760696411
+            ],
+            "velocity": [
+              0.00036711705615743995,
+              0.00003753979399334639,
+              0.0001428164541721344
+            ],
+            "angularVelocity": [
+              0.00016610515012871474,
+              -0.00019023196364287287,
+              -0.00039222880150191486
+            ],
+            "rotation": [
+              -0.008493288420140743,
+              0.7026666402816772,
+              0.7113939523696899,
+              0.01029924862086773
+            ],
+            "tiltDeg": 90.70515597632037,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 65.09682022946424,
+          "defender": 91.04255369853246
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    },
+    {
+      "engine": "jolt-physics-js",
+      "engineVersion": "1.1.0",
+      "scenarioId": "angle-90-speed-8",
+      "seed": 20261022,
+      "approachAngleDeg": 90,
+      "closingSpeedMps": 8,
+      "carrierMassKg": 96,
+      "defenderMassKg": 108,
+      "contactOccurred": true,
+      "contactTimeSeconds": 0.175,
+      "contactPoint": [
+        -0.000280623062880303,
+        0.8287402837507932,
+        -0.23302616069441273
+      ],
+      "impulseEstimateNs": 282.68887586206085,
+      "carrierPeakTiltDeg": 91.1774330475837,
+      "defenderPeakTiltDeg": 90.10370516165193,
+      "carrierFellAt55Deg": true,
+      "defenderFellAt55Deg": true,
+      "finite": true,
+      "physicsResult": {
+        "engine": "jolt-physics-js",
+        "scenario": "angle-90-speed-8",
+        "seed": 20261022,
+        "policy": "initial approach velocities only; no post-launch motor force",
+        "contact": {
+          "occurred": true,
+          "tick": 21,
+          "timeSeconds": 0.175,
+          "positionEstimate": [
+            -0.000280623062880303,
+            0.8287402837507932,
+            -0.23302616069441273
+          ],
+          "impulseEstimateNs": 282.68887586206085,
+          "carrierMomentumImpulseNs": [
+            2.361001386647274,
+            85.55403704452515,
+            -269.4214782714844
+          ],
+          "momentumBefore": [
+            -0.3857592058975001,
+            -59.59625575352402,
+            683.5005798675027
+          ],
+          "momentumAfterGravityAdjusted": [
+            -0.6011858582496643,
+            33.966200166240334,
+            674.3306837081909
+          ]
+        },
+        "players": {
+          "carrier": {
+            "position": [
+              0.05264981463551521,
+              0.7509584426879883,
+              0.6796146035194397
+            ],
+            "velocity": [
+              0.16653065383434296,
+              -0.008950562216341496,
+              -0.0031117114704102278
+            ],
+            "angularVelocity": [
+              -0.004107475280761719,
+              -0.000008269043064501602,
+              -0.22332309186458588
+            ],
+            "rotation": [
+              0.5908673405647278,
+              -0.5143455862998962,
+              -0.3589339256286621,
+              0.50743567943573
+            ],
+            "tiltDeg": 87.47332845883983,
+            "mass": 96,
+            "engineMassKg": 95.99999713897714
+          },
+          "defender": {
+            "position": [
+              0.024534819647669792,
+              0.24990509450435638,
+              0.9966411590576172
+            ],
+            "velocity": [
+              0.055422596633434296,
+              0.0004949335707351565,
+              -0.0010493984445929527
+            ],
+            "angularVelocity": [
+              -0.004196670837700367,
+              0.000009199001397064421,
+              -0.22306503355503082
+            ],
+            "rotation": [
+              0.01650083251297474,
+              0.7071385383605957,
+              0.7068751454353333,
+              0.0032149930484592915
+            ],
+            "tiltDeg": 89.99366866828085,
+            "mass": 108,
+            "engineMassKg": 107.9999991953373
+          }
+        },
+        "engineMassKg": {
+          "carrier": 95.99999713897714,
+          "defender": 107.9999991953373
+        },
+        "maxTiltDeg": {
+          "carrier": 91.1774330475837,
+          "defender": 90.10370516165193
+        },
+        "falling": {
+          "carrier": true,
+          "defender": true
+        },
+        "finite": true
+      }
+    }
+  ]
+}

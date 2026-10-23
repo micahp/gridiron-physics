@@ -45,7 +45,7 @@ The practical architecture is **engine-resolved rigid-body contact plus custom m
 | Deterministic replay | Rapier documents exact cross-platform determinism for its JS/WASM binding when version, initial state, creation order, and input generation match. Verified repeatably within this harness; no separate-machine comparison was performed. | This WASM build reproduced exactly under repeated same-process Node/Chromium runs. Cross-platform determinism is a build option (`CROSS_PLATFORM_DETERMINISTIC=ON`); the npm prebuild used here was not independently verified as that build. | Not evaluated here. Would need binding/build and cross-platform replay qualification. |
 | Browser / Node / Three.js | Works in Chromium and Node. Three.js reads body transforms directly; no engine-specific Three integration is required. | Works in Chromium and Node. The Emscripten wrapper needs disciplined explicit object/reference cleanup; the comparison harness includes that adapter work. | Community bindings target browser/WASM; build and API compatibility are a separate dependency risk. |
 | Mobile and package footprint | Mobile device performance not measured. NPM package is 15.0 MB unpacked; that includes distribution artifacts, not the measured transfer size of a chosen production bundle. | Mobile device performance not measured. NPM package is 46.4 MB unpacked across seven bundle variants; the tested WASM-compat entry file is about 3.1 MB before HTTP compression. | No package-size or mobile test in this evaluation. |
-| Measured 22-body proxy | 7.62 ms per 0.25 simulated seconds, for 22 bodies / 110 colliders / 30 fixed steps on the recorded host. | 3.53 ms per same episode and host. | Not measured. |
+| Measured 22-body proxy | Five-run summary in §4; same-process repeats on one host, not a hardware-variance study. | Five-run summary in §4; same-process repeats on one host, not a hardware-variance study. | Not measured. |
 | License / maintenance | Apache-2.0; official Dimforge JS package and documentation. | MIT JS port; Jolt core had active releases in 2026. JS wrapper is maintained separately from core. | PhysX core is BSD-3-Clause. The inspected WebIDL JS bindings are third-party and should be reviewed/version-pinned independently. |
 
 Primary references: [Rapier capabilities and Apache license](https://rapier.rs/docs/), [Rapier JS determinism](https://rapier.rs/docs/user_guides/javascript/determinism/), [Rapier character controller limits](https://rapier.rs/docs/user_guides/javascript/character_controller/), and [Rapier joint constraints](https://rapier.rs/docs/user_guides/javascript/joint_constraints/). Jolt references: [JoltPhysics.js package, build variants, cleanup, and deterministic build flag](https://github.com/jrouwe/JoltPhysics.js/), [Jolt architecture and determinism](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/Architecture.md), and [Jolt CharacterVirtual](https://jrouwe.github.io/JoltPhysics/class_character_virtual.html). PhysX references: [third-party PhysX 5.11 JS/WASM binding feature coverage](https://github.com/fabmax/physx-js-webidl) and [NVIDIA PhysX BSD-3-Clause license](https://github.com/NVIDIA-Omniverse/PhysX/blob/main/LICENSE.md). Rapier is actively maintained: its [JS changelog](https://github.com/dimforge/rapier.js/blob/master/CHANGELOG.md) and [core changelog](https://github.com/dimforge/rapier/blob/master/CHANGELOG.md) show 2026 changes. Jolt's [release list](https://github.com/jrouwe/JoltPhysics/releases) includes 2026 core releases.
@@ -72,22 +72,47 @@ Measured on an AMD EPYC x64 host, Node 22.22, four logical CPUs. Contact time is
 
 The complete contact points, impulses, momenta, player transforms, final angular velocities, tilt peaks, and finite-value flags are in [`results.json`](./results.json). Engine results diverge in whether the same contact geometry produces a fall. That is evidence of sensitivity to geometry, solver settings, and contact/friction calibration, not evidence that either one currently predicts NFL tackles.
 
+### Contact-geometry sweep
+
+**Controlled research inputs with a collision proxy; not a tackle model, not a prediction, and not validation against NFL data.** The sweep covers 4 approach headings × 3 closing speeds for each engine (12 cells per engine). The defender is stationary, faces downfield-opposite (-x), and has mass 108 kg. The 96 kg carrier starts 2 m away, travels into the defender, and is yaw-aligned with its velocity. Angle is the carrier travel heading relative to the defender's forward axis: 0° is head-on and 90° is side-on. Thus this varies body-relative approach orientation and arm-proxy orientation; it does not claim to sample every anatomical contact point. All cells use the same five-collider proxy, 1/120 s step, existing solver settings, 1.5 s duration, and 55° peak-tilt fall threshold. The carrier has only its initial velocity; no outcome draw, motor, or forced fall is used.
+
+Each cell records contact occurrence/time, the engine-specific impulse value, peak carrier and defender tilt, both fall flags, final body state, and a recursive finite-state flag in [`results-sweep.json`](./results-sweep.json). The artifact also stores paired fall-disagreement counts, shares, and cell lists. `R/J` means Rapier/Jolt. Rapier's impulse is its summed solver contact impulse; Jolt's is the carrier momentum-change estimate at first body contact and can include ground/support impulses. These magnitudes are not calibrated cross-engine equivalents.
+
+| Approach | Closing speed (m/s) | Contact R/J | Time R/J (s) | Impulse R/J (N·s) | Peak tilt R carrier/defender; J carrier/defender (°) | Fall R carrier/defender | Fall J carrier/defender |
+|---:|---:|---|---:|---:|---|---|---|
+| 0° | 4 | yes / yes | 0.342 / 0.325 | 193.0 / 285.7 | 86.4/89.3; 86.4/89.3 | yes / yes | yes / yes |
+| 0° | 6 | yes / yes | 0.233 / 0.225 | 231.3 / 258.8 | 90.0/89.2; 64.1/88.9 | yes / yes | yes / yes |
+| 0° | 8 | yes / yes | 0.175 / 0.175 | 178.7 / 282.9 | 90.4/89.3; 90.2/89.3 | yes / yes | yes / yes |
+| 30° | 4 | yes / yes | 0.342 / 0.325 | 188.5 / 285.7 | 86.4/88.9; 86.4/88.7 | yes / yes | yes / yes |
+| 30° | 6 | yes / yes | 0.233 / 0.225 | 232.6 / 258.7 | 90.0/89.0; 71.7/89.3 | yes / yes | yes / yes |
+| 30° | 8 | yes / yes | 0.175 / 0.175 | 185.0 / 282.7 | 91.9/89.3; 102.9/89.3 | yes / yes | yes / yes |
+| 60° | 4 | yes / yes | 0.342 / 0.325 | 189.4 / 285.5 | 84.4/90.1; 86.4/90.0 | yes / yes | yes / yes |
+| 60° | 6 | yes / yes | 0.233 / 0.225 | 220.0 / 258.6 | 90.0/90.0; 58.0/90.0 | yes / yes | yes / yes |
+| 60° | 8 | yes / yes | 0.175 / 0.167 | 121.9 / 181.8 | 92.7/90.0; 67.7/86.4 | yes / yes | yes / yes |
+| 90° | 4 | yes / yes | 0.342 / 0.325 | 203.7 / 285.4 | 89.7/85.5; 86.4/90.0 | yes / yes | yes / yes |
+| 90° | 6 | yes / yes | 0.233 / 0.225 | 211.0 / 258.5 | 90.0/90.0; 65.1/91.0 | yes / yes | yes / yes |
+| 90° | 8 | yes / yes | 0.183 / 0.175 | 309.3 / 282.7 | 96.3/90.0; 91.2/90.1 | yes / yes | yes / yes |
+
+**Fall-classification disagreement across the 12 paired cells:** carrier 0/12 (0%; no cells); defender 0/12 (0%; no cells). Both engines classify both players as fallen in every cell. Tilt and impulse values differ, but the binary 55° threshold is saturated throughout this grid; this sweep therefore finds no fall-classification disagreement and does not establish general engine agreement.
+
 ### Pass and ball contact
 
 The harness passes the existing `solveLaunch()` output into a dynamic, collidable football-shaped capsule, integrates gravity and the existing spiral drag coefficient, and allows the ball to hit the receiver/defender geometry. Neither a catch nor a deflection is forced. In the primary trajectory, Rapier and Jolt both report receiver contact. In the second lane-placement test, Jolt contacts both defender and receiver; Rapier contacts the receiver only. Contact is reported as **catch/deflection feasibility only**: this does not prove a secure catch, possession, hand control, or an NFL-quality pass. Rapier records its solver contact point; Jolt records the ball center on the first step `WereBodiesInContact` reports.
 
 ## 4. 22-player runtime and stability
 
-The 22-player benchmark resets a fixed 11-offense / 11-defense formation, then advances 30 steps at 120 Hz (0.25 seconds simulated) per episode. Each engine receives 20 warmup episodes; scene/WASM initialization is outside the timed loop. The final command ran **1,000 scenes per engine**, which is 250 seconds of aggregate simulated time. The finite-state check samples every 100th episode and the final episode to reduce measurement overhead.
+### Repeatability
 
-| Engine | Bodies / colliders | Episodes × steps | Wall time | Per episode | Projected 1,000 × 1-second scenes* | Sampled state checks |
-|---|---:|---:|---:|---:|---:|---|
-| Rapier | 22 / 110 | 1,000 × 30 | 7.62 s | 7.62 ms | 30.49 s | all finite |
-| Jolt | 22 / 110 | 1,000 × 30 | 3.53 s | 3.53 ms | 14.13 s | all finite |
+The 22-player benchmark resets a fixed 11-offense / 11-defense formation, then advances 30 steps at 120 Hz (0.25 seconds simulated) per episode. Each of five repeats runs 20 warmup episodes before its timed loop; each timed loop contains 1,000 scenes (250 seconds of aggregate simulated time). Scene/WASM initialization is excluded. The finite-state check samples every 100th episode and the final episode to reduce measurement overhead. All five repeats, including the slowest, are retained in [`results.json`](./results.json). The five repeats ran in the same Node process on the same host, so their spread measures run-to-run variance, not hardware variance. IQR uses linearly interpolated Q1/Q3 (type-7 percentile convention).
 
-\*Linear 4× extrapolation of this 0.25-second proxy episode; world creation, a full play, and final game-event logic are excluded. It is not a production throughput guarantee. Browser testing also ran 100 × 22-player episodes per engine in headless Chromium and checked finite transforms; those timings are included in the browser command output. No mobile device was benchmarked.
+| Engine | Bodies / colliders | Repeats × scenes × steps | Median ms/scene | Min ms/scene | Max ms/scene | IQR ms/scene | Sampled state checks |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Rapier | 22 / 110 | 5 × 1,000 × 30 | 7.457 | 7.162 | 7.794 | 0.240 | all finite |
+| Jolt | 22 / 110 | 5 × 1,000 × 30 | 3.859 | 3.692 | 4.705 | 0.115 | all finite |
 
-Same-engine repeated scenarios with identical initial conditions and the same recorded seed produced exact deep-equal Node results for both engines. The seed is metadata only in this controlled harness because it uses no stochastic outcome policy; changing seed alone intentionally changes no physics. Cross-platform equality was not tested for Jolt. The browser test executed all 14 tackle cases, four pass cases, and both 22-player benchmarks without page/runtime errors.
+World creation, a full play, and final game-event logic are excluded. These are not production throughput guarantees. Browser testing also ran 100 × 22-player episodes per engine in headless Chromium and checked finite transforms; those timings are included in the browser command output. No mobile device was benchmarked.
+
+Same-engine repeated scenarios with identical initial conditions and the same recorded seed produced exact deep-equal Node results for both engines. The sweep test also repeats one grid cell per engine and requires exact deep equality. The seed is metadata only in this controlled harness because it uses no stochastic outcome policy; changing seed alone intentionally changes no physics. Cross-platform equality was not tested for Jolt. The browser test executed all 14 tackle cases, four pass cases, and both 22-player benchmarks without page/runtime errors.
 
 ## 5. Migration outline
 
@@ -113,11 +138,13 @@ Same-engine repeated scenarios with identical initial conditions and the same re
 ```sh
 npm ci
 npm run eval:physics3d:test
+npm run eval:physics3d:sweep:test
+npm run eval:physics3d:sweep
 npm run eval:physics3d:browser
 npm run eval:physics3d
 ```
 
-`eval:physics3d` defaults to 1,000 scenes per engine and writes [`results.json`](./results.json). Pass arguments to change workload, for example `node research/physics-3d-evaluation/benchmark.mjs 100 60`.
+`eval:physics3d` defaults to five repeats of 1,000 scenes per engine and writes [`results.json`](./results.json). Pass arguments to change scenes and steps per repeat, for example `node research/physics-3d-evaluation/benchmark.mjs 100 60`. `eval:physics3d:sweep` writes [`results-sweep.json`](./results-sweep.json); `eval:physics3d:sweep:test` checks its grid, finite records, and repeated-cell determinism.
 
 The browser test expects a Playwright Chromium install (`npx playwright install chromium` where supported). It also accepts `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome`; the evaluation environment used its cached Chromium binary because Playwright's installer did not provide a matching image there.
 

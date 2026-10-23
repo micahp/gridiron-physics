@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T02:51:42.050Z",
+  "generatedAt": "2026-10-23T03:17:10.830Z",
   "runtime": {
     "node": "v22.22.0",
     "platform": "linux",
@@ -10,13 +10,16 @@
   "benchmarkMethod": {
     "simulations": 1000,
     "stepsPerSimulation": 30,
+    "repeatCount": 5,
     "fixedTimestepSeconds": 0.008333333333333333,
     "simulatedSecondsPerEpisode": 0.25,
-    "warmupSimulations": 20,
+    "warmupSimulationsBeforeEveryTimedRun": 20,
     "periodicFiniteStateCheckEvery": 100,
     "players": 22,
     "collidersPerPlayer": 5,
-    "setupAndWasmInitExcludedFromTimedLoops": true
+    "setupAndWasmInitExcludedFromTimedLoops": true,
+    "repeatsShareOneNodeProcessAndHost": true,
+    "slowestRunRetained": true
   },
   "results": [
     {
@@ -1132,19 +1135,91 @@
           "finite": true
         }
       ],
-      "benchmark22": {
-        "engine": "rapier3d-compat",
-        "simulations": 1000,
-        "warmupSimulations": 20,
-        "playerBodies": 22,
-        "colliders": 110,
-        "stepsPerSimulation": 30,
-        "simulatedSecondsPerEpisode": 0.25,
-        "elapsedMs": 7621.587603,
-        "msPerSimulation": 7.621587603,
-        "projected1000SimulationsMs": 7621.587603,
-        "startedColliderContactsFirstEpisode": 6,
-        "finite": true
+      "benchmark22Repeats": [
+        {
+          "repeat": 1,
+          "engine": "rapier3d-compat",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 7457.483044,
+          "msPerSimulation": 7.457483044,
+          "projected1000SimulationsMs": 7457.483044,
+          "startedColliderContactsFirstEpisode": 6,
+          "finite": true
+        },
+        {
+          "repeat": 2,
+          "engine": "rapier3d-compat",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 7333.978915,
+          "msPerSimulation": 7.333978914999999,
+          "projected1000SimulationsMs": 7333.978915,
+          "startedColliderContactsFirstEpisode": 6,
+          "finite": true
+        },
+        {
+          "repeat": 3,
+          "engine": "rapier3d-compat",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 7161.7509900000005,
+          "msPerSimulation": 7.161750990000001,
+          "projected1000SimulationsMs": 7161.7509900000005,
+          "startedColliderContactsFirstEpisode": 6,
+          "finite": true
+        },
+        {
+          "repeat": 4,
+          "engine": "rapier3d-compat",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 7573.594012000001,
+          "msPerSimulation": 7.573594012000002,
+          "projected1000SimulationsMs": 7573.594012000001,
+          "startedColliderContactsFirstEpisode": 6,
+          "finite": true
+        },
+        {
+          "repeat": 5,
+          "engine": "rapier3d-compat",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 7794.191778000004,
+          "msPerSimulation": 7.794191778000004,
+          "projected1000SimulationsMs": 7794.191778000004,
+          "startedColliderContactsFirstEpisode": 6,
+          "finite": true
+        }
+      ],
+      "benchmark22Summary": {
+        "repeatCount": 5,
+        "medianMsPerSimulation": 7.457483044,
+        "minMsPerSimulation": 7.161750990000001,
+        "maxMsPerSimulation": 7.794191778000004,
+        "q1MsPerSimulation": 7.333978914999999,
+        "q3MsPerSimulation": 7.573594012000002,
+        "iqrMsPerSimulation": 0.23961509700000239
       }
     },
     {
@@ -2410,19 +2485,91 @@
           "finite": true
         }
       ],
-      "benchmark22": {
-        "engine": "jolt-physics-js",
-        "simulations": 1000,
-        "warmupSimulations": 20,
-        "playerBodies": 22,
-        "colliders": 110,
-        "stepsPerSimulation": 30,
-        "simulatedSecondsPerEpisode": 0.25,
-        "elapsedMs": 3532.649530999999,
-        "msPerSimulation": 3.5326495309999992,
-        "projected1000SimulationsMs": 3532.649530999999,
-        "bodyContactsFirstEpisode": 4,
-        "finite": true
+      "benchmark22Repeats": [
+        {
+          "repeat": 1,
+          "engine": "jolt-physics-js",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 3692.374358000001,
+          "msPerSimulation": 3.692374358000001,
+          "projected1000SimulationsMs": 3692.374358000001,
+          "bodyContactsFirstEpisode": 4,
+          "finite": true
+        },
+        {
+          "repeat": 2,
+          "engine": "jolt-physics-js",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 3858.5203699999984,
+          "msPerSimulation": 3.858520369999998,
+          "projected1000SimulationsMs": 3858.5203699999984,
+          "bodyContactsFirstEpisode": 4,
+          "finite": true
+        },
+        {
+          "repeat": 3,
+          "engine": "jolt-physics-js",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 3960.3957059999957,
+          "msPerSimulation": 3.960395705999996,
+          "projected1000SimulationsMs": 3960.3957059999957,
+          "bodyContactsFirstEpisode": 4,
+          "finite": true
+        },
+        {
+          "repeat": 4,
+          "engine": "jolt-physics-js",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 4704.601669999996,
+          "msPerSimulation": 4.704601669999996,
+          "projected1000SimulationsMs": 4704.601669999996,
+          "bodyContactsFirstEpisode": 4,
+          "finite": true
+        },
+        {
+          "repeat": 5,
+          "engine": "jolt-physics-js",
+          "simulations": 1000,
+          "warmupSimulations": 20,
+          "playerBodies": 22,
+          "colliders": 110,
+          "stepsPerSimulation": 30,
+          "simulatedSecondsPerEpisode": 0.25,
+          "elapsedMs": 3845.5774749999982,
+          "msPerSimulation": 3.845577474999998,
+          "projected1000SimulationsMs": 3845.5774749999982,
+          "bodyContactsFirstEpisode": 4,
+          "finite": true
+        }
+      ],
+      "benchmark22Summary": {
+        "repeatCount": 5,
+        "medianMsPerSimulation": 3.858520369999998,
+        "minMsPerSimulation": 3.692374358000001,
+        "maxMsPerSimulation": 4.704601669999996,
+        "q1MsPerSimulation": 3.845577474999998,
+        "q3MsPerSimulation": 3.960395705999996,
+        "iqrMsPerSimulation": 0.11481823099999788
       }
     }
   ]
