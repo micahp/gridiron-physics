@@ -1,0 +1,66 @@
+{
+  "label": "modified",
+  "seeds": 200,
+  "results": {
+    "baseline": {
+      "run_ne_at_chi": {
+        "plays": 200,
+        "tackle_rate": 0.995,
+        "drag_yd_mean": 1.6458662350855517,
+        "drag_yd_median": 1.4745491602604155,
+        "speed_after_mean": 2.2000788935884316e-19,
+        "closing_mean": 2.1097674970624722,
+        "energy_mean": 168.59080563729077
+      },
+      "pass_ne_at_chi": {
+        "plays": 200,
+        "tackle_rate": 0.66,
+        "drag_yd_mean": 2.307150662095441,
+        "drag_yd_median": 2.082176365793033,
+        "speed_after_mean": 4.722850372569432e-20,
+        "closing_mean": 5.232842138043869,
+        "energy_mean": 733.1533019310558
+      }
+    },
+    "def_TAK_plus10": {
+      "run_ne_at_chi": {
+        "plays": 200,
+        "tackle_rate": 1,
+        "drag_yd_mean": 1.5911003416534004,
+        "drag_yd_median": 1.3984747342282924,
+        "speed_after_mean": 1.9461428996114804e-19,
+        "closing_mean": 2.172272276110856,
+        "energy_mean": 172.59102123749813
+      },
+      "pass_ne_at_chi": {
+        "plays": 200,
+        "tackle_rate": 0.66,
+        "drag_yd_mean": 2.209719524183106,
+        "drag_yd_median": 2.051273589732065,
+        "speed_after_mean": 3.285461128743953e-20,
+        "closing_mean": 5.406880068720294,
+        "energy_mean": 769.5198175895738
+      }
+    },
+    "off_BTK_plus10": {
+      "run_ne_at_chi": {
+        "plays": 200,
+        "tackle_rate": 0.99,
+        "drag_yd_mean": 1.6711355969975104,
+        "drag_yd_median": 1.5116263581530969,
+        "speed_after_mean": 3.712571075480667e-19,
+        "closing_mean": 2.064690843983803,
+        "energy_mean": 163.77937289753632
+      },
+      "pass_ne_at_chi": {
+        "plays": 200,
+        "tackle_rate": 0.66,
+        "drag_yd_mean": 2.307150662095441,
+        "drag_yd_median": 2.082176365793033,
+        "speed_after_mean": 4.722850372569432e-20,
+        "closing_mean": 5.232842138043869,
+        "energy_mean": 733.1533019310558
+      }
+    }
+  }
+}
