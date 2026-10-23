@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENGINE_IDS, PHYSICS_MATERIALS, runScenario } from './simulation.mjs';
-import { M4C_PRIORITY_IDS, instantiateM4CScenario } from './m4c-scenarios.mjs';
+import { M4C_PRIORITY_IDS, M4C_SCENARIO_VERSION, instantiateM4CScenario } from './m4c-scenarios.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '../../..');
@@ -17,7 +17,12 @@ if (!Number.isInteger(seed) || seed < 0) throw new Error(`Seed must be a nonnega
 const packageJson = JSON.parse(await readFile(path.join(REPO, 'package.json'), 'utf8'));
 const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim();
 const commitKey = sourceCommit.slice(0, 10), seedKey = `seed-${seed}`;
-const scenarioVersion = 'm4c-scenario-library-v4';
+const scenarioVersion = M4C_SCENARIO_VERSION;
+const compactRecord = (row) => {
+  if (!row.penetration?.samples) return row;
+  const { samples, ...penetration } = row.penetration;
+  return { ...row, penetration };
+};
 const outputDirectory = path.join(RESULTS, profile.id, commitKey, seedKey);
 const stagingDirectory = path.join(RESULTS, `.m4c-staging-${commitKey}-${seedKey}`);
 for (const directory of [outputDirectory, stagingDirectory]) {
@@ -103,7 +108,7 @@ for (const engine of ENGINE_IDS) {
 const summary = { schemaVersion: 1, milestone: 'M4c', simulationVersion: profile, sourceCommit, scenarioVersion, seed,
   runtime: { node: process.version, platform: process.platform, architecture: process.arch, cpu: os.cpus()[0]?.model,
     logicalCpuCount: os.cpus().length, wallTimeMs: performance.now() - startedAt, processRssBytes: process.memoryUsage().rss },
-  engines: ENGINE_IDS, scenarioIds: M4C_PRIORITY_IDS, recordCount: records.length, records };
+  engines: ENGINE_IDS, scenarioIds: M4C_PRIORITY_IDS, recordCount: records.length, records: records.map(compactRecord) };
 await writeFile(path.join(stagingDirectory, 'summary.json'), `${JSON.stringify(summary)}\n`);
 await mkdir(path.dirname(outputDirectory), { recursive: true });
 await rename(stagingDirectory, outputDirectory);
@@ -116,9 +121,9 @@ catch (error) { if (error.code !== 'ENOENT') throw error; previous = { records: 
   sideline: { title: 'Sideline / broadcast', position: [0, 5.5, 17], target: [0, 0.85, 0] },
   closeup: { title: 'Close-up contact', position: [3.4, 3.2, 5.4], target: [0.1, 1, 0] },
 } }; }
-const rowByKey = new Map((previous.records ?? []).map((row) =>
+const rowByKey = new Map((previous.records ?? []).map(compactRecord).map((row) =>
   [`${row.scenarioId}|${row.engine}|${row.simulationVersion}|${row.seed}|${row.sourceCommit}`, row]));
-for (const row of [...records, ...m4bControlRecords]) {
+for (const row of [...records, ...m4bControlRecords].map(compactRecord)) {
   rowByKey.set(`${row.scenarioId}|${row.engine}|${row.simulationVersion}|${row.seed}|${row.sourceCommit}`, row);
 }
 const profiles = [...(previous.profiles ?? []).filter((row) => row.id !== profile.id), profile];

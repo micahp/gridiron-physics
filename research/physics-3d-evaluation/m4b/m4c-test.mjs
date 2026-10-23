@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENGINE_IDS, compareSignatures, runScenario } from './simulation.mjs';
-import { instantiateM4CScenario } from './m4c-scenarios.mjs';
+import { M4C_SCENARIO_VERSION, instantiateM4CScenario } from './m4c-scenarios.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '../../..');
@@ -149,7 +149,8 @@ const summary = { schemaVersion: 1, milestone: 'M4c', preregistration: 'research
   generatedAt: new Date().toISOString(), sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim(),
   reproducibility: { command: 'npm run eval:m4c:test', node: process.version, platform: process.platform, architecture: process.arch,
     cpu: os.cpus()[0]?.model, packages: { rapier: packageJson.devDependencies['@dimforge/rapier3d-compat'], jolt: packageJson.devDependencies['jolt-physics'] },
-    fixedTimestepSeconds: 1 / 120, seeds, inputConfigurations: configs.map(({ id, options }) => ({ id, options })),
+    scenarioVersion: M4C_SCENARIO_VERSION, fixedTimestepSeconds: 1 / 120, seeds,
+    inputConfigurations: configs.map(({ id, options }) => ({ id, options })),
     randomDraws: 0, contactOpportunityGapM: 0.10 },
   acceptedDemonstrations: required, runCount: runs.length, runs, repeatability: repeat,
   runtime: { wallTimeMs: performance.now() - startedAt, processRssBytes: process.memoryUsage().rss },

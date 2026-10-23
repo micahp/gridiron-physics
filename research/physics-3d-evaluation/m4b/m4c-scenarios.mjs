@@ -12,7 +12,8 @@ const player = (id, team, p, v, extra = {}) => ({ id, team, p, v, mass: 98, fric
 const rusher = (id, p, v, extra = {}) => player(id, 'defense', p, v, { yawRad: Math.PI, mass: 106, wrap: wrap(), ...extra });
 
 const library = new Map();
-const save = (scenario) => { scenario.version = 4; library.set(scenario.id, scenario); };
+export const M4C_SCENARIO_VERSION = 'm4c-scenario-library-v5';
+const save = (scenario) => { scenario.version = 5; library.set(scenario.id, scenario); };
 
 const upright = instantiateScenario('gang-three-upright');
 upright.players = [
@@ -200,5 +201,5 @@ export const M4C_PRIORITY_IDS = Object.freeze([
 export function instantiateM4CScenario(id, seed = 41027, overrides = {}) {
   const base = M4C_SCENARIO_BY_ID.get(id);
   if (!base) throw new Error(`Unknown M4c scenario: ${id}`);
-  return structuredClone({ ...base, ...overrides, seed, version: 4 });
+  return structuredClone({ ...base, ...overrides, seed, version: 5 });
 }

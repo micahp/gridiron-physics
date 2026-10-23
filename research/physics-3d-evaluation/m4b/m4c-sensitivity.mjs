@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENGINE_IDS, runScenario } from './simulation.mjs';
-import { instantiateM4CScenario } from './m4c-scenarios.mjs';
+import { M4C_SCENARIO_VERSION, instantiateM4CScenario } from './m4c-scenarios.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '../../..');
@@ -93,7 +93,7 @@ const report = { schemaVersion: 1, milestone: 'M4c controlled sensitivity and ca
   generatedAt: new Date().toISOString(), sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim(),
   reproducibility: { command: 'npm run eval:m4c:sensitivity', node: process.version,
     rapierVersion: packageJson.devDependencies['@dimforge/rapier3d-compat'], joltVersion: packageJson.devDependencies['jolt-physics'],
-    fixedSeed: seed, noRandomDraws: true, baseScenarioDurationSeconds: 2.4 },
+    scenarioVersion: M4C_SCENARIO_VERSION, fixedSeed: seed, noRandomDraws: true, baseScenarioDurationSeconds: 2.4 },
   instrumentLimits: { solverContactStiffness: 'not directly exposed in the tested JS APIs; spring-damper controller stiffness and solver iteration/collision-step controls are varied separately',
     rapierContactSkin: 'Rapier exposes setContactSkin; Jolt shape API tested here does not expose the equivalent convex margin',
     solverEquivalence: 'Rapier numSolverIterations and Jolt Step collisionSteps are distinct settings and are not treated as equivalent.' },
