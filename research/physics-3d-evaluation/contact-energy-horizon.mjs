@@ -377,6 +377,131 @@ async function runJoltHorizon(angleDeg, speedMps, mode) {
   return result;
 }
 
+export async function runContactEnergyHorizonCell(engine, angleDeg, speedMps, mode = 'dynamic') {
+  if (!ENGINES.includes(engine)) throw new Error(`Unknown physics engine: ${engine}`);
+  if (!['dynamic', 'kinematic'].includes(mode)) throw new Error(`Unknown defender motion: ${mode}`);
+  return engine === 'rapier3d-compat'
+    ? runRapierHorizon(angleDeg, speedMps, mode)
+    : runJoltHorizon(angleDeg, speedMps, mode);
+}
+
+async function runRapierTackleScaleGravityTrial({ startHeightM, initialDownwardSpeedMps, massKg }) {
+  await RAPIER.init();
+  const world = new RAPIER.World({ x: 0, y: -G, z: 0 }); world.timestep = DT;
+  const player = rapierPlayer(world, {
+    p: [0, startHeightM, 0], v: [0, -initialDownwardSpeedMps, 0], mass: massKg,
+  }, 0);
+  const mass = player.body.mass();
+  const initialY = player.body.worldCom({ x: 0, y: 0, z: 0 }).y;
+  const energy = () => {
+    const p = player.body.worldCom({ x: 0, y: 0, z: 0 }), v = player.body.linvel();
+    return gravityEnergy(mass, p.y, v.y, initialY);
+  };
+  const traceJ = [energy()];
+  const speedTraceMps = [initialDownwardSpeedMps];
+  let maximumAngularSpeedRadPerSec = 0;
+  let ticks = 0;
+  while (player.body.worldCom({ x: 0, y: 0, z: 0 }).y > initialY - startHeightM && ticks < 120) {
+    world.step(); ticks++;
+    traceJ.push(energy());
+    speedTraceMps.push(magnitude(asArray(player.body.linvel())));
+    maximumAngularSpeedRadPerSec = Math.max(maximumAngularSpeedRadPerSec, magnitude(asArray(player.body.angvel())));
+  }
+  const final = player.body;
+  const finalPosition = final.worldCom({ x: 0, y: 0, z: 0 });
+  const finalVelocity = final.linvel();
+  const result = summarizeTackleScaleGravityTrial('rapier3d-compat', {
+    startHeightM, dropHeightM: startHeightM, initialCenterOfMassHeightM: initialY,
+    initialDownwardSpeedMps, massKg: mass,
+    ticks, finalHeightM: finalPosition.y, finalSpeedMps: magnitude(asArray(finalVelocity)),
+    traceJ, speedTraceMps, maximumAngularSpeedRadPerSec,
+  });
+  world.free();
+  return result;
+}
+
+async function runJoltTackleScaleGravityTrial({ startHeightM, initialDownwardSpeedMps, massKg }) {
+  const J = await initJolt();
+  const world = makeJoltWorld(J);
+  const player = makeJoltHumanoid(world, {
+    p: [0, startHeightM, 0], v: [0, -initialDownwardSpeedMps, 0], mass: massKg,
+  }, { linearDamping: 0, angularDamping: 0 });
+  const velocity = new J.Vec3(0, -initialDownwardSpeedMps, 0);
+  world.bodyInterface.SetLinearVelocity(player.id, velocity);
+  J.destroy(velocity);
+  const initial = joltBodyState(player.body, joltMassProps(player.body, massKg));
+  const energy = () => {
+    const p = readJoltVec(player.body.GetCenterOfMassPosition());
+    const v = readJoltVec(player.body.GetLinearVelocity());
+    return gravityEnergy(initial.massKg, p[1], v[1], initial.positionM[1]);
+  };
+  const traceJ = [energy()];
+  const speedTraceMps = [initialDownwardSpeedMps];
+  let maximumAngularSpeedRadPerSec = 0;
+  let ticks = 0;
+  let y = initial.positionM[1];
+  while (y > initial.positionM[1] - startHeightM && ticks < 120) {
+    world.jolt.Step(DT, 1); ticks++;
+    traceJ.push(energy());
+    speedTraceMps.push(magnitude(readJoltVec(player.body.GetLinearVelocity())));
+    y = readJoltVec(player.body.GetCenterOfMassPosition())[1];
+    maximumAngularSpeedRadPerSec = Math.max(maximumAngularSpeedRadPerSec,
+      magnitude(readJoltVec(player.body.GetAngularVelocity())));
+  }
+  const finalPosition = readJoltVec(player.body.GetCenterOfMassPosition());
+  const finalVelocity = readJoltVec(player.body.GetLinearVelocity());
+  const result = summarizeTackleScaleGravityTrial('jolt-physics-js', {
+    startHeightM, dropHeightM: startHeightM, initialCenterOfMassHeightM: initial.positionM[1], initialDownwardSpeedMps,
+    massKg: initial.massKg, ticks, finalHeightM: finalPosition[1],
+    finalSpeedMps: magnitude(finalVelocity), traceJ, speedTraceMps, maximumAngularSpeedRadPerSec,
+  });
+  destroyJoltWorld(world);
+  return result;
+}
+
+function summarizeTackleScaleGravityTrial(engine, trial) {
+  const deltasJ = trial.traceJ.slice(1).map((energy, index) => energy - trial.traceJ[index]);
+  return {
+    engine,
+    startHeightM: trial.startHeightM,
+    dropHeightM: trial.dropHeightM,
+    initialCenterOfMassHeightM: trial.initialCenterOfMassHeightM,
+    targetFinalHeightM: trial.initialCenterOfMassHeightM - trial.dropHeightM,
+    actualDropM: trial.initialCenterOfMassHeightM - trial.finalHeightM,
+    initialDownwardSpeedMps: trial.initialDownwardSpeedMps,
+    massKg: trial.massKg,
+    ticks: trial.ticks,
+    timestepSeconds: DT,
+    finalHeightM: trial.finalHeightM,
+    finalSpeedMps: trial.finalSpeedMps,
+    minimumSpeedMps: Math.min(...trial.speedTraceMps),
+    maximumSpeedMps: Math.max(...trial.speedTraceMps),
+    contactCount: 0,
+    maximumAngularSpeedRadPerSec: trial.maximumAngularSpeedRadPerSec,
+    initialMechanicalEnergyJ: trial.traceJ[0],
+    finalMechanicalEnergyJ: trial.traceJ.at(-1),
+    netMechanicalEnergyDriftJ: trial.traceJ.at(-1) - trial.traceJ[0],
+    maximumAbsolutePerStepDriftJ: Math.max(...deltasJ.map(Math.abs)),
+    maximumAbsoluteCumulativeDriftJ: Math.max(...trial.traceJ.map((energy) => Math.abs(energy - trial.traceJ[0]))),
+  };
+}
+
+export async function runTackleScaleGravityControls() {
+  const trials = [
+    { startHeightM: 0.5, initialDownwardSpeedMps: 0, massKg: 96 },
+    { startHeightM: 2, initialDownwardSpeedMps: 3.2, massKg: 108 },
+  ];
+  const runs = [];
+  for (const engine of ENGINES) {
+    for (const trial of trials) {
+      runs.push(engine === 'rapier3d-compat'
+        ? await runRapierTackleScaleGravityTrial(trial)
+        : await runJoltTackleScaleGravityTrial(trial));
+    }
+  }
+  return runs;
+}
+
 function rapierPlayer(world, spec, damping = 0.04) {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
     .setTranslation(...spec.p).setLinvel(...spec.v)
