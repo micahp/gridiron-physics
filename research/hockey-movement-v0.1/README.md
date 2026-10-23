@@ -21,3 +21,16 @@ versioned gzip archive.
 
 Run the movement API regression with `node test/movement.mjs`. The NFL engine validation remains
 available as `node test/validate.mjs --strict`; the hockey adapter does not import or modify it.
+
+After registering a versioned scenario archive, validate the viewer and save one clip for each
+available frozen geometry/quality category:
+
+```sh
+node research/hockey-movement-v0.1/render_and_validate.mjs
+```
+
+This browser check uses Playwright from `/root/legendarypicks/node_modules/playwright` (override with
+`PLAYWRIGHT_MODULE`) and `ffprobe` on `PATH` (override with `FFPROBE`). It checks the four replay
+panels, playback and pause, model selection, overlays, documented orientation transform, and
+Python-to-JavaScript policy-path parity. The clips and visual-validation manifest are versioned under
+`archive/clips/` and `archive/`; the manifest records measured clip durations and source hashes.
