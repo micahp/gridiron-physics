@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { simulatePlay } from '../engine/play.js';
 import { buildLineups, createDemoScenario, selectPlay, validateDemoSnapshot, validateLineups } from '../web/prototype-model.js';
 import { executeSelectedPlay } from '../web/prototype-execution.js';
+import { assertSample, buildSample } from '../scripts/sample_free_execution_outcomes.mjs';
 
 const snapshot = JSON.parse(readFileSync(new URL('../data/teams/matchup-2026-10-22.json', import.meta.url)));
 const coaching = JSON.parse(readFileSync(new URL('../data/teams/coaching-continuity-2026-10-22.json', import.meta.url)));
@@ -211,4 +212,10 @@ const unsupportedPhysics = executeSelectedPlay({ ...outputs['NE-run'].demo,
 assert.equal(unsupportedPhysics.status, 'unsupported');
 assert.equal(unsupportedPhysics.failure.code, 'unsupported_action');
 
-console.log('Patriots-Bears prototype: playbook reconciliation, 22-player validation, both-team run/pass physics, deterministic seeds, substitution failures, and unsupported-action reporting passed.');
+const recordedDistribution = JSON.parse(readFileSync(new URL('../results/free_execution_outcome_sample.json', import.meta.url)));
+const regeneratedDistribution = buildSample();
+assertSample(regeneratedDistribution);
+assert.deepEqual(regeneratedDistribution, recordedDistribution, 'the checked-in 200-seed distribution artifact must reproduce exactly');
+assert.throws(() => buildSample({ n: 199 }), /at least 200/);
+
+console.log('Patriots-Bears prototype: playbook reconciliation, 22-player validation, both-team run/pass physics, deterministic seeds, substitution failures, unsupported-action reporting, and 200-seed outcome distribution passed.');

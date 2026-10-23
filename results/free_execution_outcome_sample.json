@@ -1,0 +1,124 @@
+{
+  "schema_version": "gridiron-free-execution-outcome-sample.v1",
+  "status": "unvalidated_smoke_distribution_not_calibration_or_prediction",
+  "sample_size_per_cell": 200,
+  "seed_scheme": "dist-{run|pass}-{i}, i=0..n-1; the same seeds are used for both teams",
+  "setup": {
+    "line_of_scrimmage_yards": 45,
+    "field_direction": 1,
+    "offense_defense": {
+      "NE": "NE offense vs CHI defense",
+      "CHI": "CHI offense vs NE defense"
+    },
+    "formation": "first candidate formation for that offense and action",
+    "selection": "createDemoScenario without candidateId; seeded weighted draw from observed_2025 entries in that formation",
+    "outcome_mode": "free; no historical gain, end spot, tackler, receiver result, or catch-point anchors",
+    "roster_snapshot": "data/teams/matchup-2026-10-22.json (frozen pregame snapshot)"
+  },
+  "gain_definition": {
+    "run": "final play spot minus line of scrimmage, in offense direction",
+    "pass": "completed catch spot or sack spot minus line of scrimmage; incomplete passes and interceptions contribute 0 yards",
+    "quantiles": "linear interpolation at type-7 positions: (n-1)*p"
+  },
+  "criteria": {
+    "run_median_min_yards": 0,
+    "run_share_gaining_zero_or_less_max": 0.5,
+    "run_tackle_within_0_9s_after_handoff_max_share": 0.4,
+    "unblocked_front_crossings_at_or_before_0_6s_max": 0,
+    "pass_completion_rate_target": [
+      0.4,
+      0.55
+    ],
+    "pass_completion_target_rationale": "A simplified one-target synthetic route/coverage path should avoid the prior ~24% completion rate; 40–55% is a smoke target, not an NFL-rate calibration."
+  },
+  "cells": {
+    "NE": {
+      "run": {
+        "n": 200,
+        "gain_yards": {
+          "mean": 3.4395133974307828,
+          "median": 1.1125128800494792,
+          "p10": -3.551500654071525,
+          "p90": 14.593234909200687
+        },
+        "run": {
+          "nonpositive_gain_count": 66,
+          "share_gaining_zero_or_less": 0.33,
+          "tackle_within_0_9s_after_handoff": {
+            "count": 50,
+            "denominator": 200,
+            "share": 0.25
+          },
+          "unblocked_front_crossings_by_0_6s": {
+            "count": 0,
+            "denominator": 800
+          }
+        }
+      },
+      "pass": {
+        "n": 200,
+        "gain_yards": {
+          "mean": 3.427390959335616,
+          "median": 0,
+          "p10": 0,
+          "p90": 10.71035676746607
+        },
+        "pass": {
+          "completion_rate": 0.415,
+          "outcomes": {
+            "catch": 83,
+            "drop": 24,
+            "breakup": 26,
+            "other_incomplete": 65,
+            "sack": 0,
+            "interception": 2
+          }
+        }
+      }
+    },
+    "CHI": {
+      "run": {
+        "n": 200,
+        "gain_yards": {
+          "mean": 2.571017578254334,
+          "median": 1.2561556142658397,
+          "p10": -3.5698328663380465,
+          "p90": 6.376572319269422
+        },
+        "run": {
+          "nonpositive_gain_count": 72,
+          "share_gaining_zero_or_less": 0.36,
+          "tackle_within_0_9s_after_handoff": {
+            "count": 52,
+            "denominator": 200,
+            "share": 0.26
+          },
+          "unblocked_front_crossings_by_0_6s": {
+            "count": 0,
+            "denominator": 800
+          }
+        }
+      },
+      "pass": {
+        "n": 200,
+        "gain_yards": {
+          "mean": 2.9681389210420766,
+          "median": 0,
+          "p10": 0,
+          "p90": 9.452978400335633
+        },
+        "pass": {
+          "completion_rate": 0.44,
+          "outcomes": {
+            "catch": 88,
+            "drop": 27,
+            "breakup": 29,
+            "other_incomplete": 48,
+            "sack": 5,
+            "interception": 3
+          }
+        }
+      }
+    }
+  }
+}

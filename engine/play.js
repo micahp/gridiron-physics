@@ -210,6 +210,26 @@ export function simulatePlay(game, S, ctx = {}) {
   if (kind === 'pass' && !['WR1', 'WR2', 'WR3', 'TE', 'RB'].includes(prospectiveTargetSlot)) return null;
   if (kind === 'pass' && !['go', 'curl', 'out', 'dig', 'slant', 'post', 'seam', 'flat'].includes(S.target_route)) return null;
   st.freeOutcome = freeOutcome;
+  if (freeOutcome && kind === 'run') {
+    const engage = W.engage.bind(W);
+    const disengage = W.disengage.bind(W);
+    W.engage = (a, b) => {
+      const alreadyEngaged = a.engaged || b.engaged;
+      engage(a, b);
+      if (!alreadyEngaged && a.engaged === b && a.team === off && b.team === def) {
+        ev('run_block_engage', { blocker_id: a.id, defender_id: b.id });
+      } else if (!alreadyEngaged && b.engaged === a && b.team === off && a.team === def) {
+        ev('run_block_engage', { blocker_id: b.id, defender_id: a.id });
+      }
+    };
+    W.disengage = (e, shedder) => {
+      const tracked = e && e.a.team !== e.b.team && ((e.a.team === off && e.b.team === def) || (e.b.team === off && e.a.team === def));
+      const blocker = tracked ? (e.a.team === off ? e.a : e.b) : null;
+      const defender = tracked ? (e.a.team === def ? e.a : e.b) : null;
+      disengage(e, shedder);
+      if (tracked) ev('run_block_release', { blocker_id: blocker.id, defender_id: defender.id, by: shedder?.id ?? null });
+    };
+  }
   let OA = null, DA = null;
   const lineup = S.lineup || {};
   const heavy = /Run formation|Jumbo/.test(S.text) || (dir > 0 ? 100 - losYd : losYd) <= 3;
@@ -289,6 +309,9 @@ export function simulatePlay(game, S, ctx = {}) {
       if (q.team === st.tacklerTeam) {
         if (st.tacklers.has(q.id)) q.mode = 'tackle_to';
         else if (TO_PURSUE.has(q.mode)) q.mode = 'pursue';
+      } else if (freeOutcome && kind === 'run' && q.mode === 'run_block') {
+        // Keep assigned blockers engaged through the carrier's run instead of
+        // converting the line to escorts at the handoff.
       } else if (TO_ESCORT.has(q.mode)) q.mode = 'escort';
       else if (['pocket', 'qb_drop', 'handoff'].includes(q.mode)) q.mode = 'fake';
     }
@@ -309,7 +332,7 @@ export function simulatePlay(game, S, ctx = {}) {
     return ((st.endX - p.p.x / YD) * dir * (p.team === off ? 1 : -1));
   }
 
-  function tryTackle(a, b) {
+  function tryTackle(a, b, contact = null) {
     if (st.dead || st.tTackle != null) return;
     const c = st.carrier;
     if (!c || (a !== c && b !== c)) return;
@@ -324,12 +347,26 @@ export function simulatePlay(game, S, ctx = {}) {
       }
       return;
     }
+    let freeTackleOdds = null;
+    if (st.freeOutcome) {
+      const distance = d2(c.p, d.p);
+      const closingSpeed = contact?.closingSpeed ?? 0;
+      const alignment = contact?.alignment ?? 0;
+      // Body overlap alone is not a tackle. A defender still engaged by a
+      // blocker has not won through the block, and grazing/separating contact
+      // does not start a wrap.
+      if (d.engaged || distance > d.r + c.r + 0.25 || closingSpeed < 0.8 || alignment < 0.2) return;
+      const ballCarrierSkill = Math.max(c.R.BTK ?? 50, c.R.ELU ?? 50);
+      const impact = clamp((closingSpeed - 0.8) / 5, 0, 1);
+      const angle = clamp((alignment - 0.2) / 0.8, 0, 1);
+      freeTackleOdds = clamp(0.38 + ((d.R.TAK ?? 50) - ballCarrierSkill) * 0.007 + impact * 0.18 + angle * 0.12, 0.18, 0.88);
+    }
     const along = st.endX == null ? null : Math.abs((st.endX - c.p.x / YD));
     const designated = st.tacklers.has(d.id);
     const lim = designated ? 2.6 : 1.1;
     const waited = st.waitT > 1.4;
     const tackleOdds = clamp(0.58 + ((d.R.TAK ?? 50) - Math.max(c.R.BTK ?? 50, c.R.ELU ?? 50)) * 0.006, 0.35, 0.82);
-    const tackleWon = st.freeOutcome ? rand() < tackleOdds : along <= lim || waited;
+    const tackleWon = st.freeOutcome ? rand() < freeTackleOdds : along <= lim || waited;
     if (tackleWon) {
       startTackle(d, c);
     } else {
@@ -338,7 +375,8 @@ export function simulatePlay(game, S, ctx = {}) {
       c.stumble = 0.18 + 0.1 * rand();
       d.stumble = 0.6;
       d.ai.missUntil = W.t + 1.6;
-      if (rand() < 0.55 + (bt - tk) / 200) {
+      const brokenTackleOdds = st.freeOutcome ? clamp(0.45 + (bt - tk) * 0.008, 0.15, 0.85) : 0.55 + (bt - tk) / 200;
+      if (rand() < brokenTackleOdds) {
         d.down = true;
         d.pose = POSE.DOWN;
         d.downT = W.t;
@@ -478,6 +516,13 @@ export function simulatePlay(game, S, ctx = {}) {
   function brain(p) {
     p.face = null;
     const t = W.t;
+    if (freeOutcome && kind === 'run' && t < 0) {
+      // Prospective run blocking and defensive movement begin at the snap,
+      // never during the recorded pre-snap stance.
+      p.dv = { x: 0, y: 0 };
+      if (p.pose === POSE.STANCE) p.face = faceDownfield(p);
+      return;
+    }
     switch (p.mode) {
       case 'stance':
         p.dv = { x: 0, y: 0 };
@@ -617,7 +662,8 @@ export function simulatePlay(game, S, ctx = {}) {
           return;
         }
         p.dv = seek(p, lead(p, d, 0.8), 0.85, 10);
-        if (d2(p.p, d.p) < p.r + d.r + 0.3 && !p.engaged && !d.engaged) W.engage(p, d);
+        const engageReach = freeOutcome && kind === 'run' ? 0.55 : 0.3;
+        if (d2(p.p, d.p) < p.r + d.r + engageReach && !p.engaged && !d.engaged) W.engage(p, d);
         return;
       }
       case 'lead_block': {
@@ -811,7 +857,8 @@ export function simulatePlay(game, S, ctx = {}) {
     const passPlay = S.kindGroup === 'pass';
     const r = passPlay ? Math.max(p.R.PMV ?? 40, p.R.FMV ?? 40) : p.R.BSH ?? 50;
     const b = passPlay ? blk.R.PBK ?? 50 : blk.R.RBK ?? 50;
-    let lam = (passPlay ? 0.1 : 0.22) * Math.exp((r - b) / 15) * boost;
+    const runShedRate = st.freeOutcome ? 0.12 : 0.22;
+    let lam = (passPlay ? 0.1 : runShedRate) * Math.exp((r - b) / 15) * boost;
     if (p.ai.shedAt != null && W.t >= p.ai.shedAt) lam = 60;
     if (st.carrier && passPlay && st.carrier !== st.qb) lam *= 3; // blocks melt once the ball is out
     if (rand() < lam * DT) W.disengage(e, p);
@@ -857,7 +904,26 @@ export function simulatePlay(game, S, ctx = {}) {
     const skipSet = new Set(tackleIds.map((id) => pl(id)));
     const blockers = [...OL.map((s) => slotOf(off, s)), slotOf(off, 'TE')].filter(Boolean);
     if (heavy && slotOf(off, 'WR3')) blockers.push(slotOf(off, 'WR3'));
-    assignBlocks(blockers, front, skipSet);
+    if (freeOutcome) {
+      const frontAssignments = [
+        [slotOf(off, 'LT'), 'LEDGE'], [slotOf(off, 'LG'), 'LDT'],
+        [slotOf(off, 'RG'), 'RDT'], [slotOf(off, 'RT'), 'REDGE'],
+      ];
+      const claimedBlockers = new Set(), claimedDefenders = new Set();
+      for (const [blocker, slot] of frontAssignments) {
+        const defender = slotOf(def, slot);
+        if (blocker && defender && !skipSet.has(defender)) {
+          blocker.ai.blockOn = defender;
+          claimedBlockers.add(blocker);
+          claimedDefenders.add(defender);
+        }
+      }
+      assignBlocks(blockers.filter((b) => !claimedBlockers.has(b)),
+        front.filter((d) => !claimedDefenders.has(d)), skipSet);
+    } else assignBlocks(blockers, front, skipSet);
+    if (freeOutcome) for (const b of blockers) {
+      if (b.ai.blockOn) ev('run_block_assignment', { blocker_id: b.id, defender_id: b.ai.blockOn.id });
+    }
     for (const b of blockers) b.mode = 'run_block';
     for (const s of ['WR1', 'WR2', 'WR3']) {
       const w = slotOf(off, s);
@@ -871,7 +937,7 @@ export function simulatePlay(game, S, ctx = {}) {
       if (st.tacklers.has(q.id)) q.mode = 'tackle_to';
       else if (FRONT.includes(q.slot) || (q.slot === 'NB' && heavy)) {
         q.mode = 'runfit';
-        q.ai.gapPt = at(-0.5, lOfY(q.p.y / YD) * 0.8);
+        q.ai.gapPt = at(freeOutcome ? 0.5 : -0.5, lOfY(q.p.y / YD) * 0.8);
       } else if (['MLB', 'WLB'].includes(q.slot)) q.mode = 'read';
       else q.mode = 'pursue';
     }
@@ -1147,9 +1213,9 @@ export function simulatePlay(game, S, ctx = {}) {
     const tgt = st.target;
     const hawk = pl(S.interceptor || S.defender);
     if (freeOutcome && kindNow === 'pass') {
-      const inCatchWindow = b.z >= 0.35 && b.z <= 2.8;
+      const inCatchWindow = b.z >= 0.15 && b.z <= 3.0;
       const receiverDistance = tgt ? d2(tgt.p, { x: b.x, y: b.y }) : Infinity;
-      const receiverReach = tgt ? receiverDistance <= tgt.r + 1.2 : false;
+      const receiverReach = tgt ? receiverDistance <= tgt.r + 1.6 : false;
       const defender = defense().map((p) => ({ player: p, distance: d2(p.p, { x: b.x, y: b.y }) }))
         .sort((a, b) => a.distance - b.distance)[0];
       const defenderReach = defender && defender.distance <= defender.player.r + 1.0;
@@ -1163,8 +1229,8 @@ export function simulatePlay(game, S, ctx = {}) {
         }
       }
       if (inCatchWindow && receiverReach) {
-        const odds = clamp(0.45 + ((tgt.R.CTH ?? 50) - 70) * 0.01
-          + ((tgt.R.AWR ?? 50) - 70) * 0.002 - receiverDistance * 0.12, 0.05, 0.94);
+        const odds = clamp(0.67 + ((tgt.R.CTH ?? 50) - 70) * 0.009
+          + ((tgt.R.AWR ?? 50) - 70) * 0.002 - receiverDistance * 0.08, 0.08, 0.97);
         if (rand() < odds) {
           ev('catch', { by: tgt.id, air: S.air, intended: true });
           makeCarrier(tgt, null, null, { free: true });
@@ -1561,7 +1627,7 @@ export function simulatePlay(game, S, ctx = {}) {
   const frames = [];
   let nextRec = -PRE;
 
-  W.onTouch = (a, b) => {
+  W.onTouch = (a, b, contact) => {
     if (freeOutcome && kind === 'pass' && !st.thrown && !st.sack && st.qb && (a === st.qb || b === st.qb)) {
       const d = a === st.qb ? b : a;
       if (d.team !== off && !d.down && (d.ai.missUntil ?? 0) <= W.t) {
@@ -1578,7 +1644,7 @@ export function simulatePlay(game, S, ctx = {}) {
         }
       }
     }
-    tryTackle(a, b);
+    tryTackle(a, b, contact);
   };
 
   function record() {

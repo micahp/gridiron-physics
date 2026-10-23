@@ -302,7 +302,9 @@ export class World {
         a.p.y -= (ny * over * (1 / a.m)) / im;
         b.p.x += (nx * over * (1 / b.m)) / im;
         b.p.y += (ny * over * (1 / b.m)) / im;
-        const vn = (b.v.x - a.v.x) * nx + (b.v.y - a.v.y) * ny;
+        const rvx = b.v.x - a.v.x, rvy = b.v.y - a.v.y;
+        const relativeSpeed = Math.hypot(rvx, rvy);
+        const vn = rvx * nx + rvy * ny;
         if (vn < 0) {
           const e = 0.12; // padded bodies: very inelastic
           const jimp = (-(1 + e) * vn) / im;
@@ -316,7 +318,12 @@ export class World {
             if (this.onContact) this.onContact(a, b, -vn);
           }
         }
-        if (a.team !== b.team && this.onTouch) this.onTouch(a, b);
+        if (a.team !== b.team && this.onTouch) {
+          this.onTouch(a, b, {
+            closingSpeed: Math.max(0, -vn),
+            alignment: relativeSpeed > 1e-6 ? Math.max(0, -vn) / relativeSpeed : 0,
+          });
+        }
       }
     }
   }
