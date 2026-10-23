@@ -169,6 +169,20 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Gate:** Two independently executed, reproducible drives complete with valid legal state, traceable player outcomes and no fabricated physics. Differences from statistically generated outcomes are recorded, not suppressed.
 
+### M1b result — 2026-10-23: physical grip and balance research completed
+
+**Source:** [M1b report](https://github.com/micahp/gridiron-physics/blob/research/m1b-physical-tackling-grip-balance/research/physics-3d-evaluation/m1b/REPORT.md), [versioned research branch](https://github.com/micahp/gridiron-physics/tree/research/m1b-physical-tackling-grip-balance), commit `75b07d2`. Changes remain off `main`.
+
+**Observed:** Both Rapier and Jolt produce contact-dependent **retained-grip tackle**, **grip overload followed by fall, recovery and escape**, and **clean missed-contact attempt**, plus bounded-torque balance recovery/failure and asymmetric falls. The grip is a compliant torso-to-torso spring/damper applying forces/torques, **not** articulated hands, arms or solver-native grasp constraints. The broken-tackle demonstration includes the carrier falling and recovering; it is not yet an upright break. Variations in strength advantage, low grip height and stronger drive were inconclusive; only a weak grip capacity consistently created escapes in the current controlled sweep. No calibrated NFL tackle thresholds established.
+
+**Energy control:** Isolated airborne gravity-only run (2,400 steps at 1/1200 s): max relative frame drift **Rapier 1.225%**, **Jolt 2.286%**, inside the experiment's 4% tolerance. This is a different timestep/harness than prior 120 Hz energy controls; it does not overturn them or prove exact conservation.
+
+**Continuous 22-player proxy:** 100 seconds simulated per repeat, 3 repeats/engine, median wall time per simulated second **Rapier 54.92 ms**, **Jolt 33.79 ms**. Not a production speed verdict; body representation, iteration defaults and exposed diagnostics differ. Process memory deltas are too noisy to rank.
+
+**Viewer:** [M1b Three.js replay UI](https://github.com/micahp/gridiron-physics/blob/research/m1b-physical-tackling-grip-balance/research/physics-3d-evaluation/m1b/index.html) can select Rapier/Jolt and four animations, scrub frames and overlay colliders, contacts, torque and grip. This is the foundation for a **per-version immutable visual regression archive**, but it is not yet a public hosted archive.
+
+**Decision:** M1b **controlled feasibility accepted**, neither solver adopted into production. Move next to M4b adversarial gang-tackle / half-sack / tush-push / loose-ball pileups with archived fixed-camera recordings, and a matched secure ball–hand contact/possession test. When evaluating agent reports, distinguish a completed specific controlled case from unimplemented biomechanical mechanism.
+
 ### M4b. Adversarial many-body football physics and visual regression archive (new priority)
 
 **Requirement, 2026-10-23:** Before replacing the low-level player solver or claiming realistic tackling, stress-test the highest-contact situations in true 3D and keep a reviewable **visual archive for each tested version**. This runs as **isolated physics research** on the current `research/3d-physics-engine-evaluation` workstream, not a production migration.
