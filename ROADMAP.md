@@ -116,6 +116,33 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Gate:** Core ratings have documented, interpretable sensitivity curves; important nonresponses or unrealistic effects remain explicitly open. No unverified ratings are presented as measured player capabilities.
 
+### M3 research result — 2026-10-22 (ratings audit, no engine changes)
+
+**Status: reproducible diagnostic completed; ratings are not validated or adopted.** The ratings agent pushed [commit `c9d4e6f`](https://github.com/micahp/gridiron-physics/commit/c9d4e6f51630f911a671d1b60f23513d8e5e7e30) on [`research/rating-audit-2026-10-22`](https://github.com/micahp/gridiron-physics/tree/research/rating-audit-2026-10-22), based on `feat/free-run-pass-physics` at `7385acb`. See [35-rating inventory](https://github.com/micahp/gridiron-physics/blob/c9d4e6f51630f911a671d1b60f23513d8e5e7e30/docs/RATING-AUDIT-2026-10-22.md), [paired-seed rating probes](https://github.com/micahp/gridiron-physics/blob/c9d4e6f51630f911a671d1b60f23513d8e5e7e30/docs/RATING-PROBE-2026-10-22.md), and JSON results. The engine itself was **not modified**.
+
+- **Attribute wiring:** Of **35 player ratings**, **16 are referenced in engine logic and 19 are not**. This is an engine-read audit, not a claim that all 19 are unrelated to physical performance: e.g. sprint `vmax` is calculated directly from a measured/imputed 40-yard time, while visible `SPD` comes from that same underlying input. The `+10` WR1 pass null probe found **0/200** event/end-state changes for each of the 19 unread ratings, within that specific scenario.
+- **Critical correctness defect:** Sack chance consults **the QB's `PBK`** against defender `PMV`, rather than the actual blocker or modeled rush/contact. All seven QBs in the snapshot have a `PBK=48` low-confidence placeholder. This needs an explicit mechanism/correctness fix, not new rating data alone.
+- **Defensive interception placeholder:** `CIT` is 48 for **all 64 CB/S/LB/EDGE** players in the snapshot, yet the interception path reads defender `CIT`. This rating is derived for receivers, whose `CIT` isn't read by their catch path.
+- **Weak or thresholded sensitivity:** Drake Maye's `THA=91` aim-error standard deviation is only about **2.3 cm**, against receiver horizontal reach of radius +1.6 m; +5/+10 THA changed **0/200** outcomes, −5/−10 only **1/200**. `max(BTK, ELU)` and `max(ELU, AGI)` create threshold effects: Henderson's smaller BTK changes are masked, while ELU +10 moved mean run gain **2.07 → 4.46 yards** in one controlled scenario. Odunze `CTH+10` moved catch rate **0.560 → 0.650**, consistent with the hand-authored formula, not independently validated.
+- **Probe coverage failure:** **0 sacks, 0 pressures, 0 INT and 0 pass breakups across 6,000 pass-probe executions**. In these scenarios defenders did not reach the QB/ball, so pass-rush and interception sensitivities remain **unmeasured**. All baseline throws ended in catch or drop; this is not realistic pass-outcome coverage.
+- **Seed diagnostic:** A `THP` change shifted release/ball timing and random draw consumption, causing 37–49% outcome flips and nonmonotonic catch totals. Paired play IDs do **not** guarantee aligned random substreams after a branch divergence; establish event-specific draw streams or fixed-trajectory controls before causal attribution.
+- **Uncertainty:** Forty times were imputed for **50/84 NE (60%)** and **40/82 CHI (49%)** players; Maye's six combine drills were all imputed. Several formula-derived attributes inherit the low `0.15` placeholder-confidence label instead of evidence-appropriate confidence. All OL `PBK` confidence is zero. This limits physical-strength claims.
+- **Coverage:** The agent probed **10 of the 16 engine-read attributes** on one route/run formation per case. This is a research audit, **not** a complete cross-position validation harness, historical Madden-data study, or NFL validation.
+
+**M3 next gates (coordinate with M1/M2 3D solver work):**
+
+- [ ] Classify every attribute as physical input, independent controller input, derived/display-only, intentionally reserved, or wiring defect; don't fabricate effects just to use all 35.
+- [ ] Instrument real *opportunities* for QB pressure/sack, defender pass contest/INT, incompletion, and true tackle contacts; create scenarios that reach those mechanics and ensure failures remain possible.
+- [ ] Correct the QB-PBK sack dependency behind dedicated regression tests, then transition to a physics-based blocker/rusher/QB contact and decision model.
+- [ ] Replace placeholder defender `CIT` with a documented eligible, defensible estimator or keep it explicitly unvalidated; distinguish interception opportunity from hand-catch success.
+- [ ] Give `THA` meaningful, measurable effects on release/targeting under actual 3D coverage and receiver separation, but **do not arbitrarily widen throws** to match league rates.
+- [ ] Audit and decompose `ELU/AGI/BTK` masking and `THP` timing/RNG divergence; require controlled policies and stable event-specific streams in sensitivity tests.
+- [ ] Repair confidence propagation for formula-derived attributes and publish individual ratings with uncertainty, especially imputed drills and OL estimates.
+- [ ] Evaluate on multiple routes, pressure states, player pairs, and calibrated physical events; compare to real observed conditional outcomes with named denominators and held-out cuts.
+- [ ] Keep historical Madden rating availability, licensing and training as a separate **feasibility study**. Better rating targets won't cure unwired behaviors or invalid interactions.
+
+**Promotion rule:** Realistic changes in estimated ratings must produce intelligible changes in *causal intermediate events*, and those changes must be calibrated independently; a matched formula alone isn't validation.
+
 ### M4. **One complete physical drive per offense**, then full games
 
 **Goal:** Establish the missing link between a believable play and a believable *possession*.
@@ -231,6 +258,7 @@ The mean gap of **3.24 points per team** is “roughly one field goal,” **not*
 | 2026-10-22 | **Keep separate** | Historical reconstruction, statistical-script playback and free prospective physics have different sources and claims. |
 | 2026-10-22 | **Metric priority** | Evaluate realistic **drives** and scoring pathways, not just isolated plays or final averages. |
 | 2026-10-22 | **No premature forecasting claims** | LP sequence v0.1 and prototype free-physics distributions are research baselines until validated. |
+| 2026-10-22 | **Rating audit, not adoption** | 16/35 attribute reads; QB PBK sack mismatch, defender CIT placeholder, THA near-inert and 6,000 unpressured/uncontested pass probes. Fix opportunities, mapping and uncertainty before rating-model promotion. |
 
 ## Next actions
 
