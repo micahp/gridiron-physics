@@ -27,6 +27,14 @@ const videoTemp = join(outputDir, 'tmp');
 await mkdir(outputDir, { recursive: true });
 await rm(videoTemp, { recursive: true, force: true });
 await mkdir(videoTemp, { recursive: true });
+function recordedDuration(path) {
+  const output = execFileSync(process.env.FFPROBE || 'ffprobe', [
+    '-v', 'error', '-show_entries', 'format=duration', '-of', 'json', path,
+  ], { encoding: 'utf8' });
+  const seconds = Number(JSON.parse(output).format?.duration);
+  if (!Number.isFinite(seconds) || seconds <= 0) throw new Error(`Invalid recorded video duration: ${path}`);
+  return seconds;
+}
 
 const launchArgs = [
   '--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader',
@@ -123,7 +131,8 @@ for (const category of frozenCategories) {
     const existing = await stat(output);
     if (existing.size <= 0) throw new Error(`Existing clip is empty: ${output}`);
     clips.push({ category, scenario_option: option.text, file: basename(output), bytes: existing.size,
-      sha256: createHash('sha256').update(await readFile(output)).digest('hex'), preserved_from_previous_capture: true });
+      sha256: createHash('sha256').update(await readFile(output)).digest('hex'),
+      duration_seconds: recordedDuration(output), preserved_from_previous_capture: true });
     continue;
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
@@ -150,7 +159,8 @@ for (const category of frozenCategories) {
   await clipBrowser.close();
   const bytes = await stat(output);
   clips.push({ category, scenario_option: option.text, file: basename(output), bytes: bytes.size,
-    sha256: createHash('sha256').update(await readFile(output)).digest('hex'), duration_seconds_estimate: 46 * 0.09,
+    sha256: createHash('sha256').update(await readFile(output)).digest('hex'),
+    duration_seconds: recordedDuration(output),
     preserved_from_previous_capture: false });
 }
 await rm(videoTemp, { recursive: true, force: true });
@@ -175,6 +185,6 @@ const result = {
   visual_transform: 'Observed rink XY; period-one attack-right transform only when orientation metadata exists',
   timebase: 'ordinal Image Id increments; no validated seconds',
 };
-const manifestPath = join(archiveDir, `visual-validation-${entry.legendarypicks_git_commit.slice(0, 12)}.json`);
+const manifestPath = join(archiveDir, `visual-validation-${gridironCommit.slice(0, 12)}.json`);
 await writeFile(manifestPath, JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
 console.log(JSON.stringify(result, null, 2));
