@@ -19,6 +19,7 @@
 - Free run/pass physics execution now removes gain, catch, tackler, and end-spot anchors from prospective play inputs. Runs end through simulated tackles, boundaries, or touchdowns; passes resolve from the simulated ball and player positions. The temporary mock play selector, route assignments, ratings-derived catch odds, and fixed slot geometry remain unvalidated scaffolding. A rendered trajectory or observed outcome is not counted as predictive success.
 - Seeded run/pass outcomes and a controlled defender-sensitivity probe are recorded in [the free-physics outcome probe](research/FREE-PHYSICS-OUTCOME-PROBE-2026-10-22.md). It demonstrates supported mechanics, not realistic or calibrated outcome frequencies.
 - Free-run blocking/contact changes and the committed 200-seed distribution have regression assertions; those smoke thresholds do not establish calibrated football outcomes or predictive accuracy.
+- Pass-pressure and long-run-tail probes are n=200 smoke diagnostics of proximity and emitted events, not calibrated pressure, sack, tackle, or run-gain rates.
 - The director's geometry is a fixed 11-personnel offense and fixed 4-2-5 defensive slot map. Formation dropdown choices are observed references, not exact historical formations executed by this geometry.
 - No historical-coach play library was added. `historical_coach` remains an independent disabled provenance/sampling category; this optional expansion did not delay the core implementation.
 
