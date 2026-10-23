@@ -17,7 +17,9 @@
     "eval:physics3d:contact": "node research/physics-3d-evaluation/contact-mechanism.mjs",
     "eval:physics3d:contact:test": "node research/physics-3d-evaluation/test-contact-mechanism.mjs",
     "eval:physics3d:energy": "node research/physics-3d-evaluation/contact-energy.mjs",
-    "eval:physics3d:energy:test": "node research/physics-3d-evaluation/test-contact-energy.mjs"
+    "eval:physics3d:energy:test": "node research/physics-3d-evaluation/test-contact-energy.mjs",
+    "eval:physics3d:energy:horizon": "node research/physics-3d-evaluation/contact-energy-horizon.mjs",
+    "eval:physics3d:energy:horizon:test": "node research/physics-3d-evaluation/test-contact-energy-horizon.mjs"
   },
   "license": "MIT",
   "devDependencies": {
