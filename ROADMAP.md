@@ -89,6 +89,18 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Decision rule:** Promote a solver only when a grasp/balance/ball-control prototype passes physically meaningful football cases and remains reproducible and performant. If both pass, compare measured integration costs and validated results, not the 0.25-second speed proxy alone.
 
+### M1 contact-energy follow-up — 2026-10-23 (diagnostic, not adoption)
+
+**Source:** [3D engine evaluation revision `ba5661a`](https://github.com/micahp/gridiron-physics/commit/ba5661ac912d89e2d66ae1cb56fdd55d0bfa0eef), [report](https://github.com/micahp/gridiron-physics/blob/ba5661ac912d89e2d66ae1cb56fdd55d0bfa0eef/research/physics-3d-evaluation/REPORT.md), and [1,440-frame contact-energy ledger](https://github.com/micahp/gridiron-physics/blob/ba5661ac912d89e2d66ae1cb56fdd55d0bfa0eef/research/physics-3d-evaluation/results/contact-energy.json). Branch `research/3d-physics-engine-evaluation`; no production physics changes.
+
+- **Question:** Does the Jolt 60°/6 m/s lower carrier peak tilt arise from coupled energy transfer into the defender or from numerical/accounting differences? Follow-up traced two angles/speeds, each engine and dynamic/kinematic defender modes (8 runs × 180 frames).
+- **Observed:** Jolt 60° 4/6/8 m/s peak carrier tilts **86.4° / 58.0° / 67.7°** vs Rapier **84.4° / 90.0° / 92.7°**. The quaternion tilt metric was independently checked; a kinematic-defender control does not reproduce the 6 m/s dynamic reversal. The energy ledger heuristically labels the central Jolt case as dominated by defender-motion energy activity rather than the measured normal-impulse residual; corresponding Rapier case is residual-dominant.
+- **Do not overinterpret:** Jolt normal impulses are inferred from point-velocity change; Rapier reports solver impulses. Normal-only impulse work is not total contact work; tangential friction, damping, positional correction and kinematic external work remain unmeasured. A large residual is **not proof of nonphysical energy** or a broken solver. Ground/body contact persisted every frame, so the strict contact-free gravity-only conservation bound had **zero qualifying frames** and remains untested.
+- **Interpretation:** Paired-player and ground-contact dynamics can produce nonmonotonic tilt even when an isolated impulse response is monotone. The scene still has no active balance controller, grasp, grip break, articulated limbs, secure catch or football-level tackle outcome.
+- **Next gate:** Construct a truly contact-free ballistic/gravity control that exercises the energy bound; when evaluating tackle realism, include full external-force/contact work or explicitly report what is missing. Prioritize physical grasp/balance/catch scenarios rather than inferring football quality from energy-ledger heuristics.
+
+**Related work outside this repo:** [Legendary Picks NFL v0.2 clock intervention `b439fe8`](https://github.com/micahp/legendarypicks/blob/b439fe86e5e0fe6896bcbd87911d2e4e4803ba5e/docs/DRIVE-EVAL-nfl-sequence-v0.2-clock-2026-10-22.md) improved kneel timing and drive endings but still lacks realistic clock runoff. It changes the **statistical play-call model**, not the 3D physics layer, and is not a production predictive improvement.
+
 ### M2. Build and validate core physical football interactions
 
 **Goal:** A tackle, blocked rusher and pass should be genuine 3D interactions that can fail or succeed for explainable reasons.
