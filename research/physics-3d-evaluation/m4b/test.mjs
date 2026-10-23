@@ -1,0 +1,79 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { SCENARIOS, VERSION_PROFILES, instantiateScenario } from './scenarios.mjs';
+import { ENGINE_IDS, compareSignatures, runScenario } from './simulation.mjs';
+
+assert.equal(SCENARIOS.length, 15);
+assert.equal(new Set(SCENARIOS.map((row) => row.id)).size, SCENARIOS.length);
+assert.ok(SCENARIOS.every((row) => row.durationSeconds >= 7.5));
+assert.equal(SCENARIOS.find((row) => row.id === 'short-yardage-22-player').players.length, 22);
+assert.equal(SCENARIOS.find((row) => row.id === 'tush-push-eight').players.length, 8);
+assert.equal(SCENARIOS.find((row) => row.id === 'fumble-eight-pile-live-ball').players.length, 8);
+assert.equal(VERSION_PROFILES['proxy-v1-single-capsule'].geometry, 'single-capsule');
+assert.equal(VERSION_PROFILES['proxy-v2-compound'].geometry, 'compound');
+assert.ok(SCENARIOS.some((row) => row.category === 'gang-tackle'));
+assert.ok(SCENARIOS.some((row) => row.category === 'shared-sack'));
+assert.ok(SCENARIOS.some((row) => row.category === 'fumble-pileup'));
+assert.ok(SCENARIOS.some((row) => row.category === 'short-yardage-scrum'));
+
+function shortFixture(id, durationSeconds = 1.35) {
+  const scenario = instantiateScenario(id);
+  scenario.durationSeconds = durationSeconds;
+  return scenario;
+}
+
+const summaries = [];
+for (const engine of ENGINE_IDS) {
+  const simultaneousSack = await runScenario(engine, shortFixture('sack-simultaneous-two'), { playerGeometry: 'compound' });
+  const quarterbackContacts = simultaneousSack.contacts.filter((row) => row.pairId.startsWith('quarterback::'));
+  assert.equal(quarterbackContacts.length, 2, `${engine}: both rushers make physical quarterback contact`);
+  const contactTimes = quarterbackContacts.map((row) => row.firstTimeSeconds);
+  assert.ok(Math.max(...contactTimes) - Math.min(...contactTimes) <= 1 / 120, `${engine}: the two contacts are simultaneous within one physics step`);
+  assert.ok(simultaneousSack.events.some((row) => row.type === 'player_contact_started' && row.pointsM.length > 0));
+  assert.equal(simultaneousSack.outcome.sack.officialHalfSackCredit.includes('not assigned'), true);
+
+  const fumble = await runScenario(engine, shortFixture('fumble-two-recovery'), { playerGeometry: 'compound' });
+  assert.ok(fumble.events.some((row) => row.type === 'ball_released' && row.reason.includes('first physical opponent contact')));
+  assert.equal(fumble.outcome.football.status, 'loose_live_recovery_unresolved');
+  assert.match(fumble.outcome.football.recovery, /unresolved/);
+  assert.equal(fumble.diagnostics.finite, true);
+  assert.ok(fumble.frames.some((frame) => frame.football?.status === 'loose_fumble'));
+
+  const scrum = await runScenario(engine, shortFixture('tush-push-eight', 1.6), { playerGeometry: 'compound' });
+  assert.equal(scrum.diagnostics.playerCount, 8);
+  assert.ok(scrum.contacts.length > 0, `${engine}: short-yardage scrum includes body contact`);
+  assert.ok(scrum.events.some((row) => row.type === 'football_snap_release'), `${engine}: the line-of-scrimmage fixture starts with a snap`);
+  assert.ok(scrum.events.some((row) => row.type === 'snap_reception_unresolved'), `${engine}: catch state remains explicit without hand control`);
+  assert.ok(scrum.outcome.rawProgress.maximumCarrierOriginXM > -1.15, `${engine}: ball-carrier trajectory is recorded`);
+  assert.match(scrum.outcome.rawProgress.interpretation, /no first-down, touchdown/);
+
+  const maxLine = await runScenario(engine, shortFixture('short-yardage-22-player', 0.7), { playerGeometry: 'single-capsule', recordStride: 6 });
+  assert.equal(maxLine.diagnostics.playerCount, 22);
+  assert.equal(maxLine.diagnostics.finite, true);
+  assert.ok(maxLine.contacts.length > 0, `${engine}: 22-player line produces physical contacts`);
+
+  const repeatScenario = shortFixture('gang-two-opposite-open', 1.35);
+  const repeatA = await runScenario(engine, repeatScenario, { playerGeometry: 'single-capsule', recordStride: 30 });
+  const repeatB = await runScenario(engine, repeatScenario, { playerGeometry: 'single-capsule', recordStride: 30 });
+  assert.equal(compareSignatures(repeatA, repeatB), true, `${engine}: identical seed and fixture repeat within process`);
+  summaries.push({ engine, simultaneousSackContacts: contactTimes, looseBall: fumble.outcome.football.status,
+    scrumContacts: scrum.contacts.length, playerCount22Contacts: maxLine.contacts.length, repeatable: true });
+}
+
+try {
+  const index = JSON.parse(await readFile(new URL('./results/archive-index.json', import.meta.url), 'utf8'));
+  for (const version of Object.keys(VERSION_PROFILES)) {
+    const commit = index.activeProfileCommits?.[version];
+    if (!commit) continue;
+    const summary = JSON.parse(await readFile(new URL(`./results/${version}/${commit.slice(0, 10)}/summary.json`, import.meta.url), 'utf8'));
+    assert.equal(summary.scenarioResults.length, SCENARIOS.length * ENGINE_IDS.length);
+    assert.ok(summary.scenarioResults.every((row) => row.status === 'failed' || row.diagnostics.finite));
+    assert.ok(summary.scenarioResults.every((row) => row.status === 'failed' || (row.outcome && row.contacts)));
+    assert.ok(summary.scenarioResults.every((row) => row.status === 'failed' || row.runtime.wallTimeMs >= 0));
+  }
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
+
+console.log(JSON.stringify({ passed: true, scenarios: SCENARIOS.length, engineRuns: summaries,
+  invariants: ['simultaneous contacts', 'real 22-player contacts', 'fumble release and unresolved recovery', 'scrum trajectory', 'deterministic repeats'] }, null, 2));

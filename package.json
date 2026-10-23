@@ -21,7 +21,11 @@
     "eval:physics3d:energy:horizon": "node research/physics-3d-evaluation/contact-energy-horizon.mjs",
     "eval:physics3d:energy:horizon:test": "node research/physics-3d-evaluation/test-contact-energy-horizon.mjs",
     "eval:physics3d:energy:full-grid": "node research/physics-3d-evaluation/contact-energy-full-grid.mjs",
-    "eval:physics3d:energy:full-grid:test": "node research/physics-3d-evaluation/test-contact-energy-full-grid.mjs"
+    "eval:physics3d:energy:full-grid:test": "node research/physics-3d-evaluation/test-contact-energy-full-grid.mjs",
+    "eval:m4b": "node research/physics-3d-evaluation/m4b/benchmark.mjs",
+    "eval:m4b:sweep": "node research/physics-3d-evaluation/m4b/stress-sweep.mjs",
+    "eval:m4b:test": "node research/physics-3d-evaluation/m4b/test.mjs",
+    "eval:m4b:capture": "node research/physics-3d-evaluation/m4b/capture.mjs"
   },
   "license": "MIT",
   "devDependencies": {

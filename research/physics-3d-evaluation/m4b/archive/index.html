@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gridiron Physics · M4b Visual Regression Archive</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">Research archive · M4b · deterministic 3D replays</p>
+      <h1>Multi-player contact lab</h1>
+      <p class="lede">Compare saved Rapier and Jolt results at the same simulation time. Physics outcomes stay separate from game rules.</p>
+    </div>
+    <p class="model-note">Player shapes are rigid proxies. Wraps and carries use explicit force models. Loose-ball recovery remains unresolved without articulated hands and secure control.</p>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="Archive selectors">
+      <label>Scenario <select id="scenario"></select></label>
+      <label>Seed <select id="seed"></select></label>
+      <label>Camera <select id="camera">
+        <option value="all22">All-22 overview</option>
+        <option value="sideline">Sideline / broadcast</option>
+        <option value="closeup">Close-up contact</option>
+      </select></label>
+      <label class="check"><input id="debug" type="checkbox"> Physics debug</label>
+      <button id="load">Load comparison</button>
+      <button id="play" class="secondary" disabled>Play</button>
+    </section>
+
+    <section class="version-controls" aria-label="Compared archive records">
+      <div class="version-pick">
+        <strong>Left replay</strong>
+        <label>Solver <select id="left-engine"></select></label>
+        <label>Simulation version <select id="left-version"></select></label>
+      </div>
+      <div class="version-pick">
+        <strong>Right replay</strong>
+        <label>Solver <select id="right-engine"></select></label>
+        <label>Simulation version <select id="right-version"></select></label>
+      </div>
+    </section>
+
+    <section class="replay-controls" aria-label="Synchronized replay controls">
+      <label>Simulation time <input id="time" type="range" min="0" max="0" value="0" step="0.008333333"></label>
+      <output id="clock">0.000 s</output>
+      <button id="step-back" class="step" aria-label="Step back">− frame</button>
+      <button id="step-forward" class="step" aria-label="Step forward">+ frame</button>
+    </section>
+
+    <section class="viewers" aria-label="Three.js side-by-side replay">
+      <article class="viewer-card">
+        <div class="viewer-heading"><h2 id="left-title">Left replay</h2><span id="left-commit"></span></div>
+        <canvas id="left-view" aria-label="Left Three.js replay"></canvas>
+        <pre id="left-status" class="status">Choose a scenario and load the archive.</pre>
+      </article>
+      <article class="viewer-card">
+        <div class="viewer-heading"><h2 id="right-title">Right replay</h2><span id="right-commit"></span></div>
+        <canvas id="right-view" aria-label="Right Three.js replay"></canvas>
+        <pre id="right-status" class="status">Choose a scenario and load the archive.</pre>
+      </article>
+    </section>
+
+    <section class="record-details">
+      <article>
+        <h2>Physical events at the selected time</h2>
+        <ol id="events"><li>Load a scenario to inspect contacts and events.</li></ol>
+      </article>
+      <article>
+        <h2>Archive provenance</h2>
+        <pre id="provenance">Loading manifest…</pre>
+      </article>
+    </section>
+    <p class="legend">Debug overlay: white wireframes show player proxy shapes; amber markers show solver contact points; magenta arrows show configured forces; cyan lines show compliant wrap proxies; the football marker follows the recorded rigid-body transform.</p>
+  </main>
+
+  <script type="module" src="./archive.mjs"></script>
+</body>
+</html>
