@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hockey Movement Replay · Research v0.1</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">GRIDIRON PHYSICS · ISOLATED RESEARCH ADAPTER</p>
+      <h1>Hockey movement replay</h1>
+      <p class="subhead">Observed tracking and generated player paths · ordinal Image Id steps</p>
+    </div>
+    <div class="timebase">TIMEBASE UNVALIDATED<br><b>Not seconds or timed physics</b></div>
+  </header>
+  <main>
+    <section class="toolbar" aria-label="Replay controls">
+      <label>Scenario <select id="scenario"></select></label>
+      <button id="play">Play</button>
+      <button id="pause">Pause</button>
+      <label class="scrub">Observation <input id="scrub" type="range" min="0" max="45" value="0"></label>
+      <output id="frame-label">—</output>
+      <div class="spacer"></div>
+      <label>Camera <select id="camera"><option value="top">Top down</option><option value="side">Rink side</option><option value="orbit">Orbit</option></select></label>
+      <label>Coordinates <select id="transform"><option value="raw">Raw source XY</option><option value="attack-right">Orient focus team attack-right (period 1)</option></select></label>
+      <label>Focus team <select id="focus-team"><option>Home</option><option>Away</option></select></label>
+      <button id="run-policy">Run policies in Gridiron controller</button>
+    </section>
+    <section class="toggles">
+      <label><input id="trails" type="checkbox" checked> Path trails</label>
+      <label><input id="vectors" type="checkbox"> Movement vectors</label>
+      <label><input id="distances" type="checkbox"> Pair distances</label>
+      <label><input id="uncertainty" type="checkbox" checked> Tracking uncertainty</label>
+      <span id="status" role="status">Loading versioned scenario archive…</span>
+    </section>
+    <section id="panels" class="panels"></section>
+    <section class="inspect">
+      <div><h2>Scenario and provenance</h2><pre id="provenance">Loading…</pre></div>
+      <div><h2>Player errors and tracking flags</h2><div id="errors">—</div></div>
+    </section>
+    <p class="notice">Observed paths come from the release. M0, M1 and M2 are predictions started at the selected observed cutoff. M2 limits are ordinal 2D research proxies; the rink-side camera only tilts the XY display and does not represent validated 3D motion or contact.</p>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
