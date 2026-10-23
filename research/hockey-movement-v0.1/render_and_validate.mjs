@@ -76,11 +76,13 @@ const modelSelectors = page.locator('.panel-head select');
 if (await modelSelectors.count() !== 4) throw new Error('Expected four independently selectable replay panes');
 await modelSelectors.nth(0).selectOption('M1');
 await modelSelectors.nth(0).selectOption('Observed');
-for (const id of ['vectors', 'distances']) {
+for (const id of ['trails', 'vectors', 'distances', 'uncertainty']) {
   const toggle = page.locator(`#${id}`);
-  await toggle.check();
-  if (!(await toggle.isChecked())) throw new Error(`${id} overlay did not enable`);
-  await toggle.uncheck();
+  const wasChecked = await toggle.isChecked();
+  if (wasChecked) await toggle.uncheck(); else await toggle.check();
+  if ((await toggle.isChecked()) === wasChecked) throw new Error(`${id} overlay did not toggle`);
+  if (wasChecked) await toggle.check(); else await toggle.uncheck();
+  if ((await toggle.isChecked()) !== wasChecked) throw new Error(`${id} overlay did not restore`);
 }
 const scrub = page.locator('#scrub');
 await page.locator('#play').click();
@@ -104,6 +106,15 @@ await page.waitForFunction(() => document.querySelector('#status')?.textContent?
 const parityText = await page.locator('#status').textContent();
 const parity = Number(parityText.match(/difference from Python archive: ([0-9.]+) ft/)?.[1]);
 if (!Number.isFinite(parity) || parity > 0.05) throw new Error(`Gridiron policy replay does not match the versioned rollout: ${parityText}`);
+await scrub.evaluate((element) => { element.value = '15'; element.dispatchEvent(new Event('input', { bubbles: true })); });
+await page.waitForTimeout(250);
+const errorRows = await page.locator('#errors .error-row').count();
+if (errorRows < 1) throw new Error('Per-player future-label errors were not rendered at step 15');
+await screenshotIfMissing(page, join(outputDir, 'viewer-topdown-step15.png'));
+await page.locator('#camera').selectOption('side');
+await screenshotIfMissing(page, join(outputDir, 'viewer-rink-side-step15.png'));
+await page.locator('#camera').selectOption('top');
+await page.locator('#scrub').evaluate((element) => { element.value = '0'; element.dispatchEvent(new Event('input', { bubbles: true })); });
 await screenshotIfMissing(page, join(outputDir, 'viewer-topdown.png'));
 if (!transformDisabled) await page.locator('#transform').selectOption('raw');
 await page.locator('#camera').selectOption('side');
@@ -180,6 +191,8 @@ const result = {
   panels,
   scenario_count: scenarioCount,
   in_browser_policy_max_path_difference_ft: parity,
+  per_player_error_rows_at_step_15: errorRows,
+  screenshots: ['viewer-topdown.png', 'viewer-rink-side.png', 'viewer-topdown-step15.png', 'viewer-rink-side-step15.png'],
   clips,
   categories_without_sample: unavailable,
   visual_transform: 'Observed rink XY; period-one attack-right transform only when orientation metadata exists',
