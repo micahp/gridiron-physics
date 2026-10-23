@@ -45,7 +45,7 @@ for (const engine of ENGINE_IDS) {
       const filename = `${scenario.id}-seed-${seed}-failure.json.gz`;
       const relativeResultPath = `${profile.id}/${commitKey}/${engine}/${filename}`;
       const failurePath = path.join(stagingDirectory, engine, filename);
-      const archiveMetadata = { milestone: 'M4b', simulationVersion: profile.id, sourceCommit, solverVersion, seed,
+      const archiveMetadata = { milestone: 'M4b', simulationVersion: profile.id, playerGeometry: profile.geometry, sourceCommit, solverVersion, seed,
         scenarioVersion, timestepSeconds: 1 / 120, initialState: { players: scenario.players, football: scenario.carriedBall ?? null },
         ratingsSnapshot: 'fixture-only explicit masses and force inputs; no external ratings snapshot' };
       const failure = { name: error.name, message: error.message, stack: error.stack };
@@ -58,7 +58,7 @@ for (const engine of ENGINE_IDS) {
     }
     const archiveMetadata = {
       milestone: 'M4b multi-player contact stress tests and visual regression archive',
-      simulationVersion: profile.id, sourceCommit, solverVersion, seed,
+      simulationVersion: profile.id, playerGeometry: profile.geometry, sourceCommit, solverVersion, seed,
       scenarioVersion, timestepSeconds: result.timestepSeconds,
       ratingsSnapshot: scenario.ratingsSnapshot ?? 'fixture-only explicit masses and force inputs; no external ratings snapshot',
       initialState: { players: scenario.players, football: scenario.carriedBall ?? null,
@@ -114,6 +114,7 @@ const summary = {
   repeatability, failureCount: failures.length,
 };
 await writeFile(path.join(stagingDirectory, 'summary.json'), `${JSON.stringify(summary)}\n`);
+await mkdir(path.dirname(outputDirectory), { recursive: true });
 await rename(stagingDirectory, outputDirectory);
 
 const manifestPath = path.join(RESULTS, 'archive-index.json');
