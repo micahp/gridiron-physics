@@ -67,6 +67,28 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Decision today:** **No solver adopted yet.** Three.js stays the renderer; replace or refactor the underlying player physics layer only after M1 evidence.
 
+### M1 research result — 2026-10-22 (committed, not adopted)
+
+**Status: comparative prototype completed; migration gate still open.** See [3D physics evaluation report](https://github.com/micahp/gridiron-physics/blob/e130f3a101adae59a276613a81c34956e22de1fb/research/physics-3d-evaluation/REPORT.md), [machine-readable results](https://github.com/micahp/gridiron-physics/blob/e130f3a101adae59a276613a81c34956e22de1fb/research/physics-3d-evaluation/results.json) and [commit `e130f3a`](https://github.com/micahp/gridiron-physics/commit/e130f3a101adae59a276613a81c34956e22de1fb). Branch: `research/3d-physics-engine-evaluation`, based on `feat/free-run-pass-physics` at `7385acb`. Main production physics files were not modified.
+
+**Measured:** Both Rapier 3D and Jolt resolved genuine 3D dynamic body contacts and falls using five rigidly attached 3D colliders per player. Head-on, side, rear, fast, slow and oblique collisions were exercised. In a controlled escape-with-strength-motor scenario, **both carriers still fell**. A football-shaped rigid body made receiver contact under both engines, but neither a secure catch nor ball control/deflection outcome was modeled. The figures represent **contact feasibility**, not completed NFL actions.
+
+**Runtime:** On one AMD EPYC / Node 22 host, 1,000 22-player episodes each simulating 0.25 seconds / 30 physics steps / 110 player colliders: **Rapier 7.62 ms per episode; Jolt 3.53 ms**. Jolt was about 2.16× faster in this *proxy only*. Costs of articulated players, balance controllers, grasp, ball handling, full plays, startup and mobile performance were **not** measured. Cross-platform determinism was **not** demonstrated; fixed initial-state replay worked within the harness. Its seed was metadata because the test had no random behavior policy.
+
+**Architecture finding:** Preserve custom **football decisions and locomotion/balance controllers** but pass dynamic forces/torques into a mature solver for 3D contact. Do not preserve the existing planar contact integrator as the player collision authority. Keep Three.js. Rapier remains the **first integration candidate**, Jolt an active challenger. **No production solver change is justified yet.**
+
+**Next M1b gate, before selecting or migrating the solver:**
+
+- [ ] Build a physically resolved **wrap/grab and grip-release** scenario with an actual hold/constraint and measured failure, not just impact, tilt or a random success draw.
+- [ ] Demonstrate a successful **broken tackle** with controlled differences in balance, momentum, contact geometry or grip force; a strength motor that still falls is not a broken tackle.
+- [ ] Add **upright balance, grounded recovery and control** to avoid treating any rigid-body tip as completed football tackling.
+- [ ] Demonstrate **ball-hand contact and secure possession**, and a physically driven incomplete/deflection alternative. Merely colliding with the receiver torso does not count as a catch.
+- [ ] Rerun both engines under the **same** controllers, shapes and grasp/ball policies; compare football outcomes and runtime, not uncalibrated cross-engine impulses.
+- [ ] Test 22-player full-play-length and repeated-drive scenes, memory and startup, browser/mobile, cross-machine replay, and multi-player piles.
+- [ ] Keep a strict migration seam (`engine/physics3d/`) so historical reconstruction and existing tests continue working.
+
+**Decision rule:** Promote a solver only when a grasp/balance/ball-control prototype passes physically meaningful football cases and remains reproducible and performant. If both pass, compare measured integration costs and validated results, not the 0.25-second speed proxy alone.
+
 ### M2. Build and validate core physical football interactions
 
 **Goal:** A tackle, blocked rusher and pass should be genuine 3D interactions that can fail or succeed for explainable reasons.
@@ -205,13 +227,14 @@ The mean gap of **3.24 points per team** is “roughly one field goal,” **not*
 | 2026-10-22 | **Requirement** | All prospective player contact that claims physical causality must be computed in genuine 3D, not a 3D visual playback of 2D contact. |
 | 2026-10-22 | **Keep** | Three.js is the existing renderer and continues to draw the field, models, ball, cameras and replays. |
 | 2026-10-22 | **Evaluation, not adoption** | Compare Rapier 3D and Jolt to replace the custom low-level player physics solver; no winner yet. |
+| 2026-10-22 | **Research result, not adoption** | Both Rapier and Jolt passed 3D contact/fall feasibility and receiver-ball contact; neither demonstrated wrap escape or secure catches. Rapier remains first candidate; Jolt's simpler proxy benchmark was faster. Require grip/balance/ball possession and full-play comparisons before solver promotion. |
 | 2026-10-22 | **Keep separate** | Historical reconstruction, statistical-script playback and free prospective physics have different sources and claims. |
 | 2026-10-22 | **Metric priority** | Evaluate realistic **drives** and scoring pathways, not just isolated plays or final averages. |
 | 2026-10-22 | **No premature forecasting claims** | LP sequence v0.1 and prototype free-physics distributions are research baselines until validated. |
 
 ## Next actions
 
-1. **Immediately:** Freeze current feature-branch baselines, compare Rapier/Jolt using one *physical 3D tackle* and a pass/contest, and establish a controlled rating/seed diagnostic.
+1. **Immediately:** Use the completed Rapier/Jolt feasibility report as baseline. Next test **physically resolved wrap/grip break, balance recovery and secure hand-ball catch**, alongside the controlled rating/seed diagnostic. Do not merge a solver on contact-only evidence.
 2. **In parallel:** LP team fixes/diagnoses the statistical sequence engine's drive failures (clock/kneels, down-specific pass gains, fourth-down policy, red-zone TDs, turnover returns) without modifying the physics benchmark to make up the scoring gap.
 3. **Then:** Select a solver by evidence, integrate a minimal prospective play with real 3D contacts, run a complete **Patriots and Bears drive**, and compare those possessions to both real drives and the unchanged statistical baseline.
 4. **Only after that:** Expand to rare events, full games, player-stat coherence and prospective forecast tests.
