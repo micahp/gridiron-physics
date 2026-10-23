@@ -86,35 +86,41 @@ for (const teamId of ['NE', 'CHI']) {
     assert.ok(Object.values(D).every((id) => snapshot.teams[a.play.def].roster.some((p) => p.id === id && p.availability === 'available')));
     assert.deepEqual(a.play, b.play, 'same team, formation, action and seed must select the same play inputs');
     assert.equal(a.selection.provenance, 'synthetic_variation');
+    assert.deepEqual(a.selection.selector, { id: 'mock_historical_playbook_sampler.v1', status: 'mock', predictive: false });
     assert.equal(a.selection.playbook_entry.provenance, 'observed_2025');
     assert.equal(a.selection.playbook_entry.candidate_id, a.play.id.split(':').at(-1));
     assert.equal(a.selection.playbook_entry.attributes.formation, a.selection.formation_reference);
     assert.equal(a.play.shotgun, a.selection.playbook_entry.attributes.shotgun);
     assert.equal(a.selection.playbook_entry.source_ids.length, a.selection.playbook_entry.count);
     assert.equal(a.execution_contract.predictive_success, false);
+    assert.equal(a.execution_contract.outcome_mode, 'free');
     assert.equal(a.execution_contract.hidden_historical_outcome_constraints, false);
+    assert.equal(a.action_policy_inputs.outcome_anchor, null);
     assert.ok(a.selection.formation_observation.source_ids.length > 0);
     if (kind === 'run') {
       assert.equal(a.play.loc, a.selection.playbook_entry.attributes.run_location);
       assert.equal(a.play.gap, a.selection.playbook_entry.attributes.run_gap);
-      assert.equal(a.action_policy_inputs.outcome_anchor.provenance, 'synthetic_variation');
+      assert.equal(a.play.outcome_mode, 'free');
+      for (const key of ['gain', 'tacklers', 'end', 'endX', 'td', 'oob']) assert.ok(!(key in a.play));
       assert.ok(!('tacklers' in a.play));
     } else {
       assert.equal(a.play.loc, a.selection.playbook_entry.attributes.pass_location);
+      assert.equal(a.play.kind, 'pass');
+      assert.equal(a.play.outcome_mode, 'free');
+      assert.ok(['go', 'curl', 'out', 'dig', 'slant', 'post', 'seam', 'flat'].includes(a.play.target_route));
       assert.equal(a.selection.selected_draws.depth, a.selection.playbook_entry.attributes.pass_length);
-      assert.equal(a.play.kind, 'incomplete');
-      for (const key of ['gain', 'tacklers', 'defender', 'end', 'catchX', 'endX']) assert.ok(!(key in a.play));
-      assert.equal(a.action_policy_inputs.outcome_anchor.provenance, 'synthetic_variation');
+      for (const key of ['gain', 'tacklers', 'defender', 'interceptor', 'end', 'catchX', 'endX', 'complete_pass']) assert.ok(!(key in a.play));
     }
     const resultA = simulatePlay({ players: a.players }, a.play);
     const resultB = simulatePlay({ players: b.players }, b.play);
     assert.ok(resultA && resultA.frames.length > 2);
     assert.notEqual(resultA.end.reason, 'timeout_sim');
+    assert.equal(resultA.expectEndX, null, 'free execution must not report a historical expected end spot');
     assert.equal(digest(resultA), digest(resultB), 'same seed must reproduce the physical trajectory');
     assert.deepEqual(resultA.end, resultB.end);
     const physicalA = executeSelectedPlay(a), physicalB = executeSelectedPlay(b);
     assert.equal(physicalA.schema_version, 'gridiron.play_execution.v1');
-    assert.equal(physicalA.status, 'constrained_visualization');
+    assert.equal(physicalA.status, 'free_physics_mock_selector');
     assert.equal(physicalA.predictive_success, false);
     assert.equal(physicalA.failure, null);
     assert.equal(physicalA.trajectory.frames.length, physicalA.record.frames.length);
@@ -133,8 +139,31 @@ assert.equal(outputs['NE-run'].demo.selection.formation_observation.count,
 
 const seedA = scenario('NE', 'run', 'seed-A');
 const seedB = scenario('NE', 'run', 'seed-B');
-assert.notEqual(seedA.play.gain, seedB.play.gain, 'different seeds change the explicitly synthetic run anchor');
+assert.ok(!('gain' in seedA.play) && !('gain' in seedB.play), 'free run scenarios do not contain a gain anchor');
 assert.notEqual(seedA.play.id, seedB.play.id);
+const freeRunA = simulatePlay({ players: seedA.players }, seedA.play);
+const freeRunB = simulatePlay({ players: seedB.players }, seedB.play);
+assert.notEqual(digest(freeRunA), digest(freeRunB), 'different seeds must change unconstrained run trajectories');
+assert.notEqual(freeRunA.end.x, freeRunB.end.x, 'run end spots must emerge from the physical scenario');
+assert.equal(simulatePlay({ players: seedA.players }, { ...seedA.play, gain: 4 }), null,
+  'free mode rejects a supplied yardage anchor');
+
+// Sanity sample the temporary selector against physical catch windows. This
+// is an integration smoke test, not a model evaluation or calibration claim.
+for (const teamId of ['NE', 'CHI']) {
+  const candidate = playbooks[teamId].offense.play_candidates.pass.candidates[0];
+  const eventsSeen = new Set();
+  for (let i = 0; i < 12; i++) {
+    const demo = createDemoScenario({ offenseId: teamId, defenseId: teamId === 'NE' ? 'CHI' : 'NE',
+      teams: snapshot.teams, playbooks, kind: 'pass', formation: candidate.attributes.formation,
+      candidateId: candidate.candidate_id, seed: `pass-outcome-${i}`, los: 45, dir: 1 });
+    const result = simulatePlay({ players: demo.players }, demo.play);
+    assert.equal(result.expectEndX, null);
+    for (const event of result.events) if (['catch', 'interception', 'drop', 'pass_breakup', 'incomplete', 'sack'].includes(event.type)) eventsSeen.add(event.type);
+  }
+  assert.ok(eventsSeen.has('catch'), `${teamId} free pass sampler should produce a physical catch in the smoke sample`);
+  assert.ok([...eventsSeen].some((event) => event !== 'catch'), `${teamId} free pass sampler should retain non-catch outcomes`);
+}
 
 const activeOff = snapshot.teams.NE.roster;
 const activeDef = snapshot.teams.CHI.roster;

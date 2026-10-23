@@ -1,4 +1,5 @@
-// The play director: turns one ESPN play script into a physics simulation.
+// The play director: turns either a historical script or a prospective play
+// design into a physics simulation.
 //
 // The director decides *intent* (assignments, routes, where the ball is
 // thrown, who is meant to make the tackle) from the real play-by-play. The
@@ -6,7 +7,8 @@
 // contact an impulse. Outcome constraints from the box score (catch point,
 // end spot, tackler, sack spot) are enforced the way a coach would: by
 // giving the right player the right job, and by only allowing the play to
-// be whistled dead where the real one was.
+// be whistled dead where the real one was. Explicit `outcome_mode: 'free'`
+// uses live contacts and ball resolution without historical spot/result anchors.
 import { YD, FIELD_W, FIELD_W_YD, DT, REC_HZ, CROSSBAR, GOAL_W } from './constants.js';
 import { rng } from './rng.js';
 import { World, Player, POSE } from './world.js';
@@ -198,6 +200,16 @@ export function simulatePlay(game, S, ctx = {}) {
 
   // -------------------------------------------------------- scenario
   const kind = S.kind;
+  if (S.outcome_mode != null && !['historical_anchor', 'free'].includes(S.outcome_mode)) return null;
+  const freeOutcome = S.outcome_mode === 'free';
+  if (freeOutcome && !['run', 'pass'].includes(kind)) return null;
+  if (kind === 'pass' && !freeOutcome) return null;
+  if (freeOutcome && ['gain', 'end', 'endX', 'tacklers', 'defender', 'interceptor', 'catchX', 'retOob', 'td', 'scoring']
+    .some((key) => Object.prototype.hasOwnProperty.call(S, key))) return null;
+  const prospectiveTargetSlot = Object.entries(S.lineup?.[off] || {}).find(([, pid]) => pid === S.target)?.[0];
+  if (kind === 'pass' && !['WR1', 'WR2', 'WR3', 'TE', 'RB'].includes(prospectiveTargetSlot)) return null;
+  if (kind === 'pass' && !['go', 'curl', 'out', 'dig', 'slant', 'post', 'seam', 'flat'].includes(S.target_route)) return null;
+  st.freeOutcome = freeOutcome;
   let OA = null, DA = null;
   const lineup = S.lineup || {};
   const heavy = /Run formation|Jumbo/.test(S.text) || (dir > 0 ? 100 - losYd : losYd) <= 3;
@@ -256,11 +268,12 @@ export function simulatePlay(game, S, ctx = {}) {
     W.ball.holder = p;
     W.ball.hand = 'carry';
     st.carrier = p;
-    st.endX = endX;
-    st.endY = endY;
+    st.endX = opts.free ? null : endX;
+    st.endY = opts.free ? null : endY;
     p.mode = 'carry';
-    p.ai.path = opts.path || [{ x: endX * YD, y: endY * YD }];
-    if (opts.oob) {
+    p.ai.path = opts.free ? [] : (opts.path || [{ x: endX * YD, y: endY * YD }]);
+    if (opts.free) p.ai.runLane = opts.runLane ?? 0;
+    if (opts.oob && !opts.free) {
       const keep = (opts.path || []).slice(0, -1).filter((q) => Math.abs(q.x / YD - endX) > 2);
       p.ai.path = [...keep, ...oobPath(p, endX, endY)];
     }
@@ -311,11 +324,13 @@ export function simulatePlay(game, S, ctx = {}) {
       }
       return;
     }
-    const along = Math.abs((st.endX - c.p.x / YD));
+    const along = st.endX == null ? null : Math.abs((st.endX - c.p.x / YD));
     const designated = st.tacklers.has(d.id);
     const lim = designated ? 2.6 : 1.1;
     const waited = st.waitT > 1.4;
-    if (along <= lim || waited) {
+    const tackleOdds = clamp(0.58 + ((d.R.TAK ?? 50) - Math.max(c.R.BTK ?? 50, c.R.ELU ?? 50)) * 0.006, 0.35, 0.82);
+    const tackleWon = st.freeOutcome ? rand() < tackleOdds : along <= lim || waited;
+    if (tackleWon) {
       startTackle(d, c);
     } else {
       // broken tackle: both stumble; the defender loses his feet
@@ -346,16 +361,17 @@ export function simulatePlay(game, S, ctx = {}) {
     const c = st.carrier;
     const fall = 0.55;
     const el = W.t - st.tTackle;
-    // forward progress: the pile falls toward where the real play was spotted
-    const tx = st.endX * YD;
+    // Historical replay pins the pile to the charted spot; free mode lets
+    // the wrapped players settle where momentum carries them.
+    const tx = st.endX == null ? c.p.x : st.endX * YD;
     const rem = fall - el;
-    if (rem > 0) {
+    if (rem > 0 && st.endX != null) {
       const k = Math.min(1, DT / rem);
       const dx = (tx - c.p.x) * k;
       for (const q of [c, st.tackler]) q.p.x += dx;
     }
     if (el >= fall) {
-      c.p.x = tx;
+      if (st.endX != null) c.p.x = tx;
       for (const q of [c, st.tackler]) {
         q.down = true;
         q.pose = POSE.DOWN;
@@ -372,7 +388,11 @@ export function simulatePlay(game, S, ctx = {}) {
           q.downT = W.t;
         }
       }
-      whistle('tackle', { by: st.tackler.id });
+      if (st.freeOutcome) {
+        st.endX = c.p.x / YD;
+        st.endY = c.p.y / YD;
+      }
+      whistle(st.sack ? 'sack' : 'tackle', { by: st.tackler.id });
     }
   }
 
@@ -399,11 +419,21 @@ export function simulatePlay(game, S, ctx = {}) {
   function carryBrain(p) {
     const a = p.ai;
     if (st.tTackle != null) return { x: p.v.x, y: p.v.y };
-    while (a.wp < a.path.length - 1 && (d2(p.p, a.path[a.wp]) < 1.2 || (a.path[a.wp].x - p.p.x) * dir * (p.team === off ? 1 : -1) < -0.5)) a.wp++;
-    const tgt = a.path[a.wp];
-    let dv = seek(p, tgt, 1, 2.5);
-    const atEnd = a.wp === a.path.length - 1;
-    const remYd = Math.abs(st.endX - p.p.x / YD);
+    let dv, tgt, atEnd = false, remYd = Infinity;
+    if (st.freeOutcome) {
+      const runDir = p.team === off ? dir : -dir;
+      tgt = {
+        x: p.p.x + runDir * 8 * YD,
+        y: clamp(p.p.y + runDir * (a.runLane ?? 0) * YD, 1.2 * YD, FIELD_W - 1.2 * YD),
+      };
+      dv = seek(p, tgt, 1, 2.5);
+    } else {
+      while (a.wp < a.path.length - 1 && (d2(p.p, a.path[a.wp]) < 1.2 || (a.path[a.wp].x - p.p.x) * dir * (p.team === off ? 1 : -1) < -0.5)) a.wp++;
+      tgt = a.path[a.wp];
+      dv = seek(p, tgt, 1, 2.5);
+      atEnd = a.wp === a.path.length - 1;
+      remYd = Math.abs(st.endX - p.p.x / YD);
+    }
     if (atEnd && !a.oob && !a.td) {
       // near the spot: the play is about to end — wait for the tackle
       if (remYd < 1.5) {
@@ -515,7 +545,8 @@ export function simulatePlay(game, S, ctx = {}) {
         const a = p.ai;
         p.dv = seek(p, a.mesh, 0.85, 8);
         if (st.qb && d2(p.p, st.qb.p) < 1.1 && t > 0.25 && W.ball.holder === st.qb) {
-          makeCarrier(p, st.endX, st.endY, { path: a.runPath, oob: S.oob, td: S.td });
+          makeCarrier(p, st.endX, st.endY, { path: a.runPath, oob: S.oob, td: S.td,
+            free: freeOutcome && kind === 'run', runLane: st.gapL });
           ev('handoff', { from: st.qb.id, to: p.id });
           st.qb.mode = 'fake';
           st.qb.ai.fakeTo = at(-6, -sgn(st.gapL || 1) * 4);
@@ -796,22 +827,22 @@ export function simulatePlay(game, S, ctx = {}) {
     const gap = { end: 6.5, tackle: 3.4, guard: 1.6, middle: 0.4 }[S.gap] ?? 1.6;
     const side = S.loc === 'left' ? 1 : S.loc === 'right' ? -1 : (rand() < 0.5 ? 1 : -1) * 0.3;
     st.gapL = side * gap;
-    const gain = S.gain ?? 0;
-    const endXYd = losYd + dir * gain;
+    const gain = freeOutcome ? null : (S.gain ?? 0);
+    const endXYd = gain == null ? null : losYd + dir * gain;
     let endL = st.gapL + (gain > 4 ? side * Math.min(gain * 0.22, 10) : 0) + (rand() - 0.5) * 1.5;
     let endYYd = clamp(byYd + dir * endL, 2, FIELD_W_YD - 2);
     if (S.oob) endYYd = (byYd + dir * st.gapL * 3) > FIELD_W_YD / 2 ? FIELD_W_YD + 1.2 : -1.2;
     const td = S.td;
     const goal = dir > 0 ? 100 : 0;
-    st.endX = td ? goal + dir * 2.5 : endXYd;
-    st.endY = endYYd;
+    st.endX = freeOutcome ? null : td ? goal + dir * 2.5 : endXYd;
+    st.endY = freeOutcome ? null : endYYd;
     const tackleIds = (S.tacklers || []).filter((id) => byId.has(id) && byId.get(id).team === def);
     tackleIds.forEach((id) => st.tacklers.add(id));
 
     // carrier path: mesh -> hole -> end spot
-    const hole = at(Math.max(0.6, Math.min(2, gain * 0.5)), st.gapL);
-    const endPt = absYd(st.endX, st.endY);
-    const path = gain < 0.5 ? [at(Math.min(gain, 0) + 0.2, st.gapL), endPt] : [hole, endPt];
+    const hole = at(Math.max(0.6, Math.min(2, (gain ?? 3) * 0.5)), st.gapL);
+    const endPt = st.endX == null ? null : absYd(st.endX, st.endY);
+    const path = freeOutcome ? [hole] : gain < 0.5 ? [at(Math.min(gain, 0) + 0.2, st.gapL), endPt] : [hole, endPt];
     if (carrier === qb) {
       // QB keeper / sneak
       st.carrierIsQB = true;
@@ -858,11 +889,14 @@ export function simulatePlay(game, S, ctx = {}) {
         st.tick = () => {
           if (!st.carrier && W.t > 1.9 + rand() * 0.02 && W.ball.holder === qb) {
             ev('scramble', { by: qb.id });
-            makeCarrier(qb, st.endX, st.endY, { path: [at(Math.max(fOf(qb.p) + 2, -2), st.gapL * 1.5), endPt], oob: S.oob, td });
+            const scramblePath = [at(Math.max(fOf(qb.p) + 2, -2), st.gapL * 1.5), ...(endPt ? [endPt] : [])];
+            makeCarrier(qb, st.endX, st.endY, { path: scramblePath, oob: S.oob, td,
+              free: freeOutcome && kind === 'run', runLane: st.gapL });
           }
         };
       } else if (carrier === qb) {
-        st.afterSnap = () => makeCarrier(qb, st.endX, st.endY, { path, oob: S.oob, td });
+        st.afterSnap = () => makeCarrier(qb, st.endX, st.endY, { path, oob: S.oob, td,
+          free: freeOutcome && kind === 'run', runLane: st.gapL });
       }
     };
   }
@@ -941,7 +975,9 @@ export function simulatePlay(game, S, ctx = {}) {
     const throwDist = d2(qb.ai.dropPt, C);
     const velo = 24 + (qb.R.THP - 75) * 0.2;
     const T = 0.15 + throwDist / velo + (deep ? 0.3 : 0);
-    const dropT = shot ? (air < 3 ? 0.9 : deep ? 2.5 : 1.7) : air < 3 ? 1.0 : deep ? 2.8 : 2.0;
+    const dropT = freeOutcome && kind === 'pass'
+      ? (deep ? 1.25 : 0.85)
+      : shot ? (air < 3 ? 0.9 : deep ? 2.5 : 1.7) : air < 3 ? 1.0 : deep ? 2.8 : 2.0;
 
     // -------- receivers & routes
     const kinds = ['go', 'curl', 'out', 'dig', 'slant', 'post', 'seam'];
@@ -966,22 +1002,31 @@ export function simulatePlay(game, S, ctx = {}) {
     if (tgt) {
       const S0 = { ...tgt.p };
       const f0 = fOf(S0);
-      const stemF = air <= 1.5 ? f0 : Math.max(f0 + 1.5, air * (Math.abs(cp.l - lOfY(S0.y / YD)) > 8 ? 0.55 : 0.8));
-      const path = [];
-      if (air > 1.5) path.push(at(stemF, lOfY(S0.y / YD)));
-      path.push(C);
-      // run through the catch
-      const u = unit(C.x - (path.length > 1 ? path[0].x : S0.x), C.y - (path.length > 1 ? path[0].y : S0.y));
-      path.push({ x: C.x + u.x * 6, y: C.y + u.y * 6 });
-      const L = pathLen([S0, ...path.slice(0, -1)]);
-      const tRun = L / (tgt.vmax * 0.92) + 0.9;
-      tCatch = Math.max(dropT + T, tRun);
       tgt.mode = 'route_target';
-      tgt.ai.path = path;
+      if (freeOutcome && kind === 'pass') {
+        // The route is a design assignment. The receiver is not scheduled to
+        // reach the throw point; catch/interception/incompletion are resolved
+        // from the simulated ball and player positions.
+        const route = routeFor(tgt.slot, f0, lOfY(S0.y / YD), S.target_route);
+        tgt.ai.path = route;
+        tCatch = dropT + T;
+      } else {
+        const stemF = air <= 1.5 ? f0 : Math.max(f0 + 1.5, air * (Math.abs(cp.l - lOfY(S0.y / YD)) > 8 ? 0.55 : 0.8));
+        const path = [];
+        if (air > 1.5) path.push(at(stemF, lOfY(S0.y / YD)));
+        path.push(C);
+        // Historical reconstruction schedules the named receiver at its charted catch point.
+        const u = unit(C.x - (path.length > 1 ? path[0].x : S0.x), C.y - (path.length > 1 ? path[0].y : S0.y));
+        path.push({ x: C.x + u.x * 6, y: C.y + u.y * 6 });
+        const L = pathLen([S0, ...path.slice(0, -1)]);
+        const tRun = L / (tgt.vmax * 0.92) + 0.9;
+        tCatch = Math.max(dropT + T, tRun);
+        tgt.ai.path = path;
+        tgt.ai.arriveT = tCatch;
+        tgt.ai.extra = 1;
+        tgt.ai.catchPt = C;
+      }
       tgt.ai.wp = 0;
-      tgt.ai.arriveT = tCatch;
-      tgt.ai.extra = 1;
-      tgt.ai.catchPt = C;
     } else {
       tCatch = dropT + T;
     }
@@ -989,6 +1034,7 @@ export function simulatePlay(game, S, ctx = {}) {
     st.tThrow = tCatch - T;
     st.T = T;
     st.catchZ = catchZ;
+    st.freeDeep = freeOutcome && kind === 'pass' && deep;
 
     // -------- protection
     const rushers = defense().filter((q) => FRONT.includes(q.slot) || (q.slot === 'NB' && heavy));
@@ -1100,6 +1146,42 @@ export function simulatePlay(game, S, ctx = {}) {
     const kindNow = kind;
     const tgt = st.target;
     const hawk = pl(S.interceptor || S.defender);
+    if (freeOutcome && kindNow === 'pass') {
+      const inCatchWindow = b.z >= 0.35 && b.z <= 2.8;
+      const receiverDistance = tgt ? d2(tgt.p, { x: b.x, y: b.y }) : Infinity;
+      const receiverReach = tgt ? receiverDistance <= tgt.r + 1.2 : false;
+      const defender = defense().map((p) => ({ player: p, distance: d2(p.p, { x: b.x, y: b.y }) }))
+        .sort((a, b) => a.distance - b.distance)[0];
+      const defenderReach = defender && defender.distance <= defender.player.r + 1.0;
+      if (inCatchWindow && defenderReach && (!receiverReach || defender.distance < receiverDistance + 0.2)) {
+        const odds = clamp(0.22 + ((defender.player.R.CIT ?? 50) - 70) * 0.008
+          + ((defender.player.R.AWR ?? 50) - 70) * 0.002 - defender.distance * 0.1, 0.05, 0.72);
+        if (rand() < odds) {
+          ev('interception', { by: defender.player.id, intended_target: tgt?.id ?? null });
+          makeCarrier(defender.player, null, null, { free: true });
+          return;
+        }
+      }
+      if (inCatchWindow && receiverReach) {
+        const odds = clamp(0.45 + ((tgt.R.CTH ?? 50) - 70) * 0.01
+          + ((tgt.R.AWR ?? 50) - 70) * 0.002 - receiverDistance * 0.12, 0.05, 0.94);
+        if (rand() < odds) {
+          ev('catch', { by: tgt.id, air: S.air, intended: true });
+          makeCarrier(tgt, null, null, { free: true });
+          tgt.pose = POSE.CATCH;
+          tgt.poseT = W.t;
+          return;
+        }
+      }
+      if (inCatchWindow && defenderReach) ev('pass_breakup', { by: defender.player.id,
+        intended_target: tgt?.id ?? null, target_distance_m: receiverDistance, ball_height_m: b.z });
+      else if (inCatchWindow && receiverReach) ev('drop', { by: tgt.id, target_distance_m: receiverDistance, ball_height_m: b.z });
+      else ev('incomplete', { intended_target: tgt?.id ?? null, target_distance_m: receiverDistance,
+        defender_distance_m: defender?.distance ?? null, ball_height_m: b.z, catch_window: inCatchWindow });
+      b.state = 'loose';
+      b.k = dragK(AERO.wobble);
+      return;
+    }
     if (kindNow === 'complete' && tgt) {
       ev('catch', { by: tgt.id, air: S.air });
       const yac = st.yacEnd;
@@ -1464,7 +1546,7 @@ export function simulatePlay(game, S, ctx = {}) {
     case 'run': case 'scramble': setupRun(); break;
     case 'kneel': setupKneel(); break;
     case 'spike': setupSpike(); break;
-    case 'complete': case 'incomplete': case 'int': case 'sack': setupPass(); break;
+    case 'pass': case 'complete': case 'incomplete': case 'int': case 'sack': setupPass(); break;
     case 'kickoff': setupKickoff(); break;
     case 'punt': setupPunt(); break;
     case 'fg': case 'xp': setupFieldGoal(); break;
@@ -1479,7 +1561,25 @@ export function simulatePlay(game, S, ctx = {}) {
   const frames = [];
   let nextRec = -PRE;
 
-  W.onTouch = (a, b) => tryTackle(a, b);
+  W.onTouch = (a, b) => {
+    if (freeOutcome && kind === 'pass' && !st.thrown && !st.sack && st.qb && (a === st.qb || b === st.qb)) {
+      const d = a === st.qb ? b : a;
+      if (d.team !== off && !d.down && (d.ai.missUntil ?? 0) <= W.t) {
+        const sackOdds = clamp(0.5 + ((d.R.PMV ?? 50) - (st.qb.R.PBK ?? 50)) * 0.006, 0.25, 0.78);
+        if (rand() < sackOdds) {
+          st.carrier = st.qb;
+          st.sack = true;
+          st.tacklers.add(d.id);
+          startTackle(d, st.qb);
+          ev('sack', { by: d.id, on: st.qb.id });
+        } else {
+          d.ai.missUntil = W.t + 0.8;
+          ev('pressure', { by: d.id, on: st.qb.id });
+        }
+      }
+    }
+    tryTackle(a, b);
+  };
 
   function record() {
     const f = new Float32Array(STRIDE);
@@ -1522,10 +1622,22 @@ export function simulatePlay(game, S, ctx = {}) {
       if (r === st.holder) { st.placed = true; W.ball.holder = null; W.ball.state = 'held'; Object.assign(W.ball, { x: st.spotPt.x, y: st.spotPt.y, z: 0.15 }); r.hasBall = false; r.pose = POSE.HOLD; }
     }
     // pass: throw at the scheduled time
-    if (S.kindGroup === 'pass' && ['complete', 'incomplete', 'int'].includes(kind) && !st.thrown && st.qb && W.ball.holder === st.qb && W.t >= st.tThrow) {
+    if (S.kindGroup === 'pass' && ['pass', 'complete', 'incomplete', 'int'].includes(kind) && !st.thrown && !st.sack && st.qb && W.ball.holder === st.qb && W.t >= st.tThrow) {
       st.thrown = true;
       let C = st.catchPt;
       let z = st.catchZ;
+      if (freeOutcome && kind === 'pass' && st.target) {
+        const velo = 24 + (st.qb.R.THP - 75) * 0.2;
+        const dist = d2(st.qb.p, st.target.p);
+        st.T = clamp(0.15 + dist / velo + (st.freeDeep ? 0.3 : 0), 0.3, 1.6);
+        // Receivers can be slowed or redirected by route breaks and contact;
+        // apply a conservative route lead so the ball is not aimed at a
+        // straight-line extrapolation the athlete cannot actually reach.
+        C = { x: st.target.p.x + st.target.v.x * st.T * 0.35,
+          y: st.target.p.y + st.target.v.y * st.T * 0.35 };
+        st.catchPt = C;
+        st.tCatch = W.t + st.T;
+      }
       if (!st.target) {
         // throwaway: out of bounds past the sideline
         const l = lOfY(st.qb.p.y / YD) >= 0 ? 1 : -1;
@@ -1615,8 +1727,8 @@ export function simulatePlay(game, S, ctx = {}) {
     if (c && !st.dead) {
       const yy = c.p.y / YD, xx = c.p.x / YD;
       if (yy < -0.3 || yy > FIELD_W_YD + 0.3) whistle('out_of_bounds', { by: c.id });
-      else if ((dir > 0 && c.team === off) || (dir < 0 && c.team !== off) ? xx > 100 : xx < 0) {
-        if (c.ai.td || S.td || S.scoring) {
+      else if ((c.team === off ? dir : -dir) > 0 ? xx > 100 : xx < 0) {
+        if (freeOutcome || c.ai.td || S.td || S.scoring) {
           ev('touchdown', { by: c.id });
           c.ai.celebrate = true;
           whistle('touchdown', { by: c.id });
@@ -1627,7 +1739,7 @@ export function simulatePlay(game, S, ctx = {}) {
     if (!st.dead && W.ball.state === 'loose' && snapped) {
       const b = W.ball;
       const out = b.y < 0 || b.y > FIELD_W || b.x < -10 * YD || b.x > 110 * YD;
-      if (['incomplete', 'spike'].includes(kind) && b.z <= 0.12) whistle('incomplete');
+      if (['pass', 'incomplete', 'spike'].includes(kind) && b.z <= 0.12) whistle('incomplete');
       else if (out) whistle(kind === 'punt' || kind === 'kickoff' ? 'kick_out_of_bounds' : 'out_of_bounds');
       else if ((kind === 'punt' || kind === 'kickoff') && (S.touchback || S.oob || S.downed) && Math.hypot(b.vx, b.vy) < 0.4 && b.z < 0.15) whistle(S.touchback ? 'touchback' : 'downed');
       else if ((kind === 'punt' || kind === 'kickoff') && S.touchback && ((dir > 0 && b.x > 100 * YD) || (dir < 0 && b.x < 0)) && W.t > (st.ballLandT ?? 0) + 0.8) whistle('touchback');
@@ -1639,7 +1751,7 @@ export function simulatePlay(game, S, ctx = {}) {
       ev('flag', { text: S.penalty.text, at: o ? { x: o.p.x / YD, y: o.p.y / YD } : { x: losYd, y: byYd } });
     }
     if (W.ball.y >= 0 && W.ball.y <= FIELD_W) st.lastIn = { x: W.ball.x, y: W.ball.y };
-    if (st.carrier && !st.dead && st.tTackle == null && !st.carrier.ai.oob && !st.carrier.ai.td) {
+    if (st.carrier && st.endX != null && !st.dead && st.tTackle == null && !st.carrier.ai.oob && !st.carrier.ai.td) {
       const c = st.carrier;
       const budget = Math.abs(st.endX - c.ai.startX) * YD / (0.55 * c.vmax) + 2.5;
       if (W.t - st.carrierSince > budget) {
@@ -1670,7 +1782,7 @@ export function simulatePlay(game, S, ctx = {}) {
   return {
     id: S.id, roster, stride: STRIDE, frames, t0: -PRE, hz: REC_HZ, events: W.events,
     end: { x: st.spot ? st.spot.x : b.x / YD, y: st.spot ? st.spot.y : b.y / YD, reason: st.whistle, t: st.deadT },
-    expectEndX: st.endX ?? null,
+    expectEndX: freeOutcome ? null : st.endX ?? null,
     biggestHit: W.biggestHit, topSpeed: top, throwSpeed: st.throwSpeed ?? null,
     carrierId: st.carrier?.id ?? null,
     stats: W.players.map((p) => ({ id: p.id, top: p.topSpeed, dist: p.dist })),

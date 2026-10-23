@@ -160,27 +160,27 @@ export function createDemoScenario({ offenseId, defenseId, teams, playbooks, kin
     const loc = attributes.run_location;
     const gap = attributes.run_gap;
     const carrier = lineups.offense.RB;
-    // This synthetic gain exists only because the current director pins runs to S.gain.
-    const syntheticGain = Math.round((1.5 + random() * 6) * 10) / 10;
     play = {
       id: `demo:${offenseId}:${defenseId}:run:${seed}:${candidate.candidate_id}`, off: offenseId, def: defenseId,
-      kind: 'run', kindGroup: 'run', los, dir, shotgun: useShotgun,
-      text: `Synthetic 11-personnel alignment; observed ${formation} attribute-combination reference`, lineup: lineupsByTeam,
-      carrier, gain: syntheticGain, loc: loc || 'middle', gap: normalizeGap(gap),
+      kind: 'run', kindGroup: 'run', outcome_mode: 'free', los, dir, shotgun: useShotgun,
+      text: `Mock-selector 11-personnel alignment; observed ${formation} attribute-combination reference`, lineup: lineupsByTeam,
+      carrier, loc: loc || 'middle', gap: normalizeGap(gap),
     };
     draw = { location: loc, gap };
   } else {
     const loc = attributes.pass_location;
     const depthItem = attributes.pass_length;
-    const targetSlot = ['WR1', 'WR2', 'WR3'][Math.floor(random() * 3)];
+    const targetSlot = loc === 'left' ? 'WR1' : loc === 'right' ? 'WR2' : random.pick(['WR3', 'TE', 'RB']);
     const air = /deep/i.test(depthItem || '') ? 22 : /short/i.test(depthItem || '') ? 7 : 14;
+    const routeOptions = /deep/i.test(depthItem || '') ? ['go', 'post', 'seam', 'dig'] : ['curl', 'out', 'slant', 'flat'];
+    const targetRoute = random.pick(routeOptions);
     play = {
       id: `demo:${offenseId}:${defenseId}:pass:${seed}:${candidate.candidate_id}`, off: offenseId, def: defenseId,
-      kind: 'incomplete', kindGroup: 'pass', los, dir, shotgun: useShotgun,
-      text: `Synthetic 11-personnel alignment; observed ${formation} attribute-combination reference`, lineup: lineupsByTeam,
-      target: lineups.offense[targetSlot], air, loc: loc || 'middle',
+      kind: 'pass', kindGroup: 'pass', outcome_mode: 'free', los, dir, shotgun: useShotgun,
+      text: `Mock-selector 11-personnel alignment; observed ${formation} attribute-combination reference`, lineup: lineupsByTeam,
+      target: lineups.offense[targetSlot], target_route: targetRoute, air, loc: loc || 'middle',
     };
-    draw = { location: loc, depth: depthItem, targetSlot };
+    draw = { location: loc, depth: depthItem, targetSlot, targetRoute };
   }
   const typeCategory = profile.run_pass?.categories?.[kind];
   const typeRate = typeCategory ? typeCategory.rate : null;
@@ -202,6 +202,7 @@ export function createDemoScenario({ offenseId, defenseId, teams, playbooks, kin
         ci95_wilson: formationItem.ci95_wilson, source_ids: formationItem.source_ids },
       historical_type_marginal_rate: typeRate,
       historical_type_marginal_ci95_wilson: typeCategory?.ci95_wilson ?? null,
+      selector: { id: 'mock_historical_playbook_sampler.v1', status: 'mock', predictive: false },
       personnel_concept: '11 personnel (1 RB, 1 TE, 3 WR); synthetic demo unit, not necessarily the selected historical formation personnel',
       selected_draws: draw,
       random_seed: String(seed), selection_probability: null,
@@ -211,14 +212,17 @@ export function createDemoScenario({ offenseId, defenseId, teams, playbooks, kin
     players,
     lineups,
     action_policy_inputs: kind === 'run'
-      ? { carrier_id: play.carrier, concept: 'synthetic run using selected charted gap/location labels', blockers: 'engine-generated run blocking', defense: 'engine-generated pursuit', outcome_anchor: { field: 'gain', value: play.gain, provenance: 'synthetic_variation', purpose: 'required by the current outcome-constrained director' } }
-      : { target_id: play.target, target_role: draw.targetSlot, concept: 'synthetic pass using selected charted depth/direction labels', other_routes: 'engine generated', coverage: 'engine generated', outcome_anchor: { kind: 'incomplete', provenance: 'synthetic_variation', purpose: 'demo-only supported throw and resolution path' } },
+      ? { carrier_id: play.carrier, concept: 'mock-sampled run using selected charted gap/location labels', blockers: 'engine-generated run blocking', defense: 'engine-generated pursuit', outcome_anchor: null }
+      : { target_id: play.target, target_role: draw.targetSlot, target_route: draw.targetRoute,
+        concept: 'mock-sampled pass using selected charted depth/direction labels', other_routes: 'engine-generated route variation',
+        coverage: 'engine-generated man/zone response', outcome_anchor: null },
     execution_contract: {
-      mode: 'constrained_visualization', predictive_success: false,
+      mode: 'free_physics_mock_selector', predictive_success: false,
       unsupported: kind === 'run'
-        ? ['free-running outcome selection; current engine requires a fixed gain/end-spot anchor']
-        : ['catch/incompletion outcome prediction; demo deliberately selects the engine incomplete branch', 'custom route and coverage assignment injection'],
+        ? ['validated predictive play selection; team-specific blocking schemes and assignments']
+        : ['validated predictive play selection; full route-combination and coverage assignments'],
       hidden_historical_outcome_constraints: false,
+      outcome_mode: 'free',
     },
   };
 }

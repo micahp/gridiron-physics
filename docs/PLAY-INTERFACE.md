@@ -40,14 +40,14 @@ This object is accepted by `selectPlay(input)` in `web/prototype-model.js`. The 
 
 `selectPlay` currently returns:
 
-- `selection`: `play_id`, `provenance`, `provenance_basis`, `team_id`, `opponent_id`, `formation_reference`, `formation_observation`, `playbook_entry`, separate historical marginal rates, `personnel_concept`, `selected_draws`, `random_seed`, `selection_probability`, and `probability_note`.
-- `play`: engine-ready `id`, `off`, `def`, `kind`, `los`, `dir`, `shotgun`, `lineup`, and action-specific input fields.
+- `selection`: `play_id`, `provenance`, `provenance_basis`, `selector`, `team_id`, `opponent_id`, `formation_reference`, `formation_observation`, `playbook_entry`, separate historical marginal rates, `personnel_concept`, `selected_draws`, `random_seed`, `selection_probability`, and `probability_note`.
+- `play`: engine-ready `id`, `off`, `def`, `kind`, `los`, `dir`, `shotgun`, `lineup`, and action-specific input fields. Prospective `kind` is `run` or `pass`; `outcome_mode: "free"` opts into outcome-independent execution.
 - `players`: a stable-ID lookup with team membership, 35 ratings, and physics-body values.
 - `lineups`: 11 offense slots, 11 defense slots, and any explicit role adaptations.
 - `action_policy_inputs`: run carrier/blocking/pursuit inputs or pass target/route/coverage inputs.
 - `execution_contract`: mode, `predictive_success`, unsupported-action strings, and whether historical outcome constraints were used.
 
-The demo selector is explicitly `synthetic_variation`, while `selection.playbook_entry` identifies the directly charted `observed_2025` attribute combination selected from that team's catalog. The entry retains count, action-specific denominator, rate, Wilson interval, and source IDs. Users can pick a specific entry; absent an ID the adapter samples entries by observed counts under the supplied seed. This is an integration control, not a learned selector. `selection_probability` remains `null` because the historical combination rate does not calibrate a prospective probability. The adapter never uses observed receiver, tackler, catch point, or end spot.
+The browser uses a temporary `mock_historical_playbook_sampler.v1`, explicitly marked `predictive: false`. `selection.playbook_entry` identifies the directly charted `observed_2025` attribute combination selected from that team's catalog. The entry retains count, action-specific denominator, rate, Wilson interval, and source IDs. Users can pick a specific entry; absent an ID the adapter samples entries by observed counts under the supplied seed. The mock creates a synthetic carrier/target route assignment; the target ID is an intended receiver from the current roster, not a historical receiver outcome. `selection_probability` remains `null` because the historical combination rate does not calibrate a prospective probability. The adapter never uses a historical tackler, catch point, or end spot.
 
 ## Physics execution output
 
@@ -55,7 +55,7 @@ The demo selector is explicitly `synthetic_variation`, while `selection.playbook
 
 Every execution result carries:
 
-- `status`: supported, constrained visualization, or unsupported.
+- `status`: `free_physics_mock_selector`, constrained visualization, or unsupported.
 - `unsupported_actions`: explicit action/assignment limitations.
 - `outcome_anchor`: absent when free; otherwise marked `synthetic_variation` or another traceable provenance.
 - `predictive_success`: false for the current demo regardless of whether frames rendered or the engine returned a whistle.
@@ -63,6 +63,8 @@ Every execution result carries:
 
 ## Current engine boundary
 
-The existing director accepts a 22-player input and simulates trajectories, contacts, events, and a resulting state. Its run path requires a fixed `gain`/end spot and steers pursuit toward that spot. The pass demo deliberately selects the `incomplete` branch, uses an assigned synthetic target, and does not predict completion. The director currently has a fixed 11-personnel offensive alignment, a fixed defensive alignment, and no general injection point for arbitrary route trees, blocking rules, or coverage responsibilities. The formation label shown in the demo is an observed reference; the physical layout is a simplified synthetic alignment.
+The existing director accepts a 22-player input and simulates trajectories, contacts, events, and a resulting state. Historical reconstruction still uses its original gain, catch, tackler, and end-spot anchors. Prospective `outcome_mode: "free"` runs omit those anchors: the runner uses a lane assignment, defenders close through the physics step, and tackles settle at their simulated position. A prospective pass uses an intended roster target, route assignment, depth cue, and thrown ball; the engine resolves a catch, drop, breakup, incompletion, sack, or interception from the simulated player/ball positions and ratings. No success result or final spot is forced. `expectEndX` is `null` for free execution; `end.x` is the simulated spot.
+
+The temporary route sampler and route/coverage mapping are integration scaffolding, not a validated selection model or complete NFL assignments. The director still has a fixed 11-personnel offensive alignment, a fixed defensive alignment, and no general injection point for arbitrary route combinations, protection rules, or coverage shells. The formation label shown in the demo is an observed reference; the physical layout is a simplified synthetic alignment.
 
 Thus the prototype demonstrates roster/playbook swapping and physical execution inputs. It does not convert the reconstructed-play director into an autonomous prospective outcome model. The historical Seahawks–Broncos path continues to use its real-game anchors through `web/data/game.json` and `engine/game.js` unchanged.
