@@ -99,7 +99,37 @@ Each cell records contact occurrence/time, the engine-specific impulse measure, 
 
 Each player here is a single freely rotating rigid body on the ground plane with no upright or balance controller. Once contact tips a body past the tipping point, it can roll flat; all contacting cells cross 55°. The binary fall threshold is therefore structurally non-discriminating within this proxy sweep: it cannot answer which contact conditions produce a fall. Peak tilt is the only usable continuous discriminator in these records, and it remains a proxy measurement.
 
-Across the 12 paired cells, Jolt minus Rapier carrier peak tilt averages −10.15° (range −32.02° to +11.03°). Defender peak tilt is much closer: mean +0.14°, range −3.64° to +4.45° (maximum absolute difference 4.45°). The solvers agree closely on defender tilt and disagree substantially on carrier tilt. Jolt's carrier tilt is also non-monotonic with closing speed: at 6 m/s the 0°/30°/60°/90° values are 64.11°/71.68°/57.96°/65.10°, each below its corresponding 4 m/s value (about 86.4°). At 8 m/s they are 90.15°/102.93°/67.65°/91.18°; the 60° value is a further exception to a simple ordering. This is unexplained and may be a solver or tilt-measurement artifact. Do not use Jolt tilt claims until this behavior is understood; do not smooth these results.
+Across the 12 paired cells, Jolt minus Rapier carrier peak tilt averages −10.15° (range −32.02° to +11.03°). Defender peak tilt is much closer: mean +0.14°, range −3.64° to +4.45° (maximum absolute difference 4.45°). The solvers agree closely on defender tilt and disagree substantially on carrier tilt. Jolt's carrier tilt is also non-monotonic with closing speed: at 6 m/s the 0°/30°/60°/90° values are 64.11°/71.68°/57.96°/65.10°, each below its corresponding 4 m/s value (about 86.4°). At 8 m/s they are 90.15°/102.93°/67.65°/91.18°; the 60° value is a further exception to a simple ordering. The diagnosis below rules out a material tilt-formula difference in the traced cells. These are engine-resolved coupled contact results; their physical correctness and precise solver/contact mechanism remain unvalidated. Do not smooth these results.
+
+### Tilt diagnosis
+
+The frozen sweep computes tilt from the rigid-body quaternion as `acos(1 − 2(x² + z²))`, the angle between world-up and the body's local +Y axis. The Jolt ellipsoid/body-center helper is **not** another tilt definition: it estimates a carrier contact point from the two body centers and an enclosing ellipsoid. Comparing it numerically with tilt would be comparing different quantities. I also computed the angle by independently normalizing the quaternion, rotating local +Y, and taking its angle to world-up. Across the traced Jolt carrier frames, the maximum absolute difference from the frozen formula is **0.00001103°**; for the defender it is **0.00001117°**. Both are negligible beside the roughly 20–30° speed reversals, so the non-monotonicity is not a tilt-measurement artifact. The traced maxima match the frozen sweep values.
+
+The new [per-frame trace and probe artifact](./results/tilt-traces.json) records every 1/120 s frame for the requested cells, both engine versions, both quaternion calculations, per-collider peaks, angular velocity, and ground contact. Peak carrier summaries are:
+
+| Approach / speed | Engine | Carrier peak tilt @ time | Angular velocity at peak (rad/s) | Ground contact at peak |
+|---|---|---:|---|---|
+| 60° / 4 m/s | Rapier | 84.404° @ 0.9917 s | [−0.448, −0.046, −0.500] | yes |
+| 60° / 4 m/s | Jolt | 86.402° @ 1.4833 s | [−0.334, 0.000, −0.827] | yes |
+| 60° / 6 m/s | Rapier | 89.981° @ 1.0583 s | [−3.525, −0.010, −3.781] | yes |
+| 60° / 6 m/s | Jolt | 57.963° @ 1.5000 s | [−0.104, −0.683, −1.418] | yes |
+| 60° / 8 m/s | Rapier | 92.732° @ 0.8917 s | [−0.487, −0.781, −3.045] | no |
+| 60° / 8 m/s | Jolt | 67.653° @ 0.6917 s | [1.991, −5.401, −5.301] | no |
+| 30° / 8 m/s | Rapier | 91.905° @ 0.8500 s | [−0.282, 0.511, −0.167] | no |
+| 30° / 8 m/s | Jolt | 102.933° @ 1.5000 s | [5.615, −0.178, 3.191] | no |
+
+Jolt's carrier passes flat only in the traced 30°/8 m/s cell: it first exceeds 90° at 1.2667 s (90.117°), and is not in ground contact then or at its 1.5000 s peak. The five colliders share one rigid-body orientation, so their per-collider rigid-body peak tilt is identical; the artifact additionally reports each capsule's long-axis inclination. The spherical head has no orientation-defined long axis.
+
+To separate a measurement issue from a general contact-response pattern, I ran a single 96 kg five-collider body on the same plane and engine versions. Released upright from rest at center height 3.0 m for 2.0 s, peak tilt was 15.442° in Rapier and 8.742° in Jolt; both were in ground contact at the peak. After 24 settle steps, the body received a horizontal off-center impulse at world point [0, 1.445, 0] m. The magnitudes bracket the Rapier sweep's 121.9–309.3 N·s contact-impulse estimates; the Jolt sweep number is a different momentum-change estimate that includes support forces, so the scale comparison is approximate.
+
+| Impulse (N·s) | Rapier peak tilt | Jolt peak tilt |
+|---:|---:|---:|
+| 120 | 86.390° | 86.408° |
+| 180 | 86.384° | 93.341° |
+| 240 | 107.165° | 121.479° |
+| 300 | 174.091° | 176.964° |
+
+The isolated Jolt response is monotone and does not reproduce the sweep reversal. Rapier's first step is effectively flat with a 0.007° decrease; its larger impulses increase tilt. This points to the two-player plus ground contact interaction as the location of the sweep behavior, but does not establish a solver defect or tell whether the response is physically accurate. The usable conclusion is that the quaternion metric is consistent and the coupled-solver outcome needs calibrated contact data before it can support football claims.
 
 ### Pass and ball contact
 
@@ -150,7 +180,7 @@ npm run eval:physics3d:browser
 npm run eval:physics3d
 ```
 
-`eval:physics3d` defaults to five repeats of 1,000 scenes per engine and writes [`results.json`](./results.json). Pass arguments to change scenes and steps per repeat, for example `node research/physics-3d-evaluation/benchmark.mjs 100 60`. `eval:physics3d:sweep` writes [`results-sweep.json`](./results-sweep.json); `eval:physics3d:sweep:test` checks its grid, finite records, and repeated-cell determinism.
+`eval:physics3d` defaults to five repeats of 1,000 scenes per engine and writes [`results.json`](./results.json). Pass arguments to change scenes and steps per repeat, for example `node research/physics-3d-evaluation/benchmark.mjs 100 60`. `eval:physics3d:sweep` writes [`results-sweep.json`](./results-sweep.json); `eval:physics3d:sweep:test` checks its grid, finite records, repeated-cell determinism, and equality with the committed artifact. Generate and validate the tilt diagnosis with `node research/physics-3d-evaluation/tilt-diagnosis.mjs` and `node research/physics-3d-evaluation/test-tilt-diagnosis.mjs`.
 
 The browser test expects a Playwright Chromium install (`npx playwright install chromium` where supported). It also accepts `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome`; the evaluation environment used its cached Chromium binary because Playwright's installer did not provide a matching image there.
 
