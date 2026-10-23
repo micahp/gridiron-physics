@@ -21,7 +21,10 @@
     "eval:physics3d:energy:horizon": "node research/physics-3d-evaluation/contact-energy-horizon.mjs",
     "eval:physics3d:energy:horizon:test": "node research/physics-3d-evaluation/test-contact-energy-horizon.mjs",
     "eval:physics3d:energy:full-grid": "node research/physics-3d-evaluation/contact-energy-full-grid.mjs",
-    "eval:physics3d:energy:full-grid:test": "node research/physics-3d-evaluation/test-contact-energy-full-grid.mjs"
+    "eval:physics3d:energy:full-grid:test": "node research/physics-3d-evaluation/test-contact-energy-full-grid.mjs",
+    "eval:physics3d:m1b": "node research/physics-3d-evaluation/m1b/run.mjs",
+    "eval:physics3d:m1b:test": "node research/physics-3d-evaluation/m1b/test.mjs",
+    "eval:physics3d:m1b:browser": "node research/physics-3d-evaluation/m1b/browser-test.mjs"
   },
   "license": "MIT",
   "devDependencies": {
