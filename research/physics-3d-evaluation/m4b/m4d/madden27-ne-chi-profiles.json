@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "game": "Madden NFL 27",
+  "ratingsSnapshot": "Week 6",
+  "accessedAt": "2026-10-23",
+  "source": "EA SPORTS official player ratings database",
+  "profiles": [
+    {
+      "id": "treveyon-henderson",
+      "name": "TreVeyon Henderson",
+      "team": "New England Patriots",
+      "position": "HB",
+      "sourceUrl": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/tre-veyon-henderson/14810",
+      "height": "5'10\" / 178cm",
+      "weightLb": 202,
+      "weightKgDisplayed": 92,
+      "ratings": {
+        "STR": 71,
+        "BTK": 81,
+        "TRK": 80,
+        "CAR": 95,
+        "TKL": 33,
+        "HTP": 31
+      }
+    },
+    {
+      "id": "devin-bush",
+      "name": "Devin Bush",
+      "team": "Chicago Bears",
+      "position": "MIKE",
+      "sourceUrl": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/devin-bush/20583",
+      "height": "5'11\" / 180cm",
+      "weightLb": 234,
+      "weightKgDisplayed": 106,
+      "ratings": {
+        "STR": 74,
+        "BTK": 19,
+        "TRK": 33,
+        "CAR": 59,
+        "TKL": 89,
+        "HTP": 88
+      }
+    }
+  ]
+}
