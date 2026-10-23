@@ -120,7 +120,8 @@ try {
   index.records = index.records.map((row) => {
     const screenshotKey = `${row.scenarioId}|${row.engine}`;
     const videoKey = `${row.scenarioId}|${row.engine}|${row.simulationVersion}|${row.sourceCommit}`;
-    return { ...row, screenshots: screenshotRows.get(screenshotKey) ?? row.screenshots ?? null,
+    const isCurrentM4c = row.simulationVersion === M4C && row.sourceCommit === commits.m4c;
+    return { ...row, screenshots: isCurrentM4c ? screenshotRows.get(screenshotKey) ?? row.screenshots ?? null : row.screenshots ?? null,
       videoPath: videoRows.get(videoKey) ?? row.videoPath ?? null };
   });
   index.generatedAt = new Date().toISOString();
