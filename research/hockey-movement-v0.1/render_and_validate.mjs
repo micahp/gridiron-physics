@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { gunzipSync } from 'node:zlib';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(here, '../../..');
+const repoRoot = join(here, '../..');
 const archiveDir = join(here, 'archive');
 const manifest = JSON.parse(await readFile(join(archiveDir, 'manifest.json'), 'utf8'));
 const entry = manifest.archives.at(-1);
