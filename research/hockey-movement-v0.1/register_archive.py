@@ -20,6 +20,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--archive", type=Path, required=True)
     ap.add_argument("--source-manifest", type=Path, required=True)
+    ap.add_argument("--source-release-manifest", type=Path,
+                    default=Path("/root/lp-research-data/stathletes-big-data-cup-2026/download-manifest.json"))
+    ap.add_argument("--data-dir", type=Path, default=Path("/root/lp-research-data/stathletes-big-data-cup-2026"))
     ap.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent / "archive")
     args = ap.parse_args()
     with gzip.open(args.archive, "rt", encoding="utf-8") as f:
@@ -43,6 +46,16 @@ def main() -> None:
             if scenario["frames"][1].get("models", {}).get(model) is None:
                 raise RuntimeError(f"{key}: generated {model} frames are missing")
     source = json.loads(args.source_manifest.read_text(encoding="utf-8"))
+    release = json.loads(args.source_release_manifest.read_text(encoding="utf-8"))
+    release_manifest_sha = sha256(args.source_release_manifest)
+    if release_manifest_sha != source["source_release"]["manifest_sha256"]:
+        raise RuntimeError("download manifest hash differs from the extraction record")
+    if len(release.get("files", [])) != release.get("asset_count"):
+        raise RuntimeError("download manifest asset count is inconsistent")
+    for asset in release["files"]:
+        path = args.data_dir / asset["name"]
+        if not path.is_file() or path.stat().st_size != int(asset["bytes"]) or sha256(path) != asset["sha256"]:
+            raise RuntimeError(f"raw release asset failed independent hash verification: {asset['name']}")
     expected = source.get("artifacts", {})
     if not expected or not payload.get("source_hashes"):
         raise RuntimeError("source artifact digests are required")
@@ -70,6 +83,7 @@ def main() -> None:
         "legendarypicks_git_commit": lp_commit,
         "gridiron_movement_engine_commit": gph_commit,
         "source_manifest_sha256": source["source_release"]["manifest_sha256"],
+        "source_release_asset_hashes": {item["name"]: item["sha256"] for item in release["files"]},
         "source_artifact_hashes": expected,
         "model_version": next(iter(scenarios.values()))["model_version"],
         "random_seeds": sorted({row["random_seed"] for row in scenarios.values()}),
