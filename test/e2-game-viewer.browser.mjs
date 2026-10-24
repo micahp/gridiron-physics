@@ -46,7 +46,16 @@ try {
   const currentEnvelope = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', entry.file), 'utf8'));
   const driveCount = currentEnvelope.record.drives.length;
   const playCount = currentEnvelope.record.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
-  const finalSequence = currentEnvelope.record.drives.at(-1).plays.at(-1).sequence;
+  const eventTypeCounts = new Map();
+  for (const drive of currentEnvelope.record.drives) {
+    for (const play of drive.plays) eventTypeCounts.set(play.event_type, (eventTypeCounts.get(play.event_type) ?? 0) + 1);
+  }
+  const supportedEventTypes = new Set([
+    'field_goal_attempt', 'fumble_lost', 'interception', 'pass_complete',
+    'pass_incomplete', 'punt', 'run', 'sack',
+  ]);
+  assert.deepEqual([...eventTypeCounts.keys()].sort(), [...supportedEventTypes].sort(),
+    'the accepted seed-1 fixture must use only the enumerated E2 play event types');
   const context = await browser.newContext();
   const page = await context.newPage();
   page.on('pageerror', (error) => pageErrors.push(error.message));
@@ -56,16 +65,40 @@ try {
   assert.equal(await page.locator('#drive-select option').count(), driveCount);
   assert.equal(await page.locator('#score-a').innerText(), String(currentEnvelope.record.points.A));
   assert.equal(await page.locator('#score-b').innerText(), String(currentEnvelope.record.points.B));
-  await page.locator('#drive-select').selectOption(String(driveCount - 1));
-  assert.match(await page.locator('#drive-summary').innerText(), new RegExp(`Drive ${driveCount}`));
-  const finalDrivePlayCount = await page.locator('#play-select option').count();
-  await page.locator('#play-select').selectOption(String(finalDrivePlayCount - 1));
-  assert.match(await page.locator('#play-meta').innerText(), new RegExp(`${driveCount} \/ ${finalSequence}`));
+  const renderedEventCounts = new Map();
+  let renderedPlays = 0;
+  for (const [driveOffset, drive] of currentEnvelope.record.drives.entries()) {
+    await page.locator('#drive-select').selectOption(String(driveOffset));
+    assert.match(await page.locator('#drive-summary').innerText(), new RegExp(`Drive ${drive.index}`));
+    assert.equal(await page.locator('#play-select option').count(), drive.plays.length,
+      `Drive ${drive.index} must expose every source play`);
+    for (const [playOffset, play] of drive.plays.entries()) {
+      await page.locator('#play-select').selectOption(String(playOffset));
+      const metadata = await page.locator('#play-meta dd').allInnerTexts();
+      assert.equal(metadata[1], play.id, `Drive ${drive.index} play ${play.sequence} source ID`);
+      assert.equal(metadata[2], `${drive.index} / ${play.sequence}`, `Drive ${drive.index} play ${play.sequence} sequence`);
+      assert.equal(metadata[3], play.event_type, `Drive ${drive.index} play ${play.sequence} event type`);
+      assert.deepEqual(JSON.parse(await page.locator('#play-json').innerText()), {
+        outcome: play.outcome,
+        participants: play.participants,
+        decision: play.decision,
+        sampling: play.sampling,
+        field: play.field,
+      }, `Drive ${drive.index} play ${play.sequence} source fields must render unchanged`);
+      renderedEventCounts.set(play.event_type, (renderedEventCounts.get(play.event_type) ?? 0) + 1);
+      renderedPlays += 1;
+    }
+  }
+  assert.equal(renderedPlays, playCount);
+  assert.deepEqual([...renderedEventCounts.entries()].sort(), [...eventTypeCounts.entries()].sort(),
+    'every source event type and event count must be visible through the browser viewer');
   assert.match(await page.locator('#state-audit-summary').innerText(), /0 findings/);
   assert.match(await page.locator('#e3-clock-caveat').innerText(), /594 \/ 7016/);
   assert.match(await page.locator('#e3-load-status').innerText(), /verified by SHA-256/);
   assert.match(await page.locator('#e3-unsupported-list').innerText(), /timeouts[\s\S]*two_minute_warning/);
   assert.match(await page.locator('#conversion-source-status').innerText(), /PASS/);
+  assert.match(await page.locator('#validation').innerText(), /NOT CONFORMING/,
+    'the viewer must visibly keep the shared-v1/pregame gate open for this retrospective record');
   assert.match(await page.locator('#e3-play-table').innerText(), new RegExp(`Generated · n=${playCount}`));
   assert.equal(await page.locator('#e3-play-table tbody tr').count(), 4);
   assert.equal(await page.locator('#e3-drive-table tbody tr').count(), 5);
@@ -106,7 +139,10 @@ try {
   assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
   await regressionContext.close();
 
-  console.log(`Real Chromium navigation: LP ${manifest.lp_source.base_commit} navigated Drive ${driveCount} / Play ${playCount}; archived 5fc hard-rejected`);
+  console.log(`Real Chromium play render: LP ${manifest.lp_source.base_commit} rendered ${renderedPlays}/${playCount} plays across ${renderedEventCounts.size}/${supportedEventTypes.size} supported event types`);
+  console.log(`Rendered event counts: ${[...renderedEventCounts].sort().map(([type, count]) => `${type}=${count}`).join(', ')}`);
+  console.log('OPEN shared-v1/pregame gate: viewer displays NOT CONFORMING for the retrospective E2 payload');
+  console.log(`Regression: archived 5fc payload hard-rejected; v1 regression fixture sha256=${manifest.v1_regression_fixture?.sha256 ?? 'not pinned'}`);
   console.log(`Browser runtime errors: ${pageErrors.length}`);
 } finally {
   await browser.close();

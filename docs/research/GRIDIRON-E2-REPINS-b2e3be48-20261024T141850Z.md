@@ -83,3 +83,22 @@ The seed-1 integration can pass while shared-v1/full-game signoff remains failed
 
 LP's blocker ledger records the scoped fixes and their evidence. The survey still marks timeouts, the two-minute warning, penalties, onside kicks, overtime and lineups as unsupported in all 300 games; its zero matrix-fail count does not promote any record to a legal `valid_full_game`. The seed-1 v1 gaps remain the explicit failures above.
 These are LP-reported source statuses pinned at the evidence commit. Gridiron independently checks the immutable seed-1 payload and does not change LP event results.
+
+## Apply-mode smoke test
+
+The same command without `--verify-only` was run in a disposable worktree on `research/gridiron-e2-game-viewer-repin-test`, based on Gridiron commit `2dc21c80e019127ca40fd6a9c1eb6f2db5f2a1b2`. It wrote versioned b2e3 envelope/raw files and updated only that worktree's manifest. The generated envelope SHA-256 was `30354e16f8fd1c4c64a0f1ab6ebb456ce3738b832a90b54a30a395834458de8f`; the raw SHA-256 remained `0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`.
+
+Post-apply checks in that disposable worktree:
+
+```text
+LP E2 game adapter: assertions passed
+fixture=game-seed1-b2e3be48.json sha256=30354e16f8fd1c4c64a0f1ab6ebb456ce3738b832a90b54a30a395834458de8f
+upstream=lp-e2-game-seed1-b2e3be48.json sha256=0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821
+drives=24 plays=143 score=A 14, B 10
+football-state findings=0; raw-record v1 gaps=8; projected-v1 source gaps=7
+E2 viewer DOM audit: LP b2e3be4876d644d2ad8a5f94b7d25365ba7ba724 loads 24 drives / 143 plays; E3 diagnostics and caveats rendered
+Real Chromium navigation: LP b2e3be4876d644d2ad8a5f94b7d25365ba7ba724 navigated Drive 24 / Play 143; archived 5fc hard-rejected
+Browser runtime errors: 0
+```
+
+The active E2 worktree's manifest remains pinned to LP `1ca75609`; this smoke test only exercised the future apply path.

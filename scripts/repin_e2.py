@@ -247,8 +247,8 @@ def write_proof(root: Path, commit: str, artifact_path: str, payload_hash: str, 
     proof_path = root / "docs/research" / f"GRIDIRON-E2-REPINS-{short}-{stamp}.md"
     status_line = f"Seed 1 integration status: viewer {'PASS' if verification_passed else 'FAIL'}; per-seed LP survey row is pinned below."
     v1_line = next((line for line in outputs if line.startswith((
-        "FAIL shared full-game v1 conformance:", "PASS shared full-game v1 conformance:",
-    ))), "Shared full-game v1 conformance: not reported")
+        "OPEN shared-v1/pregame gate:", "FAIL shared full-game v1 conformance:", "PASS shared full-game v1 conformance:",
+    ))), "Shared full-game v1/pregame gate: OPEN; not reported")
     unsupported_line = next((line for line in outputs if line.startswith("LP valid_full_game=")),
                             "LP validity and unsupported rules: not reported")
     lines = [
@@ -283,7 +283,7 @@ def write_proof(root: Path, commit: str, artifact_path: str, payload_hash: str, 
         "",
         "## Outstanding LP-side blockers",
         "",
-        "The seed-1 integration can pass while shared-v1/full-game signoff remains failed; Gridiron does not fill LP's missing fields.",
+        "The scoped E2 viewer checks can pass while the shared-v1/pregame gate remains OPEN; Gridiron does not fill LP's missing fields.",
         "",
         f"- Raw-record v1 gate: `{v1_line}`. Each open field is listed in the command output above.",
         f"- {unsupported_line}",

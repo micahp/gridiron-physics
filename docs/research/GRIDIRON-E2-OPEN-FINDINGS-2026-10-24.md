@@ -1,6 +1,14 @@
 # Gridiron E2 open finding register — 2026-10-24
 
-Viewer now pins the final LP E2 record commit `1ca7560924fe7da3eb452b142176bf09d7aeb1f0` in envelope commit `45381829488e43813a31793ee546df0b95dee856`. Raw record payload SHA-256 `0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`; envelope SHA-256 `b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1`. Seed 1 has 24 drives, 143 plays, A 14–B 10, and `valid_full_game=false`. The 5fc envelope remains archived as a failing regression fixture.
+## 2026-10-24 accepted-baseline delta
+
+The active Gridiron adapter pin is now LP evidence commit `a442dcd72559cfaf2d04737fc2454cea486faf09`, accepted for the scoped completed-regulation research milestone. Its raw payload SHA-256 remains `0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`; the a442 Gridiron envelope SHA-256 is `bbccd70a224035cb09d328194de66368e517524fe1d07df8aabbb7e037134788`. The shared-v1 and full legal-game gates remain OPEN / BLOCKED. A real scheduled game ID and kickoff, real team identities and rosters, as-of/snapshot hashes, producer model/rules versions, explicit durations for all 143 plays, and producer-supported `valid_full_game=true` remain unavailable.
+
+The original `1ca75609` pin described below is the prior envelope history; its raw record is byte-identical to the a442 artifact. The old failing v1 projection is hash-pinned as a separate regression, and the 5fc payload remains a failing drive-index regression. Exhaustive Chromium rendering results and exact remaining pregame inputs are in [the a442 integration proof](GRIDIRON-E2-INTEGRATION-PROOF-A442DCD7-2026-10-24.md).
+
+## Prior 1ca pin and finding baseline
+
+Before the a442 evidence-only pin, the viewer used LP record commit `1ca7560924fe7da3eb452b142176bf09d7aeb1f0` with envelope commit `45381829488e43813a31793ee546df0b95dee856`. Raw record payload SHA-256 `0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`; prior envelope SHA-256 `b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1`. Seed 1 has 24 drives, 143 plays, A 14–B 10, and `valid_full_game=false`.
 
 Final LP 1ca output has zero independent football-state findings: all 23 drive-index defects are closed, score snapshots reconcile to the A 14–B 10 drive ledger, and score/timeout boundary checks pass. The adapter retains a hard reject and the archived 5fc payload retains all 23 index mismatches as a regression fixture. The final source explicitly keeps `valid_full_game=false`. The consumer v1 audit now verifies the score and timeout fields, closing those two gaps; eight v1 gaps remain open and are triaged below. Timeout rules remain listed unsupported, so populated timeout snapshots do not establish timeout-call behavior. `GRIDIRON-CONTRACT-v1.md` is unchanged.
 

@@ -13,6 +13,10 @@ const fixtureBytes = await readFile(resolve(root, 'docs/fixtures/e2', fixtureEnt
 const fixtureHash = createHash('sha256').update(fixtureBytes).digest('hex');
 assert.equal(fixtureHash, fixtureEntry.sha256, 'fixture must match its pinned SHA-256');
 const payload = JSON.parse(fixtureBytes.toString('utf8'));
+assert.equal(manifest.lp_source.base_commit, 'a442dcd72559cfaf2d04737fc2454cea486faf09',
+  'the adapter baseline is the LP evidence-only acceptance commit a442dcd7');
+assert.equal(payload.source.base_commit, manifest.lp_source.base_commit,
+  'the accepted E2 envelope must be pinned to LP a442dcd7');
 const upstreamBytes = await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.upstream_source_file));
 assert.equal(createHash('sha256').update(upstreamBytes).digest('hex'), fixtureEntry.upstream_source_sha256,
   'original LP payload must match its pinned SHA-256');
@@ -51,10 +55,31 @@ if (fixtureEntry.v1_document_file && fixtureEntry.v1_document_sha256) {
     'the LP shared-v1 projection must match its pin');
   const v1Document = JSON.parse(v1DocumentBytes.toString('utf8'));
   v1SourceGaps = auditGridironV1SourceGaps(v1Document);
-  if (v1SourceGaps.findings.length) {
-    assert.match(v1SourceGaps.findings.at(-1).message, new RegExp(`${adapted.sourcePlayCount} contract plays`));
-  }
+  assert.equal(v1SourceGaps.conforms, false, 'the pinned LP projection remains an explicit failing v1 regression');
+  assert.match(v1SourceGaps.findings.at(-1).message, new RegExp(`${adapted.sourcePlayCount} contract plays`));
 }
+
+const v1Regression = manifest.v1_regression_fixture;
+assert.ok(v1Regression, 'the older failing v1 projection must remain named in the fixture manifest');
+const v1RegressionBytes = await readFile(resolve(root, 'docs/fixtures/e2', v1Regression.file));
+assert.equal(createHash('sha256').update(v1RegressionBytes).digest('hex'), v1Regression.sha256,
+  'the failing v1 regression fixture must retain its committed hash');
+const v1RegressionDocument = JSON.parse(v1RegressionBytes.toString('utf8'));
+const v1RegressionAudit = auditGridironContractV1Record(v1RegressionDocument);
+assert.equal(v1RegressionAudit.conforms, false,
+  'the old LP v1 projection must continue to fail the raw-record contract audit');
+assert.equal(v1RegressionAudit.violations.length, v1Regression.known_findings.record_gate_violations);
+const v1RegressionSourceGaps = auditGridironV1SourceGaps(v1RegressionDocument);
+assert.equal(v1RegressionSourceGaps.sourceGapCount, v1Regression.known_findings.source_gap_count,
+  'the old v1 projection must retain its seven explicit source gaps');
+assert.throws(() => adaptLpGamePayload(v1RegressionDocument), /unsupported payload contract/,
+  'the old v1 projection must not be accepted as an E2 game envelope');
+assert.equal(v1Regression.known_findings.missing_duration_plays, 143);
+assert.deepEqual(v1Regression.known_findings.open_requirements, [
+  'real scheduled game ID and kickoff', 'real home/away team identities and rosters',
+  'as-of timestamp and input snapshot hashes', 'producer model_version and rules_version',
+  'explicit duration for every play', 'valid_full_game=true',
+]);
 
 const findingsDoc = await readFile(resolve(root, 'docs/research/GRIDIRON-E2-OPEN-FINDINGS-2026-10-24.md'), 'utf8');
 const driveSection = findingsDoc.split('## Drive-index findings (23)')[1].split('## Shared-contract audit violations (10)')[0];
@@ -153,3 +178,5 @@ console.log(`fixture=${fixtureEntry.file} sha256=${fixtureHash}`);
 console.log(`upstream=${fixtureEntry.upstream_source_file} sha256=${fixtureEntry.upstream_source_sha256}`);
 console.log(`drives=${adapted.drives.length} plays=${adapted.sourcePlayCount} score=A ${adapted.record.points.A}, B ${adapted.record.points.B}`);
 console.log(`football-state findings=${adapted.footballStateAudit.finding_count}; raw-record v1 gaps=${adapted.sharedV1Audit.violations.length}; projected-v1 source gaps=${v1SourceGaps?.sourceGapCount ?? 'not pinned'}`);
+console.log(`OPEN shared-v1/pregame gate: ${adapted.sharedV1Audit.violations.length} raw-record gaps; v1 regression retains ${v1Regression.known_findings.missing_duration_plays} plays without explicit duration`);
+console.log(`Pinned failing v1 regression: sha256=${v1Regression.sha256}; source gaps=${v1RegressionSourceGaps.sourceGapCount}; raw-record findings=${v1RegressionAudit.violations.length}`);

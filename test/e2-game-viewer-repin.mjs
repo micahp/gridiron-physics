@@ -152,13 +152,11 @@ try {
   console.log(`PASS adapter + independent state audit: ${driveCount} drives / ${playCount} plays; 0 state findings; drive-index mismatches=${driveIndexMismatches}; ${adapted.sharedV1Audit.violations.length} raw-record v1 gaps`);
   console.log(`PASS field-end projection: team-period-field-end-v1 (authored test-only); ${fieldPositionsChecked} state_after spots (+1=${directionCounts['+1']}, -1=${directionCounts['-1']}); ${nullSpotsPreserved} null terminal spots preserved; 0 mismatches`);
   console.log(`PASS browser viewer: loaded and navigated Drive ${driveCount} / Play ${finalSequence}; score A ${raw.record.points.A}–B ${raw.record.points.B}; runtime errors=${pageErrors.length}`);
-  if (adapted.sharedV1Audit.violations.length) {
-    console.log(`FAIL shared full-game v1 conformance: ${adapted.sharedV1Audit.violations.length} raw-record gaps remain`);
-  } else {
-    console.log('PASS shared full-game v1 conformance: zero raw-record gaps');
-  }
-  for (const violation of adapted.sharedV1Audit.violations) console.log(`  OPEN LP FIELD: ${violation}`);
-  if (raw.record.valid_full_game !== true) console.log(`FAIL full-game signoff: LP valid_full_game=${raw.record.valid_full_game}`);
+  const missingDurationPlays = raw.record.drives.flatMap((drive) => drive.plays)
+    .filter((play) => play.outcome.duration_seconds == null).length;
+  console.log(`OPEN shared-v1/pregame gate: ${adapted.sharedV1Audit.violations.length} raw-record gaps; valid_full_game=${raw.record.valid_full_game}`);
+  for (const violation of adapted.sharedV1Audit.violations) console.log(`  OPEN producer field: ${violation}`);
+  console.log(`OPEN pregame fixture requirements: scheduled game ID; real home/away rosters; as-of and snapshot hashes; model/rules versions; explicit duration for ${missingDurationPlays}/${playCount} plays; valid_full_game=true`);
   console.log(`LP valid_full_game=${raw.record.valid_full_game}; unsupported_rules=${JSON.stringify(raw.record.unsupported_rules)}`);
   await context.close();
 } finally {

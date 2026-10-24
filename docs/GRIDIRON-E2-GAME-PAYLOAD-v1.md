@@ -111,3 +111,9 @@ flag. LP's projected shared-v1 document reports seven unsourced source fields: m
 hash, roster snapshot, and play duration. The document-specific Gridiron source-gap audit now reports those seven separately.
 Its projection has 156 event rows because it includes 13 kickoff/try/period/game boundary events around 143 source plays.
 See the independent audit report for the prior six-count reconciliation and its dated delta.
+
+## Accepted scoped E2 baseline — LP a442dcd7
+
+The coordinator accepted LP `a442dcd72559cfaf2d04737fc2454cea486faf09` as a **scoped completed-regulation research milestone**. The active Gridiron adapter fixture is `game-seed1-a442dcd7.json` (SHA-256 `bbccd70a224035cb09d328194de66368e517524fe1d07df8aabbb7e037134788`), and its immutable LP raw source remains SHA-256 `0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`.
+
+The full legal-game and shared-v1 pregame gates remain **OPEN / BLOCKED**. The older `e2-game-seed1.v1.json` projection remains hash-pinned in `MANIFEST.json` as a failing regression: it reports seven source gaps and 143 missing play durations. Unmet pregame fixture requirements are a real scheduled game ID and kickoff, real team identities and rosters, as-of and snapshot hashes, producer model/rules versions, explicit duration for every play, and producer-supported `valid_full_game: true`. The expanded Chromium test renders every one of the 143 plays and all eight event types present in the accepted payload; it checks generic play detail rendering and source preservation, not physical animation or legal event resolution. See [the a442 integration proof](research/GRIDIRON-E2-INTEGRATION-PROOF-A442DCD7-2026-10-24.md) for exact output and unmet pregame inputs.
