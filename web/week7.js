@@ -70,18 +70,61 @@ function showPlaybook(p,demo){
     '<p class="note">2025 offense sample: '+esc(p.source_id?.game_id??'—')+' / '+esc(p.source_id?.play_id??'—')+
     '<br>2025 defense sample: '+esc(p.defense_source_id?.game_id??'—')+' / '+esc(p.defense_source_id?.play_id??'—')+'</p>';
 }
+const POST_CLIP_PAUSE=.9, TEXT_EVENT_SECONDS=2.5;
+let filter='all', playing=false, dwell=0, scoringAt=new Set(), keyAt=new Set();
+function classify(sim){
+  // Scoring: touchdowns and made field goals. Key: those, plus interceptions, 20+ yard gains and
+  // turnovers on downs. There is no win-probability model here, so this is not ESPN's ranked list.
+  const scoring=new Set(), key=new Set();
+  sim.plays.forEach((p,i)=>{
+    const scored=Boolean(p.touchdown||(p.type==='field_goal'&&p.good)||(p.type==='administrative'&&p.points>0));
+    if(scored)scoring.add(i);
+    if(scored||p.interception||(p.type==='scrimmage'&&Number(p.gain)>=20))key.add(i);
+  });
+  for(const d of sim.drives)if(d.reason==='turnover_on_downs'&&sim.plays[d.end])key.add(d.end);
+  return {scoring,key};
+}
+function matches(i){return filter==='all'||(filter==='scoring'?scoringAt.has(i):keyAt.has(i));}
+function playable(i,step){
+  let j=i;
+  do j+=step; while(j>=0&&j<simulation.plays.length&&!matches(j));
+  return j>=0&&j<simulation.plays.length?j:null;
+}
+function renderFilter(){
+  const counts={all:simulation.plays.length,scoring:scoringAt.size,key:keyAt.size};
+  $('filterbar').innerHTML=[['all','All plays'],['scoring','Scoring'],['key','Key plays']].map(([v,label])=>
+    '<button data-filter="'+v+'" class="'+(filter===v?'on':'')+'">'+label+'<span>'+counts[v]+'</span></button>').join('');
+}
+function setFilter(v){
+  filter=v;renderFilter();renderTimeline();
+  if(!matches(selected)){const j=playable(selected,1)??playable(selected,-1);if(j!=null)choose(j);}
+}
+function renderPlayButton(){
+  $('play').textContent=playing?'❚❚':'▶';
+  $('play').setAttribute('aria-label',playing?'Pause':'Play through the plays');
+  $('play').title=playing?'Pause (space)':'Play through the plays (space)';
+}
+function advance(){
+  dwell=0;
+  const j=playable(selected,1);
+  if(j!=null)choose(j);
+  else{playing=false;renderPlayButton();}
+}
+function startFrom(i){choose(i);playing=true;dwell=0;renderPlayButton();}
 function renderTimeline(){
-  $('timeline-head').textContent = simulation.plays.length+' events · '+simulation.drives.length+' drives';
-  const drives=new Map();
+  const drives=new Map();let shown=0;
   simulation.plays.forEach((p,i)=>{
+    if(!matches(i))return;
+    shown++;
     if(!drives.has(p.drive))drives.set(p.drive,{offense:p.offense,rows:[]});
     drives.get(p.drive).rows.push({p,i});
   });
+  $('timeline-head').textContent=shown+' of '+simulation.plays.length+' events · '+drives.size+' drives';
   $('timeline').innerHTML=[...drives].map(([n,d])=>
-    '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+' events</span></div>'+
+    '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+(d.rows.length===1?' event':' events')+'</span></div>'+
     d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+esc(p.action)+' · '+
-      (p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='field_goal'?'kick':'event')+'</span></button>').join('')+'</div>').join('');
-  $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>choose(Number(b.dataset.index))));
+      (p.touchdown?'touchdown':p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='field_goal'?'kick':'event')+'</span></button>').join('')+'</div>').join('');
+  $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
 function scoreAtPlay(p) {
   const score=p.scoreAfter || p.score || simulation.score;
@@ -131,7 +174,7 @@ function choose(idx){
   $('play-detail').innerHTML='<b>'+esc(p.action)+'</b> · '+(p.type==='scrimmage'?esc(p.gain)+' yards · ':'')+
     'Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
     '<br>'+esc(p.note||'')+(p.try?'<br>'+esc(p.try):'');
-  current=null;playSeconds=0;lastTick=null;animating=false;$('scrub').value='0';
+  current=null;playSeconds=0;lastTick=null;animating=false;dwell=0;$('scrub').value='0';
   if(p.type!=='scrimmage'){
     $('replay-type').textContent='Text-only event';
     $('players').innerHTML='<p class="note">No physical special-teams animation for this event.</p>';
@@ -165,21 +208,26 @@ function simulate(){
   try{
     const seed=$('seed').value.trim()||'1042';
     simulation=generateGame(match,books,seed);
-    selected=0;
-    renderTimeline();choose(0);
+    ({scoring:scoringAt,key:keyAt}=classify(simulation));
+    playing=false;
+    renderFilter();renderTimeline();choose(playable(-1,1)??0);renderPlayButton();
     status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
       ' drives · '+match.away+' '+simulation.score[match.away]+' / '+match.home+' '+simulation.score[match.home]+
       ' · experimental, not legally validated');
   }catch(e){status('Simulation failed: '+e.message,true);}
 }
 function animate(now){
+  if(lastTick===null)lastTick=now;
+  const dt=Math.min(.06,(now-lastTick)/1000);lastTick=now;
   if(current&&renderer){
-    if(lastTick===null)lastTick=now;
-    const dt=Math.min(.06,(now-lastTick)/1000);lastTick=now;
-    if(animating)playSeconds=Math.min(current.duration,playSeconds+dt*Number($('speed').value));
+    if(animating&&playing)playSeconds=Math.min(current.duration,playSeconds+dt*Number($('speed').value));
     renderer.draw(current.rec,current.rec.t0+playSeconds,dt);
     $('scrub').value=String(Math.round(1000*playSeconds/Math.max(.01,current.duration)));
     if(playSeconds>=current.duration)animating=false;
+  }
+  if(playing&&!animating){
+    dwell+=dt;
+    if(dwell>=(current?POST_CLIP_PAUSE:TEXT_EVENT_SECONDS))advance();
   }
   if(renderer){renderer.updateCamera(1/60,{dir:currentSelection?.play?.dir??1});renderer.render();}
   requestAnimationFrame(animate);
@@ -199,10 +247,12 @@ async function start(){
     $('simulate').disabled=false;$('again').disabled=false;
     $('simulate').addEventListener('click',simulate);
     $('again').addEventListener('click',()=>{$('seed').value=String((Number($('seed').value)||1042)+1);simulate();});
-    $('previous').addEventListener('click',()=>choose(selected-1));
-    $('next').addEventListener('click',()=>choose(selected+1));
-    $('play').addEventListener('click',()=>{playSeconds=0;lastTick=null;animating=true;});
-    $('scrub').addEventListener('input',()=>{if(current){playSeconds=current.duration*Number($('scrub').value)/1000;animating=false;}});
+    $('previous').addEventListener('click',()=>{const j=playable(selected,-1);if(j!=null)choose(j);});
+    $('next').addEventListener('click',()=>{const j=playable(selected,1);if(j!=null)choose(j);});
+    $('play').addEventListener('click',()=>{playing=!playing;dwell=0;renderPlayButton();});
+    $('filterbar').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(b)setFilter(b.dataset.filter);});
+    document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('play').click();}});
+    $('scrub').addEventListener('input',()=>{if(current){playing=false;renderPlayButton();playSeconds=current.duration*Number($('scrub').value)/1000;animating=playSeconds<current.duration;}});
     for(const b of document.querySelectorAll('.cams button[data-cam]'))b.addEventListener('click',()=>{
       for(const o of document.querySelectorAll('.cams button'))o.classList.toggle('on',o===b);
       renderer.setCamera(b.dataset.cam);

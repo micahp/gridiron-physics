@@ -64,7 +64,7 @@
   <section class="transport" aria-label="Playback">
     <div class="tp-row">
       <button id="previous" title="Previous play (previous snap)" aria-label="Previous play">‹</button>
-      <button id="play" title="Replay selected play" aria-label="Replay selected play">▶</button>
+      <button id="play" title="Play through the plays (space)" aria-label="Play through the plays">▶</button>
       <button id="next" title="Next play" aria-label="Next play">›</button>
       <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Scrub 3D replay">
       <select id="speed" aria-label="Playback speed">
@@ -92,6 +92,8 @@
     </nav>
     <div class="tab" id="tab-drives">
       <div class="sec" id="timeline-head">Drives and plays</div>
+      <div class="filterbar" id="filterbar" role="group" aria-label="Filter plays"></div>
+      <p class="note">Key plays: scoring plays, interceptions, 20+ yard gains and turnovers on downs. This is not ESPN's ranked list; the simulation has no win-probability model.</p>
       <div id="timeline"></div>
     </div>
     <div class="tab" id="tab-playbook" hidden>
