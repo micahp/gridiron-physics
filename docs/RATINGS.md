@@ -90,3 +90,11 @@ Each position has a weighted formula, e.g. `QB = 5·THA + 3·THP + 4·AWR + …`
 - No public data separates route running from QB/scheme. RTE leans on target share.
 - OL ratings are tools-and-pedigree estimates.
 - The Madden SPD curve is fan-measured; EA's exact mapping is private.
+
+## Patriots–Bears pregame snapshot
+
+`pipeline/build_matchup_snapshot.py` reuses `pipeline/ratings.py`'s `CombineModel`, `SkillModel`, `physical_profile`, `skill_ratings`, and `OvrCalibration`; it does not introduce a parallel rating formula. For the Oct. 22, 2026 snapshot, the builder sets the shared rating framework to include 2025 regular-season totals plus 2026 Weeks 1–6, then rates players on nflverse's 2026 Week 7 regular-season roster. The official Week 7 inactive list is applied after roster identity joins.
+
+The result is `data/teams/matchup-2026-10-22.json`. It carries stable GSIS IDs, team membership, listed position and depth-chart position, status/availability, all 35 attributes, physical parameters, combine measurables, imputed-drill names, and per-attribute evidence confidence. Week 7 depth-chart position has role labels but not a complete official ordering; demo unit selection is an explicitly labeled rating-based proxy. Roster changes versus the 2025 Week 18 roster are membership differences only, not claims about why a player moved.
+
+These values are estimated public-research ratings, not EA ratings or measured tracking. See [the frozen roster and ratings inputs](../data/teams/matchup-2026-10-22.json) and [the team/venue interface](MATCHUP-CONFIGURATION.md) for sources and availability handling. Rebuild with `python3 pipeline/build_matchup_snapshot.py` after fetching the pinned files.

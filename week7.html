@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gridiron Physics | Six-matchup simulator</title>
+<style>
+:root{font:14px/1.5 Inter,system-ui,-apple-system,sans-serif;color:#edf3fa;background:#08121b}
+*{box-sizing:border-box}body{margin:0}button,select,input{font:inherit;color:inherit;background:#122232;border:1px solid #32465b;border-radius:8px;padding:10px}
+button{cursor:pointer}button:hover{border-color:#73a9dd}button:focus-visible,select:focus-visible{outline:2px solid #71b3ff}
+button.primary{background:#2278bd;border-color:#3f95d7;font-weight:750}button:disabled{opacity:.55;cursor:default}
+header{padding:15px 24px;border-bottom:1px solid #2b3d4e;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{font-size:20px;font-weight:800;letter-spacing:.04em}.sub{color:#91a8bc;font-size:12px}
+.label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9eb2c6;font-weight:700}
+.status{max-width:650px;font-size:12px;padding:8px 12px;border:1px solid #344c61;border-radius:8px;color:#bfe0fa}
+main{max-width:1680px;margin:auto;padding:16px 22px;display:grid;grid-template-columns:minmax(0,1fr) 365px;gap:16px}
+.card{border:1px solid #2c4053;border-radius:12px;background:#101e2b;overflow:hidden}
+.toolbar{padding:13px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.control{display:grid;gap:4px;min-width:130px}.control label{font-size:11px;color:#a6bacd}
+.control select,.control input{width:100%}.match{min-width:195px}
+#field-shell{height:min(57vw,620px);min-height:390px;position:relative;background:#101b20}#field{width:100%;height:100%;display:block}
+.overfield{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;pointer-events:none;gap:12px}
+.pill{font-size:11px;font-weight:800;border:1px solid #465b6f;border-radius:6px;padding:7px 9px;background:#081522de}
+.scoreboard{display:flex;align-items:center;justify-content:center;gap:28px;padding:13px;border-top:1px solid #294057;border-bottom:1px solid #294057;background:#0c1826}
+.team{display:grid;gap:3px;text-align:center;min-width:80px}.team b{font-size:30px;line-height:1}.team span{font-size:12px;color:#b0c3d6}
+.scoremid{text-align:center;color:#aec5d9;font-size:12px}
+.transport{display:flex;align-items:center;gap:9px;padding:10px 16px;flex-wrap:wrap}
+.transport input{flex:1;min-width:100px;padding:0}.transport button{padding:7px 11px}.transport select{padding:7px}
+.panel{padding:15px}.panel h3{font-size:15px;margin:4px 0 10px}.panel p{color:#acbfd2;margin:5px 0 10px}
+.kv{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #233749;padding:7px 0}.kv span{color:#a5bbce}
+.sidebar{display:flex;flex-direction:column;gap:14px}.timeline{height:420px;overflow:auto;padding:8px}
+.drive-label{padding:12px 8px 5px;color:#8fa9bf;text-transform:uppercase;font-size:10px;font-weight:800;letter-spacing:.1em}
+.timeline button{display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%;margin:3px 0;padding:8px 9px;font-size:12px;gap:12px;border-color:transparent;background:transparent}
+.timeline button:hover,.timeline button.active{background:#1b3851;border-color:#326695}.tiny{font-size:10px;color:#93abc0}
+.players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:200px;overflow:auto}
+.players button{font-size:11px;padding:6px;text-align:left}.warn{color:#fbd8a1!important;font-size:12px}
+#player-detail{color:#afc3d6;font-size:12px;overflow-wrap:anywhere}#play-detail{font-size:13px;line-height:1.7}
+footer{max-width:1680px;margin:auto;padding:4px 22px 25px;color:#849ab0;font-size:12px}
+@media(max-width:1050px){main{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr}.timeline{height:300px}#field-shell{height:55vw}}
+@media(max-width:650px){main{padding:10px;gap:10px}.sidebar{display:flex}header{padding:12px}.toolbar{padding:10px}.control{flex:1;min-width:125px}#field-shell{height:54vh;min-height:290px}.scoreboard{gap:15px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">GRIDIRON PHYSICS <span style="color:#71c0ff">/ WEEK 7</span></div>
+<div class="sub">2026 upcoming matchups · 2025 play tendencies · projected 2026 rosters · 3D replay</div></div>
+<div class="status" id="status">Loading matchup data…</div></header>
+<main>
+<section>
+<div class="card">
+<div class="toolbar">
+<div class="control match"><label for="matchup">Matchup</label><select id="matchup"></select></div>
+<div class="control"><label for="seed">Simulation seed</label><input id="seed" value="1042"></div>
+<button class="primary" id="simulate" disabled>Simulate Game</button><button id="again" disabled>Simulate Again</button>
+<div class="control"><label for="camera">Camera</label><select id="camera"><option value="all22">All-22</option><option value="broadcast">Broadcast</option><option value="top">Chalkboard</option><option value="follow">Follow</option><option value="free">Free orbit</option></select></div>
+</div>
+<div id="field-shell"><canvas id="field" aria-label="3D hypothetical football play"></canvas>
+<div class="overfield"><span class="pill">HYPOTHETICAL · RESEARCH</span><span class="pill" id="replay-type">Physics reconstruction</span></div></div>
+<div class="scoreboard">
+<div class="team"><span id="away-name">AWAY</span><b id="away-score">0</b></div>
+<div class="scoremid"><div id="game-clock">Q1 · 15:00</div><div id="down-distance">1ST & 10</div><div id="possession">Possession pending</div></div>
+<div class="team"><span id="home-name">HOME</span><b id="home-score">0</b></div>
+</div>
+<div class="transport">
+<button id="previous" aria-label="Previous play">◀ Prev</button><button id="play" aria-label="Replay selected play">▶ Replay</button><button id="next" aria-label="Next play">Next ▶</button>
+<input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Scrub 3D replay">
+<label for="speed" class="tiny">Speed</label><select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+</div>
+</div>
+<div class="card panel"><div class="label">Current snap</div><h3 id="snap-title">Select a matchup to begin</h3><div id="play-detail">Loading...</div></div>
+</section>
+<aside class="sidebar">
+<div class="card"><div class="panel"><div class="label">Game timeline</div><h3 id="timeline-head">Drives and plays</h3></div><div id="timeline" class="timeline"></div></div>
+<div class="card panel"><div class="label">Playbook and source</div><h3 id="playbook-head">Team play calling</h3><div id="playbook-detail">Formation, frequency, source and inference will appear here.</div></div>
+<div class="card panel"><div class="label">On-field players</div><h3>2026 estimated ratings</h3><div id="players" class="players"></div><div id="player-detail" style="margin-top:10px">Select an athlete to inspect attributes.</div></div>
+<div class="card panel"><div class="label">Scope and limitations</div><p class="warn">This is an experimental historical-resampling simulation, not a validated NFL forecast. Outcomes and current-player motion are hypothetical.</p>
+<p class="tiny">2022 team movement research is not yet integrated. Current physics uses generic, outcome-constrained assignments. Official gameday availability is unverified for the six games. Kickoffs, penalties, timeouts and overtime are not simulated to full NFL rules.</p></div>
+</aside>
+</main>
+<footer>Powered by Gridiron Physics and 2025 nflverse tendencies. New games use generated play logs, not actual results from the upcoming 2026 games.</footer>
+<script type="module" src="./web/week7.js"></script>
+</body></html>

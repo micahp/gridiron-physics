@@ -1,0 +1,57 @@
+{
+  "schema_version": "gridiron.coaching-continuity.v1",
+  "as_of": "2026-10-22 pre-kickoff",
+  "continuity_model": {
+    "components": ["head_coach_identity", "coordinator_identity_by_side", "actual_play_caller_identity"],
+    "same_identity_score": 1,
+    "changed_identity_score": 0,
+    "unknown_identity_score": null,
+    "interpretation": "Continuity describes staff identity only; it is not proof of scheme continuity.",
+    "2025_prior_policy": "Retain observed_2025 frequencies unless a directly supported pregame 2026 usage adjustment has a traceable denominator and source. Do not infer scheme effects from coordinator titles.",
+    "2026_adjustments_applied": []
+  },
+  "teams": {
+    "NE": {
+      "name": "New England Patriots",
+      "head_coach": {"2025": "Mike Vrabel", "2026": "Mike Vrabel", "continuity_score": 1},
+      "offense": {
+        "coordinator": {"2025": "Josh McDaniels", "2026": "Josh McDaniels", "continuity_score": 1},
+        "play_caller": {"2025": "Josh McDaniels", "2026": "Josh McDaniels", "continuity_score": 1, "confidence": "high"}
+      },
+      "defense": {
+        "coordinator": {"2025": "Terrell Williams (original appointment); Zak Kuhr assumed the role during the season", "2026": "Zak Kuhr", "continuity_score": 0},
+        "play_caller": {"2025": "Zak Kuhr from Week 2 onward; Williams was the original DC", "2026": "Zak Kuhr", "continuity_score": 1, "confidence": "high"},
+        "interpretation": "The defensive coordinator title changed; Kuhr had called the defense for most of 2025 before promotion. This is caller continuity with a title change, not evidence for a new system."
+      },
+      "usage_adjustment": {"applied": false, "reason": "2026 Weeks 1-6 PBP is a descriptive comparison. The pinned PBP schema does not include play-action or motion, and no causal coaching effect is estimated."}
+    },
+    "CHI": {
+      "name": "Chicago Bears",
+      "head_coach": {"2025": "Ben Johnson", "2026": "Ben Johnson", "continuity_score": 1},
+      "offense": {
+        "coordinator": {"2025": "Declan Doyle", "2026": "Press Taylor", "continuity_score": 0},
+        "play_caller": {"2025": "Ben Johnson", "2026": "Ben Johnson", "continuity_score": 1, "confidence": "high"},
+        "interpretation": "Doyle did not call plays under Johnson in Chicago. Taylor's promotion changes the coordinator title; Johnson's play-caller continuity is the stronger scheme-continuity evidence."
+      },
+      "defense": {
+        "coordinator": {"2025": "Dennis Allen", "2026": "Dennis Allen", "continuity_score": 1},
+        "play_caller": {"2025": "Dennis Allen", "2026": "Dennis Allen", "continuity_score": 1, "confidence": "medium"},
+        "interpretation": "Chicago's 2025 official coverage identifies Allen as its defensive play caller. A Patriots.com Oct. 21, 2026 matchup preview also identifies Allen as a play caller; Chicago's official 2026 materials confirm his coordinator return but do not directly state his call assignment."
+      },
+      "usage_adjustment": {"applied": false, "reason": "2026 Weeks 1-6 PBP is a descriptive comparison only. Coordinator title change does not establish a scheme change, and there is no causal coach-effect model."}
+    }
+  },
+  "sources": {
+    "ne_2025_staff": "https://www.patriots.com/news/patriots-announce-new-additions-to-coaching-staff-x8810",
+    "ne_2025_kuhr_caller": "https://www.patriots.com/news/patriots-linebackers-coach-zak-kuhr-stepping-up-as-defense-s-primary-play-caller",
+    "ne_2026_staff": "https://www.patriots.com/team/coaches-roster/",
+    "ne_2026_offense_playcaller": "https://www.patriots.com/news/patriots-position-snapshot-quarterbacks-x3476",
+    "ne_2026_defense_caller": "https://www.patriots.com/team/coaches-roster/zak-kuhr",
+    "chi_2025_staff": "https://www.chicagobears.com/news/bears-add-to-coaching-staff",
+    "chi_2025_offense_playcaller": "https://www.chicagobears.com/news/ben-johnson-bears-offense-still-a-work-in-progress-caleb-williams-passing-running-backs",
+    "chi_2025_defense_playcaller": "https://www.chicagobears.com/news/how-c-j-gardner-johnson-the-energizer-bunny-helped-bears-complete-fourth-quarter-comeback-vs-giants",
+    "chi_2026_offense_continuity": "https://www.chicagobears.com/news/bears-hc-ben-johnson-believes-in-new-oc-running-backs-coach",
+    "chi_2026_staff": "https://www.chicagobears.com/news/chicago-bears-announce-coaching-staff-promotion-and-additions",
+    "chi_2026_defense_playcaller_secondary": "https://www.patriots.com/news/patriots-gameplan-maye-off-play-action-johnson-s-staples-and-key-matchups-in-thursday-night-football-vs-the-bears"
+  }
+}
