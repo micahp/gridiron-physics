@@ -18,8 +18,10 @@ const matchQuery = new URLSearchParams(location.search).get('game');
 const match = MATCHUPS.find(m=>m.id===matchQuery) || MATCHUPS[0];
 $('matchup').innerHTML = MATCHUPS.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.away+' @ '+m.home+' · '+m.day)+'</option>').join('');
 $('matchup').value = match.id;
-$('away-name').textContent = match.away;
-$('home-name').textContent = match.home;
+for (const [side, id] of [['away', match.away], ['home', match.home]]) {
+  $(side+'-name').textContent = id;
+  $('bug-'+side).style.setProperty('--team', teamStyle(id).color);
+}
 
 let snapshot, books, physicsGame, renderer, simulation, selected = 0, current = null, currentSelection = null;
 let animating = false, lastTick = null, playSeconds = 0;
@@ -36,23 +38,22 @@ function makeViewer(){
   physicsGame = {home:match.home,away:match.away,
     teams:{[match.home]:teamStyle(match.home),[match.away]:teamStyle(match.away)},
     players:playersMap(home,away)};
-  renderer = new Renderer($('field'),physicsGame,{displayFont:'Arial, sans-serif'});
-  renderer.setCamera('all22');renderer.resize();
+  renderer = new Renderer($('view'),physicsGame,{displayFont:'"Saira Condensed", "Arial Narrow", sans-serif'});
+  renderer.setCamera('broadcast');renderer.resize();
   window.addEventListener('resize',()=>renderer.resize());
-  $('field').addEventListener('click',e=>{const id=renderer.pick(e.clientX,e.clientY);if(id)inspectPlayer(id);});
+  $('view').addEventListener('click',e=>{const id=renderer.pick(e.clientX,e.clientY);if(id)inspectPlayer(id);});
 }
 function inspectPlayer(id){
   const p=physicsGame.players[id]; if(!p)return;
   renderer.select(id);
-  $('player-detail').innerHTML='<b>'+esc(p.name)+'</b> · '+esc(p.team)+' · '+esc(p.pos)+'<div>OVR estimate: '+esc(p.overall_estimate ?? 'not rated')+'</div>'+
-    '<div>'+Object.entries(p.ratings||{}).map(([k,v])=>esc(k)+' '+esc(v)).join(' · ')+'</div>'+
-    '<div class="tiny">Estimated public-research ratings, not EA-licensed player grades.</div>';
+  $('player-detail').innerHTML='<div class="card-h" style="grid-template-columns:1fr auto"><div><h2>'+esc(p.name)+'</h2><p>'+esc(p.team)+' · '+esc(p.pos)+' · OVR estimate</p></div><div class="big">'+esc(p.overall_estimate ?? 'n/r')+'</div></div>'+
+    '<div class="attrs" style="margin-top:12px">'+Object.entries(p.ratings||{}).map(([k,v])=>'<div class="attr est"><div class="top"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div></div>').join('')+'</div>'+
+    '<p class="note" style="margin-top:10px">Estimated public-research ratings, not EA-licensed player grades.</p>';
 }
 function drawPlayerList(demo) {
   const slots = [...Object.entries(demo.lineups.offense).map(([slot,id])=>({side:demo.play.off,slot,id})),
     ...Object.entries(demo.lineups.defense).map(([slot,id])=>({side:demo.play.def,slot,id}))];
-  $('players').innerHTML=slots.map(x=>{const p=physicsGame.players[x.id];return '<button data-player="'+esc(x.id)+'">'+
-    esc(x.slot)+' · '+esc(p?.name||'Unknown')+'<br><span class="tiny">'+esc(x.side)+' · '+esc(p?.overall_estimate??'—')+'</span></button>';}).join('');
+  $('players').innerHTML=slots.map(x=>{const p=physicsGame.players[x.id];return '<button class="rrow" data-player="'+esc(x.id)+'"><span class="pos">'+esc(x.slot)+'</span><span>'+esc(p?.name||'Unknown')+'</span><span class="pos">'+esc(x.side)+'</span><span class="ovr">'+esc(p?.overall_estimate??'—')+'</span></button>';}).join('');
   for(const b of $('players').querySelectorAll('[data-player]'))b.addEventListener('click',()=>inspectPlayer(b.dataset.player));
 }
 function showPlaybook(p,demo){
@@ -60,33 +61,37 @@ function showPlaybook(p,demo){
   const kind=p.kind, cat=prof.run_pass?.categories?.[kind], in2026=team.pregame_2026_comparison;
   $('playbook-head').textContent=p.offense+' offensive profile';
   $('playbook-detail').innerHTML=
-    '<div class="kv"><span>2025 charted plays</span><strong>'+esc(prof.eligible_scrimmage_plays)+'</strong></div>'+
-    '<div class="kv"><span>Historical '+esc(kind)+' share</span><strong>'+esc(cat?.rate == null?'—':(cat.rate*100).toFixed(1)+'%')+'</strong></div>'+
-    '<div class="kv"><span>Formation reference</span><strong>'+esc(p.formation||'Not charted')+'</strong></div>'+
-    '<div class="kv"><span>Candidate frequency</span><strong>'+esc(c?(c.count+'/'+c.denominator):'—')+'</strong></div>'+
-    '<p class="tiny">2026 Weeks 1–6 descriptive plays: '+esc(in2026?.eligible_plays??'not available')+
+    '<dl class="kv"><dt>2025 charted plays</dt><dd>'+esc(prof.eligible_scrimmage_plays)+'</dd>'+
+    '<dt>Historical '+esc(kind)+' share</dt><dd>'+esc(cat?.rate == null?'—':(cat.rate*100).toFixed(1)+'%')+'</dd>'+
+    '<dt>Formation reference</dt><dd>'+esc(p.formation||'Not charted')+'</dd>'+
+    '<dt>Candidate frequency</dt><dd>'+esc(c?(c.count+'/'+c.denominator):'—')+'</dd></dl>'+
+    '<p class="note">2026 Weeks 1–6 descriptive plays: '+esc(in2026?.eligible_plays??'not available')+
     '. The call is inferred from 2025 charted attributes, not an observed 2026 coach call.</p>'+
-    '<p class="tiny">2025 offense sample: '+esc(p.source_id?.game_id??'—')+' / '+esc(p.source_id?.play_id??'—')+
+    '<p class="note">2025 offense sample: '+esc(p.source_id?.game_id??'—')+' / '+esc(p.source_id?.play_id??'—')+
     '<br>2025 defense sample: '+esc(p.defense_source_id?.game_id??'—')+' / '+esc(p.defense_source_id?.play_id??'—')+'</p>';
 }
 function renderTimeline(){
   $('timeline-head').textContent = simulation.plays.length+' events · '+simulation.drives.length+' drives';
-  let last=0;
-  $('timeline').innerHTML=simulation.plays.map((p,i)=>{
-    let header='';
-    if(p.drive!==last){last=p.drive;header='<div class="drive-label">Drive '+p.drive+' · '+esc(p.offense)+'</div>';}
-    return header+'<button data-index="'+i+'" class="'+(i===selected?'active':'')+'"><span>Q'+p.quarter+' '+clock(p.clock)+' · '+esc(p.action)+'</span>'+
-      '<span class="tiny">'+(p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='field_goal'?'KICK':'EVENT')+'</span></button>';
-  }).join('');
+  const drives=new Map();
+  simulation.plays.forEach((p,i)=>{
+    if(!drives.has(p.drive))drives.set(p.drive,{offense:p.offense,rows:[]});
+    drives.get(p.drive).rows.push({p,i});
+  });
+  $('timeline').innerHTML=[...drives].map(([n,d])=>
+    '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+' events</span></div>'+
+    d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+esc(p.action)+' · '+
+      (p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='field_goal'?'kick':'event')+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>choose(Number(b.dataset.index))));
 }
 function scoreAtPlay(p) {
   const score=p.scoreAfter || p.score || simulation.score;
   $('away-score').textContent=score[match.away]??0;
   $('home-score').textContent=score[match.home]??0;
-  $('game-clock').textContent='Q'+p.quarter+' · '+clock(p.clock);
+  $('bug-q').textContent='Q'+p.quarter;
+  $('game-clock').textContent=clock(p.clock);
   $('down-distance').textContent=p.down+' & '+p.togo+' · '+(p.yl===50?'MIDFIELD':p.yl+' YDS TO GOAL');
-  $('possession').textContent=p.offense+' ball · Drive '+p.drive;
+  $('bug-away').classList.toggle('poss',p.offense===match.away);
+  $('bug-home').classList.toggle('poss',p.offense===match.home);
 }
 function makeSelected(p){
   // Adapter uses current 2026 roster, real 2025 playbook catalog, and LP-like chosen outcome.
@@ -129,7 +134,7 @@ function choose(idx){
   current=null;playSeconds=0;lastTick=null;animating=false;$('scrub').value='0';
   if(p.type!=='scrimmage'){
     $('replay-type').textContent='Text-only event';
-    $('players').innerHTML='<p class="tiny">No physical special-teams animation for this event.</p>';
+    $('players').innerHTML='<p class="note">No physical special-teams animation for this event.</p>';
     $('playbook-detail').textContent='Administrative/special-teams event; no observed tracking trajectory asserted.';
   }else{
     try{
@@ -153,8 +158,8 @@ function choose(idx){
       showPlaybook(p,null);
     }
   }
-  for(const b of $('timeline').querySelectorAll('button[data-index]'))b.classList.toggle('active',Number(b.dataset.index)===selected);
-  $('timeline').querySelector('button.active')?.scrollIntoView({block:'nearest'});
+  for(const b of $('timeline').querySelectorAll('button[data-index]'))b.classList.toggle('on',Number(b.dataset.index)===selected);
+  $('timeline').querySelector('.pl.on')?.scrollIntoView({block:'nearest'});
 }
 function simulate(){
   try{
@@ -198,7 +203,14 @@ async function start(){
     $('next').addEventListener('click',()=>choose(selected+1));
     $('play').addEventListener('click',()=>{playSeconds=0;lastTick=null;animating=true;});
     $('scrub').addEventListener('input',()=>{if(current){playSeconds=current.duration*Number($('scrub').value)/1000;animating=false;}});
-    $('camera').addEventListener('change',()=>renderer.setCamera($('camera').value));
+    for(const b of document.querySelectorAll('.cams button[data-cam]'))b.addEventListener('click',()=>{
+      for(const o of document.querySelectorAll('.cams button'))o.classList.toggle('on',o===b);
+      renderer.setCamera(b.dataset.cam);
+    });
+    for(const b of document.querySelectorAll('.tabs button[data-tab]'))b.addEventListener('click',()=>{
+      for(const o of document.querySelectorAll('.tabs button'))o.classList.toggle('on',o===b);
+      for(const t of document.querySelectorAll('.tab'))t.hidden=t.id!=='tab-'+b.dataset.tab;
+    });
     $('matchup').addEventListener('change',()=>{location.search='?game='+encodeURIComponent($('matchup').value);});
     simulate();
     requestAnimationFrame(animate);
