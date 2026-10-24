@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { MATCHUPS, generateGame } from '../web/week7-core.js';
+import { createPuntSampler, MATCHUPS, generateGame, seeded } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
 
@@ -56,4 +56,44 @@ for(const m of MATCHUPS){
     if(p.type==='scrimmage' || p.type==='punt' || p.type==='field_goal') assert.ok(p.yl>=1 && p.yl<=99, 'yardline in range at '+p.id);
   });
 }
+
+// Sample independently seeded punts to verify the empirical marginals and
+// the observed zero-distance/blocked-punt pairing without relying on a game
+// seed happening to include a block.
+const samplePunt = createPuntSampler(league.punts);
+const sampleN = 50000;
+const outcomeCounts = Object.fromEntries(Object.keys(league.punts.outcomes).map(k=>[k,0]));
+const distanceCounts = Object.fromEntries(Object.keys(league.punts.distance_yards)
+  .filter(k=>Number(k)>0).map(k=>[Number(k),0]));
+let blockedCount = 0;
+for(let i=0;i<sampleN;i++){
+  const punt = samplePunt(60,seeded('punt-sample-'+i));
+  outcomeCounts[punt.outcome]++;
+  if(punt.outcome==='blocked'){
+    blockedCount++;
+    assert.equal(punt.distance,0,'blocked outcome has zero recorded distance');
+  } else {
+    assert.ok(punt.distance>0,'non-blocked outcome has positive recorded distance');
+    distanceCounts[punt.distance]++;
+  }
+}
+const outcomeTotal=Object.values(league.punts.outcomes).reduce((n,v)=>n+v,0);
+const outcomeTv=0.5*Object.entries(league.punts.outcomes).reduce((n,[k,v])=>
+  n+Math.abs(outcomeCounts[k]/sampleN-v/outcomeTotal),0);
+assert.ok(outcomeTv<0.02,`punt outcome distribution drifted (TV=${outcomeTv})`);
+const positiveDistanceHist=Object.fromEntries(Object.entries(league.punts.distance_yards)
+  .filter(([yards])=>Number(yards)>0));
+const positiveTotal=Object.values(positiveDistanceHist).reduce((n,v)=>n+v,0);
+const sampledNonBlocked=sampleN-blockedCount;
+const distanceTv=0.5*Object.entries(positiveDistanceHist).reduce((n,[yards,v])=>
+  n+Math.abs(distanceCounts[Number(yards)]/sampledNonBlocked-v/positiveTotal),0);
+assert.ok(distanceTv<0.025,`non-blocked punt distance distribution drifted (TV=${distanceTv})`);
+const expectedBlocked=Number(league.punts.outcomes.blocked)/outcomeTotal;
+assert.ok(Math.abs(blockedCount/sampleN-expectedBlocked)<0.0011,
+  `blocked punt rate drifted (${blockedCount/sampleN} vs ${expectedBlocked})`);
+assert.throws(()=>createPuntSampler({
+  ...league.punts,
+  distance_yards:{...league.punts.distance_yards,'0':8},
+}),/punt table mismatch/,'reject a changed blocked/zero-distance relationship');
+
 console.log('PASS six matchup playbooks, deterministic 4-period experimental logs, explicit scope guards');

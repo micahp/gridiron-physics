@@ -14,6 +14,50 @@ const other = (a, b, id) => id === a ? b : a;
 const nDown = (o) => num(o?.attributes?.down);
 const nDist = (o) => num(o?.attributes?.ydstogo);
 const nYl = (o) => num(o?.attributes?.yardline_100);
+
+function sampleHist(hist, rand) {
+  const entries = Object.entries(hist).map(([k, v]) => [Number(k), v]);
+  const total = entries.reduce((n, [, v]) => n + v, 0);
+  let pick = rand() * total;
+  for (const [k, v] of entries) if ((pick -= v) < 0) return k;
+  return entries[entries.length - 1][0];
+}
+
+function pickCount(counts, rand) {
+  const entries = Object.entries(counts);
+  const total = entries.reduce((n, [, v]) => n + v, 0);
+  let pick = rand() * total;
+  for (const [k, v] of entries) if ((pick -= v) < 0) return k;
+  return entries[entries.length - 1][0];
+}
+
+export function createPuntSampler(puntTables) {
+  const zeroDistanceCount = Number(puntTables?.distance_yards?.['0'] ?? 0);
+  const blockedCount = Number(puntTables?.outcomes?.blocked ?? 0);
+  if (zeroDistanceCount !== blockedCount) {
+    throw new Error(`punt table mismatch: zero-yard rows=${zeroDistanceCount}, blocked outcomes=${blockedCount}`);
+  }
+  const nonBlockedPuntDistances = Object.fromEntries(
+    Object.entries(puntTables.distance_yards).filter(([yards, count]) => Number(yards) > 0 && count > 0),
+  );
+  if (!Object.keys(nonBlockedPuntDistances).length) throw new Error('missing positive-distance punts');
+
+  // Keep the empirical outcome and positive-distance marginals; couple only
+  // the observed blocked/zero-distance pair.
+  return (kickYl, rand) => {
+    const outcome = pickCount(puntTables.outcomes, rand);
+    const distance = outcome === 'blocked' ? 0 : Math.round(sampleHist(nonBlockedPuntDistances, rand));
+    if (outcome === 'blocked') {
+      // Zero is the recorded kick-distance value, not a modeled recovery path.
+      return { distance, outcome, return_yards:0, spot:clamp(100 - kickYl, 1, 99) };
+    }
+    const landing = kickYl - distance;
+    const ret = outcome === 'returned' ? sampleHist(puntTables.return_yards, rand) : 0;
+    const spot = outcome === 'touchback' ? 80 : clamp(100 - (landing + ret), 1, 99);
+    return { distance, outcome, return_yards:ret, spot };
+  };
+}
+
 export const MATCHUPS = [
   { id:'2026_07_CIN_BAL',away:'CIN',home:'BAL',ref:'2022_05_CIN_BAL',day:'Oct 25' },
   { id:'2026_07_MIA_NYJ',away:'MIA',home:'NYJ',ref:'2022_05_MIA_NYJ',day:'Oct 25' },
@@ -77,6 +121,7 @@ export function generateGame(match, books, seed = '1042', league = null) {
   if (!match || !books?.[match.home] || !books?.[match.away]) throw new Error('missing pregame matchup or playbook');
   if (!league?.kickoffs || !league?.punts || !league?.field_goals || !league?.extra_points) throw new Error('missing 2025 special-teams tables');
   const rand = seeded(match.id + '|' + seed);
+  const puntSampler = createPuntSampler(league.punts);
   const scores = { [match.home]:0, [match.away]:0 };
   const firstReceiver = rand() < 0.5 ? match.home : match.away;
   let offense = other(match.home, match.away, firstReceiver), quarter = 1, clock = 900, down = 1, togo = 10, yl = 75, drive = 1;
@@ -107,26 +152,12 @@ export function generateGame(match, books, seed = '1042', league = null) {
       note:'Illustrative scoring/restart. No special-teams physics claimed.'});
     turnover(label, 75);
   }
-  function sampleHist(hist) {
-    const entries = Object.entries(hist).map(([k, v]) => [Number(k), v]);
-    const total = entries.reduce((n, [, v]) => n + v, 0);
-    let pick = rand() * total;
-    for (const [k, v] of entries) if ((pick -= v) < 0) return k;
-    return entries[entries.length - 1][0];
-  }
-  function pickCount(counts) {
-    const entries = Object.entries(counts);
-    const total = entries.reduce((n, [, v]) => n + v, 0);
-    let pick = rand() * total;
-    for (const [k, v] of entries) if ((pick -= v) < 0) return k;
-    return entries[entries.length - 1][0];
-  }
   // Kickoff by the kicking team. The receiving spot is yards to the goal the receiver attacks:
   // touchback = own 25, out of bounds = own 35, otherwise own 25 plus the return.
   function kickoff(kicking, endReason) {
     if (endReason) finishDrive(endReason);
-    const outcome = pickCount(league.kickoffs.outcomes);
-    const ret = outcome === 'returned' ? sampleHist(league.kickoffs.return_yards) : 0;
+    const outcome = pickCount(league.kickoffs.outcomes, rand);
+    const ret = outcome === 'returned' ? sampleHist(league.kickoffs.return_yards, rand) : 0;
     const spot = outcome === 'out_of_bounds' ? 65 : clamp(75 - ret, 1, 99);
     offense = kicking;
     event({type:'kickoff',kind:'kickoff',action:'KICKOFF',outcome,return_yards:ret,points:0,
@@ -134,23 +165,9 @@ export function generateGame(match, books, seed = '1042', league = null) {
     offense = other(match.home, match.away, kicking);
     down = 1; togo = 10; yl = spot;
   }
-  // Punt from kickYl. The landing is measured from the receiving team's own goal, which is the
-  // goal the kicker attacks. A landing in the end zone is a touchback to the receiver's own 20.
-  function samplePunt(kickYl) {
-    const distance = Math.round(sampleHist(league.punts.distance_yards));
-    // A zero-yard punt is a block: the 9 zero-yard rows and the 9 blocked
-    // outcomes are the same punts, so keep them coupled instead of sampling
-    // distance and outcome independently.
-    if (distance <= 0) return { distance:0, outcome:'blocked', return_yards:0, spot:clamp(100 - kickYl, 1, 99) };
-    const landing = kickYl - distance;
-    if (landing <= 0) return { distance, outcome:'touchback', return_yards:0, spot:80 };
-    const cats = { ...league.punts.outcomes };
-    delete cats.touchback;
-    delete cats.blocked;
-    const outcome = pickCount(cats);
-    const ret = outcome === 'returned' ? sampleHist(league.punts.return_yards) : 0;
-    return { distance, outcome, return_yards:ret, spot:clamp(100 - (landing + ret), 1, 99) };
-  }
+  // Estimate the punt spot from kickYl and the sampled distance/return. The
+  // generator does not model the full kick trajectory or the outcome-distance
+  // relationship beyond the blocked/zero-distance pairing.
   function fieldGoalMake(distance) {
     const b = league.field_goals.buckets[distance < 30 ? 0 : distance < 40 ? 1 : distance < 50 ? 2 : distance < 60 ? 3 : 4];
     return b.attempts ? b.made / b.attempts : 0;
@@ -179,10 +196,12 @@ export function generateGame(match, books, seed = '1042', league = null) {
           if (good) { scores[offense] += 3; kickoff(offense, 'field_goal_good'); }
           else turnover('field_goal_miss',clamp(100-yl,20,95));
         } else {
-          const pt = samplePunt(yl);
+          const pt = puntSampler(yl, rand);
           event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff:kickClock,distance:pt.distance,
             outcome:pt.outcome,return_yards:pt.return_yards,
-            note:'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
+            note:pt.outcome==='blocked'
+              ? 'Blocked punt: zero is the recorded distance; recovery location is an illustrative spot assumption.'
+              : 'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
           clock -= kickClock;
           turnover('punt',pt.spot);
         }
