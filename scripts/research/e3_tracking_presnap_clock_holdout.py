@@ -374,7 +374,7 @@ def load_development_features(path: Path, by_lp):
     document = json.loads(path.read_text(encoding="utf-8"))
     if document.get("schema") != "gridiron.bdb2025.presnap_tracking_features.v1":
         raise ValueError("unexpected weeks 1-5 feature schema")
-    source_files = {int(item["week"]): item["sha256"] for item in document["source"]["tracking_source"]["files"]}
+    source_files = {int(item["week"]): item["sha256"] for item in document["source"]["tracking_files"]}
     if source_files != DEV_TRACKING_SHA256:
         raise ValueError("weeks 1-5 feature input tracking-file hashes differ from frozen values")
     output = {}
