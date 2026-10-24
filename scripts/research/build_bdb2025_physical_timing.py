@@ -259,7 +259,12 @@ def read_clock_audit(path: Path | None) -> dict[tuple[int, int], dict[str, str]]
     rows: dict[tuple[int, int], dict[str, str]] = {}
     with path.open(newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            rows[key_from_ids(row["bdb_game"], row["bdb_play"])] = row
+            key = key_from_ids(row["bdb_game"], row["bdb_play"])
+            if key in rows:
+                raise ValueError(f"duplicate BDB key in LP crosswalk: {key}")
+            if not row.get("lp_game_id", "").strip() or not row.get("lp_play_id", "").strip():
+                raise ValueError(f"missing LP nfl_pbp key for crosswalk row {key}")
+            rows[key] = row
     return rows
 
 
@@ -331,6 +336,17 @@ def main() -> None:
         } if carrier else {}
         kine = vec(carrier_frames, base["snap_frame"])
         audit_row = audit.get(key)
+        lp_game_id = audit_row["lp_game_id"].strip() if audit_row and audit_row["lp_game_id"].strip() else None
+        lp_play_id = int(float(audit_row["lp_play_id"])) if audit_row and audit_row["lp_play_id"].strip() else None
+        carrier_candidates = []
+        if carrier:
+            carrier_candidates.append({
+                "nfl_id": carrier,
+                "event_marker": carrier_event["event"],
+                "event_frame": carrier_event["frame"],
+                "distance_to_football_yards": carrier_distance,
+                "kinematics_at_snap": kine,
+            })
         audit_crosscheck = None
         if audit_row is not None:
             audit_metrics["matched_records"] += 1
@@ -351,6 +367,9 @@ def main() -> None:
 
         records.append({
             **base,
+            "lp_game_id": lp_game_id,
+            "lp_play_id": lp_play_id,
+            "lp_join_status": "matched" if lp_game_id is not None and lp_play_id is not None else "unmatched",
             "snap_frame_type": snap_marker["frame_type"] if snap_marker else None,
             "snap_event_frame": snap_marker["frame"] if snap_marker else None,
             "snap_event_time": snap_marker["time"] if snap_marker else None,
@@ -359,29 +378,37 @@ def main() -> None:
             "terminal_event_time": terminal_time.isoformat(sep=" ") if terminal_time else None,
             "terminal_event": terminal_event,
             "outcome_family_tracking_only": family,
+            "timing_status": "resolved" if elapsed is not None and family is not None else "unresolved_terminal",
             "elapsed_seconds": round(elapsed, 3) if elapsed is not None else None,
             "elapsed_frames": terminal_frame - base["snap_frame"] if terminal_frame is not None else None,
             "elapsed_seconds_from_frames": round((terminal_frame - base["snap_frame"]) * FRAME_SECONDS, 3) if terminal_frame is not None else None,
-            "ball_carrier_candidate_nfl_id": carrier,
-            "carrier_candidate_event": carrier_event["event"] if carrier_event else None,
-            "carrier_candidate_frame": carrier_event["frame"] if carrier_event else None,
-            "carrier_candidate_distance_to_football_yards": carrier_distance,
-            "carrier_candidate_kinematics_at_snap": kine,
+            "carrier_candidates": carrier_candidates,
             "clock_audit_crosscheck_only": audit_crosscheck,
         })
 
     audit_metrics["tracking_terminal_family_records"] = sum(bool(x["outcome_family_tracking_only"]) for x in records)
     audit_metrics["missing_snap_event_at_manifest_frame"] = sum(not x["snap_event_matches_manifest"] for x in records)
     audit_metrics["missing_terminal_event"] = sum(x["terminal_frame"] is None for x in records)
-    audit_metrics["carrier_candidate_available"] = sum(x["ball_carrier_candidate_nfl_id"] is not None for x in records)
-    audit_metrics["carrier_velocity_available"] = sum(x["carrier_candidate_kinematics_at_snap"]["speed_yards_per_second"] is not None for x in records)
-    audit_metrics["carrier_acceleration_available"] = sum(x["carrier_candidate_kinematics_at_snap"]["acceleration_magnitude_yards_per_second_squared"] is not None for x in records)
+    audit_metrics["lp_join_key_available"] = sum(x["lp_join_status"] == "matched" for x in records)
+    audit_metrics["resolved_and_lp_joinable"] = sum(x["timing_status"] == "resolved" and x["lp_join_status"] == "matched" for x in records)
+    audit_metrics["resolved_without_lp_join_key"] = sum(x["timing_status"] == "resolved" and x["lp_join_status"] != "matched" for x in records)
+    audit_metrics["carrier_candidate_available"] = sum(bool(x["carrier_candidates"]) for x in records)
+    audit_metrics["carrier_candidate_and_lp_joinable"] = sum(bool(x["carrier_candidates"]) and x["lp_join_status"] == "matched" for x in records)
+    audit_metrics["carrier_candidate_without_lp_join_key"] = sum(bool(x["carrier_candidates"]) and x["lp_join_status"] != "matched" for x in records)
+    audit_metrics["carrier_candidates_without_terminal_timing"] = sum(bool(x["carrier_candidates"]) and x["timing_status"] != "resolved" for x in records)
+    audit_metrics["carrier_velocity_available"] = sum(bool(x["carrier_candidates"]) and x["carrier_candidates"][0]["kinematics_at_snap"]["speed_yards_per_second"] is not None for x in records)
+    audit_metrics["carrier_acceleration_available"] = sum(bool(x["carrier_candidates"]) and x["carrier_candidates"][0]["kinematics_at_snap"]["acceleration_magnitude_yards_per_second_squared"] is not None for x in records)
+    lp_keys = [(x["lp_game_id"], x["lp_play_id"]) for x in records if x["lp_join_status"] == "matched"]
+    if len(lp_keys) != len(set(lp_keys)):
+        raise ValueError("LP nfl_pbp join keys are not unique in the eligible cohort")
 
     result = {
-        "schema": "gridiron.bdb2025.snap_physical_timing.v1",
+        "schema": "gridiron.bdb2025.snap_physical_timing.v2",
         "date": "2026-10-24",
         "cohort": {
             "key": ["game_id", "play_id"],
+            "key_source": "BDB tracking gameId/playId; these are retained as source identifiers",
+            "lp_nfl_pbp_join_key": ["lp_game_id", "lp_play_id"],
             "weeks": list(WEEKS),
             "manifest_rows": manifest_rows,
             "eligible_plays": len(cohort),
@@ -396,14 +423,14 @@ def main() -> None:
             "carrier_velocity_acceleration": "finite differences of the candidate player's tracking x/y at snap and the two immediately preceding frames; future coordinates are used only to identify the retrospective subject, never for reported kinematics or model inputs",
             "coordinate_units": "yards; velocity in yards/second; acceleration in yards/second^2",
             "percentiles": "nearest lower empirical order statistic at floor(p*(n-1)); median uses the standard sample median",
-            "lp_clock_audit": "optional retrospective cross-check and separate eight-class grouping only; it does not determine the primary tracking family or duration",
+            "lp_clock_audit": "supplies the exact BDB-to-LP game/play crosswalk when present; outcome labels, terminal event, and duration are separate retrospective checks and do not determine the primary tracking family or duration",
         },
         "limitations": [
             "Tracking is sampled at 10 Hz, so event timing is quantized and sub-frame motion is not observed.",
             "The terminal event marker is not a whistle timestamp.",
             "Tracking does not attribute clock stoppage or runoff to rules, officials, timeout use, or other stoppage causes.",
             "Ball-carrier identity is an unverified nearest-player-to-football inference at an event frame; candidate distances are retained, and only snap/pre-snap coordinates contribute to the reported kinematics.",
-            "Ball-carrier identity comes from a retrospective BDB label and is not an eligible prospective input; only the subject's snap and pre-snap tracking contributes to the reported kinematics.",
+            "Carrier candidate identity uses a retrospective event frame and is not a prospective input; only the candidate's snap and pre-snap tracking contributes to the reported kinematics.",
         ],
         "input_manifest": {
             "tracking_source": {
@@ -414,7 +441,7 @@ def main() -> None:
                 "rows_scanned_by_week": tracking_row_counts,
             },
             "canonical_cohort_manifest": {"path": str(args.cohort_manifest), "sha256": sha256_file(args.cohort_manifest)},
-            "lp_clock_audit_crosscheck_only": None if args.clock_audit_csv is None else {"path": str(args.clock_audit_csv), "sha256": sha256_file(args.clock_audit_csv)},
+            "lp_clock_audit_crosswalk_and_crosscheck": None if args.clock_audit_csv is None else {"path": str(args.clock_audit_csv), "sha256": sha256_file(args.clock_audit_csv)},
         },
         "coverage": dict(audit_metrics),
         "by_tracking_outcome_family": summarize(families),

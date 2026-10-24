@@ -4,9 +4,11 @@
 
 Built a play-level weeks 1–5 development cohort keyed by `game_id` and `play_id`, using LP's canonical snap-anchored manifest. It contains 9,289 eligible plays, selected from the 9,456-row manifest; each included play passed the all-22-player snap cohort criteria. Weeks 6–9 were not read or included.
 
-For every eligible play, the JSON records the manifest snap frame, matching tracking snap event/time, earliest resolved terminal event/frame/time, physical elapsed seconds, and a tracking-event terminal family. It also records a retrospective ball-carrier candidate and that player's snap velocity/acceleration when the candidate can be inferred from the tracked football.
+For every eligible play, the JSON records BDB IDs (`game_id`, `play_id`) plus the LP `nfl_pbp` composite key (`lp_game_id`, `lp_play_id`) where crosswalked, the manifest snap frame, matching tracking snap event/time, earliest resolved terminal event/frame/time, physical elapsed seconds, and a tracking-event terminal family. It also records a retrospective carrier-candidate list and candidate snap velocity/acceleration when the candidate can be inferred from the tracked football. The exact field contract and null semantics are in [the join contract](GRIDIRON-E3-PHYSICAL-TIMING-JOIN-CONTRACT-2026-10-24.md).
 
 The LP weeks 1–5 clock audit independently matches the tracking terminal event on all 9,066 overlapping eligible plays. Elapsed seconds match on 9,060; the remaining six overlap plays have no terminal event and remain unresolved. The 9,283 primary durations include plays outside the LP clock-audit join.
+
+The same crosswalk supplies unique LP keys for those 9,066 overlap plays. Of 9,283 resolved timing records, 9,060 have LP keys and 223 are partial for LP joining; of 7,576 carrier-candidate records, 7,386 have LP keys and 190 are partial. Six mapped records lack terminal timing, and five mapped carrier-candidate records also lack terminal timing.
 
 ## Primary tracking-only terminal-family durations
 
@@ -51,11 +53,13 @@ Velocity and acceleration are finite differences of the candidate's tracking `x/
 
 - Candidate identified and snap velocity/acceleration available: 7,576 plays.
 - Candidate unresolved: 1,713 plays. These are left null rather than guessed.
+- The candidate list has an LP play key on 7,386 of those 7,576 plays; 190 lack a crosswalk key.
 - Example: game `2022090800`, play `1009` selects player `52494` at the tracked handoff frame; the candidate is 0.522 yards from the football. Snap velocity and acceleration are zero in the two-frame finite-difference estimate.
 
 ## Coverage and audit checks
 
 - Eligible input keys: 9,289 unique `(game_id, play_id)` pairs; weeks 1–5 only.
+- LP `nfl_pbp` keys `(lp_game_id, lp_play_id)` are present and unique on 9,066 plays.
 - Manifest snap frame agrees with a raw tracking `SNAP` / `ball_snap` event for 9,289/9,289 plays.
 - A tracking terminal family and duration resolve for 9,283/9,289 plays.
 - On the LP clock-audit overlap, terminal event names match 9,066/9,066 records; elapsed seconds match 9,060/9,066 resolved comparisons.
@@ -77,7 +81,7 @@ The tracking mirror is `b00nk3r/NFL-Big-Data-Bowl-2025`, source commit `e28d3b25
 | BDB `tracking_week_3.csv` | `db2965ad61a5ad3895a8878a3754c3d3e4bf4b2dce75732c0b6b4d9d094887bb` |
 | BDB `tracking_week_4.csv` | `2e931bc9cd7f6126d6cd1e7eb71a3c711b748a0cece9d04dcace870e7298774f` |
 | BDB `tracking_week_5.csv` | `1c10136562b82f3e2d5405247540d890fc02f38804109bdaaba5e63bd816c3e9` |
-| LP weeks 1–5 clock-audit CSV (cross-check only) | `f030e9c6da3d69f1b1a9a15da0d5f14074639b1697f52d9e964eeabdb6f844c9` |
+| LP weeks 1–5 clock-audit CSV (LP key crosswalk and retrospective cross-check) | `f030e9c6da3d69f1b1a9a15da0d5f14074639b1697f52d9e964eeabdb6f844c9` |
 
 ## Limitations
 
@@ -99,8 +103,10 @@ python3 scripts/research/build_bdb2025_physical_timing.py \
   --cohort-manifest /path/to/bdb2025-snap-anchored-cohort-v1.csv \
   --clock-audit-csv /path/to/bdb2022-clock-audit-weeks1-5-2026-10-24.csv \
   --output docs/research/gridiron-e3-physical-timing-2026-10-24.json
+python3 test/test_e3_physical_timing_guard.py
+python3 test/verify_e3_physical_timing_repro.py
 ```
 
 Machine-readable output: `gridiron-e3-physical-timing-2026-10-24.json`
 
-Output SHA-256: `f7c2be638e720852e93e254144876cfac1e57ba71fcbe74425b156d58710a91b`
+Output SHA-256: `e885fd20be7fe54f429c31f98dff11425538d331e383c90527141dd78754a63b`
