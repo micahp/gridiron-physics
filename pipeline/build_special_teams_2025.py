@@ -12,6 +12,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -55,6 +56,7 @@ def main():
     ko_tb_zone = 0
     ko_tb_air = 0
     punts = kickoffs = 0
+    blocked_res = collections.Counter()
 
     with gzip.open(RAW, "rt") as f:
         for r in csv.DictReader(f):
@@ -72,6 +74,16 @@ def main():
             elif pt == "punt" and r["punt_attempt"] == "1" and r["kick_distance"]:
                 punts += 1
                 punt_dist[int(num(r["kick_distance"]))] += 1
+                if r["punt_blocked"] == "1":
+                    recovered = re.search(r"recovered by (\w+)-", r["desc"], re.I)
+                    if recovered:
+                        blocked_res["kicking_recovery" if recovered.group(1) == r["posteam"] else "receiving_recovery"] += 1
+                    elif "SAFETY" in r["desc"]:
+                        blocked_res["safety"] += 1
+                    elif "out of bounds" in r["desc"].lower():
+                        blocked_res["out_of_bounds"] += 1
+                    else:
+                        blocked_res["unclassified"] += 1
                 if r["touchback"] == "1":
                     cat = "touchback"
                 elif r["punt_fair_catch"] == "1":
@@ -118,7 +130,7 @@ def main():
         },
         "scope": "League-wide 2025 regular-season rates. Not team or kicker rates.",
         "field_goals": {
-            "distance_is_yards_to_goal_plus": 17,
+            "distance_is_yards_to_goal_plus": 18,
             "buckets": [
                 {"name": name, "attempts": fg[name]["attempts"], "made": fg[name]["made"]}
                 for name, _, _ in FG_BUCKETS
@@ -129,6 +141,7 @@ def main():
             "n": punts,
             "distance_yards": {str(k): v for k, v in sorted(punt_dist.items())},
             "outcomes": dict(punt_cats),
+            "blocked_resolution": {k: blocked_res[k] for k in ("receiving_recovery", "kicking_recovery", "out_of_bounds", "safety")},
             "return_yards": {str(k): v for k, v in sorted(punt_ret.items())},
         },
         "kickoffs": {
@@ -143,6 +156,8 @@ def main():
             },
         },
     }
+    if blocked_res["unclassified"]:
+        sys.exit(f"{blocked_res['unclassified']} blocked punts have no recognized resolution; refusing to write {OUT}")
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w") as f:
         json.dump(out, f, indent=1, sort_keys=False)

@@ -106,11 +106,11 @@ export function auditModule(core, league, book) {
     for(const p of plays){
       if(p.type!=='field_goal' || p.good) continue;
       if(p.restart_spot===undefined){ tag('missed_fg',`${p.id} missed field goal has no restart spot`); continue; }
-      // Rule 11-4-2(a)/(b) with the estimated kick spot: LOS plus a 7-yard
+      // Rule 11-4-2(a)/(b) with the estimated kick spot: LOS plus the 8-yard
       // holder offset, measured from the receivers' goal. The old LOS-as-spot
       // restart (receiverOwn = LOS) must be rejected.
       const tryYl=p.yl;                       // yards to the kicking team's goal = receivers' own number at the LOS
-      const kickSpotOwn=tryYl+7;
+      const kickSpotOwn=tryYl+8;
       const expected = kickSpotOwn<20 ? 80 : 100-kickSpotOwn;
       if(p.restart_spot!==expected)
         tag('missed_fg',`${p.id} restart spot ${p.restart_spot}, expected ${expected} (try at yl ${tryYl}, kick spot own ${kickSpotOwn})`);
@@ -129,7 +129,7 @@ export function auditModule(core, league, book) {
       if(p.type!=='punt') continue;
       if(p.outcome==='blocked' && p.distance!==0)
         tag('punt_contradiction',`${p.id} blocked punt has distance ${p.distance}`);
-      if(p.outcome==='blocked' && p.possession_resolution!=='generated_recovery_estimate')
+      if(p.outcome==='blocked' && !core.BLOCKED_PUNT_OUTCOMES.includes(p.possession_resolution))
         tag('punt_contradiction',`${p.id} blocked punt possession is unresolved or unlabelled`);
       if(p.outcome==='blocked' && p.possession_after!==p.recovery_team)
         tag('punt_contradiction',`${p.id} blocked punt possession ${p.possession_after} does not match recovery ${p.recovery_team}`);
@@ -148,6 +148,7 @@ export function auditModule(core, league, book) {
       }
       const pts=(p.touchdown?6:0)+(p.try?.startsWith('XP good')?1:0)+(p.type==='field_goal'&&p.good?3:0);
       if(pts) running[p.offense]+=pts;
+      if(p.possession_resolution==='safety') running[p.offense===m.home?m.away:m.home]+=2;
       // The score after the play.
       if(p.scoreAfter){
         for(const t of [m.home,m.away]){
@@ -215,29 +216,40 @@ export function auditKickoffSampler(core, league, book) {
   assert.throws(()=>createKickoffSampler({...league.kickoffs,touchback_spot:{landing_zone:0,in_air:0}}),
     /landing-zone split/,'reject a kickoff table with no touchback split');
 
-  // A blocked punt is not an automatic turnover: the recovering team must vary.
-  const rng=core.seeded('blocked-recovery');
-  const recovered=new Set();
-  for(let i=0;i<2000;i++) recovered.add(core.blockedPuntRecovery(rng));
-  assert.deepEqual([...recovered].sort(),['kicking','receiving'],
-    'blocked-punt recovery must generate both the receiving and kicking team');
+  // Blocked punts sample all four observed outcomes, and the sampler fails
+  // closed when the resolution table is missing or empty.
+  const rng=core.seeded('blocked-outcome');
+  const mixed={blocked_resolution:{receiving_recovery:7,kicking_recovery:2,out_of_bounds:1,safety:1}};
+  const sampled=new Set();
+  for(let i=0;i<4000;i++) sampled.add(core.sampleBlockedPuntOutcome(mixed,rng));
+  assert.deepEqual([...sampled].sort(),[...core.BLOCKED_PUNT_OUTCOMES].sort(),
+    'all four blocked-punt outcomes must be sampled');
+  assert.throws(()=>core.sampleBlockedPuntOutcome({},rng),/missing blocked-punt/,'missing table must fail closed');
+  assert.throws(()=>core.sampleBlockedPuntOutcome({blocked_resolution:{receiving_recovery:0,kicking_recovery:0,out_of_bounds:0,safety:0}},rng),
+    /no observations/,'an empty table must fail closed');
+  assert.ok(core.BLOCKED_PUNT_OUTCOMES.includes(core.sampleBlockedPuntOutcome(league.punts,rng)),
+    'observed 2025 table yields a known outcome');
 
-  // Generator call site: with a punt table that is all blocked, every punt goes
-  // through the recovery path, so both recovery outcomes and the next-play
-  // possession must be exercised in real generated games.
-  const allBlocked={...league,punts:{outcomes:{blocked:1},distance_yards:{'0':1,'40':1}}};
-  const seen=new Set();
-  for(const m of core.MATCHUPS.slice(0,2)) for(const seed of ['1042','1','2','3']){
-    const books={[m.home]:book(m.home),[m.away]:book(m.away)};
-    const g=core.generateGame(m,books,seed,allBlocked);
-    for(const p of g.plays){
-      if(p.type!=='punt') continue;
-      seen.add(p.recovery_team===p.offense?'kicking':'receiving');
-      const next=g.plays[p.index];
-      if(next && next.offense!==p.possession_after)
-        throw new Error(`${p.id} blocked punt possession ${p.possession_after} but next play offense is ${next.offense}`);
+  // Generator call site: a table with one outcome forces that outcome on every
+  // blocked punt, so each branch's possession and next-play ownership is checked
+  // in real generated games.
+  for(const outcome of core.BLOCKED_PUNT_OUTCOMES){
+    const only={...league,punts:{outcomes:{blocked:1},distance_yards:{'0':1,'40':1},
+      blocked_resolution:Object.fromEntries(core.BLOCKED_PUNT_OUTCOMES.map(k=>[k,k===outcome?1:0]))}};
+    const seen=new Set();
+    for(const m of core.MATCHUPS.slice(0,2)) for(const seed of ['1042','1','2','3']){
+      const books={[m.home]:book(m.home),[m.away]:book(m.away)};
+      const g=core.generateGame(m,books,seed,only);
+      for(const p of g.plays){
+        if(p.type!=='punt') continue;
+        seen.add(p.possession_resolution);
+        if(p.possession_resolution==='safety')
+          assert.equal(p.scoreAfter[p.possession_after],p.score[p.possession_after]+2,'safety scores 2 for the receiving team');
+        const next=g.plays[p.index];
+        if(next && next.quarter===p.quarter && next.offense!==p.possession_after)
+          throw new Error(`${p.id} blocked punt possession ${p.possession_after} but next play offense is ${next.offense}`);
+      }
     }
+    assert.deepEqual([...seen],[outcome],`generated blocked punts must all resolve as ${outcome}`);
   }
-  assert.deepEqual([...seen].sort(),['kicking','receiving'],
-    'generated blocked punts must include both recovering teams');
 }
