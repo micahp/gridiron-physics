@@ -127,7 +127,7 @@ function renderPlaybook(){
 const POST_CLIP_PAUSE=.9, TEXT_EVENT_SECONDS=2.5;
 let filter='all', playing=false, dwell=0, scoringAt=new Set(), keyAt=new Set();
 let rosterSlots=[], rosterTeam=match.away;
-let currentPlay=null, bookTeam=match.away;
+let currentPlay=null, bookTeam=match.away, league=null;
 function classify(sim){
   // Scoring: touchdowns and made field goals. Key: those, plus interceptions, 20+ yard gains and
   // turnovers on downs. There is no win-probability model here, so this is not ESPN's ranked list.
@@ -214,14 +214,14 @@ function renderTimeline(){
   simulation.plays.forEach((p,i)=>{
     if(!matches(i))return;
     shown++;
-    if(!drives.has(p.drive))drives.set(p.drive,{offense:p.offense,rows:[]});
+    if(!drives.has(p.drive))drives.set(p.drive,{offense:simulation.drives.find(d=>d.index===p.drive)?.offense??p.offense,rows:[]});
     drives.get(p.drive).rows.push({p,i});
   });
   $('timeline-head').textContent=shown+' of '+simulation.plays.length+' events · '+drives.size+' drives';
   $('timeline').innerHTML=[...drives].map(([n,d])=>
     '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+(d.rows.length===1?' event':' events')+'</span></div>'+
     d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+esc(p.action)+' · '+
-      (p.touchdown?'TOUCHDOWN':p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='field_goal'?'kick':'event')+'</span></button>').join('')+'</div>').join('');
+      (p.touchdown?'TOUCHDOWN':p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='punt'||p.type==='field_goal'?esc(p.distance)+' yd':p.type==='kickoff'?(p.outcome==='returned'?esc(p.return_yards)+' yd return':esc(p.outcome.replace('_',' '))):'event')+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
 function scoreAtPlay(p) {
@@ -306,7 +306,7 @@ function choose(idx){
 function simulate(){
   try{
     const seed=$('seed').value.trim()||'1042';
-    simulation=generateGame(match,books,seed);
+    simulation=generateGame(match,books,seed,league);
     ({scoring:scoringAt,key:keyAt}=classify(simulation));
     playing=false;
     renderFilter();renderTimeline();renderBox();choose(playable(-1,1)??0);renderPlayButton();
@@ -342,6 +342,9 @@ async function start(){
     books=Object.fromEntries((await Promise.all(bs.map(r=>r.json()))).map((v,i)=>[ids[i],v]));
     if(!ids.every(id=>snapshot.teams?.[id]?.roster?.length&&books[id]?.offense?.observed_plays?.length))
       throw new Error('Incomplete matchup roster or observed team playbook');
+    const lr=await fetch('./data/special_teams/2025-league.json');
+    if(!lr.ok)throw new Error('missing 2025 special-teams tables. Run python3 pipeline/build_special_teams_2025.py.');
+    league=await lr.json();
     makeViewer();
     $('simulate').disabled=false;$('again').disabled=false;
     $('simulate').addEventListener('click',simulate);

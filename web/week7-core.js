@@ -73,14 +73,16 @@ function playbookCandidate(book, kind, rand) {
   return a.find(c => (pick -= c.count) < 0) || a[a.length - 1];
 }
 
-export function generateGame(match, books, seed = '1042') {
+export function generateGame(match, books, seed = '1042', league = null) {
   if (!match || !books?.[match.home] || !books?.[match.away]) throw new Error('missing pregame matchup or playbook');
+  if (!league?.kickoffs || !league?.punts || !league?.field_goals || !league?.extra_points) throw new Error('missing 2025 special-teams tables');
   const rand = seeded(match.id + '|' + seed);
   const scores = { [match.home]:0, [match.away]:0 };
   const firstReceiver = rand() < 0.5 ? match.home : match.away;
-  let offense = firstReceiver, quarter = 1, clock = 900, down = 1, togo = 10, yl = 75, drive = 1;
+  let offense = other(match.home, match.away, firstReceiver), quarter = 1, clock = 900, down = 1, togo = 10, yl = 75, drive = 1;
   const plays = [], drives = [];
   let driveStart = 0, snaps = 0;
+  const xpRate = league.extra_points.good / Object.values(league.extra_points).reduce((n, v) => n + v, 0);
 
   function event(data) {
     const item = { id:match.id + ':' + seed + ':' + (plays.length + 1), index:plays.length + 1,
@@ -105,13 +107,55 @@ export function generateGame(match, books, seed = '1042') {
       note:'Illustrative scoring/restart. No special-teams physics claimed.'});
     turnover(label, 75);
   }
+  function sampleHist(hist) {
+    const entries = Object.entries(hist).map(([k, v]) => [Number(k), v]);
+    const total = entries.reduce((n, [, v]) => n + v, 0);
+    let pick = rand() * total;
+    for (const [k, v] of entries) if ((pick -= v) < 0) return k;
+    return entries[entries.length - 1][0];
+  }
+  function pickCount(counts) {
+    const entries = Object.entries(counts);
+    const total = entries.reduce((n, [, v]) => n + v, 0);
+    let pick = rand() * total;
+    for (const [k, v] of entries) if ((pick -= v) < 0) return k;
+    return entries[entries.length - 1][0];
+  }
+  // Kickoff by the kicking team. The receiving spot is yards to the goal the receiver attacks:
+  // touchback = own 25, out of bounds = own 35, otherwise own 25 plus the return.
+  function kickoff(kicking, endReason) {
+    if (endReason) finishDrive(endReason);
+    const outcome = pickCount(league.kickoffs.outcomes);
+    const ret = outcome === 'returned' ? sampleHist(league.kickoffs.return_yards) : 0;
+    const spot = outcome === 'out_of_bounds' ? 65 : clamp(75 - ret, 1, 99);
+    offense = kicking;
+    event({type:'kickoff',kind:'kickoff',action:'KICKOFF',outcome,return_yards:ret,points:0,
+      note:'Outcome and return from 2025 league kickoffs (nflverse). Kick flight is not simulated.'});
+    offense = other(match.home, match.away, kicking);
+    down = 1; togo = 10; yl = spot;
+  }
+  // Punt from kickYl. The landing is measured from the receiving team's own goal, which is the
+  // goal the kicker attacks. A landing in the end zone is a touchback to the receiver's own 20.
+  function samplePunt(kickYl) {
+    const distance = Math.round(sampleHist(league.punts.distance_yards));
+    const landing = kickYl - distance;
+    if (landing <= 0) return { distance, outcome:'touchback', return_yards:0, spot:80 };
+    const cats = { ...league.punts.outcomes };
+    delete cats.touchback;
+    const outcome = pickCount(cats);
+    const ret = outcome === 'returned' ? sampleHist(league.punts.return_yards) : 0;
+    return { distance, outcome, return_yards:ret, spot:clamp(100 - (landing + ret), 1, 99) };
+  }
+  function fieldGoalMake(distance) {
+    const b = league.field_goals.buckets[distance < 30 ? 0 : distance < 40 ? 1 : distance < 50 ? 2 : distance < 60 ? 3 : 4];
+    return b.attempts ? b.made / b.attempts : 0;
+  }
+  kickoff(offense, null);
   for (quarter = 1; quarter <= 4; quarter++) {
     clock = 900;
     if (quarter === 3) {
       if (driveStart < plays.length) finishDrive('halftime');
-      offense = other(match.home,match.away,firstReceiver);
-      down = 1; togo = 10; yl = 75;
-      driveStart = plays.length;
+      kickoff(firstReceiver, null);
     }
     let qSnaps = 0;
     while (clock > 0 && snaps < 220 && qSnaps < 80) {
@@ -121,18 +165,21 @@ export function generateGame(match, books, seed = '1042') {
       if (down === 4 && !lateGo) {
         const kickClock = clamp(Math.round(6 + rand() * 5), 1, clock);
         if (yl <= 40) {
-          const good = rand() < clamp(0.92 - Math.max(0, 40-yl)*0.013, 0.50, 0.92);
+          const distance = yl + 17;
+          const good = rand() < fieldGoalMake(distance);
           event({type:'field_goal',kind:'field_goal',action:good?'FIELD GOAL GOOD':'FIELD GOAL MISSED',
-            good,points:good?3:0,runoff:kickClock,
-            note:'Illustrative kick probability; no validated kick-distance or clock rules.'});
+            good,distance,points:good?3:0,runoff:kickClock,
+            note:'Make rate from 2025 league field goals by distance (nflverse). Kick flight is not simulated.'});
           clock -= kickClock;
-          if (good) scores[offense] += 3;
-          turnover(good?'field_goal_good':'field_goal_miss',good?75:clamp(100-yl,20,95));
+          if (good) { scores[offense] += 3; kickoff(offense, 'field_goal_good'); }
+          else turnover('field_goal_miss',clamp(100-yl,20,95));
         } else {
-          event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff:kickClock,
-            note:'Illustrative punt and receiving spot; not a tracked 2022 special-teams play.'});
+          const pt = samplePunt(yl);
+          event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff:kickClock,distance:pt.distance,
+            outcome:pt.outcome,return_yards:pt.return_yards,
+            note:'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
           clock -= kickClock;
-          turnover('punt',20+Math.floor(rand()*22));
+          turnover('punt',pt.spot);
         }
         continue;
       }
@@ -154,11 +201,11 @@ export function generateGame(match, books, seed = '1042') {
       if (touchdown) {
         scores[offense] += 6;
         item.scoreAfter = {...scores};
-        // Simplified conversion, disclosed as a statistical placeholder.
-        if (rand() < 0.958) { scores[offense] += 1; item.try='XP good (estimated)'; }
-        else item.try='XP missed (estimated)';
+        // Extra point at the 2025 league make rate. Kick flight is not simulated.
+        if (rand() < xpRate) { scores[offense] += 1; item.try='XP good (2025 league rate)'; }
+        else item.try='XP missed (2025 league rate)';
         item.scoreAfter = {...scores};
-        turnover('touchdown',75);
+        kickoff(offense,'touchdown');
       } else if (result.interception) {
         turnover('interception',clamp(100-yl,2,99));
       } else {
@@ -183,7 +230,7 @@ export function generateGame(match, books, seed = '1042') {
     score:{...scores}, plays, drives, source_play_count:snaps,
     warnings:['Not a validated NFL full-game simulator or betting forecast.',
       'Timeouts, penalties, play clock, onside kicks and overtime are unsupported.',
-      'Period transitions and special-teams plays use labeled approximations.',
+      'Kickoffs, punts and field goals use 2025 league rates, not kicker or team rates. Kick flight and returns are not simulated.',
       '2022 player tracking informs ongoing movement research; the trained team movement prior is not connected.'],
   };
 }
