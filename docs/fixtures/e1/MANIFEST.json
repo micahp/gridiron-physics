@@ -1,48 +1,48 @@
 {
   "lp_repo": "micahp/legendarypicks",
-  "lp_commit": "e621e83ef86b2255bd6622f32d691553ea2abaaf",
+  "lp_commit": "2248f7e1f9710daa3092104526ab6003a0fc3b18",
   "lp_branch": "feat/nfl-sequence-e1-2026-10-24",
-  "note": "Pinned copies of the ten E1 fixtures at LP head e621e83e (schema 1.1: null field endpoint at halftime and regulation; gap text corrected; boundary-2 census named). Supersedes the 641e1b2e pin.",
+  "note": "Pinned copies of the ten schema 1.1 E1 fixtures at LP head 2248f7e1. Play IDs follow the shared simulation_id:sequence contract; supersedes the e621e83e pin.",
   "fixtures": [
     {
       "file": "own25_q1_060-seed1-quarter_change_then_punt.json",
-      "sha256": "1e1ad6ea0682de35f3b7cf487298b639d1953bc9dcb9eecd403fc292aa3dc0ba"
+      "sha256": "cfc7dde25eb74785c8a67c24e235b291148c87e5530a377400789115bd8fe3a6"
     },
     {
       "file": "own25_q1_900-seed1-punt.json",
-      "sha256": "67ae504795361501a09ce3e94317073576fc443ca7c3a542a009526106189182"
+      "sha256": "2fac2155ce3fe4f996e20e8843eded9f0104092634ba894df3a00417805be6b1"
     },
     {
       "file": "own25_q1_900-seed12-turnover.json",
-      "sha256": "0f42f55bd616b298548a37c4c0d14b8a3647a6b86111ec17f4043e4e7dcc74c3"
+      "sha256": "24b891645680232d98109f21b380847f16b70528a7f528dd3a9dfb37a268cfc9"
     },
     {
       "file": "own25_q1_900-seed2-field_goal_attempt.json",
-      "sha256": "e76ab3e343d58e5c567a14e7bf92d6300200f68b8333afaed97c5c697eb18e79"
+      "sha256": "5dad02d0968ae0a33a762560365400e4180c11dab7f7a782ea8320f6103f4229"
     },
     {
       "file": "own25_q1_900-seed6-touchdown.json",
-      "sha256": "fcef11c09b2992c8c0cb602588d75a1de054df79aac9c0cd2b591b5ffca3537a"
+      "sha256": "51fdc5accd4e551ad9e92f4f69df13f284a022e00cbdde9acfd5176d68041f8b"
     },
     {
       "file": "own25_q2_120-seed1-halftime.json",
-      "sha256": "ee58944fbb86503f7ac8dd14202afa427c57872ed9eb167b0813c9aecbb95e62"
+      "sha256": "72f73bc3f3356147f8b6aa7e23fbcdc75842f172720867a03b9876667a1c0bd4"
     },
     {
       "file": "own25_q2_120-seed15-turnover_on_downs.json",
-      "sha256": "fac40496678828cdedf840c0a96d35075cfeaa22349068483418041b25b64002"
+      "sha256": "cb1fbc9cde6f03ac151401b69683e65edfe2d98d3f6387a768e81e2d796811dc"
     },
     {
       "file": "own25_q3_060-seed1-quarter_change_then_punt.json",
-      "sha256": "740e5c5335f349224808ae116148cf51d34f527029c1a093b93de6893e4764a0"
+      "sha256": "13205e1457dfd5faaa4c97ed34c8aeb412255e800d1cf4097a465ca649ea8478"
     },
     {
       "file": "own25_q4_150-seed1-end_of_regulation.json",
-      "sha256": "cecde97f37ede4a0c49028f18e165f0178ae2a36038dee04d1ffca95fb9e48a7"
+      "sha256": "d110d0504ad33a8114d1c257b50f16e9051e192d445d27082fa8f16359a69ecc"
     },
     {
       "file": "own5_q1_900-seed14-safety.json",
-      "sha256": "60e1acf10bba25634ecc82b70ca0afea4ece7b47d4fdf53c8e85221c419a1f60"
+      "sha256": "2b75ed742b5402d74dff96a99d157769e7a2a39896865e533076b34a966686b6"
     }
   ]
 }

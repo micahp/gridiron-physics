@@ -37,7 +37,7 @@ const EXPECTED = {
 };
 
 test('the ten fixtures match the pinned manifest hashes and LP commit', () => {
-  assert.equal(manifest.lp_commit, 'e621e83ef86b2255bd6622f32d691553ea2abaaf');
+  assert.equal(manifest.lp_commit, '2248f7e1f9710daa3092104526ab6003a0fc3b18');
   assert.equal(manifest.fixtures.length, 10);
   for (const entry of manifest.fixtures) {
     const hash = createHash('sha256').update(loadBytes(entry.file)).digest('hex');
@@ -176,9 +176,14 @@ test('rejects a broken state chain', () => {
 
 test('rejects duplicate play ids and out-of-order sequences', () => {
   const dup = mutated('own25_q1_900-seed6-touchdown.json', (r) => { r.plays[1].id = r.plays[0].id; });
-  assert.throws(() => adaptLpDriveRecord(dup), /must be e1-seed|duplicate play id/);
+  assert.throws(() => adaptLpDriveRecord(dup), /duplicate play id/);
   const order = mutated('own25_q1_900-seed6-touchdown.json', (r) => { r.plays[1].sequence = 3; r.plays[1].id = `${r.simulation_id}:3`; });
   assert.throws(() => adaptLpDriveRecord(order), /consecutive from 1/);
+});
+
+test('rejects play ids that do not follow simulation_id and sequence', () => {
+  const record = mutated('own25_q1_900-seed6-touchdown.json', (r) => { r.plays[0].id = `e1-seed${r.seed}:1`; });
+  assert.throws(() => adaptLpDriveRecord(record), /id must be .*:1/);
 });
 
 test('rejects a los that does not match its dir and yardline', () => {

@@ -7,12 +7,13 @@ physical replay. Nothing was merged, deployed or changed in the shared contract.
 ## Pinned sources
 
 - LP repository `micahp/legendarypicks`, branch `feat/nfl-sequence-e1-2026-10-24`, LP head
-  **`e621e83ef86b2255bd6622f32d691553ea2abaaf`**. The ten fixtures and their SHA-256 values are in
-  `docs/fixtures/e1/MANIFEST.json`. Each fixture was copied from that commit with `git show`.
-- This supersedes the pin at `641e1b2ea7882389778a14e6c52b58583f7e9917`, and the earlier pin at
-  `945754080086a1f9ae6dac06740041826395b017`. At `e621e83e` the fixtures are schema **1.1**: a halftime or
+  **`2248f7e1f9710daa3092104526ab6003a0fc3b18`**. The ten fixtures and their SHA-256 values are in
+  `docs/fixtures/e1/MANIFEST.json`. Each fixture was copied from that commit.
+- This supersedes the pin at `e621e83ef86b2255bd6622f32d691553ea2abaaf`, the pin at
+  `641e1b2ea7882389778a14e6c52b58583f7e9917`, and the earlier pin at
+  `945754080086a1f9ae6dac06740041826395b017`. The fixtures remain schema **1.1**: a halftime or
   end-of-regulation record has a null field endpoint, and its final play position is in
-  `outcome.final_play_yardline_100`. The gap text is corrected, and each drive summary carries `clock_clamped_plays`.
+  `outcome.final_play_yardline_100`. They also use the shared v1 play ID form `<simulation_id>:<sequence>`.
 
 ## What was built
 
@@ -27,7 +28,7 @@ The E0a page (`e0-record.html`), its adapter and its test are unchanged. The E0a
 
 ## Verification run
 
-- `node --test test/lp-drive-record-adapter.mjs`: **27 of 27 pass**. They cover:
+- `node --test test/lp-drive-record-adapter.mjs`: **28 of 28 pass**. They cover:
   - fixture hashes against the manifest;
   - all ten fixtures accepted, with the recorded drive summary equal to the recomputed one;
   - the eight terminal variants each reached by a fixture;
@@ -40,7 +41,7 @@ The E0a page (`e0-record.html`), its adapter and its test are unchanged. The E0a
   - schema 1.0 and 1.1 accepted, any other version rejected; a field endpoint at any terminal without a scrimmage state rejected;
   - the E0 record and the E1 record each rejected by the other viewer;
   - rejection of single-play and full-game modes, `valid_full_game: true`, `end_of_period`, unknown events, broken state chains,
-    duplicate or out-of-order IDs, wrong LOS, direction contradicting the authored start, drive-summary tampering, unverified
+    noncanonical, duplicate or out-of-order IDs, wrong LOS, direction contradicting the authored start, drive-summary tampering, unverified
     as-of sources, non-retrospective pools, participant identities and scores, punt yards, missing terminals, and a terminal
     before the last play.
 - `node test/lp-play-record-adapter.mjs` (E0a): passes.
@@ -64,8 +65,8 @@ The E1 document is a **drive** profile. It is not the E0a single-play envelope.
 
 These are reported, and the shared contract is not changed.
 
-1. **Play ID.** `GRIDIRON-CONTRACT-v1` says `play_id` is `<simulation_id>:<sequence>`. E1 uses `e1-seed<seed>:<sequence>`, because
-   its `simulation_id` is `e1-<start>-seed<seed>`. The viewer accepts the E1 form. The shared contract, as written, does not.
+1. **Play ID.** Resolved. The LP producer and all ten pinned fixtures now set `id` to
+   `<simulation_id>:<sequence>`, matching `GRIDIRON-CONTRACT-v1`. The viewer validates this relationship on every play.
 2. **Missing identity fields.** E1 has no `game_id`, no `teams` and no `start_state_source`. The shared contract requires
    `game_id` and `teams`. E1 has `start_state` with `source` instead.
 3. **Missing summary.** E1 has `drive` where the shared contract and E0a expect `summary`.
@@ -80,7 +81,7 @@ These are reported, and the shared contract is not changed.
 7. **Mode.** `drive_statistical_demo` is multi-play. E0a requires `single_play_statistical_demo` with exactly one play. The two
    are not interchangeable, and each viewer rejects the other.
 
-## LP-side defects (status at `e621e83e`)
+## LP-side defects (status at `2248f7e1`)
 
 - **A. Incorrect gap text: resolved.** No pinned fixture still says "penalties, quarter changes… not modelled". The
   not-modelled and modelled statements are now separate entries.
@@ -89,8 +90,8 @@ These are reported, and the shared contract is not changed.
 - **C. Half-end endpoint: resolved for schema 1.1.** At halftime and end of regulation `field.after` is null, and the final
   play position is in `outcome.final_play_yardline_100`. The viewer requires a null endpoint wherever there is no scrimmage
   state. It accepts schema `1.0` and `1.1`, and it rejects any other version.
-- **D. Undocumented ID scheme: open.** E1 play IDs are `e1-seed<seed>:<sequence>`, which does not match the shared contract's
-  `<simulation_id>:<sequence>`. See incompatibility 1.
+- **D. Play ID contract: resolved.** LP commit `2248f7e1` emits `<simulation_id>:<sequence>`; all ten pinned fixtures
+  pass that check, and the Gridiron adapter rejects any play ID that does not match its record's `simulation_id` and sequence.
 
 ## Not provided, and not invented
 
@@ -115,9 +116,8 @@ headless_shell --no-sandbox --disable-gpu --virtual-time-budget=20000 --dump-dom
   'http://127.0.0.1:<port>/e1-drive-record.html?fixture=own25_q2_120-seed1-halftime.json'
 ```
 
-## Requests to the LP owner
+## Coordination status
 
-1. Confirm `e621e83e` as the pin. Gridiron will repin again if LP moves the fixture bytes.
-2. Decide defect D: keep E1 as a separate drive profile with its own play-ID rule, or change `GRIDIRON-CONTRACT-v1`. Gridiron
-   will not change the shared contract without that decision.
-3. Confirm the schema 1.1 contract (null field endpoint at halftime and regulation), which is now the LP head.
+1. LP fixture pin updated to `2248f7e1` after the ID correction; hashes are fixed in the manifest.
+2. Defect D is resolved by using the existing shared ID rule. `GRIDIRON-CONTRACT-v1` remains unchanged.
+3. Schema 1.1 remains pinned: halftime and regulation ends have null field endpoints.

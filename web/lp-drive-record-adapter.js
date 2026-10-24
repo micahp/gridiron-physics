@@ -243,10 +243,11 @@ export function adaptLpDriveRecord(record) {
     const label = `plays[${index}]`;
     requireObject(play, label);
     if (play.sequence !== index + 1) fail(`${label}.sequence must be ${index + 1}; plays must be consecutive from 1`);
-    // E1 play ids are `e1-seed<seed>:<sequence>`; the simulation_id uses the start name, so it is not the prefix.
-    if (play.id !== `e1-seed${record.seed}:${play.sequence}`) fail(`${label}.id must be e1-seed${record.seed}:${play.sequence}`);
     if (ids.has(play.id)) fail(`duplicate play id: ${play.id}`);
     ids.add(play.id);
+    if (play.id !== `${record.simulation_id}:${play.sequence}`) {
+      fail(`${label}.id must be ${record.simulation_id}:${play.sequence}`);
+    }
     requireString(play.event_type, `${label}.event_type`);
     if (!DRIVE_EVENT_TYPES.includes(play.event_type)) fail(`${label}.event_type is unsupported: ${play.event_type}`);
     validateState(play.state_before, `${label}.state_before`);
