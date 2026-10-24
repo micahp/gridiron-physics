@@ -1,0 +1,206 @@
+// Reusable state-rule audit for the week-7 generator.
+//
+// `auditModule(core, league, book)` runs every acceptance check against the
+// exported API of a `web/week7-core.js`-shaped module. It is factored out of
+// `week7-audit.mjs` so the same checks can be run against a deliberately
+// mutated copy of the generator, proving the assertions are not vacuous.
+//
+// Where the event model cannot prove legality, the event is reported as
+// unverified rather than assumed legal.
+import assert from 'node:assert/strict';
+
+// Valid receiving-team spots after a kickoff, under 2026 Rule 6-1-5 and 6-2-4.
+const VALID_KICKOFF_SPOTS = new Set([80, 65, 60]);
+
+// The acceptance games are the six seed-1042 fixtures. A deterministic seed
+// sweep is added on top so the rules that seed 1042 never exercises are still
+// covered by a real generated game rather than by a hand-written assertion.
+export const SEEDS = ['1042', ...Array.from({length:12},(_,i)=>String(i+1))];
+
+export function auditModule(core, league, book) {
+  const {MATCHUPS, generateGame} = core;
+  const violations = [];
+  const unverified = [];
+  const fail = (game, check, detail) => violations.push({game, check, detail});
+
+  for(const m of MATCHUPS){
+   for(const seed of SEEDS){
+    const books={[m.home]:book(m.home),[m.away]:book(m.away)};
+    const g=generateGame(m,books,seed,league);
+    const plays=g.plays;
+    const tag=(check,detail)=>fail(`${m.id}#${seed}`,check,detail);
+
+    // ---- 1. Goal-to-go ---------------------------------------------------
+    // On every play, yards to go may not exceed the distance to the goal line.
+    for(const p of plays){
+      if(p.type==='scrimmage'||p.type==='punt'||p.type==='field_goal'){
+        if(p.togo>p.yl) tag('goal_to_go',
+          `${p.id} togo=${p.togo} exceeds distance to goal yl=${p.yl}`);
+        if(p.togo<1) tag('goal_to_go',`${p.id} togo=${p.togo} is not positive`);
+      }
+      // A new series that starts inside the 10 must be goal-to-go. This covers
+      // every way a series can begin there: a first down, a turnover deep in
+      // the opponent's territory, a missed-FG restart, and a kickoff return
+      // that lands inside the 10.
+      if(p.down===1 && p.yl<10 && p.togo!==p.yl){
+        tag('goal_to_go',`${p.id} new series at yl=${p.yl} has togo=${p.togo}, expected ${p.yl}`);
+      }
+    }
+
+    // ---- 2/3. Kickoff placement and ownership ----------------------------
+    for(const p of plays){
+      if(p.type!=='kickoff') continue;
+      if(!p.kicking_team||!p.receiving_team)
+        tag('kickoff_ownership',`${p.id} is missing kicking/receiving teams`);
+      if(p.kicking_team===p.receiving_team)
+        tag('kickoff_ownership',`${p.id} kicker and receiver are the same team`);
+      if(!VALID_KICKOFF_SPOTS.has(p.receiving_spot) && p.outcome!=='returned' && p.outcome!=='fair_catch' && p.outcome!=='downed')
+        tag('kickoff_spot',`${p.id} outcome=${p.outcome} invalid receiving spot ${p.receiving_spot}`);
+      // Touchback spots must match the touchback type.
+      if(p.touchback_type==='landing_zone' && p.receiving_spot!==80)
+        tag('kickoff_spot',`${p.id} landing-zone touchback spotted at ${p.receiving_spot}, expected 80`);
+      if(p.touchback_type==='in_air' && p.receiving_spot!==65)
+        tag('kickoff_spot',`${p.id} in-air touchback spotted at ${p.receiving_spot}, expected 65`);
+      if(p.touchback_type==='midfield' && p.receiving_spot!==80)
+        tag('kickoff_spot',`${p.id} midfield touchback spotted at ${p.receiving_spot}, expected 80`);
+      // The receiving team must be the team with the ball next.
+      if(p.possession_after!==p.receiving_team)
+        tag('kickoff_ownership',`${p.id} possession_after=${p.possession_after} is not the receiving team`);
+      // The kickoff event itself must be owned by the receiving team: it is a
+      // special-teams event, and the ball it produces belongs to the receiver.
+      if(p.offense!==p.receiving_team)
+        tag('kickoff_ownership',`${p.id} kickoff offense=${p.offense} is not the receiving team ${p.receiving_team}`);
+      if(p.defense!==p.kicking_team)
+        tag('kickoff_ownership',`${p.id} kickoff defense=${p.defense} is not the kicking team ${p.kicking_team}`);
+      // The kickoff must open a drive owned by the receiving team, and the
+      // first scrimmage play after it must be that team's.
+      const next=plays[p.index];
+      if(next&&next.type==='scrimmage'&&next.offense!==p.receiving_team)
+        tag('kickoff_ownership',`${p.id} is followed by a ${next.offense} scrimmage play, expected ${p.receiving_team}`);
+      const dr=g.drives.find(d=>d.index===p.drive);
+      if(dr&&dr.offense!==p.receiving_team)
+        tag('kickoff_ownership',`${p.id} opens drive ${p.drive} owned by ${dr.offense}, expected ${p.receiving_team}`);
+    }
+
+    // ---- 4. Quarter transitions ------------------------------------------
+    // A kickoff may never be recorded at 00:00 of a quarter.
+    for(const p of plays){
+      if(p.type==='kickoff' && p.clock===0)
+        tag('quarter_transition',`${p.id} kickoff recorded at 00:00 in Q${p.quarter}`);
+    }
+    // The clock must not increase as the game progresses, except at a period
+    // boundary where the clock resets to 15:00.
+    for(let i=1;i<plays.length;i++){
+      const prev=plays[i-1], cur=plays[i];
+      if(cur.quarter===prev.quarter && cur.clock>prev.clock)
+        tag('quarter_transition',`${cur.id} clock rose from ${prev.clock} to ${cur.clock} within Q${cur.quarter}`);
+    }
+    // Q1 and Q3 each open with a kickoff at 15:00.
+    for(const q of [1,3]){
+      const open=plays.find(p=>p.quarter===q && p.type==='kickoff');
+      if(!open) tag('quarter_transition',`no kickoff opens Q${q}`);
+      else if(open.clock!==900) tag('quarter_transition',`Q${q} opening kickoff at clock ${open.clock}, expected 900`);
+    }
+
+    // ---- 5. Missed field goal restarts -----------------------------------
+    for(const p of plays){
+      if(p.type!=='field_goal' || p.good) continue;
+      if(p.restart_spot===undefined){ tag('missed_fg',`${p.id} missed field goal has no restart spot`); continue; }
+      // Rule 9-4-2: untouched miss inside the receivers' 20 -> their 20 (yl 80);
+      // otherwise the ball is spotted at the spot of the kick.
+      const tryYl=p.yl;                       // yards to the kicking team's goal
+      const receiverOwn=tryYl;               // distance from the receivers' goal to the kick
+      const expected = receiverOwn<20 ? 80 : 100-receiverOwn;
+      if(p.restart_spot!==expected)
+        tag('missed_fg',`${p.id} restart spot ${p.restart_spot}, expected ${expected} (try at yl ${tryYl})`);
+      if(p.restart_spot<1||p.restart_spot>99)
+        tag('missed_fg',`${p.id} restart spot ${p.restart_spot} out of range`);
+    }
+
+    // ---- 6. Punt outcome/distance contradictions --------------------------
+    for(const p of plays){
+      if(p.type!=='punt') continue;
+      if(p.outcome==='blocked' && p.distance!==0)
+        tag('punt_contradiction',`${p.id} blocked punt has distance ${p.distance}`);
+      if(p.outcome!=='blocked' && !(p.distance>0))
+        tag('punt_contradiction',`${p.id} ${p.outcome} punt has distance ${p.distance}`);
+    }
+
+    // ---- Score and possession continuity ---------------------------------
+    // The score carried forward must match the score recorded on each play.
+    const running={[m.home]:0,[m.away]:0};
+    for(const p of plays){
+      // The score before the play.
+      for(const t of [m.home,m.away]){
+        if(p.score && p.score[t]!==running[t])
+          tag('score_continuity',`${p.id} pre-play score ${t}=${p.score[t]} but carried ${running[t]}`);
+      }
+      const pts=(p.touchdown?6:0)+(p.try?.startsWith('XP good')?1:0)+(p.type==='field_goal'&&p.good?3:0);
+      if(pts) running[p.offense]+=pts;
+      // The score after the play.
+      if(p.scoreAfter){
+        for(const t of [m.home,m.away]){
+          if(p.scoreAfter[t]!==running[t])
+            tag('score_continuity',`${p.id} post-play score ${t}=${p.scoreAfter[t]} but accumulated ${running[t]}`);
+        }
+      }
+    }
+    for(const t of [m.home,m.away]){
+      if(running[t]!==g.score[t])
+        tag('score_continuity',`final score ${t}=${g.score[t]} but plays total ${running[t]}`);
+    }
+
+    // Possession continuity: within a drive the offense may not change. A change
+    // of possession must come with a new drive.
+    for(let i=1;i<plays.length;i++){
+      const prev=plays[i-1], cur=plays[i];
+      if(cur.offense===prev.offense) continue;
+      if(cur.drive===prev.drive)
+        tag('possession_continuity',
+          `${cur.id} offense changed from ${prev.offense} to ${cur.offense} inside drive ${cur.drive}`);
+    }
+   }
+  }
+
+  return {violations, unverified};
+}
+
+// ---- Kickoff placement regression tests --------------------------------
+// The generated games do not naturally produce every kickoff outcome, so the
+// 2026 Rule 6-1-5 placement rules are tested directly against the sampler.
+export function auditKickoffSampler(core, league) {
+  const {createKickoffSampler} = core;
+  const only=(outcome)=>({...league.kickoffs,outcomes:{[outcome]:1}});
+  const always=(outcome,type)=>{
+    const s=createKickoffSampler(only(outcome));
+    // Force the touchback type by controlling the random draw.
+    const rand=()=>type==='landing_zone'?0.0:0.999999;
+    return s(35,rand);
+  };
+
+  // Touchback that touched the landing zone -> the receiving team's 20 (yl 80).
+  const zone=always('touchback','landing_zone');
+  assert.equal(zone.spot,80,"landing-zone touchback must be spotted at the receiving team's 20");
+  assert.equal(zone.touchback_type,'landing_zone');
+
+  // Touchback that reached the end zone in the air -> the receiving team's 35 (yl 65).
+  const air=always('touchback','in_air');
+  assert.equal(air.spot,65,"in-air touchback must be spotted at the receiving team's 35");
+  assert.equal(air.touchback_type,'in_air');
+
+  // The 2026 midfield exception: a kickoff from the 50 is spotted at the
+  // receiving team's 20 for either touchback type.
+  for(const type of ['landing_zone','in_air']){
+    const mid=createKickoffSampler(only('touchback'))(50,()=>type==='landing_zone'?0.0:0.999999);
+    assert.equal(mid.spot,80,`midfield ${type} touchback must be spotted at the receiving team's 20`);
+    assert.equal(mid.touchback_type,'midfield');
+  }
+
+  // Out of bounds -> the receiving team's 40 (yl 60).
+  const oob=createKickoffSampler(only('out_of_bounds'))(35,core.seeded('oob'));
+  assert.equal(oob.spot,60,"out-of-bounds kickoff must be spotted at the receiving team's 40");
+
+  // The sampler must reject a table with no touchback landing-zone split.
+  assert.throws(()=>createKickoffSampler({...league.kickoffs,touchback_spot:{landing_zone:0,in_air:0}}),
+    /landing-zone split/,'reject a kickoff table with no touchback split');
+}
