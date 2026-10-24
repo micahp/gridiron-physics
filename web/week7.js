@@ -70,23 +70,64 @@ function renderRoster(){
   $('players').innerHTML=rosterSlots.filter(x=>x.side===rosterTeam).map(x=>{const p=physicsGame.players[x.id];return '<button class="rrow" data-player="'+esc(x.id)+'"><span class="pos">'+esc(x.slot)+'</span><span>'+esc(p?.name||'Unknown')+'</span><span class="pos">'+esc(x.side)+'</span><span class="ovr">'+esc(p?.overall_estimate??'—')+'</span></button>';}).join('');
   for(const b of $('players').querySelectorAll('[data-player]'))b.addEventListener('click',()=>inspectPlayer(b.dataset.player));
 }
-function showPlaybook(p,demo){
-  const team=books[p.offense], prof=team.offense.profile, c=demo?.selection?.playbook_entry || p.candidate;
-  const kind=p.kind, cat=prof.run_pass?.categories?.[kind], in2026=team.pregame_2026_comparison;
-  $('playbook-head').textContent=p.offense+' offensive profile';
+const FORM_LABEL={'SHOTGUN':'Shotgun','UNDER CENTER':'Under center','PISTOL':'Pistol'};
+const GAP_LABEL={end:'End',tackle:'Tackle',guard:'Guard'};
+// Diagram geometry in a 160x96 box: line of scrimmage at y=60, offensive line at x=56..104.
+const DIAG_ALIGN={'UNDER CENTER':{qb:[80,68],rb:[80,84]},'SHOTGUN':{qb:[80,80],rb:[68,80]},'PISTOL':{qb:[80,72],rb:[80,88]}};
+const DIAG_GAP={end:{left:46,right:114},tackle:{left:62,right:98},guard:{left:74,right:86}};
+const DIAG_ZONE={left:44,middle:80,right:116};
+function cardLabel(c){
+  const a=c.attributes, f=FORM_LABEL[a.formation]||a.formation;
+  return c.action==='run'
+    ? f+' · '+GAP_LABEL[a.run_gap]+' '+a.run_location
+    : f+' · '+(a.pass_length==='deep'?'deep':'short')+' '+a.pass_location;
+}
+function playDiagram(c){
+  const a=c.attributes, al=DIAG_ALIGN[a.formation]||DIAG_ALIGN['UNDER CENTER'];
+  const ol=[56,68,80,92,104].map(x=>'<circle cx="'+x+'" cy="60" r="3.2" class="pd-ol"/>').join('');
+  let play, rb='';
+  if(c.action==='run'){
+    const gx=DIAG_GAP[a.run_gap][a.run_location];
+    rb='<circle cx="'+al.rb[0]+'" cy="'+al.rb[1]+'" r="3.6" class="pd-rb"/>';
+    play='<path d="M'+al.rb[0]+' '+al.rb[1]+' L'+gx+' 60 L'+gx+' 26" class="pd-run"/><circle cx="'+gx+'" cy="26" r="2.6" class="pd-end"/>';
+  }else{
+    const tx=DIAG_ZONE[a.pass_location], ty=a.pass_length==='deep'?18:40;
+    play='<path d="M'+al.qb[0]+' '+al.qb[1]+' L'+tx+' '+ty+'" class="pd-pass"/><circle cx="'+tx+'" cy="'+ty+'" r="4" class="pd-target"/>';
+  }
+  return '<svg viewBox="0 0 160 96" role="img" aria-label="'+esc(cardLabel(c))+'"><rect width="160" height="96" class="pd-field"/><line x1="6" x2="154" y1="60" y2="60" class="pd-los"/>'+
+    ol+'<circle cx="'+al.qb[0]+'" cy="'+al.qb[1]+'" r="3.6" class="pd-qb"/>'+rb+play+'</svg>';
+}
+function playCard(c){
+  const on=currentPlay?.playbook_candidate_id===c.candidate_id&&currentPlay.offense===bookTeam;
+  const [lo,hi]=c.ci95_wilson;
+  return '<div class="pcard'+(on?' on':'')+'">'+playDiagram(c)+'<div class="pc-t">'+esc(cardLabel(c))+'</div>'+
+    '<div class="pc-n">'+c.count+' of '+c.denominator+' · '+(c.rate*100).toFixed(1)+'%</div>'+
+    '<div class="pc-n">95% interval '+(lo*100).toFixed(1)+'–'+(hi*100).toFixed(1)+'%</div></div>';
+}
+function renderPlaybook(){
+  $('book-t').innerHTML=[match.away,match.home].map(t=>'<button data-team="'+esc(t)+'" class="'+(t===bookTeam?'on':'')+'">'+esc(t)+'</button>').join('');
+  const off=books[bookTeam].offense, prof=off.profile;
+  const pass=prof.run_pass?.categories?.pass?.rate;
+  const forms=Object.entries(prof.formation?.categories||{}).sort((a,b)=>b[1].count-a[1].count).slice(0,3)
+    .map(([k,v])=>(FORM_LABEL[k]||k)+' '+(v.rate*100).toFixed(0)+'%').join(' · ');
+  const snap=currentPlay?.type==='scrimmage'
+    ? (currentPlay.offense===bookTeam ? 'Highlighted: the card this snap drew from.' : 'The current snap is '+currentPlay.offense+' offense. Switch team to see its card.')
+    : 'The current event has no playbook card (kicks and punts).';
+  const group=(kind,label)=>{
+    const cs=[...off.play_candidates[kind].candidates].sort((a,b)=>b.count-a.count);
+    return '<div class="pgroup">'+label+' · '+cs.length+' combinations</div><div class="pgrid">'+cs.map(playCard).join('')+'</div>';
+  };
+  $('playbook-head').textContent=bookTeam+' · 2025 charted offense';
   $('playbook-detail').innerHTML=
-    '<dl class="kv"><dt>2025 charted plays</dt><dd>'+esc(prof.eligible_scrimmage_plays)+'</dd>'+
-    '<dt>Historical '+esc(kind)+' share</dt><dd>'+esc(cat?.rate == null?'—':(cat.rate*100).toFixed(1)+'%')+'</dd>'+
-    '<dt>Formation reference</dt><dd>'+esc(p.formation||'Not charted')+'</dd>'+
-    '<dt>Candidate frequency</dt><dd>'+esc(c?(c.count+'/'+c.denominator):'—')+'</dd></dl>'+
-    '<p class="note">2026 Weeks 1–6 descriptive plays: '+esc(in2026?.eligible_plays??'not available')+
-    '. The call is inferred from 2025 charted attributes, not an observed 2026 coach call.</p>'+
-    '<p class="note">2025 offense sample: '+esc(p.source_id?.game_id??'—')+' / '+esc(p.source_id?.play_id??'—')+
-    '<br>2025 defense sample: '+esc(p.defense_source_id?.game_id??'—')+' / '+esc(p.defense_source_id?.play_id??'—')+'</p>';
+    '<p class="note">'+esc(prof.eligible_scrimmage_plays)+' charted plays · '+(pass==null?'—':(pass*100).toFixed(1)+'%')+' pass · '+esc(forms)+'</p>'+
+    '<p class="note">'+esc(snap)+'</p>'+
+    group('run','Run')+group('pass','Pass')+
+    '<p class="note">Built from 2025 charted labels: formation, run gap or pass depth and side. Diagrams show the alignment and the run gap or pass target, not routes, blocks or coverage. These are tendencies, not play calls.</p>';
 }
 const POST_CLIP_PAUSE=.9, TEXT_EVENT_SECONDS=2.5;
 let filter='all', playing=false, dwell=0, scoringAt=new Set(), keyAt=new Set();
 let rosterSlots=[], rosterTeam=match.away;
+let currentPlay=null, bookTeam=match.away;
 function classify(sim){
   // Scoring: touchdowns and made field goals. Key: those, plus interceptions, 20+ yard gains and
   // turnovers on downs. There is no win-probability model here, so this is not ESPN's ranked list.
@@ -227,6 +268,7 @@ function choose(idx){
   if(!simulation)return;
   selected=Math.max(0,Math.min(simulation.plays.length-1,idx));
   const p=simulation.plays[selected];
+  currentPlay=p;
   scoreAtPlay(p); $('snap-title').textContent='Play '+p.index+' · '+p.action+' · '+p.offense;
   $('play-detail').innerHTML='<b>'+esc(p.action)+'</b> · '+(p.type==='scrimmage'?esc(p.gain)+' yards · ':'')+
     'Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
@@ -236,7 +278,6 @@ function choose(idx){
     $('replay-type').textContent='Text-only event';
     $('roster-t').hidden=true;rosterSlots=[];
     $('players').innerHTML='<p class="note">No physical special-teams animation for this event.</p>';
-    $('playbook-detail').textContent='Administrative/special-teams event; no observed tracking trajectory asserted.';
   }else{
     try{
       const demo=makeSelected(p);
@@ -251,16 +292,16 @@ function choose(idx){
       if(!result.record?.frames?.length)throw new Error('physics returned no frames');
       current={rec:result.record,duration:(result.record.frames.length-1)/result.record.hz};
       $('replay-type').textContent='22-player 3D · constrained';
-      drawPlayerList(demo);showPlaybook(p,demo);
+      drawPlayerList(demo);
       animating=true;
     }catch(e){
       $('replay-type').textContent='Physical animation unavailable';
       $('play-detail').innerHTML+='<p class="warn">3D unavailable for this play: '+esc(e.message)+'. The game log remains accessible.</p>';
-      showPlaybook(p,null);
     }
   }
   for(const b of $('timeline').querySelectorAll('button[data-index]'))b.classList.toggle('on',Number(b.dataset.index)===selected);
   $('timeline').querySelector('.pl.on')?.scrollIntoView({block:'nearest'});
+  renderPlaybook();
 }
 function simulate(){
   try{
@@ -320,6 +361,7 @@ async function start(){
       for(const t of document.querySelectorAll('.tab'))t.hidden=t.id!=='tab-'+b.dataset.tab;
     });
     $('roster-t').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;rosterTeam=b.dataset.team;renderRoster();});
+    $('book-t').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;bookTeam=b.dataset.team;renderPlaybook();});
     $('matchup').addEventListener('change',()=>{location.search='?game='+encodeURIComponent($('matchup').value);});
     simulate();
     requestAnimationFrame(animate);
