@@ -1,0 +1,50 @@
+{
+  "bdb_players": {
+    "path": "/root/nfl-tracking-data/bdb2025/code-data/players.csv",
+    "sha256": "dc2b5f923e84a16d789d999e88aea670b5495436ab88c24aef7b97b07d723626"
+  },
+  "bdb_plays": {
+    "path": "/root/nfl-tracking-data/bdb2025/code-data/plays.csv",
+    "sha256": "a103cbc3a1ddf7678cb6d77ea5f9919c4292b5d55c7876f7cad6cce3d62dca04"
+  },
+  "canonical_cohort": {
+    "path": "/root/lp-nfl-snap-benchmark/docs/research/bdb2025-snap-anchored-cohort-v1.csv",
+    "sha256": "45325d55103da9a7eca5139f3fda9506cb38d8f0af76d7753868c8f40fbd548a"
+  },
+  "chi_playbook": {
+    "path": "/root/gridiron-physics/data/playbooks/CHI-2025.json",
+    "sha256": "d4e589b0bf45ad319ece0d4b5b0a85eea78dc0edd25328cbaa23e6b911e81039"
+  },
+  "coaching_continuity": {
+    "path": "/root/gridiron-physics/data/teams/coaching-continuity-2026-10-22.json",
+    "sha256": "299ee43b7852333c843549b3f752e6ff136e772b70f5a17deb9f498a47ce4441"
+  },
+  "current_roster_snapshot": {
+    "path": "/root/gridiron-physics/data/teams/matchup-2026-10-22.json",
+    "sha256": "8d23885500e7c51cc1e21a2520baa959aa626524804910f461ecb3b5cd95c9ad"
+  },
+  "ne_playbook": {
+    "path": "/root/gridiron-physics/data/playbooks/NE-2025.json",
+    "sha256": "8a95fe75a4b0c9d3fce5b92649115387d9fcbe5d218a6dad828d96b28f206c19"
+  },
+  "tracking_week_1": {
+    "path": "/root/nfl-tracking-data/bdb2025/snap-anchored-v1/window_week_1.csv",
+    "sha256": "9209d77f247a3080a4b8f3a7dd5600336f9e129f5eaa574227445a3424a0659e"
+  },
+  "tracking_week_2": {
+    "path": "/root/nfl-tracking-data/bdb2025/snap-anchored-v1/window_week_2.csv",
+    "sha256": "ae807a89609096659eb9e142fbedab60a093052528578911cad57550a329e0df"
+  },
+  "tracking_week_3": {
+    "path": "/root/nfl-tracking-data/bdb2025/snap-anchored-v1/window_week_3.csv",
+    "sha256": "1f55568476ce298d2cce5b6da89bed0f2bc4eac8767542ed1e6ebdb0bfae1d3a"
+  },
+  "tracking_week_4": {
+    "path": "/root/nfl-tracking-data/bdb2025/snap-anchored-v1/window_week_4.csv",
+    "sha256": "cc7d436dce5c38f661fd9e530e0bbf7c1e295b29be3bd76327f4814f14b4e251"
+  },
+  "tracking_week_5": {
+    "path": "/root/nfl-tracking-data/bdb2025/snap-anchored-v1/window_week_5.csv",
+    "sha256": "a0ce6350e4a65d50ef23a95eba5a2fc9c39ea415f74229073ab34cff28248c92"
+  }
+}

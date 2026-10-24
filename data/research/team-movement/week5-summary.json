@@ -1,0 +1,133 @@
+{
+  "claims": [
+    "development-only movement metric",
+    "not a tackle or play-outcome prediction",
+    "team residuals are 2022 historical tendencies"
+  ],
+  "cohort_manifest_rows": 9456,
+  "eligible_input_plays_weeks_1_5": 9289,
+  "evaluation_week": 5,
+  "generated_scene_sha256": "cc911c7b443886644d3d39866ce5e9375d5ca9e30763532ad57a2352bbacb269",
+  "input_hashes": {
+    "bdb_players": "dc2b5f923e84a16d789d999e88aea670b5495436ab88c24aef7b97b07d723626",
+    "bdb_plays": "a103cbc3a1ddf7678cb6d77ea5f9919c4292b5d55c7876f7cad6cce3d62dca04",
+    "canonical_cohort": "45325d55103da9a7eca5139f3fda9506cb38d8f0af76d7753868c8f40fbd548a",
+    "chi_playbook": "d4e589b0bf45ad319ece0d4b5b0a85eea78dc0edd25328cbaa23e6b911e81039",
+    "coaching_continuity": "299ee43b7852333c843549b3f752e6ff136e772b70f5a17deb9f498a47ce4441",
+    "current_roster_snapshot": "8d23885500e7c51cc1e21a2520baa959aa626524804910f461ecb3b5cd95c9ad",
+    "ne_playbook": "8a95fe75a4b0c9d3fce5b92649115387d9fcbe5d218a6dad828d96b28f206c19",
+    "tracking_week_1": "9209d77f247a3080a4b8f3a7dd5600336f9e129f5eaa574227445a3424a0659e",
+    "tracking_week_2": "ae807a89609096659eb9e142fbedab60a093052528578911cad57550a329e0df",
+    "tracking_week_3": "1f55568476ce298d2cce5b6da89bed0f2bc4eac8767542ed1e6ebdb0bfae1d3a",
+    "tracking_week_4": "cc7d436dce5c38f661fd9e530e0bbf7c1e295b29be3bd76327f4814f14b4e251",
+    "tracking_week_5": "a0ce6350e4a65d50ef23a95eba5a2fc9c39ea415f74229073ab34cff28248c92"
+  },
+  "mean_per_play_error_m": {
+    "0.5s": {
+      "constant_acceleration": 0.2676613773666214,
+      "role_prior": 0.2163462787879664,
+      "role_team": 0.21559404964782944
+    },
+    "1.0s": {
+      "constant_acceleration": 1.0711406017262535,
+      "role_prior": 0.7917027683252124,
+      "role_team": 0.7894255033332873
+    }
+  },
+  "paired_differences_role_minus_constant_acceleration_m": {
+    "0.5s": {
+      "game_bootstrap_95": [
+        -0.060756,
+        -0.040802
+      ],
+      "mean": -0.051315
+    },
+    "1.0s": {
+      "game_bootstrap_95": [
+        -0.303866,
+        -0.253366
+      ],
+      "mean": -0.279438
+    }
+  },
+  "paired_differences_team_minus_constant_acceleration_m": {
+    "0.5s": {
+      "game_bootstrap_95": [
+        -0.061738,
+        -0.041497
+      ],
+      "mean": -0.052067
+    },
+    "1.0s": {
+      "game_bootstrap_95": [
+        -0.306168,
+        -0.255784
+      ],
+      "mean": -0.281715
+    }
+  },
+  "paired_differences_team_minus_role_prior_m": {
+    "0.5s": {
+      "game_bootstrap_95": [
+        -0.001395,
+        -0.00016
+      ],
+      "mean": -0.000752
+    },
+    "1.0s": {
+      "game_bootstrap_95": [
+        -0.00386,
+        -0.000831
+      ],
+      "mean": -0.002277
+    }
+  },
+  "schema_version": "gridiron.team-movement-prior-eval.v1",
+  "skipped": {
+    "week1:missing_snap_available_history": 9,
+    "week2:missing_snap_available_history": 7,
+    "week3:missing_snap_available_history": 12,
+    "week4:missing_snap_available_history": 5,
+    "week5:missing_snap_available_history": 8
+  },
+  "training_weeks": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "week5_scored_plays": 1859,
+  "week_counts": {
+    "1": {
+      "eligible_rows_missing_from_window": 0,
+      "eligible_rows_seen": 1913,
+      "scorable_22_player_plays": 1904,
+      "snap_input_22_player_plays": 1904
+    },
+    "2": {
+      "eligible_rows_missing_from_window": 0,
+      "eligible_rows_seen": 1782,
+      "scorable_22_player_plays": 1775,
+      "snap_input_22_player_plays": 1775
+    },
+    "3": {
+      "eligible_rows_missing_from_window": 0,
+      "eligible_rows_seen": 1925,
+      "scorable_22_player_plays": 1913,
+      "snap_input_22_player_plays": 1913
+    },
+    "4": {
+      "eligible_rows_missing_from_window": 0,
+      "eligible_rows_seen": 1802,
+      "scorable_22_player_plays": 1797,
+      "snap_input_22_player_plays": 1797
+    },
+    "5": {
+      "eligible_rows_missing_from_window": 0,
+      "eligible_rows_seen": 1867,
+      "scorable_22_player_plays": 1859,
+      "snap_input_22_player_plays": 1859
+    }
+  },
+  "weeks_6_9_read": false
+}

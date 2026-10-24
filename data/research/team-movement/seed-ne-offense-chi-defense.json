@@ -1,0 +1,3908 @@
+{
+  "ball": {
+    "future_trajectory": null,
+    "note": "The BDB source tracks the football, but this seed only uses its snap position and does not model its future path.",
+    "snap_position_m": [
+      0,
+      0
+    ]
+  },
+  "continuity": {
+    "CHI_2025_2026_offense_coordinator_identity_score": 0,
+    "CHI_2025_2026_play_caller_identity_score": 1,
+    "NE_2025_2026_offense_coordinator_identity_score": 1,
+    "NE_2025_2026_play_caller_identity_score": 1,
+    "use_limit": "These values bridge 2025 to 2026 only; they do not establish 2022-to-2026 movement-system continuity."
+  },
+  "coordinate_frame": {
+    "origin": "snap ball",
+    "units": "meters",
+    "x": "offense-relative longitudinal meters",
+    "y": "lateral meters"
+  },
+  "execution_limit": "The role-prior waypoints are passed through the unchanged 120 Hz Player.locomote() using each current player's physics profile. Other-player geometry is only snap-time nearest-opponent context; there is no post-snap assignment response or collision handling. Madden-style ratings are retained as current roster attributes, but no 2022-to-2026 ratings-to-motion mapping is calibrated.",
+  "historical_movement_source": {
+    "CHI_defense_template_source_team": "LA",
+    "NE_offense_template_source_team": "NE",
+    "movement_prior": "league role/context residual; historical NE/CHI team residual shown but withheld from current generated paths",
+    "season": 2022,
+    "template_use": "snap alignment and pre-snap motion history only; a non-CHI defense template is a league-role reconstruction",
+    "weeks": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "lineup_selection": {
+    "claim_limit": "synthetic lineup and slot assignment; the snapshot does not identify a verified starting 22 or assignment sheet",
+    "defense_personnel": "4-2-5",
+    "offense_personnel": "113",
+    "rule": "available roster players with the highest estimated overall within the required positional role counts",
+    "within_role_slot_order": "current players ranked by estimated overall are mapped in order to historical template players sorted by lateral alignment"
+  },
+  "play_selection": {
+    "action_family": "pass",
+    "attributes": {
+      "formation": "SHOTGUN",
+      "pass_length": "short",
+      "pass_location": "left",
+      "shotgun": true
+    },
+    "candidate_id": "observed-2025-pass-shotgun-true-short-left-bcd9721e51",
+    "claim_limit": "Combination of recorded labels; not evidence of a literal call, route, blocking scheme, or full alignment.",
+    "count": 131,
+    "defensive_personnel_code": "4-2-5",
+    "defensive_team": "CHI",
+    "denominator": 551,
+    "offensive_personnel_code": "113",
+    "source": "observed_2025 team playbook profile",
+    "team": "NE"
+  },
+  "players": [
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "QB",
+      "id": "00-0039851",
+      "initial_velocity_mps": [
+        -0.0366,
+        0.0183
+      ],
+      "name": "Drake Maye",
+      "physics": {
+        "alat": 7.48,
+        "drive": 705,
+        "f0": 1067,
+        "height": 1.93,
+        "mass": 102.1,
+        "radius": 0.315,
+        "reach": 3.242,
+        "tau": 0.885,
+        "vmax": 8.884
+      },
+      "position": "QB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -4.316,
+            -0.32
+          ],
+          "historical_team_prior_m_not_applied": [
+            -4.4525,
+            -0.3246
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -4.4408,
+            -0.3189
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -4.3617,
+            -0.3109
+          ],
+          "historical_team_prior_m_not_applied": [
+            -5.1629,
+            -0.3295
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -5.0343,
+            -0.3039
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 0,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.81,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.81,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 0,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 0,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.81,
+        "THP": 0.83,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 70,
+        "AGI": 75,
+        "AWR": 76,
+        "BCV": 74,
+        "BSH": 48,
+        "BTK": 48,
+        "CAR": 70,
+        "CIT": 48,
+        "CTH": 48,
+        "ELU": 75,
+        "FMV": 48,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 69,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 48,
+        "PBK": 48,
+        "PMV": 48,
+        "POW": 48,
+        "PRC": 73,
+        "PRS": 48,
+        "PUR": 48,
+        "RBK": 48,
+        "RET": 48,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 74,
+        "STA": 92,
+        "STR": 54,
+        "TAK": 48,
+        "THA": 91,
+        "THP": 93,
+        "TRK": 48,
+        "ZCV": 48
+      },
+      "role": "QB",
+      "side": "offense",
+      "snap": [
+        -4.2885365581055055,
+        -0.32918413952637593
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "53444",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.48,
+          "drive": 705,
+          "f0": 1067,
+          "height": 1.93,
+          "mass": 102.1,
+          "radius": 0.315,
+          "reach": 3.242,
+          "tau": 0.885,
+          "vmax": 8.884
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -4.2885,
+            -0.3292
+          ],
+          "0.5s": [
+            -4.4043,
+            -0.3215
+          ],
+          "1.0s": [
+            -4.8954,
+            -0.3073
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "RB",
+      "id": "00-0040734",
+      "initial_velocity_mps": [
+        0,
+        0
+      ],
+      "name": "TreVeyon Henderson",
+      "physics": {
+        "alat": 7.86,
+        "drive": 623,
+        "f0": 1143,
+        "height": 1.778,
+        "mass": 91.6,
+        "radius": 0.305,
+        "reach": 3.196,
+        "tau": 0.809,
+        "vmax": 9.687
+      },
+      "position": "RB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -4.7686,
+            1.8014
+          ],
+          "historical_team_prior_m_not_applied": [
+            -4.7543,
+            1.8194
+          ],
+          "historical_team_shrinkage_weight": 0.6575,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -4.7381,
+            1.8037
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -4.7549,
+            1.8288
+          ],
+          "historical_team_prior_m_not_applied": [
+            -4.6339,
+            1.8974
+          ],
+          "historical_team_shrinkage_weight": 0.6575,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -4.5459,
+            1.8479
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.79,
+        "BSH": 0.15,
+        "BTK": 0.77,
+        "CAR": 0.66,
+        "CIT": 0.15,
+        "CTH": 0.66,
+        "ELU": 0.76,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 85,
+        "AGI": 79,
+        "AWR": 68,
+        "BCV": 78,
+        "BSH": 48,
+        "BTK": 72,
+        "CAR": 77,
+        "CIT": 48,
+        "CTH": 70,
+        "ELU": 76,
+        "FMV": 48,
+        "IBL": 49,
+        "INJ": 85,
+        "JMP": 88,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 48,
+        "PBK": 51,
+        "PMV": 48,
+        "POW": 48,
+        "PRC": 68,
+        "PRS": 48,
+        "PUR": 48,
+        "RBK": 49,
+        "RET": 84,
+        "RTE": 62,
+        "SPC": 48,
+        "SPD": 92,
+        "STA": 92,
+        "STR": 51,
+        "TAK": 48,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 50,
+        "ZCV": 48
+      },
+      "role": "RB",
+      "side": "offense",
+      "snap": [
+        -4.77316855810551,
+        1.792223860473623
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "47870",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.86,
+          "drive": 623,
+          "f0": 1143,
+          "height": 1.778,
+          "mass": 91.6,
+          "radius": 0.305,
+          "reach": 3.196,
+          "tau": 0.809,
+          "vmax": 9.687
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -4.7732,
+            1.7922
+          ],
+          "0.5s": [
+            -4.7464,
+            1.801
+          ],
+          "1.0s": [
+            -4.5911,
+            1.8376
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "TE",
+      "id": "00-0033090",
+      "initial_velocity_mps": [
+        0.0366,
+        0.0183
+      ],
+      "name": "Hunter Henry",
+      "physics": {
+        "alat": 7.45,
+        "drive": 765,
+        "f0": 1174,
+        "height": 1.956,
+        "mass": 113.4,
+        "radius": 0.325,
+        "reach": 3.328,
+        "tau": 0.909,
+        "vmax": 8.874
+      },
+      "position": "TE",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -1.5819,
+            -4.7503
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.3584,
+            -4.7856
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.3707,
+            -4.7891
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -1.5362,
+            -4.7274
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.448,
+            -4.8948
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.4921,
+            -4.8932
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 0.5,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.47,
+        "CIT": 0.8,
+        "CTH": 0.75,
+        "ELU": 0.82,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 0,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.83,
+        "SPC": 0.79,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 69,
+        "AGI": 74,
+        "AWR": 85,
+        "BCV": 48,
+        "BSH": 48,
+        "BTK": 63,
+        "CAR": 81,
+        "CIT": 77,
+        "CTH": 75,
+        "ELU": 75,
+        "FMV": 48,
+        "IBL": 79,
+        "INJ": 85,
+        "JMP": 76,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 48,
+        "PBK": 75,
+        "PMV": 48,
+        "POW": 48,
+        "PRC": 85,
+        "PRS": 48,
+        "PUR": 48,
+        "RBK": 79,
+        "RET": 74,
+        "RTE": 79,
+        "SPC": 71,
+        "SPD": 74,
+        "STA": 90,
+        "STR": 49,
+        "TAK": 48,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 56,
+        "ZCV": 48
+      },
+      "role": "TE",
+      "side": "offense",
+      "snap": [
+        -1.6093445581055192,
+        -4.764024139526377
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "43324",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.45,
+          "drive": 765,
+          "f0": 1174,
+          "height": 1.956,
+          "mass": 113.4,
+          "radius": 0.325,
+          "reach": 3.328,
+          "tau": 0.909,
+          "vmax": 8.874
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -1.6093,
+            -4.764
+          ],
+          "0.5s": [
+            -1.4277,
+            -4.7833
+          ],
+          "1.0s": [
+            -0.6976,
+            -4.8688
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "WR",
+      "id": "00-0040131",
+      "initial_velocity_mps": [
+        0.0183,
+        -0.0183
+      ],
+      "name": "Kyle Williams",
+      "physics": {
+        "alat": 8.03,
+        "drive": 565,
+        "f0": 1031,
+        "height": 1.803,
+        "mass": 86.2,
+        "radius": 0.3,
+        "reach": 3.187,
+        "tau": 0.864,
+        "vmax": 9.914
+      },
+      "position": "WR",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -0.7864,
+            -12.7239
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.5475,
+            -12.7215
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.5232,
+            -12.7299
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -0.7498,
+            -12.7467
+          ],
+          "historical_team_prior_m_not_applied": [
+            0.6895,
+            -12.7553
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            0.7837,
+            -12.812
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.16,
+        "CIT": 0.56,
+        "CTH": 0.49,
+        "ELU": 0.49,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.69,
+        "SPC": 0.47,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 83,
+        "AGI": 80,
+        "AWR": 58,
+        "BCV": 48,
+        "BSH": 48,
+        "BTK": 53,
+        "CAR": 79,
+        "CIT": 74,
+        "CTH": 74,
+        "ELU": 78,
+        "FMV": 48,
+        "IBL": 44,
+        "INJ": 85,
+        "JMP": 84,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 48,
+        "PBK": 40,
+        "PMV": 48,
+        "POW": 48,
+        "PRC": 58,
+        "PRS": 48,
+        "PUR": 48,
+        "RBK": 44,
+        "RET": 86,
+        "RTE": 76,
+        "SPC": 82,
+        "SPD": 93,
+        "STA": 92,
+        "STR": 43,
+        "TAK": 48,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 34,
+        "ZCV": 48
+      },
+      "role": "WR",
+      "side": "offense",
+      "snap": [
+        -0.8046725581055085,
+        -12.710160139526376
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "42363",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 8.03,
+          "drive": 565,
+          "f0": 1031,
+          "height": 1.803,
+          "mass": 86.2,
+          "radius": 0.3,
+          "reach": 3.187,
+          "tau": 0.864,
+          "vmax": 9.914
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -0.8047,
+            -12.7102
+          ],
+          "0.5s": [
+            -0.5903,
+            -12.7251
+          ],
+          "1.0s": [
+            0.477,
+            -12.7928
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 1,
+      "availability": "available",
+      "depth_chart_position": "WR",
+      "id": "00-0038621",
+      "initial_velocity_mps": [
+        0.0183,
+        -0.0183
+      ],
+      "name": "DeMario Douglas",
+      "physics": {
+        "alat": 7.9,
+        "drive": 553,
+        "f0": 1099,
+        "height": 1.727,
+        "mass": 83.9,
+        "radius": 0.298,
+        "reach": 3.15,
+        "tau": 0.758,
+        "vmax": 9.531
+      },
+      "position": "WR",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -0.7041,
+            10.6436
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.4587,
+            10.6569
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.4344,
+            10.6486
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -0.6675,
+            10.607
+          ],
+          "historical_team_prior_m_not_applied": [
+            0.7871,
+            10.7226
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            0.8812,
+            10.6659
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0.5,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.38,
+        "CIT": 0.75,
+        "CTH": 0.69,
+        "ELU": 0.75,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.8,
+        "SPC": 0.72,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 86,
+        "AGI": 79,
+        "AWR": 64,
+        "BCV": 48,
+        "BSH": 48,
+        "BTK": 52,
+        "CAR": 72,
+        "CIT": 77,
+        "CTH": 74,
+        "ELU": 76,
+        "FMV": 48,
+        "IBL": 43,
+        "INJ": 85,
+        "JMP": 91,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 48,
+        "PBK": 39,
+        "PMV": 48,
+        "POW": 48,
+        "PRC": 64,
+        "PRS": 48,
+        "PUR": 48,
+        "RBK": 43,
+        "RET": 84,
+        "RTE": 75,
+        "SPC": 78,
+        "SPD": 91,
+        "STA": 92,
+        "STR": 44,
+        "TAK": 48,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 33,
+        "ZCV": 48
+      },
+      "role": "WR",
+      "side": "offense",
+      "snap": [
+        -0.7223765581055233,
+        10.661903860473622
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "48097",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.9,
+          "drive": 553,
+          "f0": 1099,
+          "height": 1.727,
+          "mass": 83.9,
+          "radius": 0.298,
+          "reach": 3.15,
+          "tau": 0.758,
+          "vmax": 9.531
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -0.7224,
+            10.6619
+          ],
+          "0.5s": [
+            -0.503,
+            10.6519
+          ],
+          "1.0s": [
+            0.5725,
+            10.6616
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 2,
+      "availability": "available",
+      "depth_chart_position": "WR",
+      "id": "00-0035676",
+      "initial_velocity_mps": [
+        -0.3475,
+        -2.3774
+      ],
+      "name": "A.J. Brown",
+      "physics": {
+        "alat": 7.83,
+        "drive": 712,
+        "f0": 1169,
+        "height": 1.854,
+        "mass": 102.5,
+        "radius": 0.315,
+        "reach": 3.254,
+        "tau": 0.889,
+        "vmax": 9.677
+      },
+      "position": "WR",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -2.3866,
+            10.6162
+          ],
+          "historical_team_prior_m_not_applied": [
+            -2.161,
+            10.6253
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -2.1366,
+            10.6169
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -2.7249,
+            8.2479
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.6966,
+            8.3701
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.6025,
+            8.3134
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.47,
+        "CIT": 0.83,
+        "CTH": 0.77,
+        "ELU": 0.81,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.82,
+        "SPC": 0.79,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 80,
+        "AGI": 78,
+        "AWR": 88,
+        "BCV": 48,
+        "BSH": 48,
+        "BTK": 60,
+        "CAR": 76,
+        "CIT": 72,
+        "CTH": 72,
+        "ELU": 70,
+        "FMV": 48,
+        "IBL": 59,
+        "INJ": 85,
+        "JMP": 84,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 48,
+        "PBK": 55,
+        "PMV": 48,
+        "POW": 48,
+        "PRC": 88,
+        "PRS": 48,
+        "PUR": 48,
+        "RBK": 59,
+        "RET": 80,
+        "RTE": 82,
+        "SPC": 75,
+        "SPD": 88,
+        "STA": 92,
+        "STR": 55,
+        "TAK": 48,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 52,
+        "ZCV": 48
+      },
+      "role": "WR",
+      "side": "offense",
+      "snap": [
+        -2.157984558105511,
+        12.198095860473622
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "42357",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.83,
+          "drive": 712,
+          "f0": 1169,
+          "height": 1.854,
+          "mass": 102.5,
+          "radius": 0.315,
+          "reach": 3.254,
+          "tau": 0.889,
+          "vmax": 9.677
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -2.158,
+            12.1981
+          ],
+          "0.5s": [
+            -2.1388,
+            11.0127
+          ],
+          "1.0s": [
+            -1.7298,
+            8.8344
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "C",
+      "id": "00-0040147",
+      "initial_velocity_mps": [
+        0,
+        0
+      ],
+      "name": "Jared Wilson",
+      "physics": {
+        "alat": 6.13,
+        "drive": 1067,
+        "f0": 1435,
+        "height": 1.905,
+        "mass": 140.6,
+        "radius": 0.35,
+        "reach": 3.225,
+        "tau": 0.911,
+        "vmax": 8.927
+      },
+      "position": "OL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -1.207,
+            -3.0861
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.4629,
+            -3.2361
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.4749,
+            -3.2267
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -1.3442,
+            -3.1547
+          ],
+          "historical_team_prior_m_not_applied": [
+            -2.2651,
+            -3.5532
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -2.2694,
+            -3.5209
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0.5,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 69,
+        "AGI": 61,
+        "AWR": 59,
+        "BCV": 42,
+        "BSH": 42,
+        "BTK": 42,
+        "CAR": 42,
+        "CIT": 42,
+        "CTH": 42,
+        "ELU": 42,
+        "FMV": 42,
+        "IBL": 78,
+        "INJ": 85,
+        "JMP": 71,
+        "KAC": 42,
+        "KPW": 42,
+        "MCV": 42,
+        "PBK": 76,
+        "PMV": 42,
+        "POW": 42,
+        "PRC": 59,
+        "PRS": 42,
+        "PUR": 42,
+        "RBK": 78,
+        "RET": 42,
+        "RTE": 42,
+        "SPC": 42,
+        "SPD": 75,
+        "STA": 86,
+        "STR": 75,
+        "TAK": 42,
+        "THA": 42,
+        "THP": 42,
+        "TRK": 42,
+        "ZCV": 42
+      },
+      "role": "OL",
+      "side": "offense",
+      "snap": [
+        -1.161288558105511,
+        -3.0632401395263784
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "42587",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 6.13,
+          "drive": 1067,
+          "f0": 1435,
+          "height": 1.905,
+          "mass": 140.6,
+          "radius": 0.35,
+          "reach": 3.225,
+          "tau": 0.911,
+          "vmax": 8.927
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -1.1613,
+            -3.0632
+          ],
+          "0.5s": [
+            -1.4003,
+            -3.1878
+          ],
+          "1.0s": [
+            -2.085,
+            -3.4533
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 1,
+      "availability": "available",
+      "depth_chart_position": "T",
+      "id": "00-0034417",
+      "initial_velocity_mps": [
+        0,
+        -0.0183
+      ],
+      "name": "Matt Pryor",
+      "physics": {
+        "alat": 5.45,
+        "drive": 1145,
+        "f0": 1291,
+        "height": 2.007,
+        "mass": 150.6,
+        "radius": 0.359,
+        "reach": 3.275,
+        "tau": 0.987,
+        "vmax": 7.979
+      },
+      "position": "OL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -0.6812,
+            -1.7191
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.8536,
+            -1.7258
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.8656,
+            -1.7164
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -0.6949,
+            -1.7556
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.3784,
+            -1.7818
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.3827,
+            -1.7495
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 0,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 0,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 0,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 53,
+        "AGI": 54,
+        "AWR": 78,
+        "BCV": 42,
+        "BSH": 42,
+        "BTK": 42,
+        "CAR": 42,
+        "CIT": 42,
+        "CTH": 42,
+        "ELU": 42,
+        "FMV": 42,
+        "IBL": 77,
+        "INJ": 85,
+        "JMP": 58,
+        "KAC": 42,
+        "KPW": 42,
+        "MCV": 42,
+        "PBK": 77,
+        "PMV": 42,
+        "POW": 42,
+        "PRC": 78,
+        "PRS": 42,
+        "PUR": 42,
+        "RBK": 75,
+        "RET": 42,
+        "RTE": 42,
+        "SPC": 42,
+        "SPD": 54,
+        "STA": 84,
+        "STR": 75,
+        "TAK": 42,
+        "THA": 42,
+        "THP": 42,
+        "TRK": 42,
+        "ZCV": 42
+      },
+      "role": "OL",
+      "side": "offense",
+      "snap": [
+        -0.6766565581055062,
+        -1.7007841395263767
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "41069",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 5.45,
+          "drive": 1145,
+          "f0": 1291,
+          "height": 2.007,
+          "mass": 150.6,
+          "radius": 0.359,
+          "reach": 3.275,
+          "tau": 0.987,
+          "vmax": 7.979
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -0.6767,
+            -1.7008
+          ],
+          "0.5s": [
+            -0.8207,
+            -1.7125
+          ],
+          "1.0s": [
+            -1.2624,
+            -1.7419
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 2,
+      "availability": "available",
+      "depth_chart_position": "T",
+      "id": "00-0040699",
+      "initial_velocity_mps": [
+        0,
+        0
+      ],
+      "name": "Will Campbell",
+      "physics": {
+        "alat": 5.66,
+        "drive": 1090,
+        "f0": 1412,
+        "height": 1.981,
+        "mass": 144.7,
+        "radius": 0.354,
+        "reach": 3.326,
+        "tau": 0.923,
+        "vmax": 8.646
+      },
+      "position": "OL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -0.1966,
+            -0.2286
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.369,
+            -0.2353
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.381,
+            -0.226
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -0.3749,
+            -0.2286
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.0583,
+            -0.2548
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.0626,
+            -0.2225
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 64,
+        "AGI": 57,
+        "AWR": 64,
+        "BCV": 42,
+        "BSH": 42,
+        "BTK": 42,
+        "CAR": 42,
+        "CIT": 42,
+        "CTH": 42,
+        "ELU": 42,
+        "FMV": 42,
+        "IBL": 80,
+        "INJ": 85,
+        "JMP": 71,
+        "KAC": 42,
+        "KPW": 42,
+        "MCV": 42,
+        "PBK": 80,
+        "PMV": 42,
+        "POW": 42,
+        "PRC": 64,
+        "PRS": 42,
+        "PUR": 42,
+        "RBK": 78,
+        "RET": 42,
+        "RTE": 42,
+        "SPC": 42,
+        "SPD": 70,
+        "STA": 86,
+        "STR": 73,
+        "TAK": 42,
+        "THA": 42,
+        "THP": 42,
+        "TRK": 42,
+        "ZCV": 42
+      },
+      "role": "OL",
+      "side": "offense",
+      "snap": [
+        -0.13716055810552064,
+        -0.22860013952637814
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "42883",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 5.66,
+          "drive": 1090,
+          "f0": 1412,
+          "height": 1.981,
+          "mass": 144.7,
+          "radius": 0.354,
+          "reach": 3.326,
+          "tau": 0.923,
+          "vmax": 8.646
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -0.1372,
+            -0.2286
+          ],
+          "0.5s": [
+            -0.323,
+            -0.2266
+          ],
+          "1.0s": [
+            -0.904,
+            -0.2233
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 3,
+      "availability": "available",
+      "depth_chart_position": "T",
+      "id": "00-0031330",
+      "initial_velocity_mps": [
+        0,
+        0
+      ],
+      "name": "Morgan Moses",
+      "physics": {
+        "alat": 5.22,
+        "drive": 1095,
+        "f0": 1258,
+        "height": 1.981,
+        "mass": 145.1,
+        "radius": 0.354,
+        "reach": 3.099,
+        "tau": 0.961,
+        "vmax": 7.657
+      },
+      "position": "OL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -0.9418,
+            1.111
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.1142,
+            1.1042
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.1262,
+            1.1136
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -0.9418,
+            1.0973
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.6253,
+            1.0711
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.6296,
+            1.1034
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 1,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 50,
+        "AGI": 49,
+        "AWR": 88,
+        "BCV": 42,
+        "BSH": 42,
+        "BTK": 42,
+        "CAR": 42,
+        "CIT": 42,
+        "CTH": 42,
+        "ELU": 42,
+        "FMV": 42,
+        "IBL": 79,
+        "INJ": 85,
+        "JMP": 45,
+        "KAC": 42,
+        "KPW": 42,
+        "MCV": 42,
+        "PBK": 79,
+        "PMV": 42,
+        "POW": 42,
+        "PRC": 88,
+        "PRS": 42,
+        "PUR": 42,
+        "RBK": 77,
+        "RET": 42,
+        "RTE": 42,
+        "SPC": 42,
+        "SPD": 48,
+        "STA": 81,
+        "STR": 73,
+        "TAK": 42,
+        "THA": 42,
+        "THP": 42,
+        "TRK": 42,
+        "ZCV": 42
+      },
+      "role": "OL",
+      "side": "offense",
+      "snap": [
+        -0.9418325581055171,
+        1.1155678604736217
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "52590",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 5.22,
+          "drive": 1095,
+          "f0": 1258,
+          "height": 1.981,
+          "mass": 145.1,
+          "radius": 0.354,
+          "reach": 3.099,
+          "tau": 0.961,
+          "vmax": 7.657
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -0.9418,
+            1.1156
+          ],
+          "0.5s": [
+            -1.0823,
+            1.1141
+          ],
+          "1.0s": [
+            -1.5125,
+            1.1058
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 4,
+      "availability": "available",
+      "depth_chart_position": "G",
+      "id": "00-0036979",
+      "initial_velocity_mps": [
+        0,
+        -0.0183
+      ],
+      "name": "Alijah Vera-Tucker",
+      "physics": {
+        "alat": 6.08,
+        "drive": 1131,
+        "f0": 1315,
+        "height": 1.956,
+        "mass": 140.6,
+        "radius": 0.35,
+        "reach": 3.292,
+        "tau": 0.954,
+        "vmax": 8.562
+      },
+      "position": "OL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            -1.4173,
+            2.446
+          ],
+          "historical_team_prior_m_not_applied": [
+            -1.5897,
+            2.4393
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -1.6017,
+            2.4486
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            -1.4722,
+            2.478
+          ],
+          "historical_team_prior_m_not_applied": [
+            -2.1556,
+            2.4519
+          ],
+          "historical_team_shrinkage_weight": 0.6855,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -2.1599,
+            2.4842
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 1,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0,
+        "PMV": 0.15,
+        "POW": 0.15,
+        "PRC": 0.35,
+        "PRS": 0.15,
+        "PUR": 0.15,
+        "RBK": 0,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.15,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 61,
+        "AGI": 61,
+        "AWR": 84,
+        "BCV": 42,
+        "BSH": 42,
+        "BTK": 42,
+        "CAR": 42,
+        "CIT": 42,
+        "CTH": 42,
+        "ELU": 42,
+        "FMV": 42,
+        "IBL": 86,
+        "INJ": 85,
+        "JMP": 71,
+        "KAC": 42,
+        "KPW": 42,
+        "MCV": 42,
+        "PBK": 84,
+        "PMV": 42,
+        "POW": 42,
+        "PRC": 84,
+        "PRS": 42,
+        "PUR": 42,
+        "RBK": 86,
+        "RET": 42,
+        "RTE": 42,
+        "SPC": 42,
+        "SPD": 67,
+        "STA": 86,
+        "STR": 88,
+        "TAK": 42,
+        "THA": 42,
+        "THP": 42,
+        "TRK": 42,
+        "ZCV": 42
+      },
+      "role": "OL",
+      "side": "offense",
+      "snap": [
+        -1.3990325581055174,
+        2.441447860473623
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022091106",
+        "play_id": "1125"
+      },
+      "snap_template_source_team": "NE",
+      "source_tracking_player_id": "46092",
+      "team": "NE",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 6.08,
+          "drive": 1131,
+          "f0": 1315,
+          "height": 1.956,
+          "mass": 140.6,
+          "radius": 0.35,
+          "reach": 3.292,
+          "tau": 0.954,
+          "vmax": 8.562
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            -1.399,
+            2.4414
+          ],
+          "0.5s": [
+            -1.5535,
+            2.447
+          ],
+          "1.0s": [
+            -2.0301,
+            2.4758
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "DT",
+      "id": "00-0034320",
+      "initial_velocity_mps": [
+        0.0183,
+        0.0183
+      ],
+      "name": "Kentavius Street",
+      "physics": {
+        "alat": 6.17,
+        "drive": 1098,
+        "f0": 1378,
+        "height": 1.88,
+        "mass": 142.9,
+        "radius": 0.352,
+        "reach": 3.137,
+        "tau": 0.971,
+        "vmax": 8.883
+      },
+      "position": "DL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            1.3167,
+            -6.2133
+          ],
+          "historical_team_prior_m_not_applied": [
+            0.9127,
+            -6.1419
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            0.9063,
+            -6.1414
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            1.3259,
+            -6.1905
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.1829,
+            -5.8709
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.2227,
+            -5.8603
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 0.5,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.71,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.71,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 0,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.71,
+        "POW": 0.65,
+        "PRC": 0.71,
+        "PRS": 0.15,
+        "PUR": 0.73,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.71,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 65,
+        "AGI": 61,
+        "AWR": 75,
+        "BCV": 48,
+        "BSH": 74,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 48,
+        "ELU": 48,
+        "FMV": 72,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 63,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 44,
+        "PBK": 48,
+        "PMV": 76,
+        "POW": 85,
+        "PRC": 73,
+        "PRS": 48,
+        "PUR": 71,
+        "RBK": 48,
+        "RET": 58,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 72,
+        "STA": 91,
+        "STR": 78,
+        "TAK": 70,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 44
+      },
+      "role": "DL",
+      "side": "defense",
+      "snap": [
+        1.307589767578179,
+        -6.227064488342272
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "43298",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 6.17,
+          "drive": 1098,
+          "f0": 1378,
+          "height": 1.88,
+          "mass": 142.9,
+          "radius": 0.352,
+          "reach": 3.137,
+          "tau": 0.971,
+          "vmax": 8.883
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            1.3076,
+            -6.2271
+          ],
+          "0.5s": [
+            1.0016,
+            -6.1619
+          ],
+          "1.0s": [
+            0.0401,
+            -5.9259
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 1,
+      "availability": "available",
+      "depth_chart_position": "DT",
+      "id": "00-0031583",
+      "initial_velocity_mps": [
+        0.0183,
+        0
+      ],
+      "name": "Grady Jarrett",
+      "physics": {
+        "alat": 6.76,
+        "drive": 1027,
+        "f0": 1281,
+        "height": 1.854,
+        "mass": 133.4,
+        "radius": 0.343,
+        "reach": 3.135,
+        "tau": 0.918,
+        "vmax": 8.216
+      },
+      "position": "DL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            1.431,
+            -2.9627
+          ],
+          "historical_team_prior_m_not_applied": [
+            1.027,
+            -2.8913
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            1.0206,
+            -2.8907
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            1.3716,
+            -2.9627
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.1372,
+            -2.6431
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.177,
+            -2.6325
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 1,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.78,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.77,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.77,
+        "POW": 0.72,
+        "PRC": 0.77,
+        "PRS": 0.15,
+        "PUR": 0.79,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.78,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 60,
+        "AGI": 66,
+        "AWR": 81,
+        "BCV": 42,
+        "BSH": 67,
+        "BTK": 42,
+        "CAR": 42,
+        "CIT": 42,
+        "CTH": 42,
+        "ELU": 42,
+        "FMV": 69,
+        "IBL": 42,
+        "INJ": 85,
+        "JMP": 68,
+        "KAC": 42,
+        "KPW": 42,
+        "MCV": 42,
+        "PBK": 42,
+        "PMV": 70,
+        "POW": 76,
+        "PRC": 75,
+        "PRS": 42,
+        "PUR": 64,
+        "RBK": 42,
+        "RET": 54,
+        "RTE": 42,
+        "SPC": 42,
+        "SPD": 62,
+        "STA": 83,
+        "STR": 78,
+        "TAK": 68,
+        "THA": 42,
+        "THP": 42,
+        "TRK": 42,
+        "ZCV": 42
+      },
+      "role": "DL",
+      "side": "defense",
+      "snap": [
+        1.4447497675781733,
+        -2.9626564883422724
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "41239",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 6.76,
+          "drive": 1027,
+          "f0": 1281,
+          "height": 1.854,
+          "mass": 133.4,
+          "radius": 0.343,
+          "reach": 3.135,
+          "tau": 0.918,
+          "vmax": 8.216
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            1.4447,
+            -2.9627
+          ],
+          "0.5s": [
+            1.1213,
+            -2.9078
+          ],
+          "1.0s": [
+            0.1017,
+            -2.6929
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 2,
+      "availability": "available",
+      "depth_chart_position": "DE",
+      "id": "00-0040741",
+      "initial_velocity_mps": [
+        0,
+        0
+      ],
+      "name": "Shemar Turner",
+      "physics": {
+        "alat": 6.51,
+        "drive": 988,
+        "f0": 1252,
+        "height": 1.905,
+        "mass": 131.5,
+        "radius": 0.342,
+        "reach": 3.193,
+        "tau": 0.947,
+        "vmax": 8.657
+      },
+      "position": "DL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            1.463,
+            0.0183
+          ],
+          "historical_team_prior_m_not_applied": [
+            1.123,
+            0.0182
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            1.1166,
+            0.0187
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            1.4082,
+            0.0457
+          ],
+          "historical_team_prior_m_not_applied": [
+            0.2563,
+            0.0377
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            0.2165,
+            0.0482
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 0,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.38,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.37,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 0,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.37,
+        "POW": 0.31,
+        "PRC": 0.37,
+        "PRS": 0.15,
+        "PUR": 0.39,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 0,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.38,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 63,
+        "AGI": 65,
+        "AWR": 62,
+        "BCV": 42,
+        "BSH": 74,
+        "BTK": 42,
+        "CAR": 42,
+        "CIT": 42,
+        "CTH": 42,
+        "ELU": 42,
+        "FMV": 68,
+        "IBL": 42,
+        "INJ": 85,
+        "JMP": 67,
+        "KAC": 42,
+        "KPW": 42,
+        "MCV": 44,
+        "PBK": 42,
+        "PMV": 70,
+        "POW": 77,
+        "PRC": 66,
+        "PRS": 42,
+        "PUR": 71,
+        "RBK": 42,
+        "RET": 57,
+        "RTE": 42,
+        "SPC": 42,
+        "SPD": 69,
+        "STA": 86,
+        "STR": 72,
+        "TAK": 73,
+        "THA": 42,
+        "THP": 42,
+        "TRK": 42,
+        "ZCV": 44
+      },
+      "role": "DL",
+      "side": "defense",
+      "snap": [
+        1.48132576757817,
+        0.00914351165772942
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "47917",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 6.51,
+          "drive": 988,
+          "f0": 1252,
+          "height": 1.905,
+          "mass": 131.5,
+          "radius": 0.342,
+          "reach": 3.193,
+          "tau": 0.947,
+          "vmax": 8.657
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            1.4813,
+            0.0091
+          ],
+          "0.5s": [
+            1.2034,
+            0.0164
+          ],
+          "1.0s": [
+            0.4253,
+            0.0413
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 3,
+      "availability": "available",
+      "depth_chart_position": "DE",
+      "id": "00-0039840",
+      "initial_velocity_mps": [
+        -0.0183,
+        0.0366
+      ],
+      "name": "Austin Booker",
+      "physics": {
+        "alat": 7.69,
+        "drive": 783,
+        "f0": 1142,
+        "height": 1.981,
+        "mass": 111.1,
+        "radius": 0.323,
+        "reach": 3.337,
+        "tau": 0.918,
+        "vmax": 9.057
+      },
+      "position": "DL",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            1.4676,
+            3.1684
+          ],
+          "historical_team_prior_m_not_applied": [
+            1.0704,
+            3.0933
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            1.0641,
+            3.0938
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            1.4447,
+            3.2004
+          ],
+          "historical_team_prior_m_not_applied": [
+            -0.0309,
+            2.8519
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            -0.0707,
+            2.8625
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.77,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.76,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.15,
+        "PBK": 0.15,
+        "PMV": 0.76,
+        "POW": 0.71,
+        "PRC": 0.76,
+        "PRS": 0.15,
+        "PUR": 0.78,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.76,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.15
+      },
+      "ratings": {
+        "ACC": 70,
+        "AGI": 77,
+        "AWR": 69,
+        "BCV": 48,
+        "BSH": 77,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 48,
+        "ELU": 48,
+        "FMV": 95,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 72,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 45,
+        "PBK": 48,
+        "PMV": 88,
+        "POW": 66,
+        "PRC": 72,
+        "PRS": 48,
+        "PUR": 76,
+        "RBK": 48,
+        "RET": 67,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 77,
+        "STA": 92,
+        "STR": 58,
+        "TAK": 76,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 45
+      },
+      "role": "DL",
+      "side": "defense",
+      "snap": [
+        1.48132576757817,
+        3.1455355116577337
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "43335",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.69,
+          "drive": 783,
+          "f0": 1142,
+          "height": 1.981,
+          "mass": 111.1,
+          "radius": 0.323,
+          "reach": 3.337,
+          "tau": 0.918,
+          "vmax": 9.057
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            1.4813,
+            3.1455
+          ],
+          "0.5s": [
+            1.1635,
+            3.1058
+          ],
+          "1.0s": [
+            0.1931,
+            2.9168
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "OLB",
+      "id": "00-0038390",
+      "initial_velocity_mps": [
+        0.0183,
+        -0.0183
+      ],
+      "name": "Noah Sewell",
+      "physics": {
+        "alat": 7.49,
+        "drive": 824,
+        "f0": 1209,
+        "height": 1.854,
+        "mass": 111.6,
+        "radius": 0.323,
+        "reach": 3.179,
+        "tau": 0.902,
+        "vmax": 9.379
+      },
+      "position": "LB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            5.3081,
+            -5.2212
+          ],
+          "historical_team_prior_m_not_applied": [
+            5.3092,
+            -5.2619
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            5.3005,
+            -5.2645
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            5.3309,
+            -5.2578
+          ],
+          "historical_team_prior_m_not_applied": [
+            5.3372,
+            -5.5162
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            5.3522,
+            -5.5087
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.73,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.73,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.73,
+        "PBK": 0.15,
+        "PMV": 0.73,
+        "POW": 0.67,
+        "PRC": 0.73,
+        "PRS": 0.15,
+        "PUR": 0.75,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.73,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.73
+      },
+      "ratings": {
+        "ACC": 75,
+        "AGI": 75,
+        "AWR": 69,
+        "BCV": 48,
+        "BSH": 70,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 37,
+        "ELU": 48,
+        "FMV": 55,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 74,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 51,
+        "PBK": 48,
+        "PMV": 54,
+        "POW": 69,
+        "PRC": 69,
+        "PRS": 68,
+        "PUR": 78,
+        "RBK": 48,
+        "RET": 70,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 83,
+        "STA": 92,
+        "STR": 69,
+        "TAK": 73,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 55
+      },
+      "role": "LB",
+      "side": "defense",
+      "snap": [
+        5.294373767578179,
+        -5.202936488342271
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "38577",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.49,
+          "drive": 824,
+          "f0": 1209,
+          "height": 1.854,
+          "mass": 111.6,
+          "radius": 0.323,
+          "reach": 3.179,
+          "tau": 0.902,
+          "vmax": 9.379
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            5.2944,
+            -5.2029
+          ],
+          "0.5s": [
+            5.2989,
+            -5.2497
+          ],
+          "1.0s": [
+            5.34,
+            -5.4515
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 1,
+      "availability": "available",
+      "depth_chart_position": "MLB",
+      "id": "00-0035525",
+      "initial_velocity_mps": [
+        0,
+        -0.0183
+      ],
+      "name": "Devin Bush",
+      "physics": {
+        "alat": 8.03,
+        "drive": 746,
+        "f0": 1286,
+        "height": 1.803,
+        "mass": 105.7,
+        "radius": 0.318,
+        "reach": 3.273,
+        "tau": 0.835,
+        "vmax": 9.756
+      },
+      "position": "LB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            1.3716,
+            6.3139
+          ],
+          "historical_team_prior_m_not_applied": [
+            1.2125,
+            6.3169
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context",
+          "role_prior_m": [
+            1.2038,
+            6.3142
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            1.3716,
+            6.2911
+          ],
+          "historical_team_prior_m_not_applied": [
+            0.7544,
+            6.2891
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context",
+          "role_prior_m": [
+            0.7695,
+            6.2967
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 1,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.82,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.81,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.81,
+        "PBK": 0.15,
+        "PMV": 0.81,
+        "POW": 0.77,
+        "PRC": 0.81,
+        "PRS": 0.15,
+        "PUR": 0.83,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.81,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.82
+      },
+      "ratings": {
+        "ACC": 84,
+        "AGI": 80,
+        "AWR": 89,
+        "BCV": 48,
+        "BSH": 81,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 55,
+        "ELU": 48,
+        "FMV": 64,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 93,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 69,
+        "PBK": 48,
+        "PMV": 61,
+        "POW": 66,
+        "PRC": 86,
+        "PRS": 72,
+        "PUR": 89,
+        "RBK": 48,
+        "RET": 77,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 92,
+        "STA": 92,
+        "STR": 59,
+        "TAK": 83,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 72
+      },
+      "role": "LB",
+      "side": "defense",
+      "snap": [
+        1.3715977675781659,
+        6.327647511657727
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "52492",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 8.03,
+          "drive": 746,
+          "f0": 1286,
+          "height": 1.803,
+          "mass": 105.7,
+          "radius": 0.318,
+          "reach": 3.273,
+          "tau": 0.835,
+          "vmax": 9.756
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            1.3716,
+            6.3276
+          ],
+          "0.5s": [
+            1.2437,
+            6.3175
+          ],
+          "1.0s": [
+            0.8704,
+            6.3006
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 0,
+      "availability": "available",
+      "depth_chart_position": "CB",
+      "id": "00-0038111",
+      "initial_velocity_mps": [
+        0.0183,
+        0
+      ],
+      "name": "Kyler Gordon",
+      "physics": {
+        "alat": 8.08,
+        "drive": 607,
+        "f0": 1051,
+        "height": 1.803,
+        "mass": 90.7,
+        "radius": 0.304,
+        "reach": 3.178,
+        "tau": 0.862,
+        "vmax": 9.586
+      },
+      "position": "DB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            9.5418,
+            -18.4069
+          ],
+          "historical_team_prior_m_not_applied": [
+            9.617,
+            -18.4054
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            9.614,
+            -18.4147
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            9.5646,
+            -18.4343
+          ],
+          "historical_team_prior_m_not_applied": [
+            9.9833,
+            -18.4908
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            9.9602,
+            -18.4986
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 0.5,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 0,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.43,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.37,
+        "PRC": 0.43,
+        "PRS": 0.15,
+        "PUR": 0.46,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.44,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.43
+      },
+      "ratings": {
+        "ACC": 80,
+        "AGI": 81,
+        "AWR": 70,
+        "BCV": 48,
+        "BSH": 39,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 62,
+        "ELU": 48,
+        "FMV": 35,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 83,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 76,
+        "PBK": 48,
+        "PMV": 35,
+        "POW": 56,
+        "PRC": 74,
+        "PRS": 70,
+        "PUR": 84,
+        "RBK": 48,
+        "RET": 75,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 88,
+        "STA": 92,
+        "STR": 48,
+        "TAK": 78,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 77
+      },
+      "role": "DB",
+      "side": "defense",
+      "snap": [
+        9.528045767578163,
+        -18.397728488342267
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "47862",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 8.08,
+          "drive": 607,
+          "f0": 1051,
+          "height": 1.803,
+          "mass": 90.7,
+          "radius": 0.304,
+          "reach": 3.178,
+          "tau": 0.862,
+          "vmax": 9.586
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            9.528,
+            -18.3977
+          ],
+          "0.5s": [
+            9.5934,
+            -18.4107
+          ],
+          "1.0s": [
+            9.8791,
+            -18.4789
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 1,
+      "availability": "available",
+      "depth_chart_position": "CB",
+      "id": "00-0036292",
+      "initial_velocity_mps": [
+        -0.0183,
+        -0.0732
+      ],
+      "name": "Jaylon Johnson",
+      "physics": {
+        "alat": 8.13,
+        "drive": 587,
+        "f0": 1040,
+        "height": 1.829,
+        "mass": 88.5,
+        "radius": 0.302,
+        "reach": 3.22,
+        "tau": 0.851,
+        "vmax": 9.612
+      },
+      "position": "DB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            6.986,
+            -14.1778
+          ],
+          "historical_team_prior_m_not_applied": [
+            7.0613,
+            -14.1763
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            7.0582,
+            -14.1856
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            7.0592,
+            -14.4475
+          ],
+          "historical_team_prior_m_not_applied": [
+            7.4778,
+            -14.504
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            7.4548,
+            -14.5118
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 1,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.71,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.65,
+        "PRC": 0.71,
+        "PRS": 0.15,
+        "PUR": 0.73,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.71,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.71
+      },
+      "ratings": {
+        "ACC": 81,
+        "AGI": 81,
+        "AWR": 77,
+        "BCV": 48,
+        "BSH": 38,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 66,
+        "ELU": 48,
+        "FMV": 35,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 84,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 80,
+        "PBK": 48,
+        "PMV": 35,
+        "POW": 50,
+        "PRC": 75,
+        "PRS": 71,
+        "PUR": 80,
+        "RBK": 48,
+        "RET": 76,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 89,
+        "STA": 92,
+        "STR": 46,
+        "TAK": 73,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 81
+      },
+      "role": "DB",
+      "side": "defense",
+      "snap": [
+        6.967725767578173,
+        -14.063472488342269
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "43294",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 8.13,
+          "drive": 587,
+          "f0": 1040,
+          "height": 1.829,
+          "mass": 88.5,
+          "radius": 0.302,
+          "reach": 3.22,
+          "tau": 0.851,
+          "vmax": 9.612
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            6.9677,
+            -14.0635
+          ],
+          "0.5s": [
+            7.0368,
+            -14.156
+          ],
+          "1.0s": [
+            7.3617,
+            -14.4361
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 2,
+      "availability": "available",
+      "depth_chart_position": "CB",
+      "id": "00-0041060",
+      "initial_velocity_mps": [
+        -0.3475,
+        -0.2377
+      ],
+      "name": "Malik Muhammad",
+      "physics": {
+        "alat": 8.12,
+        "drive": 533,
+        "f0": 1038,
+        "height": 1.829,
+        "mass": 82.6,
+        "radius": 0.296,
+        "reach": 3.274,
+        "tau": 0.804,
+        "vmax": 9.701
+      },
+      "position": "DB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            13.2314,
+            -11.2746
+          ],
+          "historical_team_prior_m_not_applied": [
+            13.3066,
+            -11.2731
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            13.3036,
+            -11.2824
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            12.9753,
+            -11.5854
+          ],
+          "historical_team_prior_m_not_applied": [
+            13.394,
+            -11.642
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            13.3709,
+            -11.6497
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.6,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.54,
+        "PRC": 0.6,
+        "PRS": 0.15,
+        "PUR": 0.63,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.61,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.61
+      },
+      "ratings": {
+        "ACC": 85,
+        "AGI": 81,
+        "AWR": 60,
+        "BCV": 48,
+        "BSH": 35,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 72,
+        "ELU": 48,
+        "FMV": 35,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 90,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 86,
+        "PBK": 48,
+        "PMV": 35,
+        "POW": 45,
+        "PRC": 67,
+        "PRS": 72,
+        "PUR": 82,
+        "RBK": 48,
+        "RET": 78,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 92,
+        "STA": 92,
+        "STR": 41,
+        "TAK": 70,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 84
+      },
+      "role": "DB",
+      "side": "defense",
+      "snap": [
+        13.432533767578164,
+        -11.091672488342272
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "52607",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 8.12,
+          "drive": 533,
+          "f0": 1038,
+          "height": 1.829,
+          "mass": 82.6,
+          "radius": 0.296,
+          "reach": 3.274,
+          "tau": 0.804,
+          "vmax": 9.701
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            13.4325,
+            -11.0917
+          ],
+          "0.5s": [
+            13.3369,
+            -11.2353
+          ],
+          "1.0s": [
+            13.3525,
+            -11.5655
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 3,
+      "availability": "available",
+      "depth_chart_position": "CB",
+      "id": "00-0039071",
+      "initial_velocity_mps": [
+        0.0732,
+        -0.2195
+      ],
+      "name": "Tyrique Stevenson",
+      "physics": {
+        "alat": 7.44,
+        "drive": 662,
+        "f0": 1150,
+        "height": 1.829,
+        "mass": 97.1,
+        "radius": 0.31,
+        "reach": 3.264,
+        "tau": 0.858,
+        "vmax": 9.763
+      },
+      "position": "DB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            12.3673,
+            1.1567
+          ],
+          "historical_team_prior_m_not_applied": [
+            12.4169,
+            1.159
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            12.4138,
+            1.1497
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            12.3901,
+            0.759
+          ],
+          "historical_team_prior_m_not_applied": [
+            12.6549,
+            0.7519
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            12.6318,
+            0.7442
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 1,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.75,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.7,
+        "PRC": 0.75,
+        "PRS": 0.15,
+        "PUR": 0.77,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 0,
+        "TAK": 0.75,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.75
+      },
+      "ratings": {
+        "ACC": 82,
+        "AGI": 74,
+        "AWR": 76,
+        "BCV": 48,
+        "BSH": 41,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 75,
+        "ELU": 48,
+        "FMV": 35,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 88,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 89,
+        "PBK": 48,
+        "PMV": 35,
+        "POW": 58,
+        "PRC": 77,
+        "PRS": 78,
+        "PUR": 84,
+        "RBK": 48,
+        "RET": 74,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 91,
+        "STA": 92,
+        "STR": 52,
+        "TAK": 77,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 89
+      },
+      "role": "DB",
+      "side": "defense",
+      "snap": [
+        12.33525376757818,
+        1.3624555116577284
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "47844",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.44,
+          "drive": 662,
+          "f0": 1150,
+          "height": 1.829,
+          "mass": 97.1,
+          "radius": 0.31,
+          "reach": 3.264,
+          "tau": 0.858,
+          "vmax": 9.763
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            12.3353,
+            1.3625
+          ],
+          "0.5s": [
+            12.3946,
+            1.2019
+          ],
+          "1.0s": [
+            12.5812,
+            0.8372
+          ]
+        }
+      }
+    },
+    {
+      "assignment_slot": 4,
+      "availability": "available",
+      "depth_chart_position": "SS",
+      "id": "00-0041538",
+      "initial_velocity_mps": [
+        -0.0183,
+        0.0183
+      ],
+      "name": "Dillon Thieneman",
+      "physics": {
+        "alat": 7.98,
+        "drive": 620,
+        "f0": 1131,
+        "height": 1.829,
+        "mass": 91.2,
+        "radius": 0.304,
+        "reach": 3.317,
+        "tau": 0.839,
+        "vmax": 9.987
+      },
+      "position": "DB",
+      "predicted_position_relative_to_snap_m": {
+        "0.5s": {
+          "generic_constant_acceleration_m": [
+            8.2662,
+            8.9748
+          ],
+          "historical_team_prior_m_not_applied": [
+            8.3192,
+            8.9997
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            8.3162,
+            8.9904
+          ]
+        },
+        "1.0s": {
+          "generic_constant_acceleration_m": [
+            8.2296,
+            9.0251
+          ],
+          "historical_team_prior_m_not_applied": [
+            8.5093,
+            9.1244
+          ],
+          "historical_team_shrinkage_weight": 0.5536,
+          "prior_source": "role-context-alignment",
+          "role_prior_m": [
+            8.4862,
+            9.1166
+          ]
+        }
+      },
+      "rating_confidence_by_attribute": {
+        "ACC": 1,
+        "AGI": 0,
+        "AWR": 0.35,
+        "BCV": 0.15,
+        "BSH": 0.15,
+        "BTK": 0.15,
+        "CAR": 0.15,
+        "CIT": 0.15,
+        "CTH": 0.15,
+        "ELU": 0.15,
+        "FMV": 0.15,
+        "IBL": 0.15,
+        "INJ": 0.35,
+        "JMP": 1,
+        "KAC": 0.15,
+        "KPW": 0.15,
+        "MCV": 0.6,
+        "PBK": 0.15,
+        "PMV": 0.15,
+        "POW": 0.54,
+        "PRC": 0.6,
+        "PRS": 0.15,
+        "PUR": 0.63,
+        "RBK": 0.15,
+        "RET": 0.15,
+        "RTE": 0.15,
+        "SPC": 0.15,
+        "SPD": 1,
+        "STA": 0.35,
+        "STR": 1,
+        "TAK": 0.61,
+        "THA": 0.15,
+        "THP": 0.15,
+        "TRK": 0.15,
+        "ZCV": 0.61
+      },
+      "ratings": {
+        "ACC": 86,
+        "AGI": 80,
+        "AWR": 71,
+        "BCV": 48,
+        "BSH": 41,
+        "BTK": 48,
+        "CAR": 48,
+        "CIT": 48,
+        "CTH": 73,
+        "ELU": 48,
+        "FMV": 35,
+        "IBL": 48,
+        "INJ": 85,
+        "JMP": 94,
+        "KAC": 48,
+        "KPW": 48,
+        "MCV": 87,
+        "PBK": 48,
+        "PMV": 35,
+        "POW": 55,
+        "PRC": 75,
+        "PRS": 77,
+        "PUR": 88,
+        "RBK": 48,
+        "RET": 79,
+        "RTE": 48,
+        "SPC": 48,
+        "SPD": 95,
+        "STA": 92,
+        "STR": 51,
+        "TAK": 78,
+        "THA": 48,
+        "THP": 48,
+        "TRK": 48,
+        "ZCV": 86
+      },
+      "role": "DB",
+      "side": "defense",
+      "snap": [
+        8.284461767578165,
+        8.951975511657725
+      ],
+      "snap_template_source_play": {
+        "game_id": "2022090800",
+        "play_id": "1102"
+      },
+      "snap_template_source_team": "LA",
+      "source_tracking_player_id": "42816",
+      "team": "CHI",
+      "execution": {
+        "controller": "existing Player.locomote()",
+        "frequency_hz": 120,
+        "roster_physics_profile": {
+          "alat": 7.98,
+          "drive": 620,
+          "f0": 1131,
+          "height": 1.829,
+          "mass": 91.2,
+          "radius": 0.304,
+          "reach": 3.317,
+          "tau": 0.839,
+          "vmax": 9.987
+        },
+        "collision_response": "not run in this seed",
+        "positions_relative_to_snap_m": {
+          "0.0s": [
+            8.2845,
+            8.952
+          ],
+          "0.5s": [
+            8.3088,
+            8.9811
+          ],
+          "1.0s": [
+            8.4462,
+            9.0872
+          ]
+        }
+      }
+    }
+  ],
+  "roster_snapshot": {
+    "as_of": "2026-10-22 pre-kickoff",
+    "kickoff_eastern": "2026-10-22T20:15:00-04:00",
+    "kickoff_venue_local": "2026-10-22T19:15:00-05:00",
+    "post_kickoff_information_included": false,
+    "snapshot_date": "2026-10-22"
+  },
+  "schema_version": "gridiron.team-movement-seed.v1",
+  "status": "research reconstruction; no play outcome generated",
+  "execution": {
+    "controller": "existing Player.locomote()",
+    "frequency_hz": 120,
+    "player_to_player_collisions": false,
+    "ball_future": "not modeled",
+    "outcome": "unchanged; no outcome generated"
+  }
+}
