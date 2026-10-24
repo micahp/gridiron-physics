@@ -63,7 +63,7 @@ try {
     assert.equal(cells[1], 'Unavailable');
     assert.equal(cells[2], 'Unavailable');
     assert.equal(cells[3], 'Unavailable');
-    assert.match(cells[4], /LP seed 1 has no/);
+    assert.match(cells[4], /No matching LP matchup entry/);
   }
   await page.getByRole('link', { name: /Inspect the unmapped LP seed-1 record/ }).click();
   await page.waitForFunction((count) => document.querySelectorAll('#drive-select option').length === count,

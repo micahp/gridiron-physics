@@ -39,7 +39,7 @@ function render(index, failure = null) {
     } else {
       const note = document.createElement('span');
       note.className = 'state';
-      note.textContent = entry ? 'Play record not indexed' : 'LP entry not published';
+      note.textContent = entry ? 'Play record not indexed' : 'No matching LP matchup entry';
       action.append(note);
     }
     row.append(action);

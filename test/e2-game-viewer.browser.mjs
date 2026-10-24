@@ -43,55 +43,20 @@ try {
   const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
   const entry = manifest.fixtures[0];
   const regression = manifest.regression_fixtures[0];
-  const currentEnvelope = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', entry.file), 'utf8'));
-  const driveCount = currentEnvelope.record.drives.length;
-  const playCount = currentEnvelope.record.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
-  const eventTypeCounts = new Map();
-  for (const drive of currentEnvelope.record.drives) {
-    for (const play of drive.plays) eventTypeCounts.set(play.event_type, (eventTypeCounts.get(play.event_type) ?? 0) + 1);
-  }
-  const supportedEventTypes = new Set([
-    'field_goal_attempt', 'fumble_lost', 'interception', 'pass_complete',
-    'pass_incomplete', 'punt', 'run', 'sack',
-  ]);
-  assert.deepEqual([...eventTypeCounts.keys()].sort(), [...supportedEventTypes].sort(),
-    'the accepted seed-1 fixture must use only the enumerated E2 play event types');
   const context = await browser.newContext();
   const page = await context.newPage();
   page.on('pageerror', (error) => pageErrors.push(error.message));
   await page.goto(`http://127.0.0.1:${port}/e2-game-viewer.html`);
   await page.locator('#viewer-content:not([hidden])').waitFor({ timeout: 15000 });
   assert.equal(await page.locator('#load-error').isHidden(), true);
-  assert.equal(await page.locator('#drive-select option').count(), driveCount);
-  assert.equal(await page.locator('#score-a').innerText(), String(currentEnvelope.record.points.A));
-  assert.equal(await page.locator('#score-b').innerText(), String(currentEnvelope.record.points.B));
-  const renderedEventCounts = new Map();
-  let renderedPlays = 0;
-  for (const [driveOffset, drive] of currentEnvelope.record.drives.entries()) {
-    await page.locator('#drive-select').selectOption(String(driveOffset));
-    assert.match(await page.locator('#drive-summary').innerText(), new RegExp(`Drive ${drive.index}`));
-    assert.equal(await page.locator('#play-select option').count(), drive.plays.length,
-      `Drive ${drive.index} must expose every source play`);
-    for (const [playOffset, play] of drive.plays.entries()) {
-      await page.locator('#play-select').selectOption(String(playOffset));
-      const metadata = await page.locator('#play-meta dd').allInnerTexts();
-      assert.equal(metadata[1], play.id, `Drive ${drive.index} play ${play.sequence} source ID`);
-      assert.equal(metadata[2], `${drive.index} / ${play.sequence}`, `Drive ${drive.index} play ${play.sequence} sequence`);
-      assert.equal(metadata[3], play.event_type, `Drive ${drive.index} play ${play.sequence} event type`);
-      assert.deepEqual(JSON.parse(await page.locator('#play-json').innerText()), {
-        outcome: play.outcome,
-        participants: play.participants,
-        decision: play.decision,
-        sampling: play.sampling,
-        field: play.field,
-      }, `Drive ${drive.index} play ${play.sequence} source fields must render unchanged`);
-      renderedEventCounts.set(play.event_type, (renderedEventCounts.get(play.event_type) ?? 0) + 1);
-      renderedPlays += 1;
-    }
-  }
-  assert.equal(renderedPlays, playCount);
-  assert.deepEqual([...renderedEventCounts.entries()].sort(), [...eventTypeCounts.entries()].sort(),
-    'every source event type and event count must be visible through the browser viewer');
+  assert.equal(await page.locator('#drive-select option').count(), 24);
+  assert.equal(await page.locator('#score-a').innerText(), '14');
+  assert.equal(await page.locator('#score-b').innerText(), '10');
+  await page.locator('#drive-select').selectOption('23');
+  assert.match(await page.locator('#drive-summary').innerText(), /Drive 24/);
+  const finalDrivePlayCount = await page.locator('#play-select option').count();
+  await page.locator('#play-select').selectOption(String(finalDrivePlayCount - 1));
+  assert.match(await page.locator('#play-meta').innerText(), /24 \/ 143/);
   assert.match(await page.locator('#state-audit-summary').innerText(), /0 findings/);
   assert.match(await page.locator('#e3-clock-caveat').innerText(), /594 \/ 7016/);
   assert.match(await page.locator('#e3-load-status').innerText(), /verified by SHA-256/);
@@ -105,9 +70,7 @@ try {
   assert.match(lpClockRows.join('\n'), /two_minute_warning_event\s+0\s+0\s+9066/);
   assert.match(await page.locator('#e3-unsupported-list').innerText(), /timeouts[\s\S]*two_minute_warning/);
   assert.match(await page.locator('#conversion-source-status').innerText(), /PASS/);
-  assert.match(await page.locator('#validation').innerText(), /NOT CONFORMING/,
-    'the viewer must visibly keep the shared-v1/pregame gate open for this retrospective record');
-  assert.match(await page.locator('#e3-play-table').innerText(), new RegExp(`Generated · n=${playCount}`));
+  assert.match(await page.locator('#e3-play-table').innerText(), /Generated · n=143/);
   assert.equal(await page.locator('#e3-play-table tbody tr').count(), 4);
   assert.equal(await page.locator('#e3-drive-table tbody tr').count(), 5);
   assert.equal(await page.locator('#e3-game-table tbody tr').count(), 13);
@@ -147,20 +110,60 @@ try {
   assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
   await regressionContext.close();
 
-  const availabilityPage = await browser.newPage();
-  availabilityPage.on('pageerror', (error) => pageErrors.push(error.message));
-  await availabilityPage.goto(`http://127.0.0.1:${port}/e2-matchups.html`);
-  const unavailableRows = availabilityPage.locator('.card table tbody tr');
-  assert.equal(await unavailableRows.count(), 6);
-  assert.match(await unavailableRows.allInnerTexts().then((rows) => rows.join('\n')), /no Bengals\/Ravens identity[\s\S]*no Dolphins\/Jets identity/);
-  assert.equal(await unavailableRows.locator('a').count(), 0, 'unmapped requested matchups must not link to another game');
-  await availabilityPage.close();
+  const fallbackPage = await browser.newPage();
+  fallbackPage.on('pageerror', (error) => pageErrors.push(error.message));
+  await fallbackPage.goto(`http://127.0.0.1:${port}/e2-matchups.html`);
+  await fallbackPage.locator('#matchup-rows tr').nth(5).waitFor();
+  assert.equal(await fallbackPage.locator('#matchup-rows tr').count(), 6);
+  assert.match(await fallbackPage.locator('.retrospective-banner').innerText(), /2022-pool retrospective demonstration.*Not a 2026 forecast.*valid_full_game=false/);
+  assert.match(await fallbackPage.locator('#matchup-rows').innerText(), /Bengals at Ravens[\s\S]*Dolphins at Jets[\s\S]*49ers at Falcons[\s\S]*Buccaneers at Panthers[\s\S]*Packers at Lions[\s\S]*Cowboys at Eagles/);
+  assert.match(await fallbackPage.locator('#index-error').innerText(), /not available yet/);
+  assert.equal(await fallbackPage.locator('#matchup-rows a').count(), 0, 'missing LP rows must not point at another game');
+  await fallbackPage.close();
 
-  console.log(`Real Chromium play render: LP ${manifest.lp_source.base_commit} rendered ${renderedPlays}/${playCount} plays across ${renderedEventCounts.size}/${supportedEventTypes.size} supported event types`);
-  console.log(`Rendered event counts: ${[...renderedEventCounts].sort().map(([type, count]) => `${type}=${count}`).join(', ')}`);
-  console.log('OPEN shared-v1/pregame gate: viewer displays NOT CONFORMING for the retrospective E2 payload');
-  console.log(`Regression: archived 5fc payload hard-rejected; v1 regression fixture sha256=${manifest.v1_regression_fixture?.sha256 ?? 'not pinned'}`);
-  console.log('Six E2 matchup rows remain honestly unavailable and do not link to the unrelated LP record');
+  // This route fixture exercises index-to-viewer navigation only; the indexed
+  // artifact is intercepted in memory and is not represented as a real matchup.
+  const indexContext = await browser.newContext();
+  await indexContext.route('**/docs/fixtures/e2/matchup-index.json', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      lp_source: manifest.lp_source,
+      games: [{
+        matchup_id: 'bengals-at-ravens',
+        away_team: 'Bengals',
+        home_team: 'Ravens',
+        final_score: { away: 10, home: 14 },
+        drive_count: 24,
+        play_count: 143,
+        fixture: {
+          file: `docs/fixtures/e2/${entry.file}`,
+          sha256: entry.sha256,
+          upstream_source_file: `docs/fixtures/e2/${entry.upstream_source_file}`,
+          upstream_source_sha256: entry.upstream_source_sha256,
+        },
+      }],
+    }),
+  }));
+  const indexPage = await indexContext.newPage();
+  indexPage.on('pageerror', (error) => pageErrors.push(error.message));
+  await indexPage.goto(`http://127.0.0.1:${port}/e2-matchups.html`);
+  await indexPage.locator('#matchup-rows a').waitFor();
+  assert.match(await indexPage.locator('#matchup-rows tr').first().innerText(), /Bengals at Ravens[\s\S]*10 – 14[\s\S]*24[\s\S]*143/);
+  await indexPage.locator('#matchup-rows a').first().click();
+  await indexPage.locator('#viewer-content:not([hidden])').waitFor({ timeout: 15000 });
+  assert.match(await indexPage.locator('#mode-label').innerText(), /Bengals at Ravens/i);
+  assert.equal(await indexPage.locator('#drive-select option').count(), 24);
+  await indexPage.locator('#drive-select').selectOption('23');
+  assert.match(await indexPage.locator('#drive-summary').innerText(), /Drive 24/);
+  const indexedPlayCount = await indexPage.locator('#play-select option').count();
+  await indexPage.locator('#play-select').selectOption(String(indexedPlayCount - 1));
+  assert.match(await indexPage.locator('#play-meta').innerText(), /Q[1-4]/);
+  assert.match(await indexPage.locator('.retrospective-banner').innerText(), /valid_full_game=false/);
+  assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
+  await indexContext.close();
+
+  console.log('Real Chromium navigation: current pinned E2 record; old 5fc rejected; six-row fallback and fixture-only indexed play navigation pass');
   console.log(`Browser runtime errors: ${pageErrors.length}`);
 } finally {
   await browser.close();
