@@ -6,15 +6,15 @@
   "gridiron": {
     "branch": "research/gridiron-e2-game-viewer-2026-10-24",
     "base_commit": "2b70ef3",
-    "implementation_commit": "0e4db756f7a1f9b19a68e5df373666e45efe44e3"
+    "implementation_commit": "83e428b55436bfb2d4104264fd4a038d993cb95f"
   },
   "lp_source": {
     "repository": "micahp/legendarypicks",
     "branch": "feat/nfl-sequence-e2-kickoffs-2026-10-24",
-    "base_commit": "3daa0ed6dc99c3bdc666d5c0f226af02173e05cc",
+    "base_commit": "702f41db569de04a962b6f1336460d5273b66ce0",
     "producer_worktree_dirty": false,
     "producer_file_sha256": {
-      "scripts/nfl_sequence/game_state.py": "1927bea91d40c41ca7b9cd6310567fbe096bff807bbc979b46693ad6db77e9d1",
+      "scripts/nfl_sequence/game_state.py": "fa52e8aaadd979dbf272cfae520502b80f84f9a1a431fc7e9385415400296500",
       "scripts/nfl_sequence/e2_reference.py": "5c355349e2568273060b4ac5f45f956163420ddab48f08119e0bc81b052888aa",
       "scripts/nfl_sequence/game_stats.py": "75e4dde4321a2f9cd3c1b997b95a0225dd2227c3c34aaa32e8b31b56f06fe745",
       "scripts/nfl_sequence/e1_drive.py": "b2a36750c6ed66d31297eaa317b9ab95367ae0a574d50f9ed06434a7f5ead95f",
@@ -26,7 +26,7 @@
   "fixtures": [
     {
       "file": "game-seed1.json",
-      "sha256": "c26d41fecda9477c6f5c5dd45c8c0f4fefd009ab99f69bb193a2494b74a42396",
+      "sha256": "0a11cd89558a97cec5a8913cdc517d6efd8c23b15248954d54b77478d0f2d373",
       "seed": 1,
       "status": "complete_regulation",
       "valid_full_game": false,

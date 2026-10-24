@@ -1,7 +1,15 @@
 # LP E2 adversarial review — 2026-10-24
 
-Review target: `micahp/legendarypicks`, branch `feat/nfl-sequence-e2-kickoffs-2026-10-24`, current head
+Review target at the time of review: `micahp/legendarypicks`, branch `feat/nfl-sequence-e2-kickoffs-2026-10-24`, head
 `3daa0ed6dc99c3bdc666d5c0f226af02173e05cc`.
+
+## Follow-up: game-wide play IDs
+
+LP commit `702f41db569de04a962b6f1336460d5273b66ce0` resolved the drive-local ID finding below. E2 now emits one game
+`simulation_id` and contiguous play sequences across drives; `validate_game` checks both. The Gridiron adapter enforces the
+same rule without rewriting the source. Seed-1 output was regenerated: after excluding only the new `simulation_id` and the
+corrected play `id`/`sequence` values, its record is identical to the reviewed record. Score, outcomes, drives, and the rules
+matrix did not change. The finding below records the reviewed revision's state, not the current one.
 
 ## Revision integrity and tests
 
@@ -54,8 +62,8 @@ are ingested and the tables are rebuilt. The current PBP input window is retrosp
   confirms drive order, drive start/end metadata, score sums, kickoff `after_drive` links, and receiving-team-to-next-drive
   linkage. It finds 23 state-index inconsistencies: drives 2–24 have distinct `drive.index` values but all embedded E1 play
   states retain `drive_index: 1`.
-- Play IDs are unique and preserved, but use a separate simulation prefix per drive (`e2-1-drive<n>:<local-sequence>`).
-  This does not meet the shared v1 game-wide `simulation_id:sequence` rule. The adapter reports it and does not rewrite IDs.
+- At the reviewed revision, play IDs used a separate simulation prefix per drive (`e2-1-drive<n>:<local-sequence>`), which
+  did not meet the shared v1 game-wide `simulation_id:sequence` rule. Resolved by LP commit `702f41db` as described above.
 - `complete_regulation: true` means the generated record reaches 0:00 in Q4. `valid_full_game: false` is intentional while
   `unsupported_rules` is non-empty (timeouts, two-minute warning, penalties, onside kicks, overtime, exception coin-toss
   paths, and lineups). Do not promote the record as a fully legal rule-complete game.
