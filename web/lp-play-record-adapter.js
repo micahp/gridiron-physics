@@ -144,13 +144,12 @@ export function adaptLpPlayRecord(record) {
   if (!Array.isArray(record.plays) || record.plays.length === 0) {
     throw new TypeError('plays must be a nonempty array');
   }
-  if (record.plays.length !== 1) {
-    throw new TypeError('single_play_statistical_demo must contain exactly one play');
-  }
-
   const ids = new Set();
   const sequences = new Set();
   record.plays.forEach((play, index) => validatePlay(play, index, ids, sequences));
+  if (record.plays.length !== 1) {
+    throw new TypeError('single_play_statistical_demo must contain exactly one play');
+  }
   if (record.plays[0].id !== `${record.simulation_id}:${record.plays[0].sequence}`) {
     throw new TypeError('single-play id must match simulation_id:sequence');
   }

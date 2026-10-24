@@ -56,7 +56,13 @@ const rejected = (mutate, message) => {
 
 rejected((record) => { record.schema_version = '2.0'; }, /unsupported schema_version/);
 rejected((record) => { record.plays[0].event_type = 'unknown_event'; }, /event_type is unsupported/);
-rejected((record) => { record.plays.push(structuredClone(record.plays[0])); }, /must contain exactly one play/);
+rejected((record) => { record.plays.push(structuredClone(record.plays[0])); }, /duplicate play id/);
+rejected((record) => {
+  const secondPlay = structuredClone(record.plays[0]);
+  secondPlay.sequence = 2;
+  secondPlay.id = `${record.simulation_id}:2`;
+  record.plays.push(secondPlay);
+}, /must contain exactly one play/);
 rejected((record) => { record.plays[0].id = 'wrong-id'; }, /id must match simulation_id:sequence/);
 rejected((record) => { record.mode = 'pregame_full_game'; }, /unsupported mode/);
 rejected((record) => { record.summary.valid_full_game = true; }, /summary.valid_full_game must match/);

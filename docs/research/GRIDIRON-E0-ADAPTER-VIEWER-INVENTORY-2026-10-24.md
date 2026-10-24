@@ -61,7 +61,7 @@ The E0a work below implements read-only record validation and viewer. The viewer
 
 **Gridiron status:** E0a implemented on `research/gridiron-e0-adapter-viewer-2026-10-24`. This commit confirms the LP interface and missing-field policy above.
 
-- `web/lp-play-record-adapter.js` validates the supplied v1 single-play record, including the supported field-block version/source and LOS-to-`yardline_100` consistency. It rejects unsupported modes/schema/events and malformed IDs, and returns a detached, deeply frozen display copy. The LP source record remains unchanged.
+- `web/lp-play-record-adapter.js` validates the supplied v1 single-play record, including the supported field-block version/source and LOS-to-`yardline_100` consistency. It rejects unsupported modes/schema/events, malformed IDs, duplicate play IDs and sequences, and returns a detached, deeply frozen display copy. The LP source record remains unchanged.
 - `e0-record.html` and `web/e0-record-viewer.js` provide a separate page. The historical Film Room remains untouched. The page shows the retrospective label, state, decision, sampled outcome, temporal-pool provenance, declared gaps, authored field coordinates and every null path in the play. `null` appears as **Not modelled**; absent fields appear as **Not provided**.
 - `docs/fixtures/nfl-seq-e0-play-record-seed1042.json` is a byte-identical local copy of LP's fixture at `693e1767cecc36ad6e222da628cf9b4dd296740f` (SHA-256 `37478127345c80d44664c30481ea9adbf372450223d1c89822b4b27b450808f6`). The adapter does not call `simulatePlay`, infer participants, fill nulls, alter the sampled result, or claim a full game.
 - Run the page with `npm run serve` and open `/e0-record.html`. The focused adapter check is `node test/lp-play-record-adapter.mjs`.
