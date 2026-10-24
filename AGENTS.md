@@ -2,6 +2,12 @@
 
 **Read this before editing or launching an experiment.**
 
+## CANONICAL NFL 2026 GAME RULES — 2026-10-24 (LP-owned)
+
+**Read [LP's official-rule-grounded game-state reference](https://github.com/micahp/legendarypicks/blob/dev/docs/rules/NFL-2026-GAME-STATE-RULES.md) before E0b/E1/E2 direction, quarter, kickoff, possession or game-viewer changes**, along with the [current cross-repo delivery plan](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md). A kickoff starts each half; who receives is determined by the toss/deferral/half-choice ledger, **not** simply the opposite of opening receiver. Q1/Q3 end changes goals and preserves the drive, with **no kickoff**; halftime ends the half and resolves **a new kickoff event**. Direction comes from the **possessing team's period-specific field-end assignment**, not a Q1/Q2 versus Q3/Q4 default or home/away. The Q2 seed-1042 `dir=+1`, `los=12` remains an explicitly authored research display assumption only.
+
+LP E1 [`b58a19f1`](https://github.com/micahp/legendarypicks/commit/b58a19f1350897b0ded2841bcf441e70a36449af) has research-only partial drives; no punt/FG/kickoff/score/quarter model, so do not render a full legal game from it. Preserve LP outcome authority, schema checks, nulls and provenance. Gridiron may implement **honestly labeled** kickoff/quarter timeline display and E0b later, but do not invent real field ends, participant identities or unimplemented scoring/possession events. No merges or production changes.
+
 ## E0 field-direction correction, E1 unblocked — 2026-10-24
 
 Read [NFL field-end decision](docs/research/E0-FIELD-END-CONVENTION-DECISION-2026-10-24.md). Pushed LP E0 `693e1767` and Gridiron adapter `15b0b34` share the exact same updated seed-1042 JSON. The Q2 `dir=+1`, `los=12` is **approved solely as a labeled `authored_demo_convention`**, not historical field-end evidence or NFL period logic. **Do not generalize `dir=+1` in Q1–Q2 / `dir=-1` in Q3–Q4**. NFL teams switch ends after Q1 and Q3; second-half ends are explicitly assigned. E1/E2 require **team × period** field-end assignments and tests for possession, quarter change, halftime, touchdown/turnover and los consistency. Gridiron must remove the universal quarter-to-dir validation before supporting full games; keep this fixture labeled authored, not observed. LP **may begin E1 now** on its research branch, in parallel with E0b player-specific replay prerequisites. No production edits/merge.
