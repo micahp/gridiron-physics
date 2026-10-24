@@ -5,7 +5,9 @@ import { resolve } from 'node:path';
 const root = resolve(new URL('..', import.meta.url).pathname);
 const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
 const fixtureEntry = manifest.fixtures[0];
+const currentEnvelope = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.file), 'utf8'));
 const sourceRecord = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.upstream_source_file), 'utf8')).record;
+const playCount = sourceRecord.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
 
 class FakeNode {
   constructor(tag = 'div') {
@@ -104,18 +106,18 @@ for (let attempt = 0; attempt < 300 && get('viewer-content')?.hidden !== false; 
 
 assert.equal(get('load-error').hidden, true, `the final LP source should load: ${get('load-error').textContent}`);
 assert.equal(get('viewer-content').hidden, false, 'the final pinned record must render as a navigable game');
-assert.equal(get('drive-select').children.length, 24);
+assert.equal(get('drive-select').children.length, fixtureEntry.drives);
 assert.equal(get('play-select').children.length, sourceRecord.drives[0].plays.length);
-assert.match(get('record-meta').textContent, /143/);
-assert.equal(get('score-a').textContent, '14');
-assert.equal(get('score-b').textContent, '10');
+assert.match(get('record-meta').textContent, new RegExp(String(playCount)));
+assert.equal(get('score-a').textContent, String(sourceRecord.points.A));
+assert.equal(get('score-b').textContent, String(sourceRecord.points.B));
 assert.match(get('state-audit-summary').textContent, /0 findings/);
 assert.match(get('e3-clock-caveat').textContent, /594 \/ 7016/);
 assert.match(get('e3-unsupported-list').textContent, /timeouts/);
 assert.match(get('conversion-source-status').textContent, /PASS/);
-assert.match(get('e3-play-table').textContent, /Generated · n=143/);
+assert.match(get('e3-play-table').textContent, new RegExp(`Generated · n=${playCount}`));
 assert.equal(get('e3-play-table').querySelectorAll('tr').length, 5);
 assert.equal(get('e3-drive-table').querySelectorAll('tr').length, 6);
 assert.equal(get('e3-game-table').querySelectorAll('tr').length, 14);
 
-console.log('E2 viewer DOM audit: final LP record loads 24 drives / 143 plays; E3 diagnostics and caveats rendered');
+console.log(`E2 viewer DOM audit: LP ${manifest.lp_source.base_commit} loads ${fixtureEntry.drives} drives / ${playCount} plays; E3 diagnostics and caveats rendered`);

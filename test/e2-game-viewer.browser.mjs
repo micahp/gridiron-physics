@@ -43,26 +43,30 @@ try {
   const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
   const entry = manifest.fixtures[0];
   const regression = manifest.regression_fixtures[0];
+  const currentEnvelope = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', entry.file), 'utf8'));
+  const driveCount = currentEnvelope.record.drives.length;
+  const playCount = currentEnvelope.record.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
+  const finalSequence = currentEnvelope.record.drives.at(-1).plays.at(-1).sequence;
   const context = await browser.newContext();
   const page = await context.newPage();
   page.on('pageerror', (error) => pageErrors.push(error.message));
   await page.goto(`http://127.0.0.1:${port}/e2-game-viewer.html`);
   await page.locator('#viewer-content:not([hidden])').waitFor({ timeout: 15000 });
   assert.equal(await page.locator('#load-error').isHidden(), true);
-  assert.equal(await page.locator('#drive-select option').count(), 24);
-  assert.equal(await page.locator('#score-a').innerText(), '14');
-  assert.equal(await page.locator('#score-b').innerText(), '10');
-  await page.locator('#drive-select').selectOption('23');
-  assert.match(await page.locator('#drive-summary').innerText(), /Drive 24/);
+  assert.equal(await page.locator('#drive-select option').count(), driveCount);
+  assert.equal(await page.locator('#score-a').innerText(), String(currentEnvelope.record.points.A));
+  assert.equal(await page.locator('#score-b').innerText(), String(currentEnvelope.record.points.B));
+  await page.locator('#drive-select').selectOption(String(driveCount - 1));
+  assert.match(await page.locator('#drive-summary').innerText(), new RegExp(`Drive ${driveCount}`));
   const finalDrivePlayCount = await page.locator('#play-select option').count();
   await page.locator('#play-select').selectOption(String(finalDrivePlayCount - 1));
-  assert.match(await page.locator('#play-meta').innerText(), /24 \/ 143/);
+  assert.match(await page.locator('#play-meta').innerText(), new RegExp(`${driveCount} \/ ${finalSequence}`));
   assert.match(await page.locator('#state-audit-summary').innerText(), /0 findings/);
   assert.match(await page.locator('#e3-clock-caveat').innerText(), /594 \/ 7016/);
   assert.match(await page.locator('#e3-load-status').innerText(), /verified by SHA-256/);
   assert.match(await page.locator('#e3-unsupported-list').innerText(), /timeouts[\s\S]*two_minute_warning/);
   assert.match(await page.locator('#conversion-source-status').innerText(), /PASS/);
-  assert.match(await page.locator('#e3-play-table').innerText(), /Generated · n=143/);
+  assert.match(await page.locator('#e3-play-table').innerText(), new RegExp(`Generated · n=${playCount}`));
   assert.equal(await page.locator('#e3-play-table tbody tr').count(), 4);
   assert.equal(await page.locator('#e3-drive-table tbody tr').count(), 5);
   assert.equal(await page.locator('#e3-game-table tbody tr').count(), 13);
@@ -102,7 +106,7 @@ try {
   assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
   await regressionContext.close();
 
-  console.log('Real Chromium navigation: final 1ca payload navigated Drive 24 / Play 143; archived 5fc hard-rejected');
+  console.log(`Real Chromium navigation: LP ${manifest.lp_source.base_commit} navigated Drive ${driveCount} / Play ${playCount}; archived 5fc hard-rejected`);
   console.log(`Browser runtime errors: ${pageErrors.length}`);
 } finally {
   await browser.close();
