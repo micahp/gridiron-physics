@@ -1,6 +1,8 @@
 # Ratings-to-physics: coordinated research contract (2026-10-23)
 
-**Status:** coordination and comparison protocol, not model/solver adoption. Production engine and existing historical archives remain unchanged.
+**Status:** historical coordination and comparison protocol; source results remain frozen. Production engine and existing historical archives remain unchanged.
+
+> **PRIORITY SUPERSEDED (2026-10-23):** The [football-first agent directive](../FOOTBALL-FIRST-AGENT-DIRECTIVE-2026-10-23.md) is now the current cross-project work order. This document still governs how to interpret and reconcile its completed M4c/M4d and legacy tackle research, but its synthetic follow-up experiments are **not automatically authorized next tasks**. Do not commission another free-standing ratings-to-force sweep or solver-contact investigation without a demonstrated real-NFL-play relevance, a specifically blocking reproducible safety defect, or explicit instruction. Preserve all old failures and no-merge conclusions.
 
 ## Source-of-truth branches
 
