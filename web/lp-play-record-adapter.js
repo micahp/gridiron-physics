@@ -30,22 +30,24 @@ function freezeDeep(value) {
   return value;
 }
 
+export function convertYardlineToLos(dir, yardline100) {
+  if (dir !== 1 && dir !== -1) throw new TypeError('dir must be 1 or -1');
+  if (!Number.isFinite(yardline100) || yardline100 < 0 || yardline100 > 100) {
+    throw new TypeError('yardline_100 must be between 0 and 100');
+  }
+  return dir === 1 ? 100 - yardline100 : yardline100;
+}
+
 function validateFieldEndpoint(endpoint, state, label) {
   requireObject(endpoint, label);
   if (endpoint.dir !== 1 && endpoint.dir !== -1) {
     throw new TypeError(`${label}.dir must be 1 or -1`);
   }
-  if (Number.isInteger(state.quarter) && state.quarter >= 1 && state.quarter <= 4) {
-    const expectedDir = state.quarter <= 2 ? 1 : -1;
-    if (endpoint.dir !== expectedDir) {
-      throw new TypeError(`${label}.dir conflicts with the authored quarter convention`);
-    }
-  }
   if (!Number.isFinite(endpoint.los) || endpoint.los < 0 || endpoint.los > 100) {
     throw new TypeError(`${label}.los must be between 0 and 100`);
   }
   if (Number.isFinite(state.yardline_100)) {
-    const expectedLos = endpoint.dir === 1 ? 100 - state.yardline_100 : state.yardline_100;
+    const expectedLos = convertYardlineToLos(endpoint.dir, state.yardline_100);
     if (endpoint.los !== expectedLos) {
       throw new TypeError(`${label}.los does not match the stated dir and yardline_100`);
     }

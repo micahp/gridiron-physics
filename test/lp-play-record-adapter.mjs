@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { adaptLpPlayRecord, collectNullPaths, displayRecordValue } from '../web/lp-play-record-adapter.js';
+import { adaptLpPlayRecord, collectNullPaths, convertYardlineToLos, displayRecordValue } from '../web/lp-play-record-adapter.js';
 
 const fixtureBytes = readFileSync(new URL('../docs/fixtures/nfl-seq-e0-play-record-seed1042.json', import.meta.url));
 assert.equal(createHash('sha256').update(fixtureBytes).digest('hex'), '37478127345c80d44664c30481ea9adbf372450223d1c89822b4b27b450808f6');
@@ -46,6 +46,24 @@ assert.equal(adapted.replay.status, 'not_attempted');
 assert.equal(displayRecordValue(null), 'Not modelled');
 assert.equal(displayRecordValue(undefined), 'Not provided');
 assert.equal(displayRecordValue(false), 'No');
+assert.equal(convertYardlineToLos(1, 88), 12);
+assert.equal(convertYardlineToLos(-1, 88), 88);
+assert.equal(convertYardlineToLos(-1, 12), 12, 'opposite offense can retain the same absolute LOS at the same spot');
+assert.throws(() => convertYardlineToLos(0, 88), /dir must be 1 or -1/);
+assert.throws(() => convertYardlineToLos(1, 101), /yardline_100 must be between/);
+
+const turnoverRecord = structuredClone(fixture);
+const turnoverPlay = turnoverRecord.plays[0];
+turnoverPlay.state_before.down = 4;
+turnoverPlay.state_after.offense_team = 'LV';
+turnoverPlay.state_after.defense_team = 'IND';
+turnoverPlay.state_after.down = 1;
+turnoverPlay.state_after.yardline_100 = 12;
+turnoverPlay.outcome.turnover = true;
+turnoverPlay.field.after = { dir: -1, los: 12 };
+const turnoverDisplay = adaptLpPlayRecord(turnoverRecord);
+assert.equal(turnoverDisplay.plays[0].field.after.dir, -1, 'possession change can flip direction during Q2');
+assert.equal(turnoverDisplay.plays[0].field.after.los, turnoverDisplay.plays[0].field.before.los);
 assert.deepEqual(collectNullPaths({ known: null, nested: { also: null } }), ['known', 'nested.also']);
 
 const rejected = (mutate, message) => {
@@ -69,6 +87,5 @@ rejected((record) => { record.summary.valid_full_game = true; }, /summary.valid_
 rejected((record) => { delete record.outcome_pool.temporal_eligibility.cell_rows_total; }, /row counts must be valid/);
 rejected((record) => { record.plays[0].field.source = 'observed'; }, /field.source is unsupported/);
 rejected((record) => { record.plays[0].field.before.los = 11; }, /does not match the stated dir/);
-rejected((record) => { record.plays[0].field.before = { dir: -1, los: 88 }; }, /conflicts with the authored quarter convention/);
 
 console.log('LP play record E0a adapter checks passed');
