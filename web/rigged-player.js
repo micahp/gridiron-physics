@@ -1,10 +1,17 @@
 // Rigged free football player integration.
 //
 // Loads web/assets/football-player-rigged.glb (CC BY 3.0, "American Football
-// Player" by Hikky via BlendSwap) and drives its 56-bone skeleton with the same
-// 12 procedural pose states the primitive fallback uses. The primitive build
-// in render.js remains the fallback: if the GLB fails to load or a bone is
-// missing, players keep rendering and only the rigged path degrades.
+// Player" by Hikky via BlendSwap, exported with Blender 4.2's official glTF 2.0
+// exporter) and drives its 56-bone skeleton with the same 12 procedural pose
+// states the primitive fallback uses.
+//
+// The rig's bind pose is already upright, Y-up, feet on the ground and facing
+// +Z, so the module only spins it to the field's +X and scales it to the
+// player's height. Posing happens in WORLD space (field axes) rather than in
+// bone-local axes, because this rig's bone roll does not match the primitive
+// player's joint frames: hip/knee swing and shoulder flexion rotate about the
+// field's left-right axis (Z), abduction about the forward axis (X), and
+// elbows/knees bend about the hinge axis captured from the bind pose.
 import * as THREE from './vendor/three.module.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
@@ -13,6 +20,10 @@ export const POSE = { STANCE: 0, RUN: 1, BLOCK: 2, DOWN: 3, THROW: 4, CATCH: 5, 
 
 const YD = 0.9144;
 const ASSET_URL = 'web/assets/football-player-rigged.glb';
+
+// Field axes (world units are yards): +X downfield, +Y up, +Z across the field.
+const AX_FWD = new THREE.Vector3(1, 0, 0);
+const AX_SIDE = new THREE.Vector3(0, 0, 1);
 
 let loaderPromise = null;
 export function loadRiggedPlayer() {
@@ -25,36 +36,21 @@ export function loadRiggedPlayer() {
   return loaderPromise;
 }
 
-// glTF bone names from the rig's spine/limb hierarchy.
+// three.js sanitises glTF node names ('thigh.L' -> 'thighL'), so the map holds
+// the sanitised names and the builder also aliases the dot-stripped variants.
 const BONE = {
-  hip: 'spine', chest: 'spine.001', chest2: 'spine.002', neck: 'spine.003', head: 'Bone',
-  upL: 'upper_arm.L', foreL: 'forearm.L', handL: 'hand.L',
-  upR: 'upper_arm.R', foreR: 'forearm.R', handR: 'hand.R',
-  thighL: 'thigh.L', shinL: 'shin.L', footL: 'foot.L',
-  thighR: 'thigh.R', shinR: 'shin.R', footR: 'foot.R',
+  hip: 'spine', chest: 'spine001', chest2: 'spine002', neck: 'spine003', head: 'Bone',
+  upL: 'upper_armL', foreL: 'forearmL', handL: 'handL',
+  upR: 'upper_armR', foreR: 'forearmR', handR: 'handR',
+  thighL: 'thighL', shinL: 'shinL', footL: 'footL', toeL: 'toeL',
+  thighR: 'thighR', shinR: 'shinR', footR: 'footR', toeR: 'toeR',
 };
 
-// Local axis we rotate around for forward/back limb flexion. Blender-authored
-// bones point +Y along the bone and glTF keeps +Y up, so a standing leg flexes
-// around the local X axis; the sign is tuned against the field's +X forward.
-const FLEX = 'x';
-
-function tintKit(clone, kit) {
-  // Clone materials per player so one team's colour never leaks into another,
-  // then tint the helmet and body meshes toward the kit colours. Textures are
-  // preserved; the colour simply multiplies them.
-  clone.traverse((o) => {
-    if (!o.isMesh || !o.material) return;
-    const mats = Array.isArray(o.material) ? o.material : [o.material];
-    o.material = mats.map((m) => {
-      const c = m.clone();
-      if (o.name === 'OBHELMET') c.color.set(kit.helmet);
-      else if (o.name === 'OBPERSONAGEM') c.color.set(kit.jersey);
-      return c;
-    });
-    if (o.material.length === 1) o.material = o.material[0];
-  });
-}
+// Neutral mode: skip all procedural posing so the imported bind pose can be
+// checked on its own (Test 1: does the model stand upright, feet on the ground).
+let neutralMode = false;
+export function setNeutralMode(on) { neutralMode = !!on; }
+export function isNeutralMode() { return neutralMode; }
 
 export function buildRiggedPlayer(gltf, info, kit) {
   const root = new THREE.Group(); // positioned & yawed on the field (yards)
@@ -64,31 +60,58 @@ export function buildRiggedPlayer(gltf, info, kit) {
   const clone = cloneSkeleton(gltf.scene);
   const bones = {};
   clone.traverse((o) => {
+    if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; }
     if (o.isSkinnedMesh) {
-      o.castShadow = true;
-      o.frustumCulled = false;
-      o.skeleton.bones.forEach((b) => { bones[b.name] = b; });
+      o.skeleton.bones.forEach((b) => {
+        bones[b.name] = b;
+        bones[b.name.replace(/\./g, '')] = b; // alias for dotted source names
+      });
     }
   });
-  tintKit(clone, kit);
   const rig = new THREE.Group(); // orientation + scale wrapper
   body.add(rig);
   rig.add(clone);
 
-  // The custom-extracted rig lies flat in glTF space: long (height) axis along
-  // +Z, thin chest-to-back along Y, arm span along X. Use a nested rig so the two
-  // 90° rotations don't compound through a single Euler: stand it up, then spin
-  // the stood-up body to face the field's +X.
-  rig.rotation.x = Math.PI / 2;    // stand up: +Z -> +Y
-  clone.rotation.y = -Math.PI / 2; // face +X (field forward)
+  // Official Blender export: the model is already glTF Y-up and standing
+  // (body spans y 0.09..1.83, helmet to 1.86 in metres) and faces +Z. Spin it
+  // to the field's +X, then scale to the player height and ground the feet.
+  clone.rotation.y = Math.PI / 2; // +Z forward -> +X forward
   rig.updateMatrixWorld(true);
   const bb = new THREE.Box3().setFromObject(rig);
-  const heightU = Math.max(1e-3, bb.max.y - bb.min.y); // authored units (~1.87)
+  const heightU = Math.max(1e-3, bb.max.y - bb.min.y); // authored units (~1.86)
   const s = (info.physics?.height || 1.88) / 1.88;
   const fit = (1.88 * s) / heightU;
   const S = fit / YD; // metres -> yards (same convention as the primitive body)
   rig.scale.setScalar(S);
   rig.position.y = -bb.min.y * S; // ground the feet
+
+  // Capture the bind pose so posing can be expressed as an offset from rest.
+  const dir = (from, to) => {
+    const a = bones[from], b = bones[to];
+    if (!a || !b) return null;
+    const pa = new THREE.Vector3(), pb = new THREE.Vector3();
+    a.getWorldPosition(pa); b.getWorldPosition(pb);
+    return pb.sub(pa).normalize();
+  };
+  const hinge = (from, to) => {
+    const d1 = dir(from, to);
+    const child = bones[to];
+    const grand = child && child.children.length ? dir(to, child.children[0].name) : null;
+    if (!d1 || !grand) return null;
+    return new THREE.Vector3().crossVectors(d1, grand).normalize();
+  };
+  for (const b of Object.values(bones)) {
+    if (!b || !b.isBone) continue;
+    b.userData.restQuat = b.quaternion.clone();
+    const pq = new THREE.Quaternion();
+    if (b.parent) b.parent.getWorldQuaternion(pq);
+    b.userData.restParentQuat = pq;
+  }
+  // semantic aliases (upL, hip, chest, ...) so the poser can use stable names
+  for (const [key, name] of Object.entries(BONE)) {
+    const b = bones[name] || bones[name.replace(/\./g, '')];
+    if (b) bones[key] = b;
+  }
 
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.85, 1.05, 32),
@@ -99,11 +122,31 @@ export function buildRiggedPlayer(gltf, info, kit) {
   ring.visible = false;
   root.add(ring);
 
-  root.userData = { rigged: true, id: info.id, body, ring, bones, phase: Math.random() * 6, lie: 0 };
+  root.userData = {
+    rigged: true, id: info.id, body, ring, bones, phase: Math.random() * 6, lie: 0,
+    hinge: {
+      shinL: hinge('thighL', 'shinL'), shinR: hinge('thighR', 'shinR'),
+      foreL: hinge('upper_armL', 'forearmL'), foreR: hinge('upper_armR', 'forearmR'),
+    },
+  };
   return root;
 }
 
+// Rotate a bone by `angle` about a world-space axis, on top of its bind pose.
+// The bone's local quaternion is derived from the parent's bind-pose rotation so
+// the rig's own bone roll never matters.
+const _q = new THREE.Quaternion();
+const _pq = new THREE.Quaternion();
+function rotWorld(bone, axis, angle, k) {
+  if (!bone || !axis || !bone.userData.restQuat || !bone.userData.restParentQuat) return;
+  _pq.copy(bone.userData.restParentQuat);
+  _q.setFromAxisAngle(axis, angle);
+  const desired = _pq.clone().invert().multiply(_q).multiply(_pq).multiply(bone.userData.restQuat);
+  bone.quaternion.slerp(desired, k);
+}
+
 export function animateRigged(root, pose, speed, dt, carrying) {
+  if (neutralMode) return; // Test 1: leave the imported bind pose untouched
   const u = root.userData;
   const b = u.bones;
   if (!b.hip && !b.thighL) return;
@@ -115,48 +158,56 @@ export function animateRigged(root, pose, speed, dt, carrying) {
   let armOut = 0.12;
   const legA = [Math.sin(u.phase) * swing, -Math.sin(u.phase) * swing];
   const kneeB = [Math.max(0, -Math.cos(u.phase)) * swing * 1.4, Math.max(0, Math.cos(u.phase)) * swing * 1.4];
-  let lieT = 0, lift = 0;
+  let lieT = 0, lift = 0, elbow = 0.55;
   switch (pose) {
     case POSE.STANCE:
-      crouch = 0.32; lean = 0.75; legA[0] = 0.9; legA[1] = 0.6; kneeB[0] = 1.4; kneeB[1] = 1.2; armF[0] = 0.9; armF[1] = 0.3; break;
+      crouch = 0.32; lean = 0.55; legA[0] = 0.55; legA[1] = 0.35; kneeB[0] = 0.9; kneeB[1] = 0.8;
+      armF[0] = 0.5; armF[1] = 0.2; armOut = 0.18; elbow = 0.9; break;
     case POSE.BLOCK:
-      lean = 0.5; crouch = 0.12; armF[0] = armF[1] = 1.3; armOut = 0.05;
-      legA[0] = 0.5 + Math.sin(u.phase) * 0.25; legA[1] = -0.2 - Math.sin(u.phase) * 0.25; kneeB[0] = 0.7; kneeB[1] = 0.5; break;
+      lean = 0.4; crouch = 0.12; armF[0] = armF[1] = 0.6; armOut = 0.05; elbow = 1.1;
+      legA[0] = 0.35 + Math.sin(u.phase) * 0.2; legA[1] = -0.15 - Math.sin(u.phase) * 0.2;
+      kneeB[0] = 0.6; kneeB[1] = 0.45; break;
     case POSE.WRAP:
-      lean = 0.85; crouch = 0.15; armF[0] = armF[1] = 1.5; armOut = -0.15; break;
+      lean = 0.5; crouch = 0.15; armF[0] = armF[1] = 0.7; armOut = -0.1; elbow = 1.3; break;
     case POSE.DOWN:
-      lieT = Math.PI / 2; armF[0] = 2.6; armF[1] = 2.4; legA[0] = 0.1; legA[1] = -0.1; kneeB[0] = 0.2; kneeB[1] = 0.2; break;
+      lieT = Math.PI / 2; armF[0] = 1.4; armF[1] = 1.2; legA[0] = 0.1; legA[1] = -0.1;
+      kneeB[0] = 0.3; kneeB[1] = 0.3; elbow = 0.3; break;
     case POSE.THROW:
-      armF[0] = -2.6; armF[1] = 0.6; lean = 0.1; break;
+      armF[0] = -1.2; armF[1] = 0.5; lean = 0.15; elbow = 1.4; break;
     case POSE.CATCH:
-      armF[0] = armF[1] = 2.8; armOut = 0.25; lean = 0.05; break;
+      armF[0] = armF[1] = 1.1; armOut = 0.2; lean = 0.05; elbow = 0.5; break;
     case POSE.KICK:
-      legA[0] = -1.3; legA[1] = 0.2; kneeB[0] = 0; kneeB[1] = 0.3; lean = -0.2; armF[0] = 0.6; armF[1] = -0.8; armOut = 0.7; break;
+      legA[0] = -0.9; legA[1] = 0.2; kneeB[0] = 0.1; kneeB[1] = 0.3; lean = -0.15;
+      armF[0] = 0.4; armF[1] = -0.5; armOut = 0.45; elbow = 0.6; break;
     case POSE.HOLD:
     case POSE.KNEEL:
-      crouch = 0.42; legA[0] = 1.5; legA[1] = -0.2; kneeB[0] = 1.6; kneeB[1] = 2.2; lean = 0.2; armF[0] = armF[1] = 0.9; break;
+      crouch = 0.42; legA[0] = 1.0; legA[1] = -0.2; kneeB[0] = 1.2; kneeB[1] = 1.6; lean = 0.15;
+      armF[0] = armF[1] = 0.6; elbow = 1.2; break;
     case POSE.CELEBRATE:
-      armF[0] = armF[1] = 3.0; armOut = 0.5; lift = Math.abs(Math.sin(u.phase * 1.3)) * 0.18; break;
+      armF[0] = armF[1] = 2.2; armOut = 0.4; lift = Math.abs(Math.sin(u.phase * 1.3)) * 0.18; elbow = 0.3; break;
     case POSE.BACKPEDAL:
       lean = 0.25; crouch = 0.1; break;
   }
-  if (carrying && pose !== POSE.DOWN) armF[1] = 1.4;
+  if (carrying && pose !== POSE.DOWN) { armF[1] = 1.0; elbow = 1.3; }
   const k = 1 - Math.exp(-dt * 14);
 
-  const rot = (bone, val) => { if (bone) bone.rotation[FLEX] += (val - bone.rotation[FLEX]) * k; };
-  // legs
-  rot(b.thighL, legA[0]); rot(b.thighR, -legA[1]);
-  rot(b.shinL, -kneeB[0]); rot(b.shinR, -kneeB[1]);
-  // arms
-  rot(b.upL, armF[0]); rot(b.upR, -armF[1]);
-  rot(b.foreL, 0.5); rot(b.foreR, 0.5);
-  if (b.upL) b.upL.rotation.z = armOut;
-  if (b.upR) b.upR.rotation.z = -armOut;
+  // legs: hip swing about the field's left-right axis, knee about its hinge
+  rotWorld(b.thighL, AX_SIDE, legA[0], k);
+  rotWorld(b.thighR, AX_SIDE, legA[1], k);
+  rotWorld(b.shinL, u.hinge.shinL, kneeB[0], k);
+  rotWorld(b.shinR, u.hinge.shinR, kneeB[1], k);
+  // arms: shoulder flexion about the left-right axis, abduction about forward
+  rotWorld(b.upL, AX_SIDE, armF[0], k);
+  rotWorld(b.upR, AX_SIDE, armF[1], k);
+  rotWorld(b.upL, AX_FWD, armOut, k);
+  rotWorld(b.upR, AX_FWD, -armOut, k);
+  rotWorld(b.foreL, u.hinge.foreL, elbow, k);
+  rotWorld(b.foreR, u.hinge.foreR, elbow, k);
   // torso lean and crouch
-  rot(b.hip, -lean * 0.5);
-  rot(b.chest, -lean * 0.5);
+  rotWorld(b.hip, AX_SIDE, -lean * 0.5, k);
+  rotWorld(b.chest, AX_SIDE, -lean * 0.5, k);
 
   u.lie += (lieT - u.lie) * (1 - Math.exp(-dt * 8));
   u.body.rotation.z = -u.lie;
-  u.body.position.y = lift + (u.lie > 0.1 ? 0.12 : 0);
+  u.body.position.y = lift + (u.lie > 0.1 ? 0.12 : 0) - crouch * 0.25;
 }

@@ -3,7 +3,12 @@
 // (0..53.33), Y is up. Player bodies are built in metres and scaled.
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { loadRiggedPlayer, buildRiggedPlayer, animateRigged } from './rigged-player.js';
+import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, setNeutralMode } from './rigged-player.js';
+
+// ?neutral=1 keeps the imported rig in its bind pose (no procedural posing).
+if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('neutral')) {
+  setNeutralMode(true);
+}
 
 const YD = 0.9144;
 const W = 160 / 3;
