@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LP E2 Seed 1 · Gridiron Record Viewer</title>
+  <link rel="stylesheet" href="web/e2-real-record-viewer.css">
+</head>
+<body>
+  <div class="retrospective-banner">2022-pool retrospective demonstration · Not a 2026 forecast · valid_full_game=false</div>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">Gridiron Physics · direct LP E2 record</p>
+      <p><a href="e2-matchups.html">← Matchup index</a></p>
+      <h1>LP seed 1 game record</h1>
+      <p id="source-mode" class="mode-label">Loading source record…</p>
+      <p id="load-status" role="status">Loading byte-pinned LP JSON</p>
+    </header>
+
+    <section id="load-error" class="notice error" role="alert" hidden></section>
+    <section class="notice scope-note">This is LP's retrospective statistical seed-1 game record with abstract teams A and B. LP supplies no scheduled matchup identities here. `valid_full_game=false`. 3D replay availability is reported on every play.</section>
+
+    <section class="scoreboard" aria-label="Final score">
+      <div><span>LP team A</span><strong id="final-a" data-field="final-points-a">—</strong></div>
+      <div class="score-separator">FINAL</div>
+      <div><span>LP team B</span><strong id="final-b" data-field="final-points-b">—</strong></div>
+      <p id="game-flags" class="score-note"></p>
+    </section>
+
+    <section class="source-grid">
+      <article class="card">
+        <h2>Game record</h2>
+        <dl id="game-meta" class="meta-grid"></dl>
+      </article>
+      <article class="card">
+        <h2>Source provenance</h2>
+        <dl id="source-meta" class="meta-grid"></dl>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Drives</h2>
+      <div class="table-wrap">
+        <table><thead><tr><th>Drive</th><th>Possession</th><th>Start</th><th>Plays</th><th>Terminal</th><th>End</th></tr></thead><tbody id="drive-rows"></tbody></table>
+      </div>
+    </section>
+
+    <section class="card navigation">
+      <div class="selectors">
+        <label>Drive<select id="drive-select"></select></label>
+        <label>Play<select id="play-select"></select></label>
+      </div>
+      <p id="drive-summary" class="drive-summary">Drive <span id="summary-drive-index"></span> · state drive index <span id="summary-state-drive-index"></span> · possession <span id="summary-possession"></span> · <span id="summary-play-count"></span> plays · <span id="summary-terminal"></span></p>
+      <ol id="play-list" class="play-list"></ol>
+      <div class="play-controls">
+        <button id="previous-play" type="button">Previous play</button>
+        <button id="next-play" type="button">Next play</button>
+      </div>
+    </section>
+
+    <section class="details-grid">
+      <article class="card">
+        <h2>Selected play</h2>
+        <p id="event-text" class="event-text"></p>
+        <p id="replay-availability" class="replay-state"></p>
+        <h3>Before play</h3>
+        <dl id="before-state" class="meta-grid state-grid"></dl>
+        <h3>After play</h3>
+        <dl id="after-state" class="meta-grid state-grid"></dl>
+        <h3>Authored field assignment</h3>
+        <p id="field-assignment" class="muted"></p>
+      </article>
+      <article class="card">
+        <h2>LP event record</h2>
+        <pre id="play-json" class="json-view"></pre>
+      </article>
+    </section>
+
+    <footer>Read-only source rendering. Record fields and outcomes are displayed as supplied by LP.</footer>
+  </main>
+  <script type="module" src="web/e2-real-record-viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "drive_count": 24,
+  "local_snapshot_path": "docs/fixtures/e2/lp-current-seed1.json",
+  "lp_artifact_path": "docs/fixtures/e2/e2-game-seed1.json",
+  "lp_artifact_sha256": "0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821",
+  "lp_commit": "a442dcd72559cfaf2d04737fc2454cea486faf09",
+  "lp_repository": "git@github.com:micahp/legendarypicks.git",
+  "mode": "legal_game_state_first_piece",
+  "play_count": 143,
+  "points": {
+    "A": 14,
+    "B": 10
+  },
+  "schema": "gridiron.lp-e2-real-record-pin.v1",
+  "seed": 1,
+  "valid_full_game": false
+}
