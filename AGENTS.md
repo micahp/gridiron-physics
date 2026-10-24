@@ -2,6 +2,12 @@
 
 **Read this before editing or launching an experiment.**
 
+## MOVEMENT POLICY DECISION — 2026-10-24: statistical pass, not material adoption
+
+The [coordinator materiality decision](docs/research/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md) accepted the agents' **reported, not remotely verified** development result: a same-history constant-acceleration predictor supplies ~97% of the current controller's benefit over constant velocity, while the controller adds only ~3.72 mm at 1.0 s. The original literal prereg **passes**, but no new movement-policy complexity is approved on this evidence. A **new, explicitly post-development** future holdout policy requires ≥5 cm AND ≥5% 1-second position MAE improvement versus the strongest equal-information kinematic baseline, a game-clustered interval below zero, and no serious spatial/runtime regression. **Do not open weeks 6–9 for current-controller promotion now.**
+
+Before future movement scoring, reconcile the reported **9,456 manifest rows / 9,388 snap plays / 9,289 scored plays** using exact IDs and exclusions. Keep the old prereg unchanged and the movement reports unmerged; source research files were **uncommitted** at the time of this decision. This does **not** supersede full-game gates E0–E2: focus on completing play → drive → game.
+
 ## ACTIVE TOP PRIORITY — 2026-10-24: deliver one full generated NFL game
 
 **Required first read:** [End-to-end simulator delivery plan](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md). This **supersedes the immediate work ordering** of the football-first tracking directive and the 2026-10-24 observed-movement review, while keeping their verified findings and these safety rules. The goal is to connect existing LP play/drive/game generation to Gridiron Physics' existing visualization, then validate against real football. *Observed motion experiments support delivery; they do not block it.*
