@@ -7,7 +7,30 @@
 
 > **North star:** Simulate a football game in which real, pregame-eligible players with estimated abilities make football decisions and physically interact in three dimensions. Those interactions should produce the individual play results, which change downs, drives, field position, clock, scoring, and ultimately game outcomes. Then demonstrate which parts look like real football and whether they improve held-out predictions.
 
+## Latest E1/OOB decisions — 2026-10-24
+
+- **E1 research viewer checkpoint accepted:** [Gridiron `f2a00a09`](https://github.com/micahp/gridiron-physics/commit/f2a00a0973e901c7590220cd569dde80cdf6245c) now pins LP `641e1b2e` and validates the `clock_clamped_plays` summary; agent reports 25 Node passes, E0a regression and 10 headless fixture renders. LP defects A/B/C + play IDs remain and must be fixed before final research-contract acceptance; then Gridiron repins to **new repair SHA**. No complete-game or 3D claim.
+- **OOB candidate NOT ADOPTED:** [M4d paired disc-edge report `1ea4ee63`](https://github.com/micahp/gridiron-physics/commit/1ea4ee63a98ecc379b36bc22e09acff3762ba320) has unchanged median paired timing error despite more near-frame detections and mixed better/worse spot outcomes. Reported p90 baseline/candidate spots use different available-crossing denominators, so no matched-p90 claim. Keep existing 0.3-yard center threshold unchanged. Stop this research line pending independent legal contact labels. Weeks 6–9 reserved.
+- **Critical next milestone E2:** Two half-opening kickoffs by different teams in normal mode, toss/choice ledger, drive→score/try→kickoff transitions, clock/quarter and game stats. All physical gaps remain honest and non-blocking for LP game-state development.
+
+
 This document translates the cross-project research notebook into **concrete Gridiron Physics milestones**. It is a roadmap, not proof that the proposed architecture has been implemented. Keep research claims, existing behavior, hypotheses and accepted implementation separate.
+
+## MOVEMENT RESEARCH DECISION — 2026-10-24: stop polishing millimeters
+
+[Coordinator review and new prospective holdout policy](docs/research/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md): agent-reported equal-history full-play snap movement experiment **passed the original preregistered statistical gate** but yielded only **3.72 mm** lower 1-second MAE for legacy locomotion versus constant acceleration, versus **113.2 mm** gained by acceleration over constant velocity. About **97%** of the total observed improvement is explainable by the simple acceleration extrapolation. The original rule had no materiality floor. **Decision:** accept literal pass; **decline complexity/adoption**. Add a *prospective, post-development* ≥5 cm AND ≥5% 1-second gain rule before any future weeks-6–9 held-out scoring; don't use that reserved cohort for this candidate yet.
+
+**Research artifacts not yet pushed** at the time of review; reported denominators **9,456 local manifest rows, 9,388 included snap plays, 9,289 scored plays** require play-ID reconciliation. Historic origin-anchored minimum-separation metric is invalid as evidence of tackle timing; absolute original RMSE must be relabeled or corrected. This **does not delay** E0/E1/E2 game integration.
+
+## NORMAL HALF-KICKOFF POLICY — 2026-10-24
+
+**Product rule (not legal-rule claim):** two opening-half kickoffs per normal simulated game, **one by each team**. The team receiving Q1 kicks Q3; the team kicking Q1 receives Q3. Coin toss and deferral must still be modeled, but **the legal exception in which one team kicks twice has zero sampling probability and is forbidden in normal mode**. Permit it only as explicit exceptional test or verified historical reconstruction, never ordinary forecast input. Require **hard assertions** for the two `half_start` events, different kickers, coin-toss/choice ledger and kickoff-determined ball possession. Track scoring kickoffs separately. Consult the [revised LP rules contract](https://github.com/micahp/legendarypicks/blob/dev/docs/rules/NFL-2026-GAME-STATE-RULES.md). This overrides prior permissive wording.
+
+## NFL 2026 rulebook gate — 2026-10-24: halftime is a kickoff, not a field flip
+
+**Source of truth for the game-state engine:** [LP NFL 2026 rules reference](https://github.com/micahp/legendarypicks/blob/dev/docs/rules/NFL-2026-GAME-STATE-RULES.md) and the [official NFL rulebook](https://operations.nfl.com/rules-officiating/2026-nfl-rulebook). The user correctly identified that the earlier field-direction discussion omitted the **second-half kickoff and coin-toss/deferral choices**. A game must resolve first-half and second-half kicking/receiving rights from the choice ledger; the opening receiver **MUST** kick to open Q3 in **normal simulated games**. A legally possible exception is not included in normal predictions. Q1 and Q3 **change goals and continue the drive** with no kickoff; halftime **terminates that half's drive, resolves choices and restarts with a kickoff**. No universal `quarter<=2:dir=+1` rule. Research E0 authored coordinates must stay labeled as authored, not observed NFL choices.
+
+**Verified LP E1 research:** [`b58a19f1`](https://github.com/micahp/legendarypicks/commit/b58a19f1350897b0ded2841bcf441e70a36449af) contains four demonstration drives and 4,396/4,800 completed under the **limited** E1 checker; 404 end in thin-cell failure. Its **2,075 turnovers on downs** are an artifact of no punt/FG decision, and its no-kickoff/score/halftime/quarter-change model **does not establish full NFL legality**. Next critical path: correct game transition model, fourth-down decisions, legal scoreboard and clock and two half-kickoffs before describing a complete game. Remain research-only; keep E0b physical playback separate.
 
 ## ACTIVE DELIVERY PRIORITY — 2026-10-24: full end-to-end football game
 

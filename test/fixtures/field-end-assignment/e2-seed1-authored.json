@@ -1,0 +1,14 @@
+{
+  "assignment_version": "team-period-field-end-v1",
+  "source": "authored_demo_orientation_test_only",
+  "assignments": [
+    { "team_id": "A", "period": "Q1", "dir": -1 },
+    { "team_id": "B", "period": "Q1", "dir": 1 },
+    { "team_id": "A", "period": "Q2", "dir": 1 },
+    { "team_id": "B", "period": "Q2", "dir": -1 },
+    { "team_id": "A", "period": "Q3", "dir": -1 },
+    { "team_id": "B", "period": "Q3", "dir": 1 },
+    { "team_id": "A", "period": "Q4", "dir": 1 },
+    { "team_id": "B", "period": "Q4", "dir": -1 }
+  ]
+}

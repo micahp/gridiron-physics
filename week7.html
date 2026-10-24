@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gridiron Physics | Six-matchup simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="web/style.css">
+<style>
+/* Setup strip and notes, using the film room tokens from web/style.css. */
+.setup { display: grid; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--rail); }
+.setup-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.setup-row label { font: 11px var(--f-data); color: var(--dim); }
+.setup select, .setup input { background: var(--rail); border: 1px solid var(--rail); padding: 6px 8px; min-width: 0; }
+.setup select { width: 100%; }
+.setup input { width: 7em; }
+.setup button {
+  border: 1px solid var(--rail); background: var(--rail); padding: 7px 12px;
+  font: 600 13px var(--f-display); letter-spacing: 0.05em; text-transform: uppercase;
+}
+.setup button:hover { border-color: var(--dim); }
+.setup button.primary { background: var(--chalk); color: var(--night); border-color: var(--chalk); }
+.setup button:disabled { opacity: 0.45; cursor: default; }
+.warn { color: var(--firstdown); }
+.note { font-size: 12px; color: var(--dim); }
+.pdetail { padding: 12px; margin: 2px 0 10px; background: var(--rail); border-left: 3px solid var(--firstdown); }
+.box { width: 100%; border-collapse: collapse; font: 12px/1.3 var(--f-data); margin-bottom: 6px; }
+.box th, .box td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--rail); }
+.box th { font: 600 12px var(--f-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.box th:first-child, .box td:first-child { text-align: left; }
+.box td:first-child { font: 600 14px var(--f-display); letter-spacing: 0.04em; }
+.pgroup { font: 600 13px var(--f-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); margin: 14px 0 8px; }
+.pgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pcard { background: var(--rail); padding: 8px; border: 1px solid transparent; min-width: 0; }
+.pcard.on { border-color: var(--firstdown); }
+.pcard svg { width: 100%; height: auto; display: block; margin-bottom: 6px; }
+.pd-field { fill: #16241b; }
+.pd-los { stroke: var(--chalk); stroke-width: 0.6; opacity: 0.5; }
+.pd-ol { fill: var(--dim); }
+.pd-qb, .pd-rb { fill: var(--chalk); }
+.pd-run, .pd-pass { fill: none; stroke: var(--firstdown); stroke-width: 1.6; }
+.pd-pass { stroke-dasharray: 3 2; }
+.pd-end { fill: var(--firstdown); }
+.pd-target { fill: var(--firstdown); }
+.pc-t { font: 600 13px var(--f-display); letter-spacing: 0.03em; text-transform: uppercase; }
+.pc-n { font: 11px var(--f-data); color: var(--dim); }
+.bug-meta p { margin: 0; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="bug" aria-label="Scoreboard">
+    <div class="bug-team" id="bug-away">
+      <span class="abbr" id="away-name">AWAY</span><span class="score" id="away-score">0</span>
+    </div>
+    <div class="bug-mid">
+      <div class="bug-clock"><span id="bug-q">Q1</span><span id="game-clock">15:00</span></div>
+      <div class="bug-down" id="down-distance">1ST &amp; 10</div>
+    </div>
+    <div class="bug-team" id="bug-home">
+      <span class="score" id="home-score">0</span><span class="abbr" id="home-name">HOME</span>
+    </div>
+    <div class="bug-meta">
+      <p>Gridiron Physics · Week 7 · HYPOTHETICAL · RESEARCH</p>
+      <p><span id="replay-type">Physics reconstruction</span></p>
+      <p id="status">Loading matchup data…</p>
+    </div>
+  </header>
+
+  <main class="stage">
+    <canvas id="view" aria-label="3D hypothetical football play"></canvas>
+    <div class="ticker" aria-live="polite"><div class="big" id="snap-title">Select a matchup to begin</div></div>
+    <div class="cams" role="group" aria-label="Camera">
+      <button data-cam="broadcast" class="on">Broadcast</button>
+      <button data-cam="all22">All-22</button>
+      <button data-cam="sky">Skycam</button>
+      <button data-cam="top">Chalkboard</button>
+      <button data-cam="follow">Follow</button>
+      <button data-cam="free">Free</button>
+    </div>
+  </main>
+
+  <section class="transport" aria-label="Playback">
+    <div class="tp-row">
+      <button id="previous" title="Previous play (previous snap)" aria-label="Previous play">‹</button>
+      <button id="play" title="Play through the plays (space)" aria-label="Play through the plays">▶</button>
+      <button id="next" title="Next play" aria-label="Next play">›</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Scrub 3D replay">
+      <select id="speed" aria-label="Playback speed">
+        <option value=".5">½×</option><option value="1" selected>1×</option><option value="2">2×</option>
+      </select>
+    </div>
+    <p class="playtext" id="play-detail">Loading...</p>
+  </section>
+
+  <aside class="panel" aria-label="Details">
+    <div class="setup">
+      <select id="matchup" aria-label="Matchup"></select>
+      <div class="setup-row">
+        <label for="seed">Seed</label>
+        <input id="seed" value="1042">
+        <button class="primary" id="simulate" disabled>Simulate</button>
+        <button id="again" disabled>Again</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="drives" class="on">Drives</button>
+      <button role="tab" data-tab="playbook">Playbook</button>
+      <button role="tab" data-tab="ratings">Ratings</button>
+      <button role="tab" data-tab="box">Box score</button>
+    </nav>
+    <div class="tab" id="tab-drives">
+      <div class="sec" id="timeline-head">Drives and plays</div>
+      <div class="filterbar" id="filterbar" role="group" aria-label="Filter plays"></div>
+      <p class="note">Key plays: scoring plays, interceptions, 20+ yard gains and turnovers on downs. This is not ESPN's ranked list; the simulation has no win-probability model.</p>
+      <div id="timeline"></div>
+    </div>
+    <div class="tab" id="tab-playbook" hidden>
+      <div class="roster-t" id="book-t"></div>
+      <div class="sec" id="playbook-head">Team play calling</div>
+      <div id="playbook-detail"></div>
+    </div>
+    <div class="tab" id="tab-ratings" hidden>
+      <div class="sec">On-field players · 2026 estimated ratings</div>
+      <p class="hint">Select an athlete to inspect attributes.</p>
+      <div class="roster-t" id="roster-t" hidden></div>
+      <div id="players"></div>
+    </div>
+    <div class="tab" id="tab-box" hidden>
+      <div class="sec">Line score</div>
+      <table class="box" id="linescore"></table>
+      <div class="sec">Team stats</div>
+      <table class="box" id="teamstats"></table>
+      <p class="note">Simulated game, not a forecast and not a result. Plays are sampled from 2025 play tendencies. Extra points are estimated. Fumbles, penalties and kick returns are not modelled, and overtime is not simulated. Time of possession is the modelled play clock.</p>
+    </div>
+  </aside>
+</div>
+<script type="module" src="./web/week7.js"></script>
+</body>
+</html>

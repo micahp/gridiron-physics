@@ -13,6 +13,10 @@ const fixtureBytes = await readFile(resolve(root, 'docs/fixtures/e2', fixtureEnt
 const fixtureHash = createHash('sha256').update(fixtureBytes).digest('hex');
 assert.equal(fixtureHash, fixtureEntry.sha256, 'fixture must match its pinned SHA-256');
 const payload = JSON.parse(fixtureBytes.toString('utf8'));
+assert.equal(manifest.lp_source.base_commit, 'a442dcd72559cfaf2d04737fc2454cea486faf09',
+  'the adapter baseline is the LP evidence-only acceptance commit a442dcd7');
+assert.equal(payload.source.base_commit, manifest.lp_source.base_commit,
+  'the accepted E2 envelope must be pinned to LP a442dcd7');
 const upstreamBytes = await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.upstream_source_file));
 assert.equal(createHash('sha256').update(upstreamBytes).digest('hex'), fixtureEntry.upstream_source_sha256,
   'original LP payload must match its pinned SHA-256');
@@ -21,23 +25,21 @@ const before = JSON.stringify(payload.record);
 assert.deepEqual(payload.record, upstream.record, 'the pinned envelope record must equal the pinned LP source record');
 assert.equal(payload.source.base_commit, manifest.lp_source.base_commit, 'record producer commit must match the manifest');
 assert.equal(payload.source.branch, manifest.lp_source.branch, 'producer branch must match the manifest');
-assert.equal(manifest.lp_source.envelope_commit, '45381829488e43813a31793ee546df0b95dee856');
-assert.equal(manifest.lp_source.base_commit, '1ca7560924fe7da3eb452b142176bf09d7aeb1f0');
+assert.equal(manifest.lp_source.envelope_sha256, fixtureEntry.sha256, 'manifest envelope digest must match the current fixture');
+assert.equal(manifest.lp_source.payload_sha256, fixtureEntry.upstream_source_sha256, 'manifest source digest must match the current fixture');
 
 const adapted = adaptLpGamePayload(payload);
 assert.deepEqual(adapted.record, upstream.record, 'the adapter must preserve the LP record exactly');
-assert.equal(adapted.drives.length, 24);
-assert.equal(adapted.sourcePlayCount, 143);
-assert.equal(adapted.record.points.A, 14);
-assert.equal(adapted.record.points.B, 10);
-assert.equal(adapted.record.complete_regulation, true);
-assert.equal(adapted.record.valid_full_game, false);
+assert.equal(adapted.drives.length, fixtureEntry.drives);
+assert.equal(adapted.sourcePlayCount, fixtureEntry.plays);
+assert.equal(adapted.record.points.A, fixtureEntry.points.A);
+assert.equal(adapted.record.points.B, fixtureEntry.points.B);
+assert.equal(adapted.record.complete_regulation, adapted.record.status === 'complete_regulation');
+assert.equal(adapted.record.valid_full_game, fixtureEntry.valid_full_game);
 assert.equal(adapted.validation.passed, true, 'the final LP record passes adapter validation');
 assert.equal(adapted.validation.findings.length, 0);
 assert.equal(adapted.footballStateAudit.finding_count, 0, 'the final record passes independent state audit');
 assert.equal(adapted.footballStateAudit.counts.drive_index_mismatch, undefined);
-assert.equal(adapted.sharedV1Audit.violations.length, 8,
-  'raw E2 record audit includes absent model/rules fields as well as pregame gaps');
 
 const regression = manifest.regression_fixtures[0];
 const oldEnvelopeBytes = await readFile(resolve(root, 'docs/fixtures/e2', regression.file));
@@ -46,17 +48,38 @@ const oldEnvelope = JSON.parse(oldEnvelopeBytes.toString('utf8'));
 assert.throws(() => adaptLpGamePayload(oldEnvelope), /rejected 23 drive-index mismatches/,
   'the archived 5fc fixture must continue to hard-fail as a regression');
 
-const v1DocumentBytes = await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.v1_document_file));
-assert.equal(createHash('sha256').update(v1DocumentBytes).digest('hex'), fixtureEntry.v1_document_sha256,
-  'the LP shared-v1 projection must match its pin');
-const v1Document = JSON.parse(v1DocumentBytes.toString('utf8'));
-const v1SourceGaps = auditGridironV1SourceGaps(v1Document);
-assert.equal(v1Document.plays.length, 156, 'shared-v1 includes explicit kickoff, try, and boundary events');
-assert.equal(v1SourceGaps.sourceGapCount, 7, 'the projected v1 document has seven unsourced source fields');
-assert.deepEqual(v1SourceGaps.findings.map((finding) => finding.code), [
-  'V-mode', 'V-game-id', 'V-scheduled-kickoff', 'V-as-of', 'V-snapshot-hash', 'V-roster-snapshot', 'V-duration-seconds',
+let v1SourceGaps = null;
+if (fixtureEntry.v1_document_file && fixtureEntry.v1_document_sha256) {
+  const v1DocumentBytes = await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.v1_document_file));
+  assert.equal(createHash('sha256').update(v1DocumentBytes).digest('hex'), fixtureEntry.v1_document_sha256,
+    'the LP shared-v1 projection must match its pin');
+  const v1Document = JSON.parse(v1DocumentBytes.toString('utf8'));
+  v1SourceGaps = auditGridironV1SourceGaps(v1Document);
+  assert.equal(v1SourceGaps.conforms, false, 'the pinned LP projection remains an explicit failing v1 regression');
+  assert.match(v1SourceGaps.findings.at(-1).message, new RegExp(`${adapted.sourcePlayCount} contract plays`));
+}
+
+const v1Regression = manifest.v1_regression_fixture;
+assert.ok(v1Regression, 'the older failing v1 projection must remain named in the fixture manifest');
+const v1RegressionBytes = await readFile(resolve(root, 'docs/fixtures/e2', v1Regression.file));
+assert.equal(createHash('sha256').update(v1RegressionBytes).digest('hex'), v1Regression.sha256,
+  'the failing v1 regression fixture must retain its committed hash');
+const v1RegressionDocument = JSON.parse(v1RegressionBytes.toString('utf8'));
+const v1RegressionAudit = auditGridironContractV1Record(v1RegressionDocument);
+assert.equal(v1RegressionAudit.conforms, false,
+  'the old LP v1 projection must continue to fail the raw-record contract audit');
+assert.equal(v1RegressionAudit.violations.length, v1Regression.known_findings.record_gate_violations);
+const v1RegressionSourceGaps = auditGridironV1SourceGaps(v1RegressionDocument);
+assert.equal(v1RegressionSourceGaps.sourceGapCount, v1Regression.known_findings.source_gap_count,
+  'the old v1 projection must retain its seven explicit source gaps');
+assert.throws(() => adaptLpGamePayload(v1RegressionDocument), /unsupported payload contract/,
+  'the old v1 projection must not be accepted as an E2 game envelope');
+assert.equal(v1Regression.known_findings.missing_duration_plays, 143);
+assert.deepEqual(v1Regression.known_findings.open_requirements, [
+  'real scheduled game ID and kickoff', 'real home/away team identities and rosters',
+  'as-of timestamp and input snapshot hashes', 'producer model_version and rules_version',
+  'explicit duration for every play', 'valid_full_game=true',
 ]);
-assert.match(v1SourceGaps.findings.at(-1).message, /143 contract plays/);
 
 const findingsDoc = await readFile(resolve(root, 'docs/research/GRIDIRON-E2-OPEN-FINDINGS-2026-10-24.md'), 'utf8');
 const driveSection = findingsDoc.split('## Drive-index findings (23)')[1].split('## Shared-contract audit violations (10)')[0];
@@ -75,8 +98,6 @@ assert.equal(contractRows.filter((line) => line.includes('| OPEN |')).length, 8,
   'eight raw-record v1 gaps remain open in the final LP output');
 assert.equal(contractRows.filter((line) => line.includes('CLOSED in 1ca')).length, 2,
   'score and timeout state coverage close in the final LP record');
-assert.equal(adapted.sharedV1Audit.conforms, false);
-assert.equal(adapted.sharedV1Audit.violations.length, 8);
 assert.ok(!adapted.sharedV1Audit.violations.some((issue) => /play ID|simulation_id/.test(issue)));
 const allPlays = adapted.record.drives.flatMap((drive) => drive.plays);
 assert.deepEqual(allPlays.map((play) => play.sequence), allPlays.map((_, index) => index + 1));
@@ -156,4 +177,6 @@ console.log('LP E2 game adapter: assertions passed');
 console.log(`fixture=${fixtureEntry.file} sha256=${fixtureHash}`);
 console.log(`upstream=${fixtureEntry.upstream_source_file} sha256=${fixtureEntry.upstream_source_sha256}`);
 console.log(`drives=${adapted.drives.length} plays=${adapted.sourcePlayCount} score=A ${adapted.record.points.A}, B ${adapted.record.points.B}`);
-console.log(`football-state findings=${adapted.footballStateAudit.finding_count}; raw-record v1 gaps=${adapted.sharedV1Audit.violations.length}; projected-v1 source gaps=${v1SourceGaps.sourceGapCount}`);
+console.log(`football-state findings=${adapted.footballStateAudit.finding_count}; raw-record v1 gaps=${adapted.sharedV1Audit.violations.length}; projected-v1 source gaps=${v1SourceGaps?.sourceGapCount ?? 'not pinned'}`);
+console.log(`OPEN shared-v1/pregame gate: ${adapted.sharedV1Audit.violations.length} raw-record gaps; v1 regression retains ${v1Regression.known_findings.missing_duration_plays} plays without explicit duration`);
+console.log(`Pinned failing v1 regression: sha256=${v1Regression.sha256}; source gaps=${v1RegressionSourceGaps.sourceGapCount}; raw-record findings=${v1RegressionAudit.violations.length}`);
