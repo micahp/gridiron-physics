@@ -1,0 +1,1746 @@
+{
+  "conditionals": {
+    "drive_terminal_by_starting_field_zone": [
+      {
+        "resolved_drive_count": 304,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result_counts": {
+          "Field goal": 85,
+          "Missed field goal": 3,
+          "Opp touchdown": 1,
+          "QB kneel": 19,
+          "Touchdown": 167,
+          "Turnover": 13,
+          "Turnover on downs": 16
+        },
+        "terminal_result_shares": {
+          "Field goal": 0.27960526315789475,
+          "Missed field goal": 0.009868421052631578,
+          "Opp touchdown": 0.003289473684210526,
+          "QB kneel": 0.0625,
+          "Touchdown": 0.5493421052631579,
+          "Turnover": 0.04276315789473684,
+          "Turnover on downs": 0.05263157894736842
+        }
+      },
+      {
+        "resolved_drive_count": 1643,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result_counts": {
+          "End of half": 22,
+          "Field goal": 463,
+          "First down": 3,
+          "Missed field goal": 81,
+          "Opp touchdown": 9,
+          "Punt": 156,
+          "QB kneel": 209,
+          "Touchdown": 512,
+          "Turnover": 103,
+          "Turnover on downs": 85
+        },
+        "terminal_result_shares": {
+          "End of half": 0.013390139987827145,
+          "Field goal": 0.2818015824710895,
+          "First down": 0.0018259281801582471,
+          "Missed field goal": 0.049300060864272674,
+          "Opp touchdown": 0.005477784540474742,
+          "Punt": 0.09494826536822885,
+          "QB kneel": 0.12720632988435787,
+          "Touchdown": 0.31162507608034085,
+          "Turnover": 0.06269020085209982,
+          "Turnover on downs": 0.051734631771150334
+        }
+      },
+      {
+        "resolved_drive_count": 13625,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result_counts": {
+          "End of half": 332,
+          "Field goal": 2115,
+          "First down": 6,
+          "Missed field goal": 373,
+          "Opp touchdown": 150,
+          "Punt": 4926,
+          "QB kneel": 469,
+          "Safety": 7,
+          "Touchdown": 2974,
+          "Turnover": 1428,
+          "Turnover on downs": 845
+        },
+        "terminal_result_shares": {
+          "End of half": 0.02436697247706422,
+          "Field goal": 0.15522935779816513,
+          "First down": 0.00044036697247706424,
+          "Missed field goal": 0.027376146788990825,
+          "Opp touchdown": 0.011009174311926606,
+          "Punt": 0.3615412844036697,
+          "QB kneel": 0.03442201834862385,
+          "Safety": 0.0005137614678899083,
+          "Touchdown": 0.21827522935779817,
+          "Turnover": 0.10480733944954128,
+          "Turnover on downs": 0.06201834862385321
+        }
+      },
+      {
+        "resolved_drive_count": 3724,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result_counts": {
+          "End of half": 121,
+          "Field goal": 365,
+          "First down": 2,
+          "Missed field goal": 68,
+          "Opp touchdown": 53,
+          "Punt": 1751,
+          "QB kneel": 163,
+          "Safety": 44,
+          "Touchdown": 583,
+          "Turnover": 402,
+          "Turnover on downs": 172
+        },
+        "terminal_result_shares": {
+          "End of half": 0.032491944146079484,
+          "Field goal": 0.09801288936627282,
+          "First down": 0.0005370569280343716,
+          "Missed field goal": 0.018259935553168637,
+          "Opp touchdown": 0.014232008592910848,
+          "Punt": 0.4701933404940924,
+          "QB kneel": 0.04377013963480129,
+          "Safety": 0.011815252416756176,
+          "Touchdown": 0.15655209452201935,
+          "Turnover": 0.1079484425349087,
+          "Turnover on downs": 0.04618689581095596
+        }
+      },
+      {
+        "resolved_drive_count": 92,
+        "starting_field_zone": "unknown",
+        "terminal_result_counts": {
+          "End of half": 40,
+          "Field goal": 7,
+          "First down": 16,
+          "Missed field goal": 1,
+          "Opp touchdown": 1,
+          "Punt": 1,
+          "Touchdown": 23,
+          "Turnover": 2,
+          "Turnover on downs": 1
+        },
+        "terminal_result_shares": {
+          "End of half": 0.43478260869565216,
+          "Field goal": 0.07608695652173914,
+          "First down": 0.17391304347826086,
+          "Missed field goal": 0.010869565217391304,
+          "Opp touchdown": 0.010869565217391304,
+          "Punt": 0.010869565217391304,
+          "Touchdown": 0.25,
+          "Turnover": 0.021739130434782608,
+          "Turnover on downs": 0.010869565217391304
+        }
+      }
+    ],
+    "dropback_events_by_down_distance": [
+      {
+        "distance_band": "0-3",
+        "down": 1,
+        "fumble_lost_count": 2,
+        "fumble_lost_flag_known_count": 299,
+        "fumble_lost_rate_known_flags": 0.006688963210702341,
+        "interception_count": 5,
+        "interception_flag_known_count": 299,
+        "interception_rate_known_flags": 0.016722408026755852,
+        "qb_dropbacks": 299,
+        "sack_count": 7,
+        "sack_flag_known_count": 299,
+        "sack_rate_known_flags": 0.023411371237458192
+      },
+      {
+        "distance_band": "11+",
+        "down": 1,
+        "fumble_lost_count": 17,
+        "fumble_lost_flag_known_count": 1309,
+        "fumble_lost_rate_known_flags": 0.012987012987012988,
+        "interception_count": 23,
+        "interception_flag_known_count": 1309,
+        "interception_rate_known_flags": 0.01757066462948816,
+        "qb_dropbacks": 1309,
+        "sack_count": 74,
+        "sack_flag_known_count": 1309,
+        "sack_rate_known_flags": 0.05653170359052712
+      },
+      {
+        "distance_band": "4-6",
+        "down": 1,
+        "fumble_lost_count": 5,
+        "fumble_lost_flag_known_count": 420,
+        "fumble_lost_rate_known_flags": 0.011904761904761904,
+        "interception_count": 9,
+        "interception_flag_known_count": 420,
+        "interception_rate_known_flags": 0.02142857142857143,
+        "qb_dropbacks": 420,
+        "sack_count": 20,
+        "sack_flag_known_count": 420,
+        "sack_rate_known_flags": 0.047619047619047616
+      },
+      {
+        "distance_band": "7-10",
+        "down": 1,
+        "fumble_lost_count": 168,
+        "fumble_lost_flag_known_count": 22072,
+        "fumble_lost_rate_known_flags": 0.007611453425154041,
+        "interception_count": 385,
+        "interception_flag_known_count": 22072,
+        "interception_rate_known_flags": 0.017442914099311344,
+        "qb_dropbacks": 22072,
+        "sack_count": 1111,
+        "sack_flag_known_count": 22072,
+        "sack_rate_known_flags": 0.05033526640086988
+      },
+      {
+        "distance_band": "0-3",
+        "down": 2,
+        "fumble_lost_count": 16,
+        "fumble_lost_flag_known_count": 2204,
+        "fumble_lost_rate_known_flags": 0.007259528130671506,
+        "interception_count": 37,
+        "interception_flag_known_count": 2204,
+        "interception_rate_known_flags": 0.01678765880217786,
+        "qb_dropbacks": 2204,
+        "sack_count": 126,
+        "sack_flag_known_count": 2204,
+        "sack_rate_known_flags": 0.05716878402903811
+      },
+      {
+        "distance_band": "11+",
+        "down": 2,
+        "fumble_lost_count": 26,
+        "fumble_lost_flag_known_count": 4407,
+        "fumble_lost_rate_known_flags": 0.0058997050147492625,
+        "interception_count": 99,
+        "interception_flag_known_count": 4407,
+        "interception_rate_known_flags": 0.0224642614023145,
+        "qb_dropbacks": 4407,
+        "sack_count": 237,
+        "sack_flag_known_count": 4407,
+        "sack_rate_known_flags": 0.053778080326752895
+      },
+      {
+        "distance_band": "4-6",
+        "down": 2,
+        "fumble_lost_count": 28,
+        "fumble_lost_flag_known_count": 4550,
+        "fumble_lost_rate_known_flags": 0.006153846153846154,
+        "interception_count": 74,
+        "interception_flag_known_count": 4550,
+        "interception_rate_known_flags": 0.016263736263736263,
+        "qb_dropbacks": 4550,
+        "sack_count": 264,
+        "sack_flag_known_count": 4550,
+        "sack_rate_known_flags": 0.058021978021978025
+      },
+      {
+        "distance_band": "7-10",
+        "down": 2,
+        "fumble_lost_count": 97,
+        "fumble_lost_flag_known_count": 11376,
+        "fumble_lost_rate_known_flags": 0.008526722925457102,
+        "interception_count": 199,
+        "interception_flag_known_count": 11376,
+        "interception_rate_known_flags": 0.0174929676511955,
+        "qb_dropbacks": 11376,
+        "sack_count": 648,
+        "sack_flag_known_count": 11376,
+        "sack_rate_known_flags": 0.056962025316455694
+      },
+      {
+        "distance_band": "0-3",
+        "down": 3,
+        "fumble_lost_count": 19,
+        "fumble_lost_flag_known_count": 3353,
+        "fumble_lost_rate_known_flags": 0.0056665672532060845,
+        "interception_count": 63,
+        "interception_flag_known_count": 3353,
+        "interception_rate_known_flags": 0.018789144050104383,
+        "qb_dropbacks": 3353,
+        "sack_count": 247,
+        "sack_flag_known_count": 3353,
+        "sack_rate_known_flags": 0.07366537429167909
+      },
+      {
+        "distance_band": "11+",
+        "down": 3,
+        "fumble_lost_count": 39,
+        "fumble_lost_flag_known_count": 3758,
+        "fumble_lost_rate_known_flags": 0.010377860564129857,
+        "interception_count": 96,
+        "interception_flag_known_count": 3758,
+        "interception_rate_known_flags": 0.025545502927088876,
+        "qb_dropbacks": 3758,
+        "sack_count": 374,
+        "sack_flag_known_count": 3758,
+        "sack_rate_known_flags": 0.09952102182011709
+      },
+      {
+        "distance_band": "4-6",
+        "down": 3,
+        "fumble_lost_count": 40,
+        "fumble_lost_flag_known_count": 5161,
+        "fumble_lost_rate_known_flags": 0.007750435962022864,
+        "interception_count": 115,
+        "interception_flag_known_count": 5161,
+        "interception_rate_known_flags": 0.022282503390815733,
+        "qb_dropbacks": 5161,
+        "sack_count": 491,
+        "sack_flag_known_count": 5161,
+        "sack_rate_known_flags": 0.09513660143383065
+      },
+      {
+        "distance_band": "7-10",
+        "down": 3,
+        "fumble_lost_count": 42,
+        "fumble_lost_flag_known_count": 5993,
+        "fumble_lost_rate_known_flags": 0.007008176205573168,
+        "interception_count": 146,
+        "interception_flag_known_count": 5993,
+        "interception_rate_known_flags": 0.024361755381278157,
+        "qb_dropbacks": 5993,
+        "sack_count": 650,
+        "sack_flag_known_count": 5993,
+        "sack_rate_known_flags": 0.10845986984815618
+      },
+      {
+        "distance_band": "0-3",
+        "down": 4,
+        "fumble_lost_count": 3,
+        "fumble_lost_flag_known_count": 884,
+        "fumble_lost_rate_known_flags": 0.003393665158371041,
+        "interception_count": 26,
+        "interception_flag_known_count": 884,
+        "interception_rate_known_flags": 0.029411764705882353,
+        "qb_dropbacks": 884,
+        "sack_count": 57,
+        "sack_flag_known_count": 884,
+        "sack_rate_known_flags": 0.06447963800904978
+      },
+      {
+        "distance_band": "11+",
+        "down": 4,
+        "fumble_lost_count": 2,
+        "fumble_lost_flag_known_count": 181,
+        "fumble_lost_rate_known_flags": 0.011049723756906077,
+        "interception_count": 14,
+        "interception_flag_known_count": 181,
+        "interception_rate_known_flags": 0.07734806629834254,
+        "qb_dropbacks": 181,
+        "sack_count": 21,
+        "sack_flag_known_count": 181,
+        "sack_rate_known_flags": 0.11602209944751381
+      },
+      {
+        "distance_band": "4-6",
+        "down": 4,
+        "fumble_lost_count": 3,
+        "fumble_lost_flag_known_count": 429,
+        "fumble_lost_rate_known_flags": 0.006993006993006993,
+        "interception_count": 18,
+        "interception_flag_known_count": 429,
+        "interception_rate_known_flags": 0.04195804195804196,
+        "qb_dropbacks": 429,
+        "sack_count": 26,
+        "sack_flag_known_count": 429,
+        "sack_rate_known_flags": 0.06060606060606061
+      },
+      {
+        "distance_band": "7-10",
+        "down": 4,
+        "fumble_lost_count": 5,
+        "fumble_lost_flag_known_count": 265,
+        "fumble_lost_rate_known_flags": 0.018867924528301886,
+        "interception_count": 14,
+        "interception_flag_known_count": 265,
+        "interception_rate_known_flags": 0.052830188679245285,
+        "qb_dropbacks": 265,
+        "sack_count": 28,
+        "sack_flag_known_count": 265,
+        "sack_rate_known_flags": 0.10566037735849057
+      }
+    ],
+    "pass_run_by_down_distance": [
+      {
+        "condition": [
+          1,
+          "0-3"
+        ],
+        "eligible_pass_run_plays": 1014,
+        "pass_count": 290,
+        "pass_share": 0.2859960552268245,
+        "run_count": 724,
+        "run_share": 0.7140039447731755
+      },
+      {
+        "condition": [
+          1,
+          "11+"
+        ],
+        "eligible_pass_run_plays": 1869,
+        "pass_count": 1253,
+        "pass_share": 0.6704119850187266,
+        "run_count": 616,
+        "run_share": 0.3295880149812734
+      },
+      {
+        "condition": [
+          1,
+          "4-6"
+        ],
+        "eligible_pass_run_plays": 1143,
+        "pass_count": 398,
+        "pass_share": 0.34820647419072615,
+        "run_count": 745,
+        "run_share": 0.6517935258092739
+      },
+      {
+        "condition": [
+          1,
+          "7-10"
+        ],
+        "eligible_pass_run_plays": 43982,
+        "pass_count": 21008,
+        "pass_share": 0.47764994770587965,
+        "run_count": 22974,
+        "run_share": 0.5223500522941203
+      },
+      {
+        "condition": [
+          2,
+          "0-3"
+        ],
+        "eligible_pass_run_plays": 5924,
+        "pass_count": 2112,
+        "pass_share": 0.3565158676569885,
+        "run_count": 3812,
+        "run_share": 0.6434841323430115
+      },
+      {
+        "condition": [
+          2,
+          "11+"
+        ],
+        "eligible_pass_run_plays": 5386,
+        "pass_count": 4176,
+        "pass_share": 0.7753434831043446,
+        "run_count": 1210,
+        "run_share": 0.2246565168956554
+      },
+      {
+        "condition": [
+          2,
+          "4-6"
+        ],
+        "eligible_pass_run_plays": 8687,
+        "pass_count": 4336,
+        "pass_share": 0.49913664095775295,
+        "run_count": 4351,
+        "run_share": 0.500863359042247
+      },
+      {
+        "condition": [
+          2,
+          "7-10"
+        ],
+        "eligible_pass_run_plays": 16474,
+        "pass_count": 10847,
+        "pass_share": 0.658431467767391,
+        "run_count": 5627,
+        "run_share": 0.34156853223260897
+      },
+      {
+        "condition": [
+          3,
+          "0-3"
+        ],
+        "eligible_pass_run_plays": 6590,
+        "pass_count": 3140,
+        "pass_share": 0.4764795144157815,
+        "run_count": 3450,
+        "run_share": 0.5235204855842185
+      },
+      {
+        "condition": [
+          3,
+          "11+"
+        ],
+        "eligible_pass_run_plays": 4207,
+        "pass_count": 3528,
+        "pass_share": 0.8386023294509152,
+        "run_count": 679,
+        "run_share": 0.16139767054908485
+      },
+      {
+        "condition": [
+          3,
+          "4-6"
+        ],
+        "eligible_pass_run_plays": 5662,
+        "pass_count": 4844,
+        "pass_share": 0.8555280819498411,
+        "run_count": 818,
+        "run_share": 0.14447191805015897
+      },
+      {
+        "condition": [
+          3,
+          "7-10"
+        ],
+        "eligible_pass_run_plays": 6337,
+        "pass_count": 5621,
+        "pass_share": 0.8870127820735364,
+        "run_count": 716,
+        "run_share": 0.11298721792646363
+      },
+      {
+        "condition": [
+          4,
+          "0-3"
+        ],
+        "eligible_pass_run_plays": 1739,
+        "pass_count": 822,
+        "pass_share": 0.47268545140885565,
+        "run_count": 917,
+        "run_share": 0.5273145485911443
+      },
+      {
+        "condition": [
+          4,
+          "11+"
+        ],
+        "eligible_pass_run_plays": 188,
+        "pass_count": 171,
+        "pass_share": 0.9095744680851063,
+        "run_count": 17,
+        "run_share": 0.09042553191489362
+      },
+      {
+        "condition": [
+          4,
+          "4-6"
+        ],
+        "eligible_pass_run_plays": 452,
+        "pass_count": 408,
+        "pass_share": 0.9026548672566371,
+        "run_count": 44,
+        "run_share": 0.09734513274336283
+      },
+      {
+        "condition": [
+          4,
+          "7-10"
+        ],
+        "eligible_pass_run_plays": 278,
+        "pass_count": 254,
+        "pass_share": 0.9136690647482014,
+        "run_count": 24,
+        "run_share": 0.08633093525179857
+      }
+    ],
+    "pass_run_by_field_zone": [
+      {
+        "condition": [
+          "backed_up_81-99"
+        ],
+        "eligible_pass_run_plays": 8582,
+        "pass_count": 4865,
+        "pass_share": 0.566884176182708,
+        "run_count": 3717,
+        "run_share": 0.433115823817292
+      },
+      {
+        "condition": [
+          "opponent_half_21-50"
+        ],
+        "eligible_pass_run_plays": 34335,
+        "pass_count": 19566,
+        "pass_share": 0.5698558322411533,
+        "run_count": 14769,
+        "run_share": 0.4301441677588467
+      },
+      {
+        "condition": [
+          "own_half_51-80"
+        ],
+        "eligible_pass_run_plays": 50349,
+        "pass_count": 30329,
+        "pass_share": 0.6023754195713917,
+        "run_count": 20020,
+        "run_share": 0.3976245804286083
+      },
+      {
+        "condition": [
+          "red_zone_0-20"
+        ],
+        "eligible_pass_run_plays": 16666,
+        "pass_count": 8448,
+        "pass_share": 0.5069002760110405,
+        "run_count": 8218,
+        "run_share": 0.49309972398895957
+      }
+    ],
+    "pass_run_by_quarter_clock": [
+      {
+        "condition": [
+          1,
+          "0-120"
+        ],
+        "eligible_pass_run_plays": 3173,
+        "pass_count": 1692,
+        "pass_share": 0.5332492908919004,
+        "run_count": 1481,
+        "run_share": 0.46675070910809957
+      },
+      {
+        "condition": [
+          1,
+          "121-600"
+        ],
+        "eligible_pass_run_plays": 13009,
+        "pass_count": 7066,
+        "pass_share": 0.5431624260127604,
+        "run_count": 5943,
+        "run_share": 0.4568375739872396
+      },
+      {
+        "condition": [
+          1,
+          "601-900"
+        ],
+        "eligible_pass_run_plays": 8566,
+        "pass_count": 4602,
+        "pass_share": 0.5372402521597012,
+        "run_count": 3964,
+        "run_share": 0.46275974784029883
+      },
+      {
+        "condition": [
+          2,
+          "0-120"
+        ],
+        "eligible_pass_run_plays": 7966,
+        "pass_count": 6122,
+        "pass_share": 0.7685161938237509,
+        "run_count": 1844,
+        "run_share": 0.23148380617624906
+      },
+      {
+        "condition": [
+          2,
+          "121-600"
+        ],
+        "eligible_pass_run_plays": 13107,
+        "pass_count": 7318,
+        "pass_share": 0.5583276112001221,
+        "run_count": 5789,
+        "run_share": 0.4416723887998779
+      },
+      {
+        "condition": [
+          2,
+          "601-900"
+        ],
+        "eligible_pass_run_plays": 8672,
+        "pass_count": 4792,
+        "pass_share": 0.5525830258302583,
+        "run_count": 3880,
+        "run_share": 0.4474169741697417
+      },
+      {
+        "condition": [
+          3,
+          "0-120"
+        ],
+        "eligible_pass_run_plays": 3251,
+        "pass_count": 1813,
+        "pass_share": 0.5576745616733313,
+        "run_count": 1438,
+        "run_share": 0.4423254383266687
+      },
+      {
+        "condition": [
+          3,
+          "121-600"
+        ],
+        "eligible_pass_run_plays": 13277,
+        "pass_count": 7336,
+        "pass_share": 0.5525344580854109,
+        "run_count": 5941,
+        "run_share": 0.44746554191458915
+      },
+      {
+        "condition": [
+          3,
+          "601-900"
+        ],
+        "eligible_pass_run_plays": 8479,
+        "pass_count": 4477,
+        "pass_share": 0.52801037858238,
+        "run_count": 4002,
+        "run_share": 0.47198962141762
+      },
+      {
+        "condition": [
+          4,
+          "0-120"
+        ],
+        "eligible_pass_run_plays": 4908,
+        "pass_count": 3350,
+        "pass_share": 0.6825590872045639,
+        "run_count": 1558,
+        "run_share": 0.317440912795436
+      },
+      {
+        "condition": [
+          4,
+          "121-600"
+        ],
+        "eligible_pass_run_plays": 15780,
+        "pass_count": 9039,
+        "pass_share": 0.5728136882129278,
+        "run_count": 6741,
+        "run_share": 0.4271863117870722
+      },
+      {
+        "condition": [
+          4,
+          "601-900"
+        ],
+        "eligible_pass_run_plays": 9130,
+        "pass_count": 5252,
+        "pass_share": 0.5752464403066813,
+        "run_count": 3878,
+        "run_share": 0.42475355969331874
+      }
+    ],
+    "plays_per_drive_by_starting_zone_and_terminal": [
+      {
+        "drive_count": 121,
+        "plays_per_drive_p10": 2,
+        "plays_per_drive_p50": 5,
+        "plays_per_drive_p90": 12,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "End of half"
+      },
+      {
+        "drive_count": 365,
+        "plays_per_drive_p10": 8.399999999999999,
+        "plays_per_drive_p50": 13,
+        "plays_per_drive_p90": 18.0,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Field goal"
+      },
+      {
+        "drive_count": 2,
+        "plays_per_drive_p10": 3.8,
+        "plays_per_drive_p50": 7.0,
+        "plays_per_drive_p90": 10.2,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "First down"
+      },
+      {
+        "drive_count": 68,
+        "plays_per_drive_p10": 8.0,
+        "plays_per_drive_p50": 12.0,
+        "plays_per_drive_p90": 16.0,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Missed field goal"
+      },
+      {
+        "drive_count": 53,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 4,
+        "plays_per_drive_p90": 9.0,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Opp touchdown"
+      },
+      {
+        "drive_count": 1751,
+        "plays_per_drive_p10": 4,
+        "plays_per_drive_p50": 6,
+        "plays_per_drive_p90": 10,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Punt"
+      },
+      {
+        "drive_count": 163,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 2,
+        "plays_per_drive_p90": 8.800000000000011,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "QB kneel"
+      },
+      {
+        "drive_count": 44,
+        "plays_per_drive_p10": 1.0,
+        "plays_per_drive_p50": 2.0,
+        "plays_per_drive_p90": 4.700000000000003,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Safety"
+      },
+      {
+        "drive_count": 583,
+        "plays_per_drive_p10": 6.0,
+        "plays_per_drive_p50": 12,
+        "plays_per_drive_p90": 18.0,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Touchdown"
+      },
+      {
+        "drive_count": 402,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 5.0,
+        "plays_per_drive_p90": 13.0,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Turnover"
+      },
+      {
+        "drive_count": 172,
+        "plays_per_drive_p10": 6.0,
+        "plays_per_drive_p50": 10.0,
+        "plays_per_drive_p90": 15.0,
+        "starting_field_zone": "backed_up_81-99",
+        "terminal_result": "Turnover on downs"
+      },
+      {
+        "drive_count": 22,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 3.5,
+        "plays_per_drive_p90": 11.0,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "End of half"
+      },
+      {
+        "drive_count": 463,
+        "plays_per_drive_p10": 4.0,
+        "plays_per_drive_p50": 7,
+        "plays_per_drive_p90": 11.0,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "Field goal"
+      },
+      {
+        "drive_count": 3,
+        "plays_per_drive_p10": 7.0,
+        "plays_per_drive_p50": 11,
+        "plays_per_drive_p90": 13.4,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "First down"
+      },
+      {
+        "drive_count": 81,
+        "plays_per_drive_p10": 4,
+        "plays_per_drive_p50": 7,
+        "plays_per_drive_p90": 9,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "Missed field goal"
+      },
+      {
+        "drive_count": 9,
+        "plays_per_drive_p10": 2.8,
+        "plays_per_drive_p50": 4,
+        "plays_per_drive_p90": 6.6000000000000005,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "Opp touchdown"
+      },
+      {
+        "drive_count": 156,
+        "plays_per_drive_p10": 4.0,
+        "plays_per_drive_p50": 5.0,
+        "plays_per_drive_p90": 8.0,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "Punt"
+      },
+      {
+        "drive_count": 209,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 4,
+        "plays_per_drive_p90": 8.0,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "QB kneel"
+      },
+      {
+        "drive_count": 512,
+        "plays_per_drive_p10": 3.0,
+        "plays_per_drive_p50": 7.0,
+        "plays_per_drive_p90": 11.0,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "Touchdown"
+      },
+      {
+        "drive_count": 103,
+        "plays_per_drive_p10": 1.0,
+        "plays_per_drive_p50": 4,
+        "plays_per_drive_p90": 8.0,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "Turnover"
+      },
+      {
+        "drive_count": 85,
+        "plays_per_drive_p10": 4.0,
+        "plays_per_drive_p50": 6,
+        "plays_per_drive_p90": 11.0,
+        "starting_field_zone": "opponent_half_21-50",
+        "terminal_result": "Turnover on downs"
+      },
+      {
+        "drive_count": 332,
+        "plays_per_drive_p10": 3.0,
+        "plays_per_drive_p50": 5.0,
+        "plays_per_drive_p90": 11.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "End of half"
+      },
+      {
+        "drive_count": 2115,
+        "plays_per_drive_p10": 7.0,
+        "plays_per_drive_p50": 11,
+        "plays_per_drive_p90": 16.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Field goal"
+      },
+      {
+        "drive_count": 6,
+        "plays_per_drive_p10": 6.0,
+        "plays_per_drive_p50": 10.5,
+        "plays_per_drive_p90": 13.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "First down"
+      },
+      {
+        "drive_count": 373,
+        "plays_per_drive_p10": 7.0,
+        "plays_per_drive_p50": 10,
+        "plays_per_drive_p90": 14.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Missed field goal"
+      },
+      {
+        "drive_count": 150,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 5.0,
+        "plays_per_drive_p90": 9.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Opp touchdown"
+      },
+      {
+        "drive_count": 4926,
+        "plays_per_drive_p10": 4.0,
+        "plays_per_drive_p50": 6.0,
+        "plays_per_drive_p90": 9.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Punt"
+      },
+      {
+        "drive_count": 469,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 3,
+        "plays_per_drive_p90": 12.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "QB kneel"
+      },
+      {
+        "drive_count": 7,
+        "plays_per_drive_p10": 3.2,
+        "plays_per_drive_p50": 5,
+        "plays_per_drive_p90": 7.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Safety"
+      },
+      {
+        "drive_count": 2974,
+        "plays_per_drive_p10": 6.0,
+        "plays_per_drive_p50": 11.0,
+        "plays_per_drive_p90": 16.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Touchdown"
+      },
+      {
+        "drive_count": 1428,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 5.0,
+        "plays_per_drive_p90": 10.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Turnover"
+      },
+      {
+        "drive_count": 845,
+        "plays_per_drive_p10": 5.0,
+        "plays_per_drive_p50": 9,
+        "plays_per_drive_p90": 14.0,
+        "starting_field_zone": "own_half_51-80",
+        "terminal_result": "Turnover on downs"
+      },
+      {
+        "drive_count": 85,
+        "plays_per_drive_p10": 4.0,
+        "plays_per_drive_p50": 5,
+        "plays_per_drive_p90": 8.0,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result": "Field goal"
+      },
+      {
+        "drive_count": 3,
+        "plays_per_drive_p10": 4.2,
+        "plays_per_drive_p50": 5,
+        "plays_per_drive_p90": 6.6,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result": "Missed field goal"
+      },
+      {
+        "drive_count": 1,
+        "plays_per_drive_p10": 4,
+        "plays_per_drive_p50": 4,
+        "plays_per_drive_p90": 4,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result": "Opp touchdown"
+      },
+      {
+        "drive_count": 19,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 4,
+        "plays_per_drive_p90": 6.0,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result": "QB kneel"
+      },
+      {
+        "drive_count": 167,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 4,
+        "plays_per_drive_p90": 6.0,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result": "Touchdown"
+      },
+      {
+        "drive_count": 13,
+        "plays_per_drive_p10": 1.0,
+        "plays_per_drive_p50": 3,
+        "plays_per_drive_p90": 4.800000000000001,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result": "Turnover"
+      },
+      {
+        "drive_count": 16,
+        "plays_per_drive_p10": 4.0,
+        "plays_per_drive_p50": 4.0,
+        "plays_per_drive_p90": 5.0,
+        "starting_field_zone": "red_zone_0-20",
+        "terminal_result": "Turnover on downs"
+      },
+      {
+        "drive_count": 40,
+        "plays_per_drive_p10": 2.0,
+        "plays_per_drive_p50": 2.0,
+        "plays_per_drive_p90": 2.0,
+        "starting_field_zone": "unknown",
+        "terminal_result": "End of half"
+      },
+      {
+        "drive_count": 7,
+        "plays_per_drive_p10": 1.0,
+        "plays_per_drive_p50": 1,
+        "plays_per_drive_p90": 1.0,
+        "starting_field_zone": "unknown",
+        "terminal_result": "Field goal"
+      },
+      {
+        "drive_count": 16,
+        "plays_per_drive_p10": 1.0,
+        "plays_per_drive_p50": 1.0,
+        "plays_per_drive_p90": 1.0,
+        "starting_field_zone": "unknown",
+        "terminal_result": "First down"
+      },
+      {
+        "drive_count": 1,
+        "plays_per_drive_p10": 1,
+        "plays_per_drive_p50": 1,
+        "plays_per_drive_p90": 1,
+        "starting_field_zone": "unknown",
+        "terminal_result": "Missed field goal"
+      },
+      {
+        "drive_count": 1,
+        "plays_per_drive_p10": 2,
+        "plays_per_drive_p50": 2,
+        "plays_per_drive_p90": 2,
+        "starting_field_zone": "unknown",
+        "terminal_result": "Opp touchdown"
+      },
+      {
+        "drive_count": 1,
+        "plays_per_drive_p10": 1,
+        "plays_per_drive_p50": 1,
+        "plays_per_drive_p90": 1,
+        "starting_field_zone": "unknown",
+        "terminal_result": "Punt"
+      },
+      {
+        "drive_count": 23,
+        "plays_per_drive_p10": 1.0,
+        "plays_per_drive_p50": 2,
+        "plays_per_drive_p90": 2.0,
+        "starting_field_zone": "unknown",
+        "terminal_result": "Touchdown"
+      },
+      {
+        "drive_count": 2,
+        "plays_per_drive_p10": 1.0,
+        "plays_per_drive_p50": 1.0,
+        "plays_per_drive_p90": 1.0,
+        "starting_field_zone": "unknown",
+        "terminal_result": "Turnover"
+      },
+      {
+        "drive_count": 1,
+        "plays_per_drive_p10": 1,
+        "plays_per_drive_p50": 1,
+        "plays_per_drive_p90": 1,
+        "starting_field_zone": "unknown",
+        "terminal_result": "Turnover on downs"
+      }
+    ],
+    "third_fourth_down_series_outcomes": [
+      {
+        "down": 3,
+        "first_down_or_touchdown": 0,
+        "first_down_or_touchdown_share": 0.0,
+        "play_type": "field_goal",
+        "resolved_series_terminals": 15,
+        "terminal_results": {
+          "Field goal": 13,
+          "Missed field goal": 2
+        }
+      },
+      {
+        "down": 3,
+        "first_down_or_touchdown": 766,
+        "first_down_or_touchdown_share": 0.9986962190352021,
+        "play_type": "no_play",
+        "resolved_series_terminals": 767,
+        "terminal_results": {
+          "First down": 766,
+          "Safety": 1
+        }
+      },
+      {
+        "down": 3,
+        "first_down_or_touchdown": 4943,
+        "first_down_or_touchdown_share": 0.912329272794389,
+        "play_type": "pass",
+        "resolved_series_terminals": 5418,
+        "terminal_results": {
+          "Field goal": 2,
+          "First down": 4941,
+          "Safety": 8,
+          "Touchdown": 2,
+          "Turnover": 465
+        }
+      },
+      {
+        "down": 3,
+        "first_down_or_touchdown": 1,
+        "first_down_or_touchdown_share": 1.0,
+        "play_type": "qb_kneel",
+        "resolved_series_terminals": 1,
+        "terminal_results": {
+          "First down": 1
+        }
+      },
+      {
+        "down": 3,
+        "first_down_or_touchdown": 2597,
+        "first_down_or_touchdown_share": 0.9825955353764662,
+        "play_type": "run",
+        "resolved_series_terminals": 2643,
+        "terminal_results": {
+          "First down": 2597,
+          "Safety": 1,
+          "Turnover": 45
+        }
+      },
+      {
+        "down": 4,
+        "first_down_or_touchdown": 0,
+        "first_down_or_touchdown_share": 0.0,
+        "play_type": "field_goal",
+        "resolved_series_terminals": 2900,
+        "terminal_results": {
+          "Field goal": 2500,
+          "Missed field goal": 400
+        }
+      },
+      {
+        "down": 4,
+        "first_down_or_touchdown": 170,
+        "first_down_or_touchdown_share": 1.0,
+        "play_type": "no_play",
+        "resolved_series_terminals": 170,
+        "terminal_results": {
+          "First down": 170
+        }
+      },
+      {
+        "down": 4,
+        "first_down_or_touchdown": 496,
+        "first_down_or_touchdown_share": 0.4025974025974026,
+        "play_type": "pass",
+        "resolved_series_terminals": 1232,
+        "terminal_results": {
+          "First down": 496,
+          "Safety": 1,
+          "Turnover": 66,
+          "Turnover on downs": 669
+        }
+      },
+      {
+        "down": 4,
+        "first_down_or_touchdown": 0,
+        "first_down_or_touchdown_share": 0.0,
+        "play_type": "punt",
+        "resolved_series_terminals": 6476,
+        "terminal_results": {
+          "Punt": 6473,
+          "Safety": 3
+        }
+      },
+      {
+        "down": 4,
+        "first_down_or_touchdown": 0,
+        "first_down_or_touchdown_share": 0.0,
+        "play_type": "qb_kneel",
+        "resolved_series_terminals": 8,
+        "terminal_results": {
+          "Turnover on downs": 8
+        }
+      },
+      {
+        "down": 4,
+        "first_down_or_touchdown": 561,
+        "first_down_or_touchdown_share": 0.6986301369863014,
+        "play_type": "run",
+        "resolved_series_terminals": 803,
+        "terminal_results": {
+          "First down": 561,
+          "Safety": 2,
+          "Turnover": 9,
+          "Turnover on downs": 231
+        }
+      }
+    ],
+    "yards_and_first_downs_by_down_distance_play_type": [
+      {
+        "distance_band": "0-3",
+        "down": 1,
+        "eligible_plays": 290,
+        "first_down_rate_among_series_terminals": 0.2857142857142857,
+        "first_down_series_terminals": 2,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 7,
+        "touchdowns": 133,
+        "yards_gained_observed_count": 290,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 0.0,
+        "yards_gained_p90": 3.0
+      },
+      {
+        "distance_band": "0-3",
+        "down": 1,
+        "eligible_plays": 724,
+        "first_down_rate_among_series_terminals": 0.3333333333333333,
+        "first_down_series_terminals": 4,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 12,
+        "touchdowns": 338,
+        "yards_gained_observed_count": 724,
+        "yards_gained_p10": -1.0,
+        "yards_gained_p50": 1.0,
+        "yards_gained_p90": 2.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 1,
+        "eligible_plays": 1253,
+        "first_down_rate_among_series_terminals": 0.746268656716418,
+        "first_down_series_terminals": 100,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 134,
+        "touchdowns": 26,
+        "yards_gained_observed_count": 1253,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 5.0,
+        "yards_gained_p90": 16.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 1,
+        "eligible_plays": 616,
+        "first_down_rate_among_series_terminals": 0.6842105263157895,
+        "first_down_series_terminals": 26,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 38,
+        "touchdowns": 2,
+        "yards_gained_observed_count": 616,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 10.0
+      },
+      {
+        "distance_band": "4-6",
+        "down": 1,
+        "eligible_plays": 398,
+        "first_down_rate_among_series_terminals": 0.8656716417910447,
+        "first_down_series_terminals": 58,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 67,
+        "touchdowns": 94,
+        "yards_gained_observed_count": 398,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 0.0,
+        "yards_gained_p90": 9.0
+      },
+      {
+        "distance_band": "4-6",
+        "down": 1,
+        "eligible_plays": 745,
+        "first_down_rate_among_series_terminals": 0.9,
+        "first_down_series_terminals": 54,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 60,
+        "touchdowns": 121,
+        "yards_gained_observed_count": 745,
+        "yards_gained_p10": -1.0,
+        "yards_gained_p50": 3.0,
+        "yards_gained_p90": 6.0
+      },
+      {
+        "distance_band": "7-10",
+        "down": 1,
+        "eligible_plays": 21008,
+        "first_down_rate_among_series_terminals": 0.9149706795446706,
+        "first_down_series_terminals": 5305,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 5798,
+        "touchdowns": 587,
+        "yards_gained_observed_count": 21008,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 5.0,
+        "yards_gained_p90": 19.0
+      },
+      {
+        "distance_band": "7-10",
+        "down": 1,
+        "eligible_plays": 22974,
+        "first_down_rate_among_series_terminals": 0.9519940915805022,
+        "first_down_series_terminals": 2578,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 2708,
+        "touchdowns": 278,
+        "yards_gained_observed_count": 22974,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 3.0,
+        "yards_gained_p90": 11.0
+      },
+      {
+        "distance_band": "0-3",
+        "down": 2,
+        "eligible_plays": 2112,
+        "first_down_rate_among_series_terminals": 0.9521384928716904,
+        "first_down_series_terminals": 935,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 982,
+        "touchdowns": 208,
+        "yards_gained_observed_count": 2112,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 3.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "0-3",
+        "down": 2,
+        "eligible_plays": 3812,
+        "first_down_rate_among_series_terminals": 0.9915054270882492,
+        "first_down_series_terminals": 2101,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 2119,
+        "touchdowns": 327,
+        "yards_gained_observed_count": 3812,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 3.0,
+        "yards_gained_p90": 9.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 2,
+        "eligible_plays": 4176,
+        "first_down_rate_among_series_terminals": 0.8521341463414634,
+        "first_down_series_terminals": 559,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 656,
+        "touchdowns": 87,
+        "yards_gained_observed_count": 4176,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 2,
+        "eligible_plays": 1210,
+        "first_down_rate_among_series_terminals": 0.9175257731958762,
+        "first_down_series_terminals": 89,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 97,
+        "touchdowns": 8,
+        "yards_gained_observed_count": 1210,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 12.0
+      },
+      {
+        "distance_band": "4-6",
+        "down": 2,
+        "eligible_plays": 4336,
+        "first_down_rate_among_series_terminals": 0.9480443666082895,
+        "first_down_series_terminals": 1624,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 1713,
+        "touchdowns": 262,
+        "yards_gained_observed_count": 4336,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "4-6",
+        "down": 2,
+        "eligible_plays": 4351,
+        "first_down_rate_among_series_terminals": 0.9800307219662059,
+        "first_down_series_terminals": 1276,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 1302,
+        "touchdowns": 133,
+        "yards_gained_observed_count": 4351,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 3.0,
+        "yards_gained_p90": 10.0
+      },
+      {
+        "distance_band": "7-10",
+        "down": 2,
+        "eligible_plays": 10847,
+        "first_down_rate_among_series_terminals": 0.9125083166999335,
+        "first_down_series_terminals": 2743,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 3006,
+        "touchdowns": 345,
+        "yards_gained_observed_count": 10847,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "7-10",
+        "down": 2,
+        "eligible_plays": 5627,
+        "first_down_rate_among_series_terminals": 0.9627192982456141,
+        "first_down_series_terminals": 878,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 912,
+        "touchdowns": 91,
+        "yards_gained_observed_count": 5627,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 11.0
+      },
+      {
+        "distance_band": "0-3",
+        "down": 3,
+        "eligible_plays": 3140,
+        "first_down_rate_among_series_terminals": 0.9534711964549483,
+        "first_down_series_terminals": 1291,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 1354,
+        "touchdowns": 246,
+        "yards_gained_observed_count": 3140,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 2.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "0-3",
+        "down": 3,
+        "eligible_plays": 3450,
+        "first_down_rate_among_series_terminals": 0.9859084046300957,
+        "first_down_series_terminals": 1959,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 1987,
+        "touchdowns": 213,
+        "yards_gained_observed_count": 3450,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 2.0,
+        "yards_gained_p90": 8.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 3,
+        "eligible_plays": 3528,
+        "first_down_rate_among_series_terminals": 0.793918918918919,
+        "first_down_series_terminals": 470,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 592,
+        "touchdowns": 72,
+        "yards_gained_observed_count": 3528,
+        "yards_gained_p10": -3.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 3,
+        "eligible_plays": 679,
+        "first_down_rate_among_series_terminals": 0.9367088607594937,
+        "first_down_series_terminals": 74,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 79,
+        "touchdowns": 9,
+        "yards_gained_observed_count": 679,
+        "yards_gained_p10": 1.0,
+        "yards_gained_p50": 6.0,
+        "yards_gained_p90": 14.0
+      },
+      {
+        "distance_band": "4-6",
+        "down": 3,
+        "eligible_plays": 4844,
+        "first_down_rate_among_series_terminals": 0.9323882224645583,
+        "first_down_series_terminals": 1710,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 1834,
+        "touchdowns": 297,
+        "yards_gained_observed_count": 4844,
+        "yards_gained_p10": -1.0,
+        "yards_gained_p50": 2.0,
+        "yards_gained_p90": 18.0
+      },
+      {
+        "distance_band": "4-6",
+        "down": 3,
+        "eligible_plays": 818,
+        "first_down_rate_among_series_terminals": 0.9770114942528736,
+        "first_down_series_terminals": 340,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 348,
+        "touchdowns": 36,
+        "yards_gained_observed_count": 818,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 11.0
+      },
+      {
+        "distance_band": "7-10",
+        "down": 3,
+        "eligible_plays": 5621,
+        "first_down_rate_among_series_terminals": 0.8974358974358975,
+        "first_down_series_terminals": 1470,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 1638,
+        "touchdowns": 229,
+        "yards_gained_observed_count": 5621,
+        "yards_gained_p10": -4.0,
+        "yards_gained_p50": 0.0,
+        "yards_gained_p90": 18.0
+      },
+      {
+        "distance_band": "7-10",
+        "down": 3,
+        "eligible_plays": 716,
+        "first_down_rate_among_series_terminals": 0.9781659388646288,
+        "first_down_series_terminals": 224,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 229,
+        "touchdowns": 15,
+        "yards_gained_observed_count": 716,
+        "yards_gained_p10": 0.5,
+        "yards_gained_p50": 6.0,
+        "yards_gained_p90": 14.0
+      },
+      {
+        "distance_band": "0-3",
+        "down": 4,
+        "eligible_plays": 822,
+        "first_down_rate_among_series_terminals": 0.4905982905982906,
+        "first_down_series_terminals": 287,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 585,
+        "touchdowns": 114,
+        "yards_gained_observed_count": 822,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 2.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "0-3",
+        "down": 4,
+        "eligible_plays": 917,
+        "first_down_rate_among_series_terminals": 0.7138964577656676,
+        "first_down_series_terminals": 524,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 734,
+        "touchdowns": 80,
+        "yards_gained_observed_count": 917,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 2.0,
+        "yards_gained_p90": 7.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 4,
+        "eligible_plays": 171,
+        "first_down_rate_among_series_terminals": 0.15671641791044777,
+        "first_down_series_terminals": 21,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 134,
+        "touchdowns": 4,
+        "yards_gained_observed_count": 171,
+        "yards_gained_p10": -5.0,
+        "yards_gained_p50": 0.0,
+        "yards_gained_p90": 19.0
+      },
+      {
+        "distance_band": "11+",
+        "down": 4,
+        "eligible_plays": 17,
+        "first_down_rate_among_series_terminals": 0.21428571428571427,
+        "first_down_series_terminals": 3,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 14,
+        "touchdowns": 0,
+        "yards_gained_observed_count": 17,
+        "yards_gained_p10": -6.199999999999999,
+        "yards_gained_p50": 6.0,
+        "yards_gained_p90": 16.6
+      },
+      {
+        "distance_band": "4-6",
+        "down": 4,
+        "eligible_plays": 408,
+        "first_down_rate_among_series_terminals": 0.41896024464831805,
+        "first_down_series_terminals": 137,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 327,
+        "touchdowns": 32,
+        "yards_gained_observed_count": 408,
+        "yards_gained_p10": 0.0,
+        "yards_gained_p50": 0.0,
+        "yards_gained_p90": 17.0
+      },
+      {
+        "distance_band": "4-6",
+        "down": 4,
+        "eligible_plays": 44,
+        "first_down_rate_among_series_terminals": 0.6666666666666666,
+        "first_down_series_terminals": 24,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 36,
+        "touchdowns": 3,
+        "yards_gained_observed_count": 44,
+        "yards_gained_p10": 0.2999999999999998,
+        "yards_gained_p50": 6.0,
+        "yards_gained_p90": 14.400000000000006
+      },
+      {
+        "distance_band": "7-10",
+        "down": 4,
+        "eligible_plays": 254,
+        "first_down_rate_among_series_terminals": 0.27419354838709675,
+        "first_down_series_terminals": 51,
+        "play_type": "pass",
+        "series_terminal_plays_with_result": 186,
+        "touchdowns": 15,
+        "yards_gained_observed_count": 254,
+        "yards_gained_p10": -2.0,
+        "yards_gained_p50": 0.0,
+        "yards_gained_p90": 17.700000000000017
+      },
+      {
+        "distance_band": "7-10",
+        "down": 4,
+        "eligible_plays": 24,
+        "first_down_rate_among_series_terminals": 0.5263157894736842,
+        "first_down_series_terminals": 10,
+        "play_type": "run",
+        "series_terminal_plays_with_result": 19,
+        "touchdowns": 0,
+        "yards_gained_observed_count": 24,
+        "yards_gained_p10": -6.799999999999999,
+        "yards_gained_p50": 4.0,
+        "yards_gained_p90": 18.099999999999998
+      }
+    ]
+  },
+  "coverage": {
+    "drive_groups_with_missing_terminal_result": 0,
+    "note": "Each table reports its own denominator and source-flag coverage. Rates are descriptive frequencies, not calibrated probabilities or a model evaluation.",
+    "series_terminal_plays_with_resolved_source_result": 49782
+  },
+  "definitions": {
+    "clock_bands_seconds_remaining": [
+      "0-120",
+      "121-600",
+      "601-900"
+    ],
+    "conditioning_state": [
+      "down",
+      "distance_band",
+      "yardline_100 field zone",
+      "quarter",
+      "derived quarter_seconds_remaining band"
+    ],
+    "conditioning_state_excludes": [
+      "score differential: no play-state score-differential field exists in this nfl_pbp schema"
+    ],
+    "distance_bands": [
+      "0-3",
+      "4-6",
+      "7-10",
+      "11+"
+    ],
+    "drive_terminal": "last play_id within (season, game_id, drive); result is source series_result",
+    "eligible_pass_run_play": "play_type in {pass, run}; down 1-4; ydstogo >= 0; yardline_100 in [0,99]",
+    "field_zones": [
+      "red_zone_0-20",
+      "opponent_half_21-50",
+      "own_half_51-80",
+      "backed_up_81-99"
+    ],
+    "first_down_or_touchdown_share": "share of resolved third/fourth-down series-terminal rows with result First down or Touchdown; includes punts, field goals and no_play rows by play_type and is not an attempt-only conversion probability",
+    "quantiles": "linear empirical quantiles at p10/p90; median is ordinary sample median",
+    "quarter_clock_derivation": "game_seconds_remaining - (4 - qtr) * 900 for regulation quarters 1-4; values outside 0-900 are excluded as unknown",
+    "series_terminal": "last play_id within (season, game_id, series) when series_result is non-null"
+  },
+  "limitations": [
+    "nfl_pbp has no pre-play score differential field in the selected schema; score-conditional rates are omitted rather than reconstructed from future scores.",
+    "First-down and drive-terminal outcomes are retrospective source labels; these tables do not establish pregame predictive skill.",
+    "The cohort intentionally excludes 2022 weeks 6-9; it is not a blind evaluation set for any model already developed on these seasons.",
+    "No tracking files, physical timing cohort, LP game payload, or engine code is consumed."
+  ],
+  "schema": "gridiron.e3.conditional_pbp_distributions.v1",
+  "sources": {
+    "database": "/root/legendarypicks/backend/data/picks.dev.db",
+    "eligible_pass_run_plays": 109932,
+    "nonnull_drive_groups": 19388,
+    "open_mode": "SQLite mode=ro; PRAGMA query_only=ON",
+    "pbp_rows": 155124,
+    "pbp_selected_rows_sha256": "ba645cc87bafd70fc744d37f75f4c8111ee72019f247f8385293dc364a7f7f76",
+    "schedule_score_rows_sha256": "ac9d3c5a2cb84156aa26f412795b3d5c02bb71b91b1dbc4c73e63edcfa0da4a5",
+    "scheduled_games": 896,
+    "scope": "regular season; 2022 weeks 1-5 and 2023-2025; 2022 weeks 6-9 excluded in SQL",
+    "weeks_6_9_queried": false
+  },
+  "study": "Retrospective conditional play and drive distributions from PBP only; no tracking features or prediction claim."
+}
