@@ -695,9 +695,19 @@ for (const group of continuityGroups.values()) {
       upper_closest_approach: await closestBoundarySample(upperRow) });
   }
 }
+const transitionContactGaps = continuityTransitions.map((transition) => transition.lower_has_contact
+  ? transition.lower_closest_approach?.signed_gap_m : transition.upper_closest_approach?.signed_gap_m).filter(Number.isFinite);
+const transitionNoContactGaps = continuityTransitions.map((transition) => transition.lower_has_contact
+  ? transition.upper_closest_approach?.signed_gap_m : transition.lower_closest_approach?.signed_gap_m).filter(Number.isFinite);
+const rangeOf = (values) => values.length
+  ? { minimum_m: Math.min(...values), maximum_m: Math.max(...values) } : { minimum_m: null, maximum_m: null };
 const strContinuityDiagnostics = { sampled_step: { tick: 5, time_seconds: 5 * DT_SECONDS },
   samples: strContinuitySamples, monotonicity_by_actor_solver_seed: continuityMonotonicity,
   all_precontact_torque_series_nondecreasing: continuityMonotonicity.every((group) => group.nondecreasing_torque),
+  contact_transition_proxy_gap_summary: { transition_count: continuityTransitions.length,
+    contact_side_first_sample_positive_gap_count: transitionContactGaps.filter((gap) => gap > 0).length,
+    contact_side_first_sample_gap_range: rangeOf(transitionContactGaps),
+    no_contact_side_closest_opportunity_gap_range: rangeOf(transitionNoContactGaps) },
   contact_transitions: continuityTransitions };
 
 function median(values) {
@@ -884,7 +894,7 @@ function markdownReport(data) {
     'At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace. The additional step-5 audit samples controller torque at 0.04167 s, before the players reach contact.',
     'At step 5 the tested torque series is nondecreasing for every actor, solver, and seed: ' + data.str_continuity_diagnostics.all_precontact_torque_series_nondecreasing + '. Representative 79→82 requests at seed ' + SEEDS[0] + ': ' + [
       torqueEndpointText('henderson', 'rapier3d-compat', 79, 82), torqueEndpointText('henderson', 'jolt-physics-js', 79, 82),
-      torqueEndpointText('bush', 'rapier3d-compat', 79, 82), torqueEndpointText('bush', 'jolt-physics-js', 79, 82)].join('; ') + '. Smooth controller-input changes can legitimately alter subsequent feedback-driven trajectories. Contact formation remains discrete: adjacent STR values can cross the geometric contact boundary. Transition rows report the signed gap at first contact on the contact side and the closest analytic opportunity sample on the no-contact side. Across the full matrix, 30 cases with nonpositive Rapier proxy gap but no Rapier contact remain candidate proxy/contact-boundary discrepancies, so detection cannot be ruled out in every case.',
+      torqueEndpointText('bush', 'rapier3d-compat', 79, 82), torqueEndpointText('bush', 'jolt-physics-js', 79, 82)].join('; ') + '. Smooth controller-input changes can legitimately alter subsequent feedback-driven trajectories. Contact formation remains a discrete engine event. Across ' + data.str_continuity_diagnostics.contact_transition_proxy_gap_summary.transition_count + ' adjacent contact/no-contact STR transitions, the first engine-contact sample has a positive analytic proxy gap in ' + data.str_continuity_diagnostics.contact_transition_proxy_gap_summary.contact_side_first_sample_positive_gap_count + ' cases (' + data.str_continuity_diagnostics.contact_transition_proxy_gap_summary.contact_side_first_sample_gap_range.minimum_m.toFixed(5) + '–' + data.str_continuity_diagnostics.contact_transition_proxy_gap_summary.contact_side_first_sample_gap_range.maximum_m.toFixed(5) + ' m); neighboring no-contact runs have closest opportunity gaps from ' + data.str_continuity_diagnostics.contact_transition_proxy_gap_summary.no_contact_side_closest_opportunity_gap_range.minimum_m.toFixed(5) + ' to ' + data.str_continuity_diagnostics.contact_transition_proxy_gap_summary.no_contact_side_closest_opportunity_gap_range.maximum_m.toFixed(5) + ' m. These transitions are not explained by crossing analytic gap zero: the proxy boundary differs from the engines’ contact boundary, pointing to a geometry/contact-query mismatch. Separately, 30 full-matrix cases with nonpositive Rapier proxy gap but no Rapier contact remain candidate detection discrepancies. Across all comparisons, the evidence supports trajectory-mediated contact splits in some cases and contact-boundary mismatch in others; it does not establish a general missed-detection defect.',
     '| Actor | STR | Engine | Min gap (m) | First contact (s) | Contact samples | Peak torque request (N·m) | Status |',
     '|---|---:|---|---:|---:|---:|---:|---|',
     '### Adjacent STR contact transitions and closest approach',
