@@ -528,13 +528,9 @@ function expectedRoleInputChanges(row) {
   return [];
 }
 
-const traceCache = new Map();
 async function traceFor(row) {
   const traceFile = path.join(RESULTS, row.trace_path);
-  if (!traceCache.has(traceFile)) {
-    traceCache.set(traceFile, JSON.parse(gunzipSync(await readFile(traceFile)).toString('utf8')));
-  }
-  return traceCache.get(traceFile);
+  return JSON.parse(gunzipSync(await readFile(traceFile)).toString('utf8'));
 }
 
 const inputAuditRowsByKey = new Map(reportRows.map((row) => [
