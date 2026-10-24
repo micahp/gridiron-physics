@@ -25,6 +25,12 @@ For each game, persist a **versioned, game-level field-end policy** (the actual 
 
 **Example, authored for development only (not observed):** For a seeded Q2 play, we can explicitly assign IND attack `+1` and LV `-1` in Q2. Then, if the same first-half field assignment spans Q1, IND would have attacked `-1` and LV `+1` in Q1. Both are valid examples; neither is a fact about the 2025 game. Q3 and Q4 directions require their own second-half configuration (Q4 opposite Q3).
 
+## Specific adapter bug exposed by current source
+
+At Gridiron `15b0b34`, `web/lp-play-record-adapter.js:validateFieldEndpoint` requires **every** Q1/Q2 endpoint to have `dir=+1` and every Q3/Q4 endpoint to have `dir=-1`. LP's `e0_single_play.py` instead flips `field.after.dir` on a **turnover on downs**, because the ball changes to the opposing offense. Consequently, a Q2 turnover-on-downs candidate emitted by LP with a valid `field.after.dir=-1` would be incorrectly rejected by Gridiron's own validation. The seed-1042 zero-yard run passes only because it keeps possession. **This is an observed cross-repository schema contradiction in code, not a demonstrated runtime test failure**, as the scenario hasn't been run on the remote checkout.
+
+**Required focused cross-repo contract test:** Build a synthetic Q2 fourth-down failure at fixed absolute `los`, verify `before.offense_team=IND`, `before.dir=+1`, then `after.offense_team=LV`, `after.dir=-1`, and `after.yardline_100=100-before_resting_yardline_100` while physical `los` remains unchanged. Ensure the adapter accepts the record, rejects an incorrect team/period assignment or mismatched `los`, and never mutates LP's original record. Likewise add Q1→Q2 and Q3→Q4 tests where the **same** offense changes physical direction without changing offense-relative position. **No additional synthetic physics experiments.**
+
 ## Required tests and ownership
 
 **LP sequence/game-state owner (E1 now):** Confirm this decision in the research handoff; implement a versioned **team-and-quarter** mapping in the next drive prototype. Verify the 2025 Q2 seed's authored display value remains `+1 / 12`. Add focused tests of Q1→Q2 and Q3→Q4 transitions, second-half choice, a possession change (same absolute ball spot, opposite attacking team, flipped offense-relative yardline), touchdown/drive-end null behavior, scoring clock/quarter transitions and unknown assignment failure. The Q2 seed alone does not exercise touchdown or turnover branches. **Do not pretend a 125,309-row reducer legality check tested these orientation branches.**
