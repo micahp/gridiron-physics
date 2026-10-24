@@ -110,7 +110,60 @@ try {
   assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
   await regressionContext.close();
 
-  console.log('Real Chromium navigation: final 1ca payload navigated Drive 24 / Play 143; archived 5fc hard-rejected');
+  const fallbackPage = await browser.newPage();
+  fallbackPage.on('pageerror', (error) => pageErrors.push(error.message));
+  await fallbackPage.goto(`http://127.0.0.1:${port}/e2-matchups.html`);
+  await fallbackPage.locator('#matchup-rows tr').nth(5).waitFor();
+  assert.equal(await fallbackPage.locator('#matchup-rows tr').count(), 6);
+  assert.match(await fallbackPage.locator('.retrospective-banner').innerText(), /2022-pool retrospective demonstration.*Not a 2026 forecast.*valid_full_game=false/);
+  assert.match(await fallbackPage.locator('#matchup-rows').innerText(), /Bengals at Ravens[\s\S]*Dolphins at Jets[\s\S]*49ers at Falcons[\s\S]*Buccaneers at Panthers[\s\S]*Packers at Lions[\s\S]*Cowboys at Eagles/);
+  assert.match(await fallbackPage.locator('#index-error').innerText(), /not available yet/);
+  assert.equal(await fallbackPage.locator('#matchup-rows a').count(), 0, 'missing LP rows must not point at another game');
+  await fallbackPage.close();
+
+  // This route fixture exercises index-to-viewer navigation only; the indexed
+  // artifact is intercepted in memory and is not represented as a real matchup.
+  const indexContext = await browser.newContext();
+  await indexContext.route('**/docs/fixtures/e2/matchup-index.json', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      lp_source: manifest.lp_source,
+      games: [{
+        matchup_id: 'bengals-at-ravens',
+        away_team: 'Bengals',
+        home_team: 'Ravens',
+        final_score: { away: 10, home: 14 },
+        drive_count: 24,
+        play_count: 143,
+        fixture: {
+          file: `docs/fixtures/e2/${entry.file}`,
+          sha256: entry.sha256,
+          upstream_source_file: `docs/fixtures/e2/${entry.upstream_source_file}`,
+          upstream_source_sha256: entry.upstream_source_sha256,
+        },
+      }],
+    }),
+  }));
+  const indexPage = await indexContext.newPage();
+  indexPage.on('pageerror', (error) => pageErrors.push(error.message));
+  await indexPage.goto(`http://127.0.0.1:${port}/e2-matchups.html`);
+  await indexPage.locator('#matchup-rows a').waitFor();
+  assert.match(await indexPage.locator('#matchup-rows tr').first().innerText(), /Bengals at Ravens[\s\S]*10 – 14[\s\S]*24[\s\S]*143/);
+  await indexPage.locator('#matchup-rows a').first().click();
+  await indexPage.locator('#viewer-content:not([hidden])').waitFor({ timeout: 15000 });
+  assert.match(await indexPage.locator('#mode-label').innerText(), /Bengals at Ravens/i);
+  assert.equal(await indexPage.locator('#drive-select option').count(), 24);
+  await indexPage.locator('#drive-select').selectOption('23');
+  assert.match(await indexPage.locator('#drive-summary').innerText(), /Drive 24/);
+  const indexedPlayCount = await indexPage.locator('#play-select option').count();
+  await indexPage.locator('#play-select').selectOption(String(indexedPlayCount - 1));
+  assert.match(await indexPage.locator('#play-meta').innerText(), /Q[1-4]/);
+  assert.match(await indexPage.locator('.retrospective-banner').innerText(), /valid_full_game=false/);
+  assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
+  await indexContext.close();
+
+  console.log('Real Chromium navigation: E2 final 1ca Drive 24 / Play 143; old 5fc rejected; six-row fallback and indexed play navigation pass');
   console.log(`Browser runtime errors: ${pageErrors.length}`);
 } finally {
   await browser.close();

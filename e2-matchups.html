@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E2 Generated Matchups · Gridiron Research Viewer</title>
+  <link rel="stylesheet" href="web/e2-matchup-index.css">
+</head>
+<body>
+  <div class="retrospective-banner">2022-pool retrospective demonstration · Not a 2026 forecast · valid_full_game=false</div>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">Gridiron Physics · E2 research viewer</p>
+      <h1>Generated matchups</h1>
+      <p class="lede">Choose a matchup to inspect its preserved play-by-play record, drives, score and clock.</p>
+      <p id="index-status" class="status" role="status">Loading LP matchup index…</p>
+    </header>
+    <section id="index-error" class="notice" hidden></section>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Matchup</th><th>Final score</th><th>Drives</th><th>Plays</th><th>Play by play</th></tr></thead>
+        <tbody id="matchup-rows"></tbody>
+      </table>
+    </div>
+    <footer>Static read-only display · Missing LP entries remain unavailable; no game outcome is filled in.</footer>
+  </main>
+  <script type="module" src="web/e2-matchup-index-page.js"></script>
+</body>
+</html>

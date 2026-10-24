@@ -7,9 +7,11 @@
   <link rel="stylesheet" href="web/e2-game-viewer.css">
 </head>
 <body>
+  <div class="retrospective-banner">2022-pool retrospective demonstration · Not a 2026 forecast · valid_full_game=false</div>
   <main class="shell">
     <header class="hero">
       <p class="eyebrow">Gridiron Physics · E2 research viewer</p>
+      <p><a class="index-link" href="e2-matchups.html">← All generated matchups</a></p>
       <h1>Full game record</h1>
       <p id="mode-label" class="mode-label">Loading pinned LP record…</p>
       <p id="record-status" class="record-status" role="status">Loading</p>
@@ -53,9 +55,9 @@
 
     <div id="viewer-content" hidden>
     <section class="scoreboard" aria-label="Final score">
-      <div><span>Team A</span><strong id="score-a">—</strong></div>
+      <div><span id="team-a-label">Team A</span><strong id="score-a">—</strong></div>
       <div class="score-separator">FINAL</div>
-      <div><span>Team B</span><strong id="score-b">—</strong></div>
+      <div><span id="team-b-label">Team B</span><strong id="score-b">—</strong></div>
       <p id="game-state" class="score-note"></p>
     </section>
 
