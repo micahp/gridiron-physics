@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>LP E0 Play Record · Gridiron</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="web/e0-record-viewer.css">
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <a class="back-link" href="index.html">Mile High Film Room</a>
+      <p class="eyebrow">Gridiron · Gate E0a</p>
+      <h1>LP play record inspector</h1>
+      <p class="lede">Read-only display of the LP record. This page preserves its state and outcome fields and does not run a physical replay.</p>
+    </header>
+
+    <section class="notice" aria-labelledby="status-label">
+      <h2 id="status-label">Record status</h2>
+      <p id="record-status" role="status">Loading the pinned LP fixture…</p>
+    </section>
+
+    <section class="tools" aria-label="Record input">
+      <button id="reload-fixture" type="button">Reload pinned fixture</button>
+      <label class="file-picker">Open a record JSON
+        <input id="record-file" type="file" accept="application/json,.json">
+      </label>
+      <span id="input-name" class="muted"></span>
+    </section>
+
+    <div id="record-content" aria-live="polite"></div>
+    <section id="load-error" class="error" hidden role="alert"></section>
+    <footer><a href="index.html">Return to historical Film Room</a></footer>
+  </main>
+  <script type="module" src="web/e0-record-viewer.js"></script>
+</body>
+</html>

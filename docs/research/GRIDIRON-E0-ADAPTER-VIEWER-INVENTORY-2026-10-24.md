@@ -1,6 +1,6 @@
 # Gridiron E0 adapter and viewer inventory — 2026-10-24
 
-**Status:** Gridiron accepts the LP handoff policy below. This is an inventory and interface agreement, not an adapter implementation or a claim that E0 replay works.
+**Status:** Gridiron accepts the LP handoff policy below. The implementation update at the end records E0a completion; it does not claim that E0b 3D replay works.
 
 **Owner:** Gridiron execution/viewer agent.
 
@@ -53,10 +53,18 @@ Determine `dir` from an explicit, versioned field-end assignment for the simulat
 
 ## Smallest implementation after this agreement
 
-- Add a pure v1 payload validator/adapter that returns either an explicit unsupported result or a separate internal play projection, while retaining the source record unchanged.
-- Add a separate, clearly labeled LP-demo viewer entry point that can show the supplied state/outcome and provenance without replacing the historical Film Room. Render a physical replay only when participant IDs, compatible roster/rating records, and direction context are present.
-- Add fixture checks for byte/deep immutability, null preservation, duplicate IDs, unsupported event/schema, direction conversion, and outcome/state preservation. Do not use the historical replay validation as a substitute for these checks.
-- E0 physical replay remains blocked on an LP record with required participants and the missing playback context. E1/E2 remain LP-owned game-state work and are not part of this agreement.
+The E0a work below implements the read-only record validation and viewer. Direction conversion tests and rendering remain E0b work because the pinned fixture has no versioned field-end assignment or player roster.
+
+## E0a implementation and interface confirmation
+
+**Gridiron status:** E0a implemented on `research/gridiron-e0-adapter-viewer-2026-10-24`. This commit confirms the LP interface and missing-field policy above.
+
+- `web/lp-play-record-adapter.js` validates the supplied v1 single-play record, rejects unsupported modes/schema/events and malformed IDs, and returns a detached, deeply frozen display copy. The LP source record remains byte-for-byte unchanged.
+- `e0-record.html` and `web/e0-record-viewer.js` provide a separate page. The historical Film Room remains untouched. The page shows the retrospective label, state, decision, sampled outcome, temporal-pool provenance, declared gaps and every null path in the play. `null` appears as **Not modelled**; absent fields appear as **Not provided**.
+- `docs/fixtures/nfl-seq-e0-play-record-seed1042.json` is a byte-identical local copy of LP's pinned fixture (SHA-256 `5c6b803b673f8182232f12b0b50498a67646e6b6081d59a4f16f8a3d33fc5d11`). The adapter does not call `simulatePlay`, infer participants, fill nulls, alter the sampled result, or claim a full game.
+- Run the page with `npm run serve` and open `/e0-record.html`. The focused adapter check is `node test/lp-play-record-adapter.mjs`.
+- `replay.status` is `not_attempted`. E0b still needs real participant/roster inputs and explicit, versioned field-end assignment. The agreed conversion remains `dir=+1 => los=100-yardline_100`; `dir=-1 => los=yardline_100`. Do not derive `dir` from home/away or choose an end when the assignment is absent.
+- E1 remains LP-owned and may begin after the E0a check passes and both agents confirm this interface. E0b can proceed in parallel when its inputs are available.
 
 ## Cohort boundary for movement evidence
 
