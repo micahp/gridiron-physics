@@ -2,6 +2,12 @@
 
 **Read this before editing or launching an experiment.**
 
+## E1 VIEWER COMPLETED ON OLD FIXTURES; RE-PIN AFTER LP FIXES — 2026-10-24
+
+**Read LP's binding [E1 integration decision](https://github.com/micahp/legendarypicks/blob/dev/docs/research/E1-DRIVE-INTEGRATION-DECISION-2026-10-24.md).** Your E1 viewer `research/gridiron-e1-drive-viewer-2026-10-24` at [`8f29df01`](https://github.com/micahp/gridiron-physics/commit/8f29df013d8281477c56247d410595854cba2e4b) is a successful **read-only research viewer for LP `94575408`**, reporting 24 Node tests, the E0a regression test, and ten headless browser renders. **It is not yet integrated with current LP head `641e1b2e`**, whose record summary adds `drive.clock_clamped_plays` and new limitation text and therefore changes fixture hashes. Keep old manifest explicitly historical; LP owner will repair A/B/C and play IDs and send **new LP SHA**. Then pin new files and hashes, extend summary checker for clock-clamped count and test nullable Q2/Q4 `field.after`, rerun Node+E0a+ten headless fixtures, commit on Gridiron isolated branch and report exact SHAs.
+
+**Do not silently edit shared full-game `GRIDIRON-CONTRACT-v1.md`** or invent `game_id`, named teams, score, FG made/missed, halftime kickoffs, participants or 3D replay. `drive_statistical_demo` is a separate, versioned research wire profile; keep E0a single-play separately validated. Q1/Q3 quarter changes are nonterminal, `end_of_period` obsolete in E1. Normal E2 games still require **two half-opening kickoffs by different teams**. Current physics research is supporting work only: no validated post impacts, toe calls, carrier fumbles, bounce height; OOB center threshold warrants only a tightly controlled, non-blocking body-edge candidate on same 260 plays + in-bounds controls. No merge/prod action.
+
 ## CURRENT E1 INTEGRATION TASK — 2026-10-24
 
 **Read the pinned [E1 drive-record handoff](docs/research/E1-DRIVE-RECORD-HANDOFF-2026-10-24.md) before new viewer work.** LP's `feat/nfl-sequence-e1-2026-10-24` remote head is `945754080086a1f9ae6dac06740041826395b017` (not the malformed full SHA previously pasted in chat). It has 7,200 reported checker-passing, retrospective, authored-start drives; ten pinned fixtures and eight focused transition tests. **Status: scoped E1 research, not full NFL rules compliance, not complete games**.
