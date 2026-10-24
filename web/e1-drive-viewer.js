@@ -37,10 +37,13 @@ function stateCell(state) {
   return parts.join(' · ');
 }
 
-function fieldCell(field) {
+function fieldCell(play) {
+  const { field, outcome } = play;
   const before = `dir ${shown(field.before.dir)}, LOS ${shown(field.before.los)}`;
   const after = `dir ${shown(field.after.dir)}, LOS ${shown(field.after.los)}`;
-  return `${before} → ${after}`;
+  const finalSpot = outcome.clock_only_terminal && outcome.final_play_yardline_100 !== null
+    ? ` · final play spot ${outcome.final_play_yardline_100} (not a scrimmage state)` : '';
+  return `${before} → ${after}${finalSpot}`;
 }
 
 function outcomeCell(play) {
@@ -98,7 +101,7 @@ function renderTimeline(plays, parent) {
     row.append(el('td', stateCell(play.stateBefore)));
     row.append(el('td', `${result.yards}; ${result.flags}`));
     row.append(el('td', play.stateAfter.end_of_drive ? `${stateCell(play.stateAfter)} (ends drive)` : stateCell(play.stateAfter)));
-    row.append(el('td', fieldCell(play.field)));
+    row.append(el('td', fieldCell(play)));
     const note = play.terminalText ?? (play.quarterChange ? 'Quarter ends: same drive continues with the same series, no kickoff, and flipped direction.' : '');
     row.append(el('td', note));
     body.append(row);

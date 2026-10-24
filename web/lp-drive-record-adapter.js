@@ -4,6 +4,7 @@
 import { collectNullPaths, convertYardlineToLos } from './lp-play-record-adapter.js';
 
 export const DRIVE_MODE = 'drive_statistical_demo';
+export const DRIVE_SCHEMA_VERSIONS = Object.freeze(['1.0', '1.1']);
 export const DRIVE_FIELD_VERSION = 'e1-field-end-v2';
 export const DRIVE_FIELD_SOURCE = 'authored_demo_orientation';
 export const DRIVE_EVENT_TYPES = Object.freeze([
@@ -211,7 +212,9 @@ function recomputeSummary(plays, terminal) {
 /** Validate and expose an LP E1 drive record for read-only presentation. Throws TypeError on any violation. */
 export function adaptLpDriveRecord(record) {
   requireObject(record, 'record');
-  if (record.schema_version !== '1.0') fail(`unsupported schema_version: ${record.schema_version ?? 'not provided'}`);
+  if (!DRIVE_SCHEMA_VERSIONS.includes(record.schema_version)) {
+    fail(`unsupported schema_version: ${record.schema_version ?? 'not provided'}; supported ${DRIVE_SCHEMA_VERSIONS.join(', ')}`);
+  }
   if (record.mode !== DRIVE_MODE) {
     fail(`unsupported mode: ${record.mode ?? 'not provided'}; this viewer accepts only ${DRIVE_MODE}`);
   }
@@ -298,16 +301,10 @@ export function adaptLpDriveRecord(record) {
       fail(`${label}.field.before.dir is inconsistent with the authored start and quarter changes`);
     }
     if (after.yardline_100 === null) {
-      const hasEndpoint = field.after !== null && (field.after.dir !== null || field.after.los !== null);
-      if (!hasEndpoint) return;
-      // A clock-only half or game end records the final play's spot. That is not a scrimmage state, and the LP
-      // record must be read as such. The endpoint must equal the recorded final-play position.
-      if (!play.outcome.clock_only_terminal || play.outcome.final_play_yardline_100 === null) {
+      // No scrimmage state: the field endpoint must be null. A half or regulation end keeps its final play position in
+      // outcome.final_play_yardline_100, which is not a scrimmage state (LP schema 1.1).
+      if (field.after.dir !== null || field.after.los !== null) {
         fail(`${label}.field.after must be null when the state has no position`);
-      }
-      checkEndpoint(field.after, play.outcome.final_play_yardline_100, `${label}.field.after`);
-      if (field.after.dir !== expectedDirection(record.start_state, after.offense_team, after.quarter)) {
-        fail(`${label}.field.after.dir is inconsistent with the authored start and quarter changes`);
       }
     } else {
       checkEndpoint(field.after, after.yardline_100, `${label}.field.after`);

@@ -37,7 +37,7 @@ const EXPECTED = {
 };
 
 test('the ten fixtures match the pinned manifest hashes and LP commit', () => {
-  assert.equal(manifest.lp_commit, '641e1b2ea7882389778a14e6c52b58583f7e9917');
+  assert.equal(manifest.lp_commit, 'e621e83ef86b2255bd6622f32d691553ea2abaaf');
   assert.equal(manifest.fixtures.length, 10);
   for (const entry of manifest.fixtures) {
     const hash = createHash('sha256').update(loadBytes(entry.file)).digest('hex');
@@ -114,7 +114,9 @@ test('field-goal attempts show no result, no points and no next possession', () 
 
 test('halftime and end of regulation carry no restart and no winner', () => {
   const endpoint = adaptLpDriveRecord(load('own25_q2_120-seed1-halftime.json')).plays.at(-1);
-  assert.equal(endpoint.field.after.los, 100 - endpoint.outcome.final_play_yardline_100, 'final-play position is recorded, not a scrimmage state');
+  assert.equal(endpoint.field.after.los, null, 'no field endpoint at a half end (schema 1.1)');
+  assert.equal(endpoint.field.after.dir, null);
+  assert.ok(Number.isInteger(endpoint.outcome.final_play_yardline_100), 'the final play position is kept in outcome');
   assert.equal(endpoint.stateAfter.yardline_100, null);
   const half = adaptLpDriveRecord(load('own25_q2_120-seed1-halftime.json'));
   assert.match(half.plays.at(-1).terminalText, /No half-start kickoff is modelled/);
@@ -227,12 +229,32 @@ test('rejects a terminal that appears before the last play', () => {
   assert.throws(() => adaptLpDriveRecord(record), /only the last play may end the drive|touchdown flag and terminal disagree/);
 });
 
-test('a half-end endpoint must equal the recorded final-play position', () => {
-  const record = mutated('own25_q2_120-seed1-halftime.json', (r) => { r.plays.at(-1).field.after.los = 1; });
-  assert.throws(() => adaptLpDriveRecord(record), /does not match the stated dir and yardline_100/);
+test('a field endpoint at a half end is rejected (schema 1.1 requires null)', () => {
+  const record = mutated('own25_q2_120-seed1-halftime.json', (r) => {
+    r.plays.at(-1).field.after.dir = 1;
+    r.plays.at(-1).field.after.los = 1;
+  });
+  assert.throws(() => adaptLpDriveRecord(record), /must be null when the state has no position/);
+});
+
+test('a field endpoint at any terminal with no scrimmage state is rejected', () => {
+  const record = mutated('own5_q1_900-seed14-safety.json', (r) => {
+    r.plays.at(-1).field.after.dir = 1;
+    r.plays.at(-1).field.after.los = 1;
+  });
+  assert.throws(() => adaptLpDriveRecord(record), /must be null when the state has no position/);
+});
+
+test('accepts schema 1.0 and 1.1 and rejects any other version', () => {
+  for (const version of ['1.0', '1.1']) {
+    const record = mutated('own25_q1_900-seed1-punt.json', (r) => { r.schema_version = version; });
+    assert.equal(adaptLpDriveRecord(record).status, 'accepted_for_read_only_display', version);
+  }
+  assert.throws(() => adaptLpDriveRecord(mutated('own25_q1_900-seed1-punt.json', (r) => { r.schema_version = '2.0'; })),
+    /unsupported schema_version/);
 });
 
 test('the E1 record is rejected by the E0a single-play viewer', async () => {
   const { adaptLpPlayRecord } = await import('../web/lp-play-record-adapter.js');
-  assert.throws(() => adaptLpPlayRecord(load('own25_q1_900-seed1-punt.json')), /unsupported mode/);
+  assert.throws(() => adaptLpPlayRecord(load('own25_q1_900-seed1-punt.json')), /unsupported (schema_version|mode)/);
 });
