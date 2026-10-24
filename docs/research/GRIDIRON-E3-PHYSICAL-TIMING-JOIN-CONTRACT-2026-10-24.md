@@ -53,6 +53,8 @@ The exact per-player kinematics fields inside `kinematics_at_snap` are:
 
 For LP `nfl_pbp`, join on `(lp_game_id, lp_play_id)` only. Use `elapsed_seconds` as a tracking-informed retrospective in-play duration estimate; leave null timing null. Do not substitute it for game-clock runoff. The LP clock audit cannot infer stoppage attribution from this cohort.
 
+The pinned LP E3 clock-decomposition artifact is consumed as an independent, labelled record and joined by the same composite key. Its source header, hashes, producer provenance, null policy, and exact overlap with this cohort are recorded in [the LP clock consumer addendum](GRIDIRON-E3-LP-CLOCK-DECOMPOSITION-CONSUMER-2026-10-24.md). LP's `in_play_s`, `game_clock_delta_s`, `residual_s`, and `real_snap_to_next_snap_s` remain separate measurements; the consumer never substitutes this cohort's `elapsed_seconds` for an LP clock field.
+
 The dataset uses snap-anchored, all-22-player cohort eligibility, but the carrier candidate is chosen retrospectively. It is suitable for descriptive timing and kinematics evaluation, not for constructing a prospective-from-snap carrier input or predicting tackle, yards, scoring, or game outcomes. Sampling is 10 Hz; there is no whistle timestamp and no stoppage attribution.
 
 ## Pins

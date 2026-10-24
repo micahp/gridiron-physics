@@ -60,6 +60,14 @@ try {
   assert.match(await page.locator('#state-audit-summary').innerText(), /0 findings/);
   assert.match(await page.locator('#e3-clock-caveat').innerText(), /594 \/ 7016/);
   assert.match(await page.locator('#e3-load-status').innerText(), /verified by SHA-256/);
+  assert.match(await page.locator('#e3-lp-clock-status').innerText(), /15,768 rows/);
+  assert.match(await page.locator('#e3-lp-clock-status').innerText(), /9,066 matched/);
+  assert.equal(await page.locator('#e3-lp-clock-table tbody tr').count(), 8);
+  assert.match(await page.locator('#e3-lp-clock-null-policy').innerText(), /unresolvable remain null/);
+  const lpClockRows = await page.locator('#e3-lp-clock-table tbody tr').allInnerTexts();
+  assert.match(lpClockRows.join('\n'), /timeouts_remaining\s+0\s+0\s+9066/);
+  assert.match(lpClockRows.join('\n'), /penalty_clock_stop\s+0\s+0\s+9066/);
+  assert.match(lpClockRows.join('\n'), /two_minute_warning_event\s+0\s+0\s+9066/);
   assert.match(await page.locator('#e3-unsupported-list').innerText(), /timeouts[\s\S]*two_minute_warning/);
   assert.match(await page.locator('#conversion-source-status').innerText(), /PASS/);
   assert.match(await page.locator('#e3-play-table').innerText(), /Generated · n=143/);

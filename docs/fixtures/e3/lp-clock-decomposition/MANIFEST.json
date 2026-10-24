@@ -1,0 +1,62 @@
+{
+  "consumer_schema": "gridiron.lp-clock-decomposition-consumer.v1",
+  "source_schema": {
+    "schema_id": null,
+    "identity": "Exact ordered CSV header emitted by the pinned LP producer",
+    "header_file": "e3-clock-decomposition.csv"
+  },
+  "source": {
+    "repository": "micahp/legendarypicks",
+    "branch": "research/nfl-e3-clock-decomposition-2026-10-24",
+    "commit": "4e18cb9f9e5b29ae9e105cbed37f90dc915c83da",
+    "artifact": "docs/evidence/e3/e3-clock-decomposition-2026-10-24.csv",
+    "artifact_sha256": "11f8dc2bf056d34cdbbf7ad5a5121ea6134aae9d9e932f920276db6f6417df46",
+    "summary_artifact": "docs/evidence/e3/e3-clock-decomposition-2026-10-24.json",
+    "summary_sha256": "c2fd272f1e29424b751a98202518c7e45657b7440d69eced0c9aa265a8fe6eba",
+    "producer": "scripts/bdb/e3_clock_decomposition.py",
+    "producer_sha256": "2fcdb47dfc75fd8ded92087e7a183dac1a2ae9b96a76cb7f10d55ea3b295bbb4",
+    "report": "docs/evidence/e3/E3-CLOCK-DECOMPOSITION-2026-10-24.md",
+    "report_sha256": "961cdc2b15a5fdfe47f6221b5be9756ae0d2f5e5cfc9e125a83f7cfa1b2b827e",
+    "rows": 15768,
+    "scope": "LP-verified 2022 BDB plays, weeks 1-9; consumer joins only keys present in the Gridiron physical-timing cohort."
+  },
+  "physical_cohort": {
+    "file": "docs/research/gridiron-e3-physical-timing-2026-10-24.json",
+    "schema": "gridiron.bdb2025.snap_physical_timing.v2",
+    "sha256": "e885fd20be7fe54f429c31f98dff11425538d331e383c90527141dd78754a63b",
+    "records": 9289,
+    "join_fields": ["lp_game_id", "lp_play_id"],
+    "join_status_required": "matched"
+  },
+  "csv_header": [
+    "bdb_gameId", "bdb_playId", "lp_game_id", "lp_play_id", "week", "quarter", "down", "distance", "offense", "defense",
+    "outcome_type", "offense_score_diff_pre_snap", "quarter_clock_at_snap_s", "late_half_snap",
+    "snap_time", "terminal_event", "terminal_time",
+    "in_play_s", "in_play_label", "in_play_rule",
+    "game_clock_delta_s", "game_clock_delta_label", "game_clock_delta_rule",
+    "residual_s", "residual_label", "residual_rule",
+    "real_snap_to_next_snap_s", "real_snap_label", "real_snap_rule",
+    "flag_out_of_bounds", "flag_timeout", "flag_penalty", "stoppage_context", "stoppage_label", "stoppage_rule",
+    "timeouts_remaining", "timeouts_label", "timeouts_rule",
+    "penalty_clock_stop", "penalty_label", "penalty_rule",
+    "two_minute_warning_event", "warning_label", "warning_rule"
+  ],
+  "labelled_fields": {
+    "in_play_s": {"label": "in_play_label", "rule": "in_play_rule", "kind": "seconds"},
+    "game_clock_delta_s": {"label": "game_clock_delta_label", "rule": "game_clock_delta_rule", "kind": "seconds"},
+    "residual_s": {"label": "residual_label", "rule": "residual_rule", "kind": "seconds"},
+    "real_snap_to_next_snap_s": {"label": "real_snap_label", "rule": "real_snap_rule", "kind": "seconds"},
+    "stoppage_context": {"label": "stoppage_label", "rule": "stoppage_rule", "kind": "string"},
+    "timeouts_remaining": {"label": "timeouts_label", "rule": "timeouts_rule", "kind": "number"},
+    "penalty_clock_stop": {"label": "penalty_label", "rule": "penalty_rule", "kind": "source_scalar"},
+    "two_minute_warning_event": {"label": "warning_label", "rule": "warning_rule", "kind": "source_scalar"}
+  },
+  "semantics": {
+    "join": "Exact composite (lp_game_id, lp_play_id), only when both are present and physical lp_join_status is matched.",
+    "unresolvable": "A blank source value with label unresolvable is represented as null, with its label and rule retained. It is never defaulted or filled from another field.",
+    "no_substitution": "In particular, elapsed_seconds is not substituted for game_clock_delta_s, residual_s, or real_snap_to_next_snap_s.",
+    "missing_join": "No LP keys or no source row yields null clock fields and an explicit non-matched join status.",
+    "label_values": ["observed", "inferred", "unresolvable"],
+    "schema_note": "The pinned LP commit emits a CSV header and per-value labels/rules, but no separately versioned machine-readable schema. source_schema.schema_id is intentionally null; the exact header and producer provenance define the consumed source format."
+  }
+}
