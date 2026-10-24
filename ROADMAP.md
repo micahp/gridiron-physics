@@ -7,6 +7,13 @@
 
 > **North star:** Simulate a football game in which real, pregame-eligible players with estimated abilities make football decisions and physically interact in three dimensions. Those interactions should produce the individual play results, which change downs, drives, field position, clock, scoring, and ultimately game outcomes. Then demonstrate which parts look like real football and whether they improve held-out predictions.
 
+## Latest E1/OOB decisions — 2026-10-24
+
+- **E1 research viewer checkpoint accepted:** [Gridiron `f2a00a09`](https://github.com/micahp/gridiron-physics/commit/f2a00a0973e901c7590220cd569dde80cdf6245c) now pins LP `641e1b2e` and validates the `clock_clamped_plays` summary; agent reports 25 Node passes, E0a regression and 10 headless fixture renders. LP defects A/B/C + play IDs remain and must be fixed before final research-contract acceptance; then Gridiron repins to **new repair SHA**. No complete-game or 3D claim.
+- **OOB candidate NOT ADOPTED:** [M4d paired disc-edge report `1ea4ee63`](https://github.com/micahp/gridiron-physics/commit/1ea4ee63a98ecc379b36bc22e09acff3762ba320) has unchanged median paired timing error despite more near-frame detections and mixed better/worse spot outcomes. Reported p90 baseline/candidate spots use different available-crossing denominators, so no matched-p90 claim. Keep existing 0.3-yard center threshold unchanged. Stop this research line pending independent legal contact labels. Weeks 6–9 reserved.
+- **Critical next milestone E2:** Two half-opening kickoffs by different teams in normal mode, toss/choice ledger, drive→score/try→kickoff transitions, clock/quarter and game stats. All physical gaps remain honest and non-blocking for LP game-state development.
+
+
 This document translates the cross-project research notebook into **concrete Gridiron Physics milestones**. It is a roadmap, not proof that the proposed architecture has been implemented. Keep research claims, existing behavior, hypotheses and accepted implementation separate.
 
 ## MOVEMENT RESEARCH DECISION — 2026-10-24: stop polishing millimeters
