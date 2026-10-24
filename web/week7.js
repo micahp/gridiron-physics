@@ -46,9 +46,16 @@ function makeViewer(){
 function inspectPlayer(id){
   const p=physicsGame.players[id]; if(!p)return;
   renderer.select(id);
-  $('player-detail').innerHTML='<div class="card-h" style="grid-template-columns:1fr auto"><div><h2>'+esc(p.name)+'</h2><p>'+esc(p.team)+' · '+esc(p.pos)+' · OVR estimate</p></div><div class="big">'+esc(p.overall_estimate ?? 'n/r')+'</div></div>'+
+  document.querySelector('.tabs button[data-tab="ratings"]').click();
+  for(const old of document.querySelectorAll('.pdetail'))old.remove();
+  const detail=document.createElement('div');
+  detail.className='pdetail';
+  detail.innerHTML='<div class="card-h" style="grid-template-columns:1fr auto"><div><h2>'+esc(p.name)+'</h2><p>'+esc(p.team)+' · '+esc(p.pos)+' · OVR estimate</p></div><div class="big">'+esc(p.overall_estimate ?? 'n/r')+'</div></div>'+
     '<div class="attrs" style="margin-top:12px">'+Object.entries(p.ratings||{}).map(([k,v])=>'<div class="attr est"><div class="top"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div></div>').join('')+'</div>'+
     '<p class="note" style="margin-top:10px">Estimated public-research ratings, not EA-licensed player grades.</p>';
+  const row=[...$('players').querySelectorAll('[data-player]')].find(b=>b.dataset.player===id);
+  if(row){row.after(detail);row.scrollIntoView({block:'start'});}
+  else{$('players').prepend(detail);detail.scrollIntoView({block:'start'});}
 }
 function drawPlayerList(demo) {
   const slots = [...Object.entries(demo.lineups.offense).map(([slot,id])=>({side:demo.play.off,slot,id})),
