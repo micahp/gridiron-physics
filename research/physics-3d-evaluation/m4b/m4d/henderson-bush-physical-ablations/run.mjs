@@ -179,7 +179,7 @@ function computeContactStats(result, focusPair) {
     pair: frame.pairSurfaceGaps?.find((row) => row.pairId === pairId) }));
   const opportunities = samples.filter((row) => row.pair?.contactOpportunity);
   const contacts = samples.filter((row) => row.pair?.physicalContact);
-  const contactEvents = (result.outcome.events ?? []).filter((event) => event.type === 'player_contact_started'
+  const contactEvents = (result.events ?? []).filter((event) => event.type === 'player_contact_started'
     && [...event.pair].sort().join('::') === pairId);
   return { pairId, opportunityCount: opportunities.length, actualContactCount: contacts.length,
     actualContactEventCount: contactEvents.length,
