@@ -9,6 +9,12 @@
 
 This document translates the cross-project research notebook into **concrete Gridiron Physics milestones**. It is a roadmap, not proof that the proposed architecture has been implemented. Keep research claims, existing behavior, hypotheses and accepted implementation separate.
 
+## MOVEMENT RESEARCH DECISION — 2026-10-24: stop polishing millimeters
+
+[Coordinator review and new prospective holdout policy](docs/research/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md): agent-reported equal-history full-play snap movement experiment **passed the original preregistered statistical gate** but yielded only **3.72 mm** lower 1-second MAE for legacy locomotion versus constant acceleration, versus **113.2 mm** gained by acceleration over constant velocity. About **97%** of the total observed improvement is explainable by the simple acceleration extrapolation. The original rule had no materiality floor. **Decision:** accept literal pass; **decline complexity/adoption**. Add a *prospective, post-development* ≥5 cm AND ≥5% 1-second gain rule before any future weeks-6–9 held-out scoring; don't use that reserved cohort for this candidate yet.
+
+**Research artifacts not yet pushed** at the time of review; reported denominators **9,456 local manifest rows, 9,388 included snap plays, 9,289 scored plays** require play-ID reconciliation. Historic origin-anchored minimum-separation metric is invalid as evidence of tackle timing; absolute original RMSE must be relabeled or corrected. This **does not delay** E0/E1/E2 game integration.
+
 ## ACTIVE DELIVERY PRIORITY — 2026-10-24: full end-to-end football game
 
 **Source of truth:** [End-to-end football simulator delivery plan](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md) and [Gridiron AGENTS.md](AGENTS.md). This **supersedes earlier suggestions** that further independent tracking, contact, balance, grip, Madden rating or solver experiments must complete before a game can be generated.
