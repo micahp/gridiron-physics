@@ -261,7 +261,7 @@ Two independently completed, isolated experiments use the same NE–CHI player p
 
 **Immediate action:** Run the same *questions* using separately controlled within-engine ablations and publish one normalized, failure-aware comparison, including the Barkley/Baun Rapier contact disappearance, no completed tackle in the NE–CHI M4d fixture, and legacy post-wrap carrier-travel reversal. Neither pilot satisfies the existing M4c penetration distribution gates. Integration choice follows coordinator review, not two independent agent completion messages.
 
-### M5. Rare events and special teams
+### 2026-10-23 research gate: role-centred tackle hold exposes far-wrap acceleration defect### M5. Rare events and special teams
 
 **Goal:** The engine can eventually produce both ordinary and exceptional outcomes for football reasons.
 
