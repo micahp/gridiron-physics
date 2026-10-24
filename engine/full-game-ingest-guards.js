@@ -15,8 +15,21 @@ function requireIndex(value, label) {
   }
 }
 
+function gameRecord(payload) {
+  return payload?.record && typeof payload.record === 'object' ? payload.record : payload;
+}
+
+function declaresLegalCompleteGame(payload) {
+  return payload?.valid_full_game === true || gameRecord(payload)?.valid_full_game === true;
+}
+
+function playRows(record) {
+  return (record?.drives ?? []).flatMap((drive) => drive.plays ?? []);
+}
+
 /** Reject a play whose before/after drive IDs disagree with one another or its enclosing drive. */
 export function validateDriveIndices(record) {
+  record = gameRecord(record);
   if (!Array.isArray(record?.drives)) throw new TypeError('record.drives must be an array');
   let checkedPlays = 0;
 
@@ -62,6 +75,7 @@ function conversionPoints(attempt, path, kindOverride) {
 
 /** Validate all conversion scoring attached to an LP-style game record. */
 export function validateConversionSources(record) {
+  record = gameRecord(record);
   if (!Array.isArray(record?.drives)) throw new TypeError('record.drives must be an array');
   const validated = [];
 
@@ -83,8 +97,114 @@ export function validateConversionSources(record) {
   return validated;
 }
 
+function activeMarker(value) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') return !['', '0', 'false', 'no', 'none', 'null', 'no penalty'].includes(value.trim().toLowerCase());
+  if (Array.isArray(value)) return value.length > 0;
+  return value != null && typeof value === 'object' && Object.keys(value).length > 0;
+}
+
+function findPlayRuleMarker(play) {
+  const penaltyKeys = new Set(['penalty', 'penalty_flag', 'penalty_called', 'penalty_applied', 'penalty_transition', 'penalty_yards']);
+  const warningKeys = new Set(['two_minute_warning', 'two_minute_warning_flag', 'two_minute_warning_event', 'two_minute_warning_transition']);
+  const warningValues = new Set(['two_minute_warning', 'two_minute_warning_transition']);
+  const stack = [{ value: play, path: 'play' }];
+
+  while (stack.length) {
+    const { value, path } = stack.pop();
+    if (Array.isArray(value)) {
+      value.forEach((child, index) => stack.push({ value: child, path: `${path}[${index}]` }));
+      continue;
+    }
+    if (!value || typeof value !== 'object') continue;
+
+    for (const [key, child] of Object.entries(value)) {
+      const normalizedKey = key.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+      const childPath = `${path}.${key}`;
+      if (normalizedKey === 'event_type' && typeof child === 'string') {
+        const event = child.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+        if (event === 'penalty' || event === 'penalty_transition') return { rule: 'penalties', path: childPath };
+        if (warningValues.has(event)) return { rule: 'two_minute_warning', path: childPath };
+      }
+      if (penaltyKeys.has(normalizedKey) && activeMarker(child)) return { rule: 'penalties', path: childPath };
+      if (warningKeys.has(normalizedKey) && activeMarker(child)) return { rule: 'two_minute_warning', path: childPath };
+      if (['clock_event', 'clock_transition', 'stoppage_type', 'transition_type'].includes(normalizedKey)
+          && typeof child === 'string' && warningValues.has(child.toLowerCase().replaceAll('-', '_').replaceAll(' ', '_'))) {
+        return { rule: 'two_minute_warning', path: childPath };
+      }
+      if (child && typeof child === 'object') stack.push({ value: child, path: childPath });
+    }
+  }
+  return null;
+}
+
+/** A record can contain these events as research data, but cannot claim legal full-game validity. */
+export function validateLegalCompleteUnmodelledTransitions(payload) {
+  if (!declaresLegalCompleteGame(payload)) return { checked: false, rejected_transitions: 0 };
+  const record = gameRecord(payload);
+  for (const play of playRows(record)) {
+    const marker = findPlayRuleMarker(play);
+    if (marker) {
+      const id = play?.id ?? play?.sequence ?? '(unknown play)';
+      throw new Error(`valid_full_game cannot be true: play ${id} carries unmodelled ${marker.rule} transition at ${marker.path}`);
+    }
+  }
+  return { checked: true, rejected_transitions: 0 };
+}
+
+function hasOvertimeQuarter(record) {
+  const playRows = new Set();
+  const markers = [];
+  for (const drive of record?.drives ?? []) {
+    for (const field of ['quarter_start', 'end_quarter']) {
+      if (Number(drive[field]) > 4) markers.push(`drive ${drive.index}.${field}`);
+    }
+    for (const play of drive.plays ?? []) {
+      for (const state of ['state_before', 'state_after']) {
+        if (Number(play?.[state]?.quarter) > 4) {
+          const id = play?.id ?? play?.sequence ?? '(unknown play)';
+          playRows.add(id);
+          markers.push(`play ${id}.${state}`);
+        }
+      }
+    }
+  }
+  for (const event of record?.kickoffs ?? []) {
+    if (Number(event.quarter) > 4) markers.push(`kickoff quarter ${event.quarter}`);
+  }
+  for (const boundary of record?.boundaries ?? []) {
+    if (Number(boundary.from_quarter) > 4 || Number(boundary.to_quarter) > 4) markers.push('overtime boundary');
+  }
+  if (Number(record?.final_quarter) > 4) markers.push(`final quarter ${record.final_quarter}`);
+  return { playRows, markers };
+}
+
+/** Overtime rows from a regulation-only pool must remain visibly scoped and incomplete. */
+export function validateOvertimePoolScope(payload) {
+  const record = gameRecord(payload);
+  const { playRows: overtimePlayRows, markers } = hasOvertimeQuarter(record);
+  if (markers.length === 0) return { overtime_play_rows: 0, overtime_markers: 0, regulation_only: null };
+
+  const scope = payload?.pool_scope ?? payload?.sources?.pool_scope ?? record?.pool_scope ?? record?.sources?.pool_scope;
+  if (scope?.regulation_only !== true) {
+    throw new Error(`overtime rows require producer pool_scope.regulation_only=true; found ${markers[0]}`);
+  }
+  if (declaresLegalCompleteGame(payload)) {
+    throw new Error('a regulation-only pool cannot be declared a legal complete overtime game; valid_full_game must remain false');
+  }
+  return {
+    overtime_play_rows: overtimePlayRows.size,
+    overtime_markers: markers.length,
+    regulation_only: true,
+    gameplay_scope: 'regulation_only_not_overtime_simulation',
+  };
+}
+
 export function validateFullGameIngest(record) {
   const driveIndexAudit = validateDriveIndices(record);
   const conversionAudit = validateConversionSources(record);
-  return { ...driveIndexAudit, conversion_scoring: conversionAudit };
+  const legalCompleteAudit = validateLegalCompleteUnmodelledTransitions(record);
+  const overtimeAudit = validateOvertimePoolScope(record);
+  return { ...driveIndexAudit, conversion_scoring: conversionAudit, legal_complete_transitions: legalCompleteAudit, overtime_scope: overtimeAudit };
 }
