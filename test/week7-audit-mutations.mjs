@@ -64,11 +64,23 @@ const MUTATIONS = [
     from:'  function scheduleKickoff(kicking, reason) {\n    if (clock <= 0) { pendingKickoff = { kicking, reason }; return null; }',
     to:'  function scheduleKickoff(kicking, reason) {\n    if (false) { pendingKickoff = { kicking, reason }; return null; }'},
   {name:'missed field goal restarts at the 20 regardless of the try',
-    from:'const restartOwn = untouched ? 20 : receiverOwnSpot;',
+    from:'const restartOwn = untouched ? 20 : kickSpotOwn;',
     to:'const restartOwn = 20;'},
-  {name:'missed field goal restart is off by eight yards',
-    from:'const restartOwn = untouched ? 20 : receiverOwnSpot;',
-    to:'const restartOwn = (untouched ? 20 : receiverOwnSpot) + 8;'},
+  {name:'missed field goal spots the ball at the LOS, not the kick spot (old behavior)',
+    from:'const kickSpotOwn = yl + FG_HOLDER_OFFSET_ESTIMATE;',
+    to:'const kickSpotOwn = yl;'},
+  {name:'missed field goal kick spot is off by one yard',
+    from:'const kickSpotOwn = yl + FG_HOLDER_OFFSET_ESTIMATE;',
+    to:'const kickSpotOwn = yl + FG_HOLDER_OFFSET_ESTIMATE + 1;'},
+  {name:'field goal runoff is uncapped at 11 seconds',
+    from:'Math.min(clock, FG_RUNOFF_CAP, good ? FG_RUNOFF_CAP : 4 + Math.floor(rand() * 2))',
+    to:'Math.min(clock, good ? 11 : 4 + Math.floor(rand() * 2))'},
+  {name:'blocked punt always goes to the receiving team',
+    from:'const recovery = blockedPuntRecovery(rand);',
+    to:"const recovery = (blockedPuntRecovery(rand), 'receiving');"},
+  {name:'blocked punt transfers possession even when the kicking team recovers',
+    from:"if (recovery === 'receiving') turnover('blocked_punt', pt.spot);",
+    to:"if (true) turnover('blocked_punt', pt.spot);"},
   {name:'blocked punt keeps a positive kick distance',
     from:"const distance = outcome === 'blocked' ? 0 : Math.round(sampleHist(nonBlockedPuntDistances, rand));",
     to:'const distance = Math.round(sampleHist(nonBlockedPuntDistances, rand));'},
@@ -95,7 +107,7 @@ try {
         caught = true;
         why = `${violations.length} violations, first [${violations[0].check}] ${violations[0].detail}`;
       } else {
-        try { auditKickoffSampler(mutated, league); }
+        try { auditKickoffSampler(mutated, league, book); }
         catch (err) { caught = true; why = `sampler assertion: ${err.message}`; }
       }
     } catch (err) {

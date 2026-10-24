@@ -106,22 +106,33 @@ export function auditModule(core, league, book) {
     for(const p of plays){
       if(p.type!=='field_goal' || p.good) continue;
       if(p.restart_spot===undefined){ tag('missed_fg',`${p.id} missed field goal has no restart spot`); continue; }
-      // Rule 9-4-2: untouched miss inside the receivers' 20 -> their 20 (yl 80);
-      // otherwise the ball is spotted at the spot of the kick.
-      const tryYl=p.yl;                       // yards to the kicking team's goal
-      const receiverOwn=tryYl;               // distance from the receivers' goal to the kick
-      const expected = receiverOwn<20 ? 80 : 100-receiverOwn;
+      // Rule 11-4-2(a)/(b) with the estimated kick spot: LOS plus a 7-yard
+      // holder offset, measured from the receivers' goal. The old LOS-as-spot
+      // restart (receiverOwn = LOS) must be rejected.
+      const tryYl=p.yl;                       // yards to the kicking team's goal = receivers' own number at the LOS
+      const kickSpotOwn=tryYl+7;
+      const expected = kickSpotOwn<20 ? 80 : 100-kickSpotOwn;
       if(p.restart_spot!==expected)
-        tag('missed_fg',`${p.id} restart spot ${p.restart_spot}, expected ${expected} (try at yl ${tryYl})`);
+        tag('missed_fg',`${p.id} restart spot ${p.restart_spot}, expected ${expected} (try at yl ${tryYl}, kick spot own ${kickSpotOwn})`);
+      if(!String(p.restart_rule||'').includes('11-4-2'))
+        tag('missed_fg',`${p.id} restart cites ${p.restart_rule}, expected Rule 11-4-2`);
       if(p.restart_spot<1||p.restart_spot>99)
         tag('missed_fg',`${p.id} restart spot ${p.restart_spot} out of range`);
     }
 
     // ---- 6. Punt outcome/distance contradictions --------------------------
     for(const p of plays){
+      if(p.type==='field_goal' && p.good && p.runoff>5)
+        tag('fg_clock',`${p.id} successful field goal runoff ${p.runoff}s exceeds the 5 s cap`);
+      if(p.type==='field_goal' && !p.good && p.runoff>5)
+        tag('fg_clock',`${p.id} missed field goal runoff ${p.runoff}s exceeds the 5 s cap`);
       if(p.type!=='punt') continue;
       if(p.outcome==='blocked' && p.distance!==0)
         tag('punt_contradiction',`${p.id} blocked punt has distance ${p.distance}`);
+      if(p.outcome==='blocked' && p.possession_resolution!=='generated_recovery_estimate')
+        tag('punt_contradiction',`${p.id} blocked punt possession is unresolved or unlabelled`);
+      if(p.outcome==='blocked' && p.possession_after!==p.recovery_team)
+        tag('punt_contradiction',`${p.id} blocked punt possession ${p.possession_after} does not match recovery ${p.recovery_team}`);
       if(p.outcome!=='blocked' && !(p.distance>0))
         tag('punt_contradiction',`${p.id} ${p.outcome} punt has distance ${p.distance}`);
     }
@@ -168,7 +179,7 @@ export function auditModule(core, league, book) {
 // ---- Kickoff placement regression tests --------------------------------
 // The generated games do not naturally produce every kickoff outcome, so the
 // 2026 Rule 6-1-5 placement rules are tested directly against the sampler.
-export function auditKickoffSampler(core, league) {
+export function auditKickoffSampler(core, league, book) {
   const {createKickoffSampler} = core;
   const only=(outcome)=>({...league.kickoffs,outcomes:{[outcome]:1}});
   const always=(outcome,type)=>{
@@ -203,4 +214,30 @@ export function auditKickoffSampler(core, league) {
   // The sampler must reject a table with no touchback landing-zone split.
   assert.throws(()=>createKickoffSampler({...league.kickoffs,touchback_spot:{landing_zone:0,in_air:0}}),
     /landing-zone split/,'reject a kickoff table with no touchback split');
+
+  // A blocked punt is not an automatic turnover: the recovering team must vary.
+  const rng=core.seeded('blocked-recovery');
+  const recovered=new Set();
+  for(let i=0;i<2000;i++) recovered.add(core.blockedPuntRecovery(rng));
+  assert.deepEqual([...recovered].sort(),['kicking','receiving'],
+    'blocked-punt recovery must generate both the receiving and kicking team');
+
+  // Generator call site: with a punt table that is all blocked, every punt goes
+  // through the recovery path, so both recovery outcomes and the next-play
+  // possession must be exercised in real generated games.
+  const allBlocked={...league,punts:{outcomes:{blocked:1},distance_yards:{'0':1,'40':1}}};
+  const seen=new Set();
+  for(const m of core.MATCHUPS.slice(0,2)) for(const seed of ['1042','1','2','3']){
+    const books={[m.home]:book(m.home),[m.away]:book(m.away)};
+    const g=core.generateGame(m,books,seed,allBlocked);
+    for(const p of g.plays){
+      if(p.type!=='punt') continue;
+      seen.add(p.recovery_team===p.offense?'kicking':'receiving');
+      const next=g.plays[p.index];
+      if(next && next.offense!==p.possession_after)
+        throw new Error(`${p.id} blocked punt possession ${p.possession_after} but next play offense is ${next.offense}`);
+    }
+  }
+  assert.deepEqual([...seen].sort(),['kicking','receiving'],
+    'generated blocked punts must include both recovering teams');
 }

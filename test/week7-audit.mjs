@@ -42,7 +42,7 @@ function book(id){
 }
 
 const {violations, unverified} = auditModule(core, league, book);
-auditKickoffSampler(core, league);
+auditKickoffSampler(core, league, book);
 
 // ---- Determinism: the same seed must reproduce the same payload hash ----
 for(const m of MATCHUPS){
