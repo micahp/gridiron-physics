@@ -249,6 +249,19 @@ def build(baseline, states, state_sha):
             "timeouts_remaining": "unresolvable in the pinned source; null, excluded, no default or imputation",
             "excluded": ["play_type", "outcome family", "terminal event", "target duration", "post-snap or future tracking", "timeout_called"],
         },
+        "model_form": {
+            "estimator": "separate conditional-median categorical backoff model within each regime",
+            "backoff_order": [name for name, _fields in MODEL_LEVELS] + ["regime_global"],
+            "minimum_bucket_rows": MIN_BUCKET,
+            "crossfit": "five leave-one-week-out folds over weeks 1-5",
+            "error_quantiles": "Type-7 linear interpolation at p*(n-1)",
+        },
+        "coverage": {
+            "paired_baseline_rows": len(scored),
+            "paired_baseline_drives": len({(r["game_id"], int(r["drive"])) for r in scored if r.get("drive") is not None}),
+            "timeouts_left_observed": 0,
+            "timeouts_left_unresolvable": len(scored),
+        },
         "metrics": metrics,
         "by_week": {
             str(week): {

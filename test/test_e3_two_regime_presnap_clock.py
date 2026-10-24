@@ -57,6 +57,20 @@ class TwoRegimePresnapClockTests(unittest.TestCase):
         self.assertEqual(model.quantile([0, 10, 20, 30, 40], 0.5), 20)
         self.assertAlmostEqual(model.quantile([0, 10, 20, 30, 40], 0.9), 36)
 
+    def test_scored_artifact_is_paired_and_keeps_regime_tails(self):
+        path = ROOT / "docs/evidence/e3/two-regime-presnap-clock-weeks1-5-2026-10-24.json"
+        result = json.loads(path.read_text())
+        self.assertEqual(result["scope"]["weeks"], [1, 2, 3, 4, 5])
+        self.assertEqual(result["scope"]["rows"], 8977)
+        self.assertEqual(len(result["per_play"]), 8977)
+        self.assertEqual(result["metrics"]["regulation"]["two_regime"]["plays"], 7928)
+        self.assertEqual(result["metrics"]["stoppage_drill"]["two_regime"]["plays"], 1049)
+        self.assertEqual(result["metrics"]["overall"]["baseline"]["mae_s"], 12.2427)
+        self.assertEqual(result["metrics"]["overall"]["two_regime"]["mae_s"], 11.8287)
+        self.assertEqual(result["metrics"]["stoppage_drill"]["two_regime"]["p99_absolute_error_s"], 41.0)
+        self.assertEqual(result["coverage"]["timeouts_left_observed"], 0)
+        self.assertEqual(result["coverage"]["timeouts_left_unresolvable"], 8977)
+
     def test_regime_model_backoff_is_confined_to_same_regime(self):
         features = model.make_state_features({
             "quarter": 2, "quarter_seconds_remaining": 60, "score_diff": 0, "down": 1, "distance": 5,
