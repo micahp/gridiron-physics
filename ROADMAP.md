@@ -15,6 +15,12 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Research artifacts not yet pushed** at the time of review; reported denominators **9,456 local manifest rows, 9,388 included snap plays, 9,289 scored plays** require play-ID reconciliation. Historic origin-anchored minimum-separation metric is invalid as evidence of tackle timing; absolute original RMSE must be relabeled or corrected. This **does not delay** E0/E1/E2 game integration.
 
+## NFL 2026 rulebook gate — 2026-10-24: halftime is a kickoff, not a field flip
+
+**Source of truth for the game-state engine:** [LP NFL 2026 rules reference](https://github.com/micahp/legendarypicks/blob/dev/docs/rules/NFL-2026-GAME-STATE-RULES.md) and the [official NFL rulebook](https://operations.nfl.com/rules-officiating/2026-nfl-rulebook). The user correctly identified that the earlier field-direction discussion omitted the **second-half kickoff and coin-toss/deferral choices**. A game must resolve first-half and second-half kicking/receiving rights from the choice ledger; the opening receiver need **not** be the second-half kicker. Q1 and Q3 **change goals and continue the drive** with no kickoff; halftime **terminates that half's drive, resolves choices and restarts with a kickoff**. No universal `quarter<=2:dir=+1` rule. Research E0 authored coordinates must stay labeled as authored, not observed NFL choices.
+
+**Verified LP E1 research:** [`b58a19f1`](https://github.com/micahp/legendarypicks/commit/b58a19f1350897b0ded2841bcf441e70a36449af) contains four demonstration drives and 4,396/4,800 completed under the **limited** E1 checker; 404 end in thin-cell failure. Its **2,075 turnovers on downs** are an artifact of no punt/FG decision, and its no-kickoff/score/halftime/quarter-change model **does not establish full NFL legality**. Next critical path: correct game transition model, fourth-down decisions, legal scoreboard and clock and two half-kickoffs before describing a complete game. Remain research-only; keep E0b physical playback separate.
+
 ## ACTIVE DELIVERY PRIORITY — 2026-10-24: full end-to-end football game
 
 **Source of truth:** [End-to-end football simulator delivery plan](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md) and [Gridiron AGENTS.md](AGENTS.md). This **supersedes earlier suggestions** that further independent tracking, contact, balance, grip, Madden rating or solver experiments must complete before a game can be generated.
