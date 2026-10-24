@@ -2,6 +2,16 @@
 
 **Read this before editing or launching an experiment.**
 
+## ACTIVE TOP PRIORITY — 2026-10-24: deliver one full generated NFL game
+
+**Required first read:** [End-to-end simulator delivery plan](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md). This **supersedes the immediate work ordering** of the football-first tracking directive and the 2026-10-24 observed-movement review, while keeping their verified findings and these safety rules. The goal is to connect existing LP play/drive/game generation to Gridiron Physics' existing visualization, then validate against real football. *Observed motion experiments support delivery; they do not block it.*
+
+**Milestone gates, in order:** **E0** show one *generated* hypothetical play (LP state and player stats → immutable contract-v1 record → Gridiron 3D replay), **E1** generate a complete legal drive with matching down/distance/clock/score/possession, **E2** generate a complete two-team NFL game with reconciled scores and player stats and navigable game→drive→play viewer, **E3** evaluate play/drive/game realism and held-out future predictive skill against the existing statistical baseline. Do not skip gates or call statistical-script playback physically causal. Preserve `GRIDIRON-CONTRACT-v1.md` byte-identical in both repos; define a separate research v2 only for plays where physics actually owns the outcome.
+
+**Critical-path owner in this repo:** Gridiron execution/viewer agent. Locate existing Three.js script playback; consume LP's deterministic generated play stream without changing outcomes; implement minimal game/drive/play navigation and provenance labels. **Critical-path owner in LP:** sequence/game-state agent, responsible for full-game legal simulation and statistical truth. Data/tracking, movement and M4d agents are *supporting*, not blocking E0–E2; stop unrelated synthetic torque/collider sweeps and broad Madden calibration. Fix narrow correctness/safety defects only when essential for a delivery gate.
+
+**Before new work:** Map exact existing branches, commits, entry points, tests, and missing v1 interface pieces. Coordinate via one pinned cross-repo integration manifest and produce a demonstrable vertical slice before designing another framework. Research branches only; no production system modifications, automatic merges or releases.
+
 ## Current priority (2026-10-23)
 
 **The active, cross-project source of truth is [Football-first Agent Directive](docs/FOOTBALL-FIRST-AGENT-DIRECTIVE-2026-10-23.md).** It explicitly supersedes older "next experiment" instructions in `ROADMAP.md` and dated M1b/M4b/M4c/M4d reports, without invalidating their findings.
