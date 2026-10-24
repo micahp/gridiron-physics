@@ -26,6 +26,18 @@ function formatClock(seconds) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]));
+  }
+  return value;
+}
+
+function canonicalJson(value) {
+  return JSON.stringify(canonicalize(value));
+}
+
 async function sha256Hex(buffer) {
   const digest = await crypto.subtle.digest('SHA-256', buffer);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -51,8 +63,9 @@ function renderMetadata(verification) {
     ['Game simulation ID', record.simulation_id],
     ['Drives', adapted.drives.length],
     ['Plays', adapted.sourcePlayCount],
-    ['Producer base', adapted.source.base_commit],
+    ['LP producer commit', adapted.source.base_commit],
     ['Fixture hash', verification],
+    ['LP source payload SHA-256', adapted.source.payload_sha256],
     ['Producer tree', adapted.source.producer_worktree_dirty ? 'dirty; file hashes pinned' : 'committed'],
     ['Team identities', 'A/B labels only'],
   ]);
@@ -68,11 +81,11 @@ function renderValidation() {
     for (const finding of adapted.validation.findings) messages.push(finding);
   }
   if (!adapted.sharedV1Audit.conforms) {
-    messages.push('This record does not conform to shared GRIDIRON-CONTRACT-v1:');
+    messages.push('Shared GRIDIRON-CONTRACT-v1 gate: NOT CONFORMING. This E2 transport view preserves the retrospective source; it does not promote it to a pregame simulation.');
     for (const violation of adapted.sharedV1Audit.violations) messages.push(violation);
   }
   validationPanel.hidden = messages.length === 0;
-  validationPanel.classList.toggle('error', !adapted.validation.passed);
+  validationPanel.classList.toggle('error', !adapted.validation.passed || !adapted.sharedV1Audit.conforms);
   validationPanel.replaceChildren();
   for (const message of messages) validationPanel.append(el('p', message));
 }
@@ -177,7 +190,27 @@ async function loadFixture() {
     const bytes = await fixtureResponse.arrayBuffer();
     const hash = await sha256Hex(bytes);
     if (hash !== entry.sha256) throw new Error('pinned fixture SHA-256 mismatch');
-    adapted = adaptLpGamePayload(JSON.parse(new TextDecoder().decode(bytes)));
+    const payload = JSON.parse(new TextDecoder().decode(bytes));
+    if (!entry.upstream_source_file || !entry.upstream_source_sha256) {
+      throw new Error('manifest does not pin the original LP source payload');
+    }
+    const upstreamResponse = await fetch(FIXTURE_DIR + entry.upstream_source_file);
+    if (!upstreamResponse.ok) throw new Error(`LP source payload HTTP ${upstreamResponse.status}`);
+    const upstreamBytes = await upstreamResponse.arrayBuffer();
+    const upstreamHash = await sha256Hex(upstreamBytes);
+    if (upstreamHash !== entry.upstream_source_sha256 || payload.source?.payload_sha256 !== upstreamHash) {
+      throw new Error('pinned LP source payload SHA-256 mismatch');
+    }
+    if (payload.source.base_commit !== manifest.lp_source?.base_commit
+        || payload.source.branch !== manifest.lp_source?.branch
+        || payload.source.payload_path !== manifest.lp_source?.payload_file) {
+      throw new Error('LP producer revision or source path does not match its manifest');
+    }
+    const upstream = JSON.parse(new TextDecoder().decode(upstreamBytes));
+    if (canonicalJson(upstream.record) !== canonicalJson(payload.record)) {
+      throw new Error('Gridiron transport record differs from the pinned LP source record');
+    }
+    adapted = adaptLpGamePayload(payload);
     renderMetadata(`matches manifest (${hash.slice(0, 12)})`);
     renderValidation();
     renderLedgerAndKickoffs();

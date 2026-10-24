@@ -75,11 +75,12 @@ as shared-v1 violations and still permits a read-only inspection when the record
 
 The earlier E2 commit `60b7708b` stored drive play counts without nested play records. LP commit
 `3daa0ed6dc99c3bdc666d5c0f226af02173e05cc` added the committed nested-play refactor and `emit_game.py`; LP commit
-`702f41db569de04a962b6f1336460d5273b66ce0` added the game-wide play ID namespace. The current pinned example was emitted
-by the latter commit. Gridiron never reconstructs missing plays from drive counts.
+`702f41db569de04a962b6f1336460d5273b66ce0` added the game-wide play ID namespace. The viewer source is pinned to the
+requested LP E2 commit `5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f`; its original payload is retained beside the Gridiron
+wrapper and hash-pinned in `docs/fixtures/e2/MANIFEST.json`. Gridiron never reconstructs missing plays from drive counts.
 
-The first emitted game (seed 1) has 24 drives and 144 plays, score A 11–B 17, and rules-matrix counts of 13 PASS, 5
-UNSUPPORTED, 1 PARTIAL, and 3 NOT_APPLICABLE. It is complete through regulation, while `valid_full_game` correctly remains
+The re-pinned game (seed 1) has 24 drives and 144 plays, score A 11–B 17, and rules-matrix counts of 13 PASS, 5
+UNSUPPORTED, 1 PARTIAL, and 4 NOT_APPLICABLE. It is complete through regulation, while `valid_full_game` correctly remains
 false because rules are unsupported. Drives 2–24 have `drive.index` 2–24, while every embedded E1 play state still says
 `drive_index: 1`. The validator reports these 23 findings and leaves the source values unchanged. Kickoff `after_drive`
 links, receiver-to-next-drive linkage, drive order, and score reconciliation pass for this fixture.

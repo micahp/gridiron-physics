@@ -250,19 +250,58 @@ function deepFreeze(value) {
   return value;
 }
 
-function sharedV1Audit(record) {
+function nonEmptyString(value) {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
+function isTeamId(value) {
+  if (!nonEmptyString(value)) return false;
+  return !new Set(['A', 'B', 'HOME', 'AWAY', 'TEAM A', 'TEAM B']).has(value.trim().toUpperCase());
+}
+
+function isUtcTimestamp(value) {
+  return nonEmptyString(value)
+    && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$/.test(value)
+    && Number.isFinite(Date.parse(value));
+}
+
+function sourcePlays(record) {
+  if (Array.isArray(record.plays)) return record.plays;
+  return Array.isArray(record.drives)
+    ? record.drives.flatMap((drive) => Array.isArray(drive?.plays) ? drive.plays : [])
+    : [];
+}
+
+// Audit the shared pregame contract using its documented top-level fields. The
+// E2 transport adapter may display a different, retrospective record, but does
+// not make that record conform by filling or renaming fields.
+export function auditGridironContractV1Record(record) {
   const violations = [];
   if (record.mode !== 'pregame_full_game') violations.push('mode is not pregame_full_game');
-  if (!record.game_id) violations.push('missing stable game_id');
-  if (!record.model_version) violations.push('missing model_version');
-  if (!record.rules_version) violations.push('missing rules_version');
-  if (!record.provenance?.as_of_utc) violations.push('missing pregame as_of provenance');
-  if (!record.teams?.home || !record.teams?.away) violations.push('missing real home/away team identities');
-  if (!record.roster_snapshot_id) violations.push('missing eligible roster snapshot');
-  if (record.drives.some((drive) => drive.plays.some((play) => play.state_before.home_score == null
-      || play.state_before.away_score == null))) violations.push('play states do not carry home/away score');
-  if (record.drives.some((drive) => drive.plays.some((play) => play.state_before.home_timeouts == null
-      || play.state_before.away_timeouts == null))) violations.push('play states do not carry timeout counts');
+  if (!nonEmptyString(record.game_id)) violations.push('missing stable game_id');
+  if (!nonEmptyString(record.model_version)) violations.push('missing model_version');
+  if (!nonEmptyString(record.rules_version)) violations.push('missing rules_version');
+  const asOf = Date.parse(record.as_of_utc);
+  const kickoff = Date.parse(record.scheduled_kickoff_utc);
+  if (!isUtcTimestamp(record.as_of_utc) || !isUtcTimestamp(record.scheduled_kickoff_utc) || asOf >= kickoff) {
+    violations.push('missing or invalid top-level as_of_utc before scheduled_kickoff_utc');
+  }
+  if (!isTeamId(record.teams?.home) || !isTeamId(record.teams?.away)
+      || record.teams.home.trim().toUpperCase() === record.teams.away.trim().toUpperCase()) {
+    violations.push('missing real home/away team identities');
+  }
+  if (!nonEmptyString(record.roster_snapshot_id)) violations.push('missing eligible roster snapshot');
+  const plays = sourcePlays(record);
+  if (plays.length === 0) violations.push('full-game play stream is empty');
+  const states = plays.flatMap((play) => play && typeof play === 'object'
+    ? [play.state_before, play.state_after]
+    : [null, null]);
+  if (states.some((state) => !state || state.home_score == null || state.away_score == null)) {
+    violations.push('play states do not carry home/away score');
+  }
+  if (states.some((state) => !state || state.home_timeouts == null || state.away_timeouts == null)) {
+    violations.push('play states do not carry timeout counts');
+  }
   if (record.valid_full_game !== true) violations.push('record.valid_full_game is not true');
   return { conforms: violations.length === 0, violations };
 }
@@ -297,7 +336,7 @@ export function adaptLpGamePayload(payload, { requireCompleteRegulation = true }
       source: play,
     })),
   }));
-  const audit = sharedV1Audit(record);
+  const audit = auditGridironContractV1Record(record);
   return Object.freeze({
     contractName: GAME_PAYLOAD_NAME,
     contractVersion: GAME_PAYLOAD_VERSION,

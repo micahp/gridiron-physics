@@ -1,6 +1,6 @@
 # Gridiron E2 full-game viewer handoff — 2026-10-24
 
-## Pinned revisions
+## Initial handoff pins (superseded by the re-pin below)
 
 - Gridiron branch: `research/gridiron-e2-game-viewer-2026-10-24`
 - Gridiron implementation commit: `83e428b55436bfb2d4104264fd4a038d993cb95f` — adapter/viewer enforces game-wide IDs.
@@ -39,3 +39,21 @@ The source-file hashes and fixture pin are in `docs/fixtures/e2/MANIFEST.json`. 
 
 No tracking cohort, weeks 6–9 tracking holdout, main branch, or production system was changed. The viewer is a read-only event
 and field-state timeline; it does not fabricate a 3D roster or motion replay.
+
+## Re-pinned LP E2 source and v1 triage
+
+- Requested LP source commit: `feat/nfl-sequence-e2-kickoffs-2026-10-24` at
+  `5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f`.
+- Raw LP payload: `docs/fixtures/e2/e2-game-seed1.json`, SHA-256
+  `ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e`.
+- Gridiron's immutable-record envelope: `docs/fixtures/e2/game-seed1.json`, SHA-256
+  `b18d1c864685c0f7f3ef7682165cda83eed16d198939a0760cfe4df8696cc66c`. The byte-exact upstream LP file is committed beside
+  the envelope, and the viewer checks both hashes and structural equality before rendering.
+- The 23 drive-index findings remain in drives 2–24, with `state_before.drive_index` and `state_after.drive_index` both `1`.
+  Their owner is LP E2 producer; each is listed separately in `GRIDIRON-E2-OPEN-FINDINGS-2026-10-24.md` and checked against
+  the adapter output.
+- The 10 shared-v1 gaps remain visible. Gridiron's audit now reads the documented top-level as-of timestamp, checks scores and
+  timeouts before and after each play, rejects A/B placeholders as team identities, and marks a nonconforming record as a
+  failed v1 gate. It does not fill LP fields or change `GRIDIRON-CONTRACT-v1.md`.
+- Viewer verification: `node test/lp-game-record-adapter.mjs` passes; `node test/e2-game-viewer.mjs` renders and navigates all
+  24 drives and 144 plays in a DOM smoke harness. LP's source outcomes and all play IDs match the pinned record.

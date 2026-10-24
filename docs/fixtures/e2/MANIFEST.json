@@ -3,41 +3,45 @@
     "name": "gridiron.lp-full-game-payload",
     "version": "1.0.0"
   },
+  "fixtures": [
+    {
+      "drives": 24,
+      "file": "game-seed1.json",
+      "plays": 144,
+      "rules_matrix_summary": {
+        "NOT_APPLICABLE": 4,
+        "PARTIAL": 1,
+        "PASS": 13,
+        "UNSUPPORTED": 5
+      },
+      "seed": 1,
+      "sha256": "b18d1c864685c0f7f3ef7682165cda83eed16d198939a0760cfe4df8696cc66c",
+      "status": "complete_regulation",
+      "upstream_source_file": "lp-e2-game-seed1-5fcaa6bc.json",
+      "upstream_source_sha256": "ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e",
+      "valid_full_game": false
+    }
+  ],
   "gridiron": {
+    "base_commit": "2b70ef37",
     "branch": "research/gridiron-e2-game-viewer-2026-10-24",
-    "base_commit": "2b70ef3",
     "implementation_commit": "83e428b55436bfb2d4104264fd4a038d993cb95f"
   },
   "lp_source": {
-    "repository": "micahp/legendarypicks",
+    "base_commit": "5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f",
     "branch": "feat/nfl-sequence-e2-kickoffs-2026-10-24",
-    "base_commit": "702f41db569de04a962b6f1336460d5273b66ce0",
-    "producer_worktree_dirty": false,
+    "payload_file": "docs/fixtures/e2/e2-game-seed1.json",
+    "payload_sha256": "ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e",
     "producer_file_sha256": {
-      "scripts/nfl_sequence/game_state.py": "fa52e8aaadd979dbf272cfae520502b80f84f9a1a431fc7e9385415400296500",
-      "scripts/nfl_sequence/e2_reference.py": "5c355349e2568273060b4ac5f45f956163420ddab48f08119e0bc81b052888aa",
-      "scripts/nfl_sequence/game_stats.py": "75e4dde4321a2f9cd3c1b997b95a0225dd2227c3c34aaa32e8b31b56f06fe745",
       "scripts/nfl_sequence/e1_drive.py": "b2a36750c6ed66d31297eaa317b9ab95367ae0a574d50f9ed06434a7f5ead95f",
+      "scripts/nfl_sequence/e2_reference.py": "36e8d7879f244f5c62dc527c54d88aecf0996e391526060e28f4b7ec9a3c096c",
+      "scripts/nfl_sequence/emit_game.py": "fbfeac11f686664a114c4da4e6b40482dba8e90c7ac1ff9b132ad214f93ef9d6",
+      "scripts/nfl_sequence/game_state.py": "cdcf80fb02fd08f2d4c9171fea95992623bfece93bcc0edf48f0be1231914dc7",
+      "scripts/nfl_sequence/game_stats.py": "ce982153b9cb92fb8d395f1146a5e4385c971805033eaa44690f29b5a3d3abcf",
       "scripts/nfl_sequence/measure_kick_outcomes.py": "f16616f80adfb4108dd189557d968cdacad680c77eea0bdec1fe46198cb622d0",
-      "scripts/nfl_sequence/rules_matrix.py": "00eec12b0ced97d509dcd8ca3758d2da7608c4e0ccfa062c8e40070b6e0b15cd",
-      "scripts/nfl_sequence/emit_game.py": "1efaf9d779732037e42aec3af193f3f5492da3f35e9ec36ebbe70f01eb1bfd51"
-    }
-  },
-  "fixtures": [
-    {
-      "file": "game-seed1.json",
-      "sha256": "0a11cd89558a97cec5a8913cdc517d6efd8c23b15248954d54b77478d0f2d373",
-      "seed": 1,
-      "status": "complete_regulation",
-      "valid_full_game": false,
-      "drives": 24,
-      "plays": 144,
-      "rules_matrix_summary": {
-        "NOT_APPLICABLE": 3,
-        "PASS": 13,
-        "UNSUPPORTED": 5,
-        "PARTIAL": 1
-      }
-    }
-  ]
+      "scripts/nfl_sequence/rules_matrix.py": "a3af8d3e37923858fdea9b53cec3bb834d9c84b111656bceafaf4fb3dd752df0"
+    },
+    "producer_worktree_dirty": false,
+    "repository": "micahp/legendarypicks"
+  }
 }

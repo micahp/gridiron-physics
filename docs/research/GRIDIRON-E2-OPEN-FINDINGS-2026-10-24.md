@@ -1,8 +1,8 @@
 # Gridiron E2 open finding register — 2026-10-24
 
-Evidence pins: LP E2 producer `702f41db569de04a962b6f1336460d5273b66ce0`; Gridiron adapter `83e428b55436bfb2d4104264fd4a038d993cb95f`; seed-1 fixture SHA-256 `0a11cd89558a97cec5a8913cdc517d6efd8c23b15248954d54b77478d0f2d373`.
+Evidence pins: LP E2 producer `5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f`; raw LP seed-1 payload SHA-256 `ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e`; Gridiron transport fixture SHA-256 `b18d1c864685c0f7f3ef7682165cda83eed16d198939a0760cfe4df8696cc66c`.
 
-The adapter reports 23 per-drive state findings and 10 shared `GRIDIRON-CONTRACT-v1` audit violations. All 33 are producer-side LP E2 payload gaps or limitations; the Gridiron adapter detects and reports them without changing the payload. There are no adapter-side defects in this list. `GRIDIRON-CONTRACT-v1.md` is unchanged.
+The exact pinned LP payload has 24 drives and 144 plays. The adapter reports 23 per-drive state findings and 10 shared `GRIDIRON-CONTRACT-v1` gaps. Every drive-index finding is LP producer-side. The v1 gaps are triaged below; three Gridiron audit defects were corrected: as-of is read from the contract's top-level field, score/timeout checks inspect both play states, and A/B placeholders fail the team-identity check. The source record and outcomes remain unchanged. `GRIDIRON-CONTRACT-v1.md` is unchanged.
 
 ## Drive-index findings (23)
 
@@ -36,17 +36,19 @@ Each line records the adapter's one finding for that drive: both before and afte
 
 ## Shared-contract audit violations (10)
 
-| # | File | Field | Fault side |
-|---:|---|---|---|
-| 1 | `scripts/nfl_sequence/game_state.py` | `record.mode`: `legal_game_state_first_piece`, not `pregame_full_game` | LP E2 producer-side; retrospective E2 mode |
-| 2 | `scripts/nfl_sequence/game_state.py` | `record.game_id`: stable scheduled game ID absent | LP E2 producer-side |
-| 3 | `scripts/nfl_sequence/game_state.py` | `record.model_version`: absent as a top-level record field | LP E2 producer-side |
-| 4 | `scripts/nfl_sequence/game_state.py` | `record.rules_version`: absent | LP E2 producer-side |
-| 5 | `scripts/nfl_sequence/game_state.py` | `record.provenance.as_of_utc`: pregame as-of provenance absent | LP E2 producer-side; source is retrospective |
-| 6 | `scripts/nfl_sequence/game_state.py` | `record.teams.home` and `record.teams.away`: real team identities absent (record uses A/B) | LP E2 producer-side |
-| 7 | `scripts/nfl_sequence/game_state.py` | `record.roster_snapshot_id`: eligible roster snapshot absent | LP E2 producer-side |
-| 8 | `scripts/nfl_sequence/e1_drive.py` | `record.drives[*].plays[*].state_before.home_score/away_score`: null; state-after scores are also null | LP E2 producer-side |
-| 9 | `scripts/nfl_sequence/e1_drive.py` | `record.drives[*].plays[*].state_before.home_timeouts/away_timeouts`: null; state-after timeouts are also null | LP E2 producer-side; timeouts unsupported |
-| 10 | `scripts/nfl_sequence/game_state.py` | `record.valid_full_game`: `false` | LP E2 producer-side; intentional while rules remain unsupported |
+| # | File | Field | Fault side | V1 triage for LP / Claude |
+|---:|---|---|---|---|
+| 1 | `scripts/nfl_sequence/game_state.py` | `record.mode`: `legal_game_state_first_piece`, not `pregame_full_game` | LP E2 producer-side | Expected for this retrospective E2 artifact; a v1 producer must emit the required mode. |
+| 2 | `scripts/nfl_sequence/game_state.py` | `record.game_id`: stable scheduled game ID absent | LP E2 producer-side | Required for v1; do not synthesize a scheduled matchup in Gridiron. |
+| 3 | `scripts/nfl_sequence/game_state.py` | `record.model_version`: absent as a top-level record field | LP E2 producer-side | Required explicit field for v1; do not infer it from `simulation_id`. |
+| 4 | `scripts/nfl_sequence/game_state.py` | `record.rules_version`: absent | LP E2 producer-side | Required explicit field for v1. |
+| 5 | `scripts/nfl_sequence/game_state.py` | top-level `record.as_of_utc` and `record.scheduled_kickoff_utc`: absent; source says as-of unknown | LP E2 producer-side | Required pregame cutoff for v1; current source is retrospective. Gridiron now checks the documented top-level fields. |
+| 6 | `scripts/nfl_sequence/game_state.py` | `record.teams.home` and `record.teams.away`: real team identities absent (record uses A/B) | LP E2 producer-side | Required for v1; A/B cannot be promoted to team identities. |
+| 7 | `scripts/nfl_sequence/game_state.py` | `record.roster_snapshot_id`: eligible roster snapshot absent | LP E2 producer-side | Required for v1; sampled participants are not a roster snapshot. |
+| 8 | `scripts/nfl_sequence/e1_drive.py` | `record.drives[*].plays[*].state_before/state_after.home_score/away_score`: null | LP E2 producer-side | Required at both state boundaries for v1; Gridiron preserves nulls. |
+| 9 | `scripts/nfl_sequence/e1_drive.py` | `record.drives[*].plays[*].state_before/state_after.home_timeouts/away_timeouts`: null | LP E2 producer-side | Required at both state boundaries for v1; timeout rules remain unsupported. |
+| 10 | `scripts/nfl_sequence/game_state.py` | `record.valid_full_game`: `false` | LP E2 producer-side | Correct guard for this artifact while rules are unsupported; do not flip it to satisfy the v1 gate. |
 
-Gridiron's detector is `web/lp-game-record-adapter.js` (`validateRecord` and `sharedV1Audit`). It preserves and displays these source values; it does not create the missing values or cause the findings.
+The LP-side rows above are a pinned note for Claude. The E2 payload is allowed to remain a retrospective first piece, but it cannot be represented as shared v1. Gridiron does not fill fields, relabel the mode, or set `valid_full_game`.
+
+Gridiron's consumer audit is `auditGridironContractV1Record` in `web/lp-game-record-adapter.js`. It now checks top-level pregame metadata, rejects placeholder A/B team IDs, and checks both `state_before` and `state_after`. The viewer verifies that its wrapped record is structurally identical to the pinned LP record before rendering it.

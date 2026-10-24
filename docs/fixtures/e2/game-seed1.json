@@ -14884,6 +14884,7 @@
         "after_drive": 0,
         "clock_before": 900,
         "clock_clamped_to_zero": false,
+        "clock_rule": null,
         "kicking_team": "B",
         "kind": "half_start",
         "quarter": 1,
@@ -14900,6 +14901,7 @@
         "after_drive": 2,
         "clock_before": 696,
         "clock_clamped_to_zero": false,
+        "clock_rule": null,
         "kicking_team": "B",
         "kind": "post_score",
         "quarter": 1,
@@ -14916,6 +14918,7 @@
         "after_drive": 6,
         "clock_before": 737,
         "clock_clamped_to_zero": false,
+        "clock_rule": null,
         "kicking_team": "B",
         "kind": "post_score",
         "quarter": 2,
@@ -14932,6 +14935,7 @@
         "after_drive": 7,
         "clock_before": 643,
         "clock_clamped_to_zero": false,
+        "clock_rule": null,
         "kicking_team": "A",
         "kind": "post_field_goal",
         "quarter": 2,
@@ -14948,6 +14952,7 @@
         "after_drive": 9,
         "clock_before": 415,
         "clock_clamped_to_zero": false,
+        "clock_rule": null,
         "kicking_team": "A",
         "kind": "post_score",
         "quarter": 2,
@@ -14964,6 +14969,7 @@
         "after_drive": 12,
         "clock_before": 900,
         "clock_clamped_to_zero": false,
+        "clock_rule": null,
         "kicking_team": "A",
         "kind": "half_start",
         "quarter": 3,
@@ -14980,6 +14986,7 @@
         "after_drive": 21,
         "clock_before": 782,
         "clock_clamped_to_zero": false,
+        "clock_rule": null,
         "kicking_team": "B",
         "kind": "post_field_goal",
         "quarter": 4,
@@ -15008,6 +15015,37 @@
       "A": 11,
       "B": 17
     },
+    "provisional_counts": {
+      "post_score_kickoffs_after_quarter_expiry": 0,
+      "quarter_ends_during_kick_return": 0,
+      "skipped_post_score_kicks_at_halftime": 0
+    },
+    "provisional_rules": [
+      {
+        "applies_to": "a touchdown, made field goal or safety whose clock expires in Q1 or Q3",
+        "effect": "the scoring side (or the conceding side, after a safety) kicks off at the start of the next quarter",
+        "id": "post_score_kick_after_quarter_expiry",
+        "label": "provisional_practice_rule",
+        "source": "NFL practice, not written in docs/rules/NFL-2026-GAME-STATE-RULES.md. Confirm against the 2026 rulebook before it is read as a rules-file fact.",
+        "status": "pending_2026_rulebook"
+      },
+      {
+        "applies_to": "a score whose clock expires in Q2",
+        "effect": "no post-score kickoff; the second-half kickoff from the ledger follows",
+        "id": "no_post_score_kick_at_halftime",
+        "label": "provisional_practice_rule",
+        "source": "NFL practice, not written in docs/rules/NFL-2026-GAME-STATE-RULES.md. Confirm against the 2026 rulebook before it is read as a rules-file fact.",
+        "status": "pending_2026_rulebook"
+      },
+      {
+        "applies_to": "a kickoff whose runoff exhausts the clock",
+        "effect": "the quarter ends on the return; the receiver starts the next quarter at the kick spot",
+        "id": "quarter_ends_during_kick_return",
+        "label": "authored_modelling_choice",
+        "source": "authored modelling choice, matching E1 clamping a play runoff at 0:00; not in the rules file",
+        "status": "pending_2026_rulebook"
+      }
+    ],
     "seed": 1,
     "simulation_id": "e2-e1-empirical-v0-seed1",
     "stats": {
@@ -16182,44 +16220,36 @@
     "valid_full_game": false
   },
   "source": {
-    "base_commit": "702f41db569de04a962b6f1336460d5273b66ce0",
+    "base_commit": "5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f",
     "branch": "feat/nfl-sequence-e2-kickoffs-2026-10-24",
     "data_source": {
-      "as_of": "unknown",
-      "seasons": [
-        2022,
-        2025
-      ],
-      "selection": "retrospective empirical sampling",
-      "table": "nfl_pbp",
-      "week_max": 18
+      "database": "dev nfl_pbp, opened read-only",
+      "drive_pool": "E1 observed-cell sampling (e1_drive.build_pool)",
+      "kick_table": "nfl_pbp season BETWEEN 2022 AND 2025 AND week <= 18",
+      "kickoff_pool": "10037 observed kickoffs; 962 excluded",
+      "participants": "passer, rusher and receiver ids of the observed play each simulated play was sampled from",
+      "window": "season 2022-2025, week <= 18 (E1 window)"
     },
     "emission": {
       "generated_by": "scripts/nfl_sequence/emit_game.py",
       "rules_matrix_summary": {
-        "NOT_APPLICABLE": 3,
+        "NOT_APPLICABLE": 4,
         "PARTIAL": 1,
         "PASS": 13,
         "UNSUPPORTED": 5
       },
-      "seed_selection": "first seed in 1..300 that completes regulation untied and unblocked; seed 1 is the 1th scanned",
-      "sources": {
-        "database": "dev nfl_pbp, opened read-only",
-        "drive_pool": "E1 observed-cell sampling (e1_drive.build_pool)",
-        "kick_table": "nfl_pbp season BETWEEN 2022 AND 2025 AND week <= 18",
-        "kickoff_pool": "10037 observed kickoffs; 962 excluded",
-        "participants": "passer, rusher and receiver ids of the observed play each simulated play was sampled from",
-        "window": "season 2022-2025, week <= 18 (E1 window)"
-      }
+      "seed_selection": "first seed in 1..300 that completes regulation untied and unblocked; seed 1 is the 1th scanned"
     },
+    "payload_path": "docs/fixtures/e2/e2-game-seed1.json",
+    "payload_sha256": "ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e",
     "producer_file_sha256": {
       "scripts/nfl_sequence/e1_drive.py": "b2a36750c6ed66d31297eaa317b9ab95367ae0a574d50f9ed06434a7f5ead95f",
-      "scripts/nfl_sequence/e2_reference.py": "5c355349e2568273060b4ac5f45f956163420ddab48f08119e0bc81b052888aa",
-      "scripts/nfl_sequence/emit_game.py": "1efaf9d779732037e42aec3af193f3f5492da3f35e9ec36ebbe70f01eb1bfd51",
-      "scripts/nfl_sequence/game_state.py": "fa52e8aaadd979dbf272cfae520502b80f84f9a1a431fc7e9385415400296500",
-      "scripts/nfl_sequence/game_stats.py": "75e4dde4321a2f9cd3c1b997b95a0225dd2227c3c34aaa32e8b31b56f06fe745",
+      "scripts/nfl_sequence/e2_reference.py": "36e8d7879f244f5c62dc527c54d88aecf0996e391526060e28f4b7ec9a3c096c",
+      "scripts/nfl_sequence/emit_game.py": "fbfeac11f686664a114c4da4e6b40482dba8e90c7ac1ff9b132ad214f93ef9d6",
+      "scripts/nfl_sequence/game_state.py": "cdcf80fb02fd08f2d4c9171fea95992623bfece93bcc0edf48f0be1231914dc7",
+      "scripts/nfl_sequence/game_stats.py": "ce982153b9cb92fb8d395f1146a5e4385c971805033eaa44690f29b5a3d3abcf",
       "scripts/nfl_sequence/measure_kick_outcomes.py": "f16616f80adfb4108dd189557d968cdacad680c77eea0bdec1fe46198cb622d0",
-      "scripts/nfl_sequence/rules_matrix.py": "00eec12b0ced97d509dcd8ca3758d2da7608c4e0ccfa062c8e40070b6e0b15cd"
+      "scripts/nfl_sequence/rules_matrix.py": "a3af8d3e37923858fdea9b53cec3bb834d9c84b111656bceafaf4fb3dd752df0"
     },
     "producer_worktree_dirty": false,
     "repository": "micahp/legendarypicks"
