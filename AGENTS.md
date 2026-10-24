@@ -27,13 +27,15 @@
 - Keep legacy `engine/world.js` / `engine/play.js` experimental tackle-hold changes separate from the M4c/M4d Rapier/Jolt research code. The legacy long-distance forced-wrap + unbounded spring defect and M4d possession-retention penetration failures are real open limitations, not defaults to conceal.
 - Do not change Legendary Picks live picks, official locks, grading or production data. Do not auto-push or merge other agents' branches.
 
-## Current work order
+## Current work order — 2026-10-24 (supersedes prior ordered audit tasks)
 
-1. **LP tracking owner:** verify which real tracked frames and labels are actually available.
-2. **Movement-policy owner:** freeze simple baselines and one informed policy challenger.
-3. **Gridiron owner:** replay identical *eligible* NFL segments with existing adapters and optionally existing physics.
-4. **LP drive owner:** align play results with state/clock/possession and evaluate drive distributions separately.
-5. **Coordinator:** review matched evidence, failing plays, real-observation improvements and integration readiness.
+**The tracking feasibility and first observed movement diagnostic are complete.** Review [observed movement integration decision](docs/research/OBSERVED-FOOTBALL-MOVEMENT-REVIEW-2026-10-24.md), [LP frozen tackler labels and manifest](https://github.com/micahp/legendarypicks/blob/c780bcc6f0e5faf4818e4ea9aba82a5f3c5cc9cc/docs/research/BDB2025-TACKLER-AUDIT-2026-10-24.md), and [Gridiron's 40-play conditional movement result](https://github.com/micahp/gridiron-physics/blob/b4ba357db66fa21222cd31a3b9cf7a70a5ce6956/research/physics-3d-evaluation/m4b/m4d/football-tracking-feasibility/results/observed-tackle-movement-2026-10-24/report.md) before duplicating any data inventory.
+
+1. **LP tracking owner:** Freeze the current 49-row event-aligned manifest. Create a *separate* from-snap selection without future tackle-event time, tackle credit, or post-snap positions as model input. Build a small all-22-player observed cohort with official game/play/player IDs, eligible initial states and grouped weeks-6–9 holdout reserved.
+2. **Gridiron movement owner:** In the event-conditioned diagnostic, add a fair constant-acceleration arm (same past velocity history as current locomotion) and bounded-acceleration challenger, report paired per-play absolute errors and origin-excluded separation minima. Then reuse the existing planar locomotion as one *baseline* on the new all-player snap-anchored test, with 0.5/1.0 s horizons and no future-identified tackler. Report trajectory and team-spacing errors; do not quietly call this Rapier/Jolt 3D contact.
+3. **LP game/drive owner:** Preserve NFL sequence/PBP outcome and drive benchmarks; do not infer improved tackle rate, yards, scoring or prediction skill from this 0.5s conditional movement result.
+4. **Coordinator:** Require one cross-repo immutable source manifest, identical input budgets, paired metric definitions and a single reviewed outcome. Only undertake a specific physics defect fix if directly required by observed-play evaluation; no new Madden-to-force sweep.
+
 
 **Stop condition:** If no suitable full-play tracking is available, narrow explicitly to the published 2026 Big Data Bowl throw-to-arrival benchmark or deliver an access blocker. Do not claim a 20–50 full-play validation was performed without the data.
 
