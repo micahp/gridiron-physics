@@ -2,11 +2,15 @@
   "schema_version": 1,
   "source_snapshot_hash": "8b92f09be84ae95600d99881887ccf450f205da13e0b60b43b00776360c27d04",
   "source_snapshot_path": "m4d/henderson-bush-week6-source.json",
-  "source_of_truth_commit": "053093a1ef0da912b19fc3a7566fdac68385e8b5",
-  "source_of_truth_sha256": "204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde",
-  "implementation_commit": "04894ad8781edc06f1320a5e3a898a7eaa0cbfdf",
+  "source_of_truth_commit": "b3ccd729707f2ccc697f750cdad774c71fe5f674",
+  "source_of_truth_sha256": "9e1dc4f55a29f69daebbe4203f3fd547dd880dce7919f57402b5e07ba731659d",
+  "frozen_snapshot_protocol": {
+    "commit": "053093a1ef0da912b19fc3a7566fdac68385e8b5",
+    "sha256": "204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde"
+  },
+  "implementation_commit": "124e64fe0879653b9c84fa98408a64fa6bc179ce",
   "implementation_hashes": {
-    "m4d/henderson-bush-physical-ablations/run.mjs": "3a84b795d0fa92f82ffcf97d34d2fd09be3e60cf790b0c008c98582a428e7e9f",
+    "m4d/henderson-bush-physical-ablations/run.mjs": "4bf1697cefb95c443f4fddebc010f8868a95e5b0374aafbe28f10f83c2f4368e",
     "m4d/henderson-bush-week6-source.json": "8b92f09be84ae95600d99881887ccf450f205da13e0b60b43b00776360c27d04",
     "simulation.mjs": "2b77933885904098d7970fab547fec3e0841ab95a2262edd199f1e01fe927ba4",
     "interface.mjs": "a5e7d178c21dfea88bc0b38908a88aad667a4655c3335341e60a6a82d35f2454",
@@ -34,5 +38,11 @@
     "worldJsSha256": "85d1e24a6b2d4af43030da07bbc74e3b7a9c3f2e7b968c91bd141be48211412b",
     "playJsSha256": "628e96d8af068b41adba4d40c3d151e2f6d487f4bed04148e3c16f679634f640"
   },
-  "created_at": "2026-10-24T03:19:09.439Z"
+  "legacy_play18_diagnosis": {
+    "branch": "research/madden27-tackle-physics-probe",
+    "commit": "51b9d0f85a147dfc3fcc866fb1c18b5186d3a106",
+    "reportPath": "research/madden27-tackle-hold-probe/diagnosis-play18/DIAGNOSIS.md",
+    "reportSha256": "1f7e28d656ade0cfff76ae40ca02f825e447a8de3f8fbb441b66afeabda8f1d2"
+  },
+  "created_at": "2026-10-24T03:45:40.454Z"
 }

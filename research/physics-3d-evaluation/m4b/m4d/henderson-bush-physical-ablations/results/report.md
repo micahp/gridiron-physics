@@ -1,8 +1,9 @@
 # M4d Henderson–Bush physical-ability ablations
 
-Code commit: 04894ad8781edc06f1320a5e3a898a7eaa0cbfdf; source snapshot SHA-256: 8b92f09be84ae95600d99881887ccf450f205da13e0b60b43b00776360c27d04.
-Protocol: [coordination contract at main commit 053093a1ef0da912b19fc3a7566fdac68385e8b5](https://github.com/micahp/gridiron-physics/blob/053093a1ef0da912b19fc3a7566fdac68385e8b5/docs/research/RATINGS-TO-PHYSICS-COORDINATION-2026-10-23.md) (SHA-256 204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde).
+Code commit: 124e64fe0879653b9c84fa98408a64fa6bc179ce; source snapshot SHA-256: 8b92f09be84ae95600d99881887ccf450f205da13e0b60b43b00776360c27d04.
+Updated coordination protocol: [main commit b3ccd729707f2ccc697f750cdad774c71fe5f674](https://github.com/micahp/gridiron-physics/blob/b3ccd729707f2ccc697f750cdad774c71fe5f674/docs/research/RATINGS-TO-PHYSICS-COORDINATION-2026-10-23.md), SHA-256 9e1dc4f55a29f69daebbe4203f3fd547dd880dce7919f57402b5e07ba731659d. Frozen profile provenance retains protocol commit 053093a1ef0da912b19fc3a7566fdac68385e8b5, SHA-256 204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde.
 Legacy comparison: [latest hold report](https://github.com/micahp/gridiron-physics/blob/ec18dee259572f4beabda68a70d0d7f58601900f/docs/research/TACKLE-HOLD-COUNTERFACTUAL-2026-10-23.md), branch research/gridiron-tackle-physics-2026-10-23, commit ec18dee259572f4beabda68a70d0d7f58601900f, report SHA-256 83cb85a7a83029ee4daf282e8f61d0acb143f152c8403ff658d0a7271df6ace1.
+Latest legacy diagnosis: [play 18 defect report](https://github.com/micahp/gridiron-physics/blob/51b9d0f85a147dfc3fcc866fb1c18b5186d3a106/research/madden27-tackle-hold-probe/diagnosis-play18/DIAGNOSIS.md), branch research/madden27-tackle-physics-probe, commit 51b9d0f85a147dfc3fcc866fb1c18b5186d3a106, report SHA-256 1f7e28d656ade0cfff76ae40ca02f825e447a8de3f8fbb441b66afeabda8f1d2.
 
 ## Scope and source
 
@@ -17,7 +18,7 @@ Contact counts in the shared schema are fixed-step samples, not independent tack
 
 ## Ablations
 
-Mass-only and STR-only changes are run separately for Henderson and Bush before any combined profile input. Capacity and controller sweeps then vary one research parameter while keeping the selected player-source inputs fixed.
+Mass-only and STR-only changes are run separately for Henderson and Bush before any combined profile input. The EA-sourced Bush mass (106 kg) equals the tackler mass in all three M4c fixtures, so mass-bush-only is an audited no-op control; mass-both-after-individual and the combined profile also leave Bush mass unchanged while changing Henderson from the 98 kg fixture value to 92 kg. These cases provide no evidence for a Bush mass effect. Capacity and controller sweeps then vary one research parameter while keeping the selected player-source inputs fixed.
 The TKL hold-capacity hypothesis is explicitly uncalibrated: capacity_N = fixture_capacity_N × clamp(1 + 0.005 × (TKL − 50), 0.5, 1.5); rating 50 is neutral. The BTK breakaway-force hypothesis is explicitly uncalibrated: additional_forward_force_N = clamp(10 × (BTK − 50), 0, 500); rating 50 adds 0 N. BTK force starts at 0.20 s in its separate fixture clone; each run records whether physical contact preceded that time. The independent wrap-capacity sweep uses 0.5×–1.5× existing fixture capacity in Newtons. None of these slopes or bounds is empirically calibrated.
 The M4d STR pass-through still feeds the existing balance-controller input without calibration. The balance-scale sweep is dimensionless; torque requests are reported in N·m. HTP and legacy ELU are unused.
 
@@ -105,13 +106,11 @@ The M4d STR pass-through still feeds the existing balance-controller input witho
 |possession-retained|m4c-neutral|rapier3d-compat|-0.0001|280|126 / 1|0.1167|434.9|n/a|-0.0254|0.0945|0.0481|failed|
 ## Paired responses within each solver
 
-Every treatment is paired to its same-engine, same-seed anchor: mass/STR substitutions use `m4c-neutral`; capacity, balance, TKL, and STR-continuity hypotheses use `madden-pair-combined`; BTK added-force values use the rating-50, 1200 N base-drive control so only the extra force changes. The JSON includes per-seed paired values and min/median/max distributions for separation, opportunities, contact samples/events, contact time, grip load, torque, drive force, penetration, and post-contact travel. Only two deterministic fixture seeds are used; these ranges are not confidence intervals.
+Every treatment is paired within the same scenario, solver, seed, timestep, gravity, solver settings, geometry, and initial player/football state. Mass/STR substitutions use m4c-neutral; capacity, balance, TKL, and STR-continuity hypotheses use madden-pair-combined; BTK added-force values use the rating-50, 1200 N base-drive control. The trace audit checks these invariants and confirms that only the declared role input or configured BTK force changes. It checks 356 treatment/anchor seed pairs; 16 source-equal/neutral no-op records are retained and labeled in the JSON. The neutral BTK 50 run is an anchor, not a self-paired treatment. The JSON includes per-seed paired values and min/median/max distributions for separation, opportunities, contact samples/events, contact time, grip load, torque, drive force, penetration, and post-contact travel. Only two deterministic fixture seeds are used; these ranges are not confidence intervals.
 | Scenario | Input | Engine | Anchor | Δ min gap (m) | Δ opportunities | Δ contact samples | Δ grip load (N) | Δ peak torque (N·m) | Δ p95 (m) | Δ weighted mean (m) | Outcome gate pass count |
 |---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
 |possession-retained|btk-drive-rating-81|jolt-physics-js|btk-drive-rating-50|0.0000 [0.0000, 0.0000]|0.0 [0.0, 0.0]|15.0 [15.0, 15.0]|34.5 [34.5, 34.5]|0.00 [0.00, 0.00]|0.0011 [0.0011, 0.0011]|0.0005 [0.0005, 0.0005]|2/2 → 2/2|
 |possession-retained|btk-drive-rating-81|rapier3d-compat|btk-drive-rating-50|0.0000 [0.0000, 0.0000]|72.0 [72.0, 72.0]|0.0 [0.0, 0.0]|n/a|0.00 [0.00, 0.00]|0.0000 [0.0000, 0.0000]|0.0016 [0.0016, 0.0016]|0/2 → 0/2|
-|possession-retained|btk-drive-rating-50|jolt-physics-js|btk-drive-rating-50|0.0000 [0.0000, 0.0000]|0.0 [0.0, 0.0]|0.0 [0.0, 0.0]|0.0 [0.0, 0.0]|0.00 [0.00, 0.00]|0.0000 [0.0000, 0.0000]|0.0000 [0.0000, 0.0000]|2/2 → 2/2|
-|possession-retained|btk-drive-rating-50|rapier3d-compat|btk-drive-rating-50|0.0000 [0.0000, 0.0000]|0.0 [0.0, 0.0]|0.0 [0.0, 0.0]|n/a|0.00 [0.00, 0.00]|0.0000 [0.0000, 0.0000]|0.0000 [0.0000, 0.0000]|0/2 → 0/2|
 |possession-retained|balance-scale-1.20|jolt-physics-js|madden-pair-combined|0.0046 [0.0046, 0.0046]|0.0 [0.0, 0.0]|-21.0 [-21.0, -21.0]|-40.5 [-40.5, -40.5]|241.30 [241.30, 241.30]|-0.0006 [-0.0006, -0.0006]|-0.0019 [-0.0019, -0.0019]|2/2 → 2/2|
 |possession-retained|balance-scale-1.20|rapier3d-compat|madden-pair-combined|0.0219 [0.0219, 0.0219]|-164.0 [-164.0, -164.0]|-89.0 [-89.0, -89.0]|n/a|127.70 [127.70, 127.70]|0.0002 [0.0002, 0.0002]|-0.0110 [-0.0110, -0.0110]|2/2 → 0/2|
 |possession-retained|balance-scale-0.80|jolt-physics-js|madden-pair-combined|0.0000 [0.0000, 0.0000]|0.0 [0.0, 0.0]|0.0 [0.0, 0.0]|0.0 [0.0, 0.0]|0.00 [0.00, 0.00]|0.0000 [0.0000, 0.0000]|0.0000 [0.0000, 0.0000]|2/2 → 2/2|
@@ -204,8 +203,8 @@ Every treatment is paired to its same-engine, same-seed anchor: mass/STR substit
 |possession-retained|mass-henderson-only|rapier3d-compat|m4c-neutral|-0.0003 [-0.0003, -0.0003]|0.0 [0.0, 0.0]|-25.0 [-25.0, -25.0]|11.3 [11.3, 11.3]|-4.89 [-4.89, -4.89]|0.0088 [0.0088, 0.0088]|0.0096 [0.0096, 0.0096]|2/2 → 2/2|
 ## STR continuity around 80–81
 
-At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace.
-The pre-player-contact request is continuous: at tick 5 (0.04167 s), while all players are still on their approach trajectories, controller torque rose monotonically at every sampled STR for both actors in both engines. Across STR 79→82, Henderson’s request changed 224.356→228.936 N·m in Rapier and 153.267→156.414 N·m in Jolt; Bush’s changed 127.053→129.663 N·m and 86.612→88.390 N·m, respectively. Contact itself was discontinuous in Rapier near grazing separation: for Henderson STR 79.75, Rapier reached −0.00018 m and recorded contact; at 80.00 it stayed +0.01671 m with no contact; at 80.10 it returned to −0.00002 m with contact. Bush STR 80.10 contacted at −0.00003 m, STR 80.20–80.50 had no contact at positive gaps, and contact returned near 80.60. Jolt retained contact at 0.09167 s through these sweeps. These are trajectory/geometry threshold transitions after smooth torque changes; across the full matrix, the 30 cases with nonpositive Rapier proxy gap but no Rapier contact remain flagged as candidate proxy/contact-boundary discrepancies, so detection cannot be ruled out in every case.
+At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace. The additional step-5 audit samples controller torque at 0.04167 s, before the players reach contact.
+At step 5 the tested torque series is nondecreasing for every actor, solver, and seed: true. Representative 79→82 requests at seed 41027: henderson rapier3d-compat 79→82: 224.356→228.936 N·m; henderson jolt-physics-js 79→82: 153.267→156.414 N·m; bush rapier3d-compat 79→82: 127.053→129.663 N·m; bush jolt-physics-js 79→82: 86.612→88.390 N·m. Smooth controller-input changes can legitimately alter subsequent feedback-driven trajectories. Contact formation remains a discrete engine event. Across 22 adjacent contact/no-contact STR transitions, the first engine-contact sample has a positive analytic proxy gap in 22 cases (0.01021–0.01751 m); neighboring no-contact runs have closest opportunity gaps from 0.01132 to 0.02077 m. These transitions are not explained by crossing analytic gap zero: the proxy boundary differs from the engines’ contact boundary, pointing to a geometry/contact-query mismatch. Separately, 30 full-matrix cases with nonpositive Rapier proxy gap but no Rapier contact remain candidate detection discrepancies. Across all comparisons, the evidence supports trajectory-mediated contact splits in some cases and contact-boundary mismatch in others; it does not establish a general missed-detection defect.
 | Actor | STR | Engine | Min gap (m) | First contact (s) | Contact samples | Peak torque request (N·m) | Status |
 |---|---:|---|---:|---:|---:|---:|---|
 |Bush (tackler)|82|jolt-physics-js|-0.00939|0.0917|231|253.92|failed|
@@ -276,6 +275,31 @@ The pre-player-contact request is continuous: at tick 5 (0.04167 s), while all p
 |Henderson (carrier)|79.5|rapier3d-compat|0.00386|0.1250|98|362.71|failed|
 |Henderson (carrier)|79|jolt-physics-js|-0.00913|0.0917|238|434.23|failed|
 |Henderson (carrier)|79|rapier3d-compat|0.01663|—|0|361.76|failed|
+### Adjacent STR contact transitions and closest approach
+| Actor | Engine | Seed | STR pair | Contact pair | Lower closest gap (m, tick/time) | Upper closest gap (m, tick/time) |
+|---|---|---:|---|---|---|---|
+|bush|rapier3d-compat|41028|81.5→82|no→yes|0.01193 (14/0.1167 s)|0.01272 (14/0.1167 s)|
+|bush|rapier3d-compat|41028|80.9→81|yes→no|0.01021 (15/0.1250 s)|0.01724 (14/0.1167 s)|
+|bush|rapier3d-compat|41028|80.5→80.6|no→yes|0.01553 (14/0.1167 s)|0.01126 (15/0.1250 s)|
+|bush|rapier3d-compat|41028|80.1→80.2|yes→no|0.01088 (15/0.1250 s)|0.01681 (14/0.1167 s)|
+|bush|rapier3d-compat|41027|81.5→82|no→yes|0.01193 (14/0.1167 s)|0.01272 (14/0.1167 s)|
+|bush|rapier3d-compat|41027|80.9→81|yes→no|0.01021 (15/0.1250 s)|0.01724 (14/0.1167 s)|
+|bush|rapier3d-compat|41027|80.5→80.6|no→yes|0.01553 (14/0.1167 s)|0.01126 (15/0.1250 s)|
+|bush|rapier3d-compat|41027|80.1→80.2|yes→no|0.01088 (15/0.1250 s)|0.01681 (14/0.1167 s)|
+|henderson|rapier3d-compat|41028|80.9→81|no→yes|0.01132 (14/0.1167 s)|0.01751 (15/0.1250 s)|
+|henderson|rapier3d-compat|41028|80.5→80.6|yes→no|0.01051 (15/0.1250 s)|0.02077 (14/0.1167 s)|
+|henderson|rapier3d-compat|41028|80.4→80.5|no→yes|0.01443 (14/0.1167 s)|0.01051 (15/0.1250 s)|
+|henderson|rapier3d-compat|41028|80.1→80.2|yes→no|0.01482 (16/0.1333 s)|0.01566 (14/0.1167 s)|
+|henderson|rapier3d-compat|41028|80→80.1|no→yes|0.01671 (14/0.1167 s)|0.01482 (16/0.1333 s)|
+|henderson|rapier3d-compat|41028|79.75→80|yes→no|0.01072 (15/0.1250 s)|0.01671 (14/0.1167 s)|
+|henderson|rapier3d-compat|41028|79→79.5|no→yes|0.01663 (14/0.1167 s)|0.01484 (15/0.1250 s)|
+|henderson|rapier3d-compat|41027|80.9→81|no→yes|0.01132 (14/0.1167 s)|0.01751 (15/0.1250 s)|
+|henderson|rapier3d-compat|41027|80.5→80.6|yes→no|0.01051 (15/0.1250 s)|0.02077 (14/0.1167 s)|
+|henderson|rapier3d-compat|41027|80.4→80.5|no→yes|0.01443 (14/0.1167 s)|0.01051 (15/0.1250 s)|
+|henderson|rapier3d-compat|41027|80.1→80.2|yes→no|0.01482 (16/0.1333 s)|0.01566 (14/0.1167 s)|
+|henderson|rapier3d-compat|41027|80→80.1|no→yes|0.01671 (14/0.1167 s)|0.01482 (16/0.1333 s)|
+|henderson|rapier3d-compat|41027|79.75→80|yes→no|0.01072 (15/0.1250 s)|0.01671 (14/0.1167 s)|
+|henderson|rapier3d-compat|41027|79→79.5|no→yes|0.01663 (14/0.1167 s)|0.01484 (15/0.1250 s)|
 ## Matched Rapier/Jolt trajectory and contact diagnosis
 
 Each comparison is paired by fixture, input, seed, and tick at 120 Hz. Position divergence is measured for the scripted focus pair. A Jolt contact while both analytic gaps remain positive is classified as a geometry/contact-boundary mismatch; a positive Rapier gap with Jolt proxy overlap is trajectory-mediated. A nonpositive Rapier gap without Rapier contact is flagged as a candidate contact-boundary/detection discrepancy, not presumed to be a missed query.
@@ -739,10 +763,10 @@ No merge or adoption recommendation is made here; the protocol assigns the next 
 
 ## Reproduction and artifacts
 
-From repository root: `node research/physics-3d-evaluation/m4b/m4d/henderson-bush-physical-ablations/run.mjs --branch=research/m4d-str-contact-diagnosis --code-commit=04894ad8781edc06f1320a5e3a898a7eaa0cbfdf`. For report regeneration from existing gzip traces, append `--reuse-traces`.
+From repository root: `node research/physics-3d-evaluation/m4b/m4d/henderson-bush-physical-ablations/run.mjs --branch=research/m4d-str-contact-diagnosis --code-commit=124e64fe0879653b9c84fa98408a64fa6bc179ce`. For report regeneration from existing gzip traces, append `--reuse-traces`.
 - `shared-summary.json`: per-run shared schema, inputs, gates, and failure ledger.
 - `shared-summary.csv`: compact row export using the common field names.
 - `run-manifest.json`: source, code, protocol, and legacy report hashes.
 - `replay-index.json` and `viewer.html`: synchronized Rapier/Jolt replays for representative pairs.
 - `traces/`: full-rate gzip diagnostics for every run.
-Implementation sources and hashes are recorded in the JSON manifest; the exact implementation commit is 04894ad8781edc06f1320a5e3a898a7eaa0cbfdf. No production engine or LP pipeline files were changed.
+Implementation sources and hashes are recorded in the JSON manifest; the exact implementation commit is 124e64fe0879653b9c84fa98408a64fa6bc179ce. No production engine or LP pipeline files were changed.
