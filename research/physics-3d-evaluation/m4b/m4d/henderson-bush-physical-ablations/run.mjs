@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync, gunzipSync } from 'node:zlib';
@@ -15,6 +14,8 @@ const TRACES = path.join(RESULTS, 'traces');
 const PROFILE_PATH = path.join(HERE, '../henderson-bush-week6-source.json');
 const PROFILE = JSON.parse(await readFile(PROFILE_PATH, 'utf8'));
 const REUSE_TRACES = process.argv.includes('--reuse-traces');
+const RUN_BRANCH = process.argv.find((argument) => argument.startsWith('--branch='))?.slice('--branch='.length);
+const CODE_COMMIT = process.argv.find((argument) => argument.startsWith('--code-commit='))?.slice('--code-commit='.length);
 const ENGINES = ['rapier3d-compat', 'jolt-physics-js'];
 const SEEDS = [41027, 41028];
 const DT_SECONDS = 1 / 120;
@@ -65,6 +66,7 @@ const REPLAY_CONFIGS = {
 };
 
 if (!HENDERSON || !BUSH) throw new Error('Frozen Henderson–Bush snapshot is incomplete');
+if (!RUN_BRANCH || !CODE_COMMIT) throw new Error('Pass frozen --branch=<name> and --code-commit=<full SHA> metadata');
 await mkdir(TRACES, { recursive: true });
 const startedAt = performance.now();
 const reportRows = [];
@@ -72,8 +74,6 @@ const replayIndex = { schemaVersion: 1, description: 'Matched-timestep M4c Rapie
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 const hashFile = async (file) => sha256(await readFile(file));
 const slug = (value) => String(value).replace(/\+/g, 'plus').replace(/[^a-zA-Z0-9.-]+/g, '-');
-const git = (args) => execFileSync('git', args, { cwd: M4B, encoding: 'utf8' }).trim();
-
 function configurationsForScenario(scenarioId) {
 const profileConfigs = [
     { id: 'm4c-neutral', phase: 'neutral-baseline', massMode: 'fixture', strengthMode: 'neutral' },
@@ -300,8 +300,8 @@ function flattenRow({ scenarioId, config, phase, seed, engine, result, roles, pr
     recorded_proxy: result.playerGeometry,
   };
   return {
-    schema_version: 1, track: 'm4c-m4d-3d-physical-mechanism', branch: git(['rev-parse', '--abbrev-ref', 'HEAD']),
-    code_commit: git(['rev-parse', 'HEAD']), source_snapshot_hash: profileHash,
+    schema_version: 1, track: 'm4c-m4d-3d-physical-mechanism', branch: RUN_BRANCH,
+    code_commit: CODE_COMMIT, source_snapshot_hash: profileHash,
     mapping_version: config.id === 'old-barkley-baun-lost-contact' ? 'prior-barkley-baun-case-replay' : 'hb-week6-physical-ablations-v1',
     player_ids: profileRefs,
     player_roles: { carrier: sourcePlayers[0].canonical_id, tackler: sourcePlayers[1].canonical_id },
@@ -504,8 +504,8 @@ const allFailures = reportRows.filter((row) => row.failure_reasons.length).map((
 const report = {
   schema_version: 1,
   track: 'm4c-m4d-3d-physical-mechanism',
-  branch: git(['rev-parse', '--abbrev-ref', 'HEAD']),
-  code_commit: git(['rev-parse', 'HEAD']),
+  branch: RUN_BRANCH,
+  code_commit: CODE_COMMIT,
   source_snapshot_hash: profileHash,
   mapping_version: 'hb-week6-physical-ablations-v1',
   source_data: { snapshot_path: path.relative(M4B, PROFILE_PATH), sha256: profileHash,
@@ -605,7 +605,7 @@ function markdownReport(data) {
     'Neither report validates a Madden rating-to-force mapping. The TKL/BTK relationships here are bounded sensitivity hypotheses only; actual grip and breakaway capacities require independent physical measurements. No external NFL trajectory/tackle calibration is included.', '',
     'No merge or adoption recommendation is made here; the protocol assigns the next decision to one consolidated integration review.', '',
     '## Reproduction and artifacts', '',
-    'From repository root: node research/physics-3d-evaluation/m4b/m4d/henderson-bush-physical-ablations/run.mjs. For report regeneration from existing gzip traces, append --reuse-traces.',
+    'From repository root: `node research/physics-3d-evaluation/m4b/m4d/henderson-bush-physical-ablations/run.mjs --branch=' + data.branch + ' --code-commit=' + data.code_commit + '`. For report regeneration from existing gzip traces, append `--reuse-traces`.',
     '- `shared-summary.json`: per-run shared schema, inputs, gates, and failure ledger.',
     '- `shared-summary.csv`: compact row export using the common field names.',
     '- `run-manifest.json`: source, code, protocol, and legacy report hashes.',
@@ -653,7 +653,7 @@ function markdownReport(data) {
 const manifest = {
   schema_version: 1, source_snapshot_hash: profileHash,
   source_snapshot_path: path.relative(M4B, PROFILE_PATH), source_of_truth_commit: MAIN_PROTOCOL_COMMIT,
-  source_of_truth_sha256: MAIN_PROTOCOL_HASH, implementation_commit: git(['rev-parse', 'HEAD']),
+  source_of_truth_sha256: MAIN_PROTOCOL_HASH, implementation_commit: CODE_COMMIT,
   implementation_hashes: codeHashes, runtime: { node: process.version, platform: process.platform, architecture: process.arch },
   legacy_report: LEGACY, created_at: new Date().toISOString(),
 };
