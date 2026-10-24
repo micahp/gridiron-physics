@@ -1,0 +1,125 @@
+{
+  "title": "Research-only sideline disc-edge candidate",
+  "cohort": "LP canonical snap-anchored eligible rushing plays, weeks 1-5",
+  "plays": 260,
+  "weeks_6_9_used": false,
+  "model_change": false,
+  "candidate_definition": "First sampled runner-frame where the existing 2D player disc touches/crosses the nearest sideline after snap or observed handoff, searched through the available play track.",
+  "observation_cadence_seconds": 0.1,
+  "field_width_yd": 53.333333333333336,
+  "engine_player_radius_range_m": [
+    0.295,
+    0.362
+  ],
+  "engine_player_radius_range_yd": [
+    0.3226159230096238,
+    0.39588801399825024
+  ],
+  "input_sha256": {
+    "cases": "e10278c3ae0a1dc747144380fc9281e16ad7d8ce5ff3c3f60b1b19c5b6495438",
+    "canonical_manifest": "45325d55103da9a7eca5139f3fda9506cb38d8f0af76d7753868c8f40fbd548a",
+    "engine_ratings": "1608c3c1f247283f1cc1e9414ce48bba103452c77d2bf3a3fa4c213aca48492b",
+    "tracking_extracts": {
+      "week_1": "2b31f7eccce2c5f0959fac091c2c2b0458befc304f7cfa4530299f2a1e58cee8",
+      "week_2": "aedec49befe4a64be95e23664819c075b1c5c9b5c67e71aea2f79379b6f45655",
+      "week_3": "d6bc41a5eaf5766d0faded226468d2fcc1f6df8d23bce42fb1ae937180834015",
+      "week_4": "a4b67a269e94ef5b9f8c1f360a0e022c4414d64d20b72f60873b390dafb5e04f",
+      "week_5": "62daf73fdc0c754caab00603f12f0fb6453bae0d3e85cf2a6155f8c3a9b66220"
+    }
+  },
+  "sideline_counts": {
+    "low_sideline": 133,
+    "high_sideline": 127
+  },
+  "limitations": [
+    "The radius is a disc proxy, not an observed foot or body-contact point.",
+    "Player-specific 2022 tracking identities are not mapped to engine radius profiles; both engine-radius endpoints are shown as a sensitivity range.",
+    "Tracking event timing and positions are quantized to 0.1 seconds; sampled crossing time is not an official ruling.",
+    "Ball spot deltas use forward x at the candidate crossing frame versus x at the tracking OOB event frame; they are diagnostics, not adjudicated spot error."
+  ],
+  "methods": {
+    "current_center_plus_0.3yd": {
+      "crossing_count": 244,
+      "preexisting_at_live_start": 0,
+      "no_crossing_in_available_track": 16,
+      "crossing_minus_oob_event_frames": {
+        "median": 1.0,
+        "p90_absolute": 3,
+        "event_precedes_crossing": 162,
+        "same_frame": 43,
+        "crossing_precedes_event": 39,
+        "within_one_frame": 137
+      },
+      "forward_ball_spot_delta_yd_vs_event_frame": {
+        "count": 244,
+        "median_signed": 0.41000175476069245,
+        "median_absolute": 0.5299987792969034,
+        "p90_absolute": 1.6900024414062003
+      }
+    },
+    "disc_edge_smallest_engine_radius": {
+      "crossing_count": 257,
+      "preexisting_at_live_start": 0,
+      "no_crossing_in_available_track": 3,
+      "crossing_minus_oob_event_frames": {
+        "median": -1,
+        "p90_absolute": 4,
+        "event_precedes_crossing": 43,
+        "same_frame": 69,
+        "crossing_precedes_event": 145,
+        "within_one_frame": 170
+      },
+      "forward_ball_spot_delta_yd_vs_event_frame": {
+        "count": 257,
+        "median_signed": -0.1899986267090057,
+        "median_absolute": 0.44000244140630684,
+        "p90_absolute": 1.9600067138671875
+      },
+      "paired_vs_current_center_plus_0.3yd": {
+        "plays": 244,
+        "absolute_event_frame_error_change_median": 0.0,
+        "current_within_one_frame": 137,
+        "candidate_within_one_frame": 162,
+        "frame_error_improved": 119,
+        "frame_error_tied": 28,
+        "frame_error_worsened": 97,
+        "absolute_ball_spot_delta_error_change_median_yd": -4.973799150320701e-14,
+        "spot_error_improved": 122,
+        "spot_error_tied": 3,
+        "spot_error_worsened": 119
+      }
+    },
+    "disc_edge_largest_engine_radius": {
+      "crossing_count": 257,
+      "preexisting_at_live_start": 0,
+      "no_crossing_in_available_track": 3,
+      "crossing_minus_oob_event_frames": {
+        "median": -1,
+        "p90_absolute": 4,
+        "event_precedes_crossing": 37,
+        "same_frame": 67,
+        "crossing_precedes_event": 153,
+        "within_one_frame": 155
+      },
+      "forward_ball_spot_delta_yd_vs_event_frame": {
+        "count": 257,
+        "median_signed": -0.2900009155273011,
+        "median_absolute": 0.45000457763670454,
+        "p90_absolute": 2.0500030517577983
+      },
+      "paired_vs_current_center_plus_0.3yd": {
+        "plays": 244,
+        "absolute_event_frame_error_change_median": 0.0,
+        "current_within_one_frame": 137,
+        "candidate_within_one_frame": 148,
+        "frame_error_improved": 113,
+        "frame_error_tied": 28,
+        "frame_error_worsened": 103,
+        "absolute_ball_spot_delta_error_change_median_yd": 0.014995574951157664,
+        "spot_error_improved": 117,
+        "spot_error_tied": 1,
+        "spot_error_worsened": 126
+      }
+    }
+  }
+}
