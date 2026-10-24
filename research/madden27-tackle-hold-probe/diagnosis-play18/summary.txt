@@ -1,0 +1,11 @@
+== wrap separation per engine (play index, separation m, tackler, carrier) ==
+wrapd-c9d4e6f far wraps (play, d0, tackler, carrier): [[12,1.23,"4428659","4241985"],[198,1.6,"4247808","4568490"],[199,1.38,"4362851","4426338"]]
+  wraps in plays 15-18: [[17,0.62],[18,1.12]]
+wrapd-0db20fe far wraps (play, d0, tackler, carrier): [[12,1.23,"4428659","4241985"],[198,1.6,"4247808","4568490"],[199,1.38,"4362851","4426338"]]
+  wraps in plays 15-18: [[17,0.62],[18,0.67]]
+wrapd-ec18dee far wraps (play, d0, tackler, carrier): [[12,1.27,"4428659","4241985"],[18,2.96,"4039059","4887558"],[198,1.6,"4247808","4568490"]]
+  wraps in plays 15-18: [[17,0.62],[18,2.96]]
+== play-18 strict validation ==
+role-centred as committed: exit 1 (2 speed violations in play 18)
+tryTackle contact gate alone: no change to play 18 (scratch, see attribution-tryTackle-gate.patch)
+budget threshold 3 m -> 1 m alone: exit 0, 0 speed violations, end-spot 122/124 (see attribution-budget-threshold.patch)

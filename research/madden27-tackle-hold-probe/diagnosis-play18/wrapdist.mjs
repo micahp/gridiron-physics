@@ -1,0 +1,10 @@
+const root = process.argv[2];
+globalThis.__wraps = [];
+const { simulateGame } = await import(`${root}/engine/game.js`);
+const { readFileSync } = await import('node:fs');
+const game = JSON.parse(readFileSync(`${root}/web/data/game.json`, 'utf8'));
+simulateGame(game);
+const w = globalThis.__wraps;
+const far = w.filter((x) => x.d0 > 1.2);
+const plays = [...new Set(far.map((x) => x.play))].sort((a, b) => a - b);
+console.log(root.split('/').pop(), 'wraps:', w.length, '| wraps starting > 1.2 m apart:', far.length, '| plays:', plays.length, '| play 18 wraps:', JSON.stringify(w.filter((x) => x.play === 18).map((x) => +x.d0.toFixed(2))), '| max d0:', w.length ? +Math.max(...w.map((x) => x.d0)).toFixed(2) : null);

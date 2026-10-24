@@ -1,0 +1,10 @@
+const root = process.argv[2];
+globalThis.__wraps = [];
+const { simulateGame } = await import(`${root}/engine/game.js`);
+const { readFileSync } = await import('node:fs');
+const game = JSON.parse(readFileSync(`${root}/web/data/game.json`, 'utf8'));
+simulateGame(game);
+const far = globalThis.__wraps.filter((x) => x.d0 > 1.2);
+console.log(root.split('/').pop(), 'far wraps (play, d0, tackler, carrier):', JSON.stringify(far.map((x) => [x.play, +x.d0.toFixed(2), x.tk, x.ca])));
+const p18 = globalThis.__wraps.filter((x) => x.play <= 18 && x.play >= 15).map((x) => [x.play, +x.d0.toFixed(2)]);
+console.log('  wraps in plays 15-18:', JSON.stringify(p18));

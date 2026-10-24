@@ -1,0 +1,23 @@
+--- /root/scratch-engines/ec18dee/engine/play.js	2026-10-23 18:01:35.000000000 -0500
++++ /root/scratch-engines/ec18dee-gate/engine/play.js	2026-10-23 21:51:36.480224521 -0500
+@@ -367,7 +367,9 @@
+     const waited = st.waitT > 1.4;
+     const tackleOdds = clamp(0.58 + ((d.R.TAK ?? 50) - Math.max(c.R.BTK ?? 50, c.R.ELU ?? 50)) * 0.006, 0.35, 0.82);
+     const tackleWon = st.freeOutcome ? rand() < freeTackleOdds : along <= lim || waited;
+-    if (tackleWon) {
++    // DIAGNOSTIC GATE (scratch only): a scripted tackle may not wrap a carrier who is not in contact range.
++    const gap = Math.hypot(c.p.x - d.p.x, c.p.y - d.p.y);
++    if (tackleWon && (st.freeOutcome || gap <= d.r + c.r + 0.5)) {
+       startTackle(d, c);
+     } else {
+       // broken tackle: both stumble; the defender loses his feet
+@@ -1830,7 +1832,8 @@
+       const budget = Math.abs(st.endX - c.ai.startX) * YD / (0.55 * c.vmax) + 2.5;
+       if (W.t - st.carrierSince > budget) {
+         const near = W.players.filter((q) => q.team !== c.team && !q.down).sort((a, b) => d2(a.p, c.p) - d2(b.p, c.p))[0];
+-        if (near && d2(near.p, c.p) < 3) startTackle(near, c);
++        // DIAGNOSTIC (scratch only): forced budget tackle limited to 1 m, was 3 m
++        if (near && d2(near.p, c.p) < 1) startTackle(near, c);
+         else if (near) near.mode = "tackle_to"; // nearest defender closes the play
+       }
+     }
