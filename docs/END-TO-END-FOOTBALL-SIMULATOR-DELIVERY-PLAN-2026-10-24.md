@@ -2,6 +2,10 @@
 
 **Status: ACTIVE HIGHEST-PRIORITY WORK ORDER for both Gridiron Physics and Legendary Picks NFL simulation agents.** Supersedes older *next-task priorities* in the football-first tracking directive, 2026-10-24 tracking review, M1–M4d reports and roadmap. All earlier measurements, license cautions, branch boundaries and no-production/no-merge safety rules still apply. This document is a delivery instruction, **not evidence that this end-to-end integration has already shipped**.
 
+## 2026-10-24 supporting movement decision (no change to delivery critical path)
+
+The [movement policy materiality review](research/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md) accepts agents' reported development result that basic same-history constant acceleration supplies about **97%** of the movement lift over constant velocity at 1.0 s; adding the existing locomotion controller yields only **3.72 mm** more. The original threshold-free prereg statistical test passed, but the **coordinator declines added policy complexity** at that effect size. A prospective rule for any later held-out movement-policy promotion now requires ≥5 cm AND ≥5% 1-second MAE improvement plus game-clustered statistical evidence and no material spatial/runtime regression; record explicitly that this criterion was set **after** seeing development. LP and Gridiron must reconcile 9,456/9,388/9,289 competing reported cohort denominators and commit source artifacts before future movement tests. The reported research files were uncommitted when this note was made. **Do not spend reserved weeks 6–9 now; prioritize E0 generated play → E1 drive → E2 full simulated game.**
+
 ## Why the work exists
 
 **Product goal:** Generate an entire, coherent NFL game from a pregame-eligible matchup state and football decisions. Repeated simulations produce internally consistent plays, downs, drives, clock, scores, possession changes and player statistics. Gridiron Physics makes the simulated football inspectable/playable; Legendary Picks uses the resulting distributions, where validated, to explain and improve game/team/player projections and ultimately player props.
