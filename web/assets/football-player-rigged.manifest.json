@@ -1,16 +1,22 @@
 {
   "asset": "football-player-rigged.glb",
   "format": "glTF 2.0 binary",
-  "originalBlenderVersion": "2.79",
+  "sourceBlenderVersion": "2.79",
+  "exportedWith": "Blender 4.2.9 LTS official glTF 2.0 exporter (io_scene_gltf2)",
   "license": "CC BY 3.0",
   "source": "https://blendswap.com/blend/22654",
   "author": "Hikky",
   "boneCount": 56,
   "skinnedMeshCount": 2,
+  "primitiveCount": 12,
   "triangleCount": 39638,
   "embeddedTextures": 9,
+  "textureFormat": "image/jpeg",
   "animationClips": 0,
   "expectedExternalPoseStates": 12,
-  "meshFacing": "Original Blender local forward -Y; glTF root converts Blender Z-up to glTF Y-up",
-  "sha256": "3c88cff0a02f5a6235cf33644809f699c921170e33b0ca1e28362e2a323eee98"
+  "upAxis": "Y",
+  "meshForward": "+Z",
+  "meshHeightMetres": 1.86,
+  "sha256": "c03cc3c332b3d2f01fa39a1958da7d4be09712156a3a3b26fd893665d52a307b",
+  "notes": "Official exporter run over the original FOOTBALL_PLAYER.blend. Legacy 2.79 Diffuse-BSDF materials were rebuilt as Principled BSDF so the exporter embeds the base-colour textures. Subsurf level 0 (base cage, 39,638 triangles). No animation clips: the 12 procedural pose states drive the 56-bone skeleton at runtime."
 }
