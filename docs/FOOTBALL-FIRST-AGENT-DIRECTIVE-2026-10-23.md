@@ -1,5 +1,7 @@
 # Football-first agent directive — 2026-10-23
 
+> **2026-10-24 higher-priority update:** [End-to-end football simulator delivery plan](END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md) is now the **active critical-path work order**. This football-first directive retains the data-cutoff, reuse-existing-tools, truth-label, real-world evaluation and no-unapproved-deployment guardrails. Its earlier instruction to make tracking/trajectory benchmarks the *first sprint* is superseded: complete generated play → drive → game E0–E2 first, then selective motion/physics evaluation E3. Do not rewrite its historical results.
+
 **Status: ACTIVE, supersedes previous "next task" guidance in older roadmaps, handoffs and research reports.** Historical results and safety rules remain valid. Applies to Gridiron Physics and Legendary Picks simulation, NFL movement, ratings and evaluation research.
 
 **North star:** Starting with *only allowed information available at a declared decision time*, generate plausible player movement and football decisions, resolve or estimate interactions using the **simplest sufficient established mechanism**, and reproduce **observed NFL trajectories, play outcomes, possessions, and game distributions** better than strong, cheaper baselines. A convincing replay is not a predictive result.
