@@ -1280,5 +1280,25 @@
         }
       }
     }
+  },
+  "cohortReconciliation": {
+    "status": "superset_metrics_not_canonical_movement_benchmark",
+    "canonicalBranch": "research/nfl-snap-anchored-benchmark-2026-10-24",
+    "canonicalCommit": "23dfa70b563fd418ac216ab806a73f982362d0b1",
+    "canonicalManifestSha256": "45325d55103da9a7eca5139f3fda9506cb38d8f0af76d7753868c8f40fbd548a",
+    "reconciliationDocumentSha256": "6a42b93839412f14cd2e8e2a2f8e3b3058a5db8c135074e73e8c739b3261cd2e",
+    "supersetManifestSha256": "5d4abe0b6584c4ce0be6dc23ade410e13a4a63a9ab8282de05383d8403fd5193",
+    "originalPerPlayMetricsSha256": "b3bd510acc9cfcb1d97257a6245a599f9a46433de6caa20637af9f44a34ae864",
+    "canonicalPlayCount": 9289,
+    "supersetPlayCount": 9388,
+    "supplementPlayCount": 99,
+    "supplementClassCounts": {
+      "qb_kneel": 92,
+      "qb_spike": 7
+    },
+    "supplementUse": "labeled only; no separate movement aggregate or benchmark",
+    "aggregateMetricsInThisSummary": "historical aggregate over all 9388 superset plays; not canonical",
+    "playMetadataSha256": "a103cbc3a1ddf7678cb6d77ea5f9919c4292b5d55c7876f7cad6cce3d62dca04",
+    "reconciliationScriptSha256": "d9c22d7daaf400af2b759a5b7668c892119014fc05acdbb2ce85d7e38603bfc0"
   }
 }

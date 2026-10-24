@@ -25,52 +25,15 @@ Paired per-play differences versus constant velocity (negative is lower error):
 
 Minimum separation and timing are recomputed only over 0.1–0.5 s. The last column above is the median absolute difference between predicted and observed minima on that origin-excluded window. The origin-minimum count reports how often including time zero would have selected the anchored starting separation. Event separation error is reported as absolute error; signed error is retained in the per-play CSV.
 
-## B. Snap-anchored all-player cohort
+## B. LP canonical movement cohort and Gridiron superset labels
 
-The independent cohort contains **9,388 plays** from weeks 1–5: week 1: 1,938, week 2: 1,798, week 3: 1,946, week 4: 1,817, week 5: 1,889. Weeks 6–9 remain reserved and were not scanned by this run.
+Per-play reconciliation against LP's preregistered manifest finds 9,289 canonical movement plays in the Gridiron 9,388-play superset, with no LP-eligible key missing. The 99 extras have blank formation: 92 are flagged as QB kneels and 7 descriptions identify a QB spike. They are not kick or special-teams plays.
 
-Eligibility uses a unique `ball_snap` frame, pre-snap play metadata, the 11/11 offense/defense split, and tracking-row presence for all 22 players and the football from snap−0.5 s through snap+1.0 s. Each prediction receives only each player's six positions from snap−0.5 s through the snap, plus listed roster mass for the controller. No future coordinates, football track, play outcomes, tackle frame, tackler credit, or drive outcomes enter the model request. The football is retained as an observable label; these four player-motion arms do not forecast it.
+LP's 9,289-play cohort is the sole canonical movement benchmark. The prior 9,388-play aggregate and report are retained as historical evidence but are not a second benchmark and must not be used for a movement-model decision. Each row in `snap-anchored-per-play.csv` now has a `cohortStratum` label; the 99-play supplement is listed without an aggregate in `snap-anchored-supplement-stratum.csv`.
 
-Constant acceleration and bounded acceleration use the same position-history-derived velocity and acceleration as the other arms. Bounded acceleration applies the fixed 6.5 m/s² / 1100 N-per-mass limit. The existing controller source and reference settings are unchanged. No parameters were fit on this cohort.
+Use the canonical result at [the Gridiron 9,289-play report pinned at 23dfa70b](https://github.com/micahp/gridiron-physics/blob/200ee6a6430d4f66700ad22a5a7d167733ece2f7/research/physics-3d-evaluation/m4b/m4d/football-tracking-feasibility/results/snap-anchored-movement-2026-10-24/report.md). The earlier superset report is preserved in `snap-anchored-superset-report-unreconciled.md` with a noncanonical warning. Weeks 6–9 remain reserved.
 
-### 0.5 s
-
-| Model | Position MAE (m) | Velocity vector MAE (m/s) | Spacing pair MAE (m) | Nearest defender distance MAE (m) | Nearest defender ID agreement | Team centroid displacement error (m) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Constant velocity | 0.239 | 0.896 | 0.185 | 0.218 | 93.1% | 0.115 |
-| Constant acceleration | 0.207 | 0.782 | 0.165 | 0.191 | 93.6% | 0.096 |
-| Bounded acceleration | 0.206 | 0.781 | 0.164 | 0.190 | 93.6% | 0.096 |
-| Existing locomotion controller | 0.206 | 0.780 | 0.164 | 0.190 | 93.6% | 0.095 |
-
-| Model vs constant velocity | Position MAE: mean paired Δ / improved plays | Spacing MAE: mean paired Δ / improved plays | Velocity error: mean paired Δ / improved plays | Team centroid error: mean paired Δ / improved plays |
-| --- | ---: | ---: | ---: | ---: |
-| constantAcceleration | -0.032 m / 90.1% | -0.020 m / 82.0% | -0.114 m/s / 88.5% | -0.019 m / 82.9% |
-| boundedAcceleration | -0.033 m / 90.2% | -0.020 m / 82.2% | -0.115 m/s / 88.7% | -0.020 m / 83.0% |
-| locomotionController | -0.033 m / 90.1% | -0.021 m / 82.1% | -0.116 m/s / 88.9% | -0.020 m / 83.1% |
-
-Mean speed above 9 m/s: constantVelocity 0.0%; constantAcceleration 0.0%; boundedAcceleration 0.0%; locomotionController 0.0%.
-Mean predicted lateral acceleration above 6.5 m/s²: constantVelocity 0.0%; constantAcceleration 0.0%; boundedAcceleration 0.0%; locomotionController 0.0%.
-
-### 1.0 s
-
-| Model | Position MAE (m) | Velocity vector MAE (m/s) | Spacing pair MAE (m) | Nearest defender distance MAE (m) | Nearest defender ID agreement | Team centroid displacement error (m) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Constant velocity | 1.030 | 2.054 | 0.746 | 0.738 | 76.3% | 0.456 |
-| Constant acceleration | 0.919 | 1.897 | 0.699 | 0.668 | 77.4% | 0.396 |
-| Bounded acceleration | 0.917 | 1.894 | 0.697 | 0.667 | 77.4% | 0.395 |
-| Existing locomotion controller | 0.915 | 1.887 | 0.694 | 0.666 | 77.4% | 0.394 |
-
-| Model vs constant velocity | Position MAE: mean paired Δ / improved plays | Spacing MAE: mean paired Δ / improved plays | Velocity error: mean paired Δ / improved plays | Team centroid error: mean paired Δ / improved plays |
-| --- | ---: | ---: | ---: | ---: |
-| constantAcceleration | -0.111 m / 89.2% | -0.047 m / 74.6% | -0.157 m/s / 82.9% | -0.060 m / 75.0% |
-| boundedAcceleration | -0.112 m / 89.3% | -0.049 m / 74.7% | -0.160 m/s / 83.1% | -0.061 m / 75.1% |
-| locomotionController | -0.115 m / 89.7% | -0.052 m / 75.2% | -0.167 m/s / 84.5% | -0.062 m / 75.5% |
-
-Mean speed above 9 m/s: constantVelocity 0.0%; constantAcceleration 0.3%; boundedAcceleration 0.3%; locomotionController 0.0%.
-Mean predicted lateral acceleration above 6.5 m/s²: constantVelocity 0.0%; constantAcceleration 0.0%; boundedAcceleration 0.0%; locomotionController 0.0%.
-
-
-Spacing MAE averages absolute pair-distance error over all 55 within-offense and 55 within-defense pairs per play. The frozen snap-nearest relationship is defined from positions at the prediction origin; its paired distance error is retained in the metrics JSON. Nearest-defender ID agreement compares each offense player's predicted nearest defender at the horizon with the observed nearest defender. Team movement uses offense and defense centroid displacement and centroid velocity errors. The metrics JSON and per-play CSV also report speed changes, turn-angle error, inter-team centroid separation, speed-cap exceedance, and lateral-acceleration exceedance.
+The cohort decision uses snap-available metadata only. Supplement class labels are post-hoc audit labels and were not model inputs.
 
 ## Outcome boundary and decision
 
@@ -82,8 +45,9 @@ No more sophisticated movement policy is justified for adoption by these descrip
 
 - `event-centered-per-play.csv`: paired 40-play errors for all four models.
 - `event-centered-summary.json`: paired aggregates and origin-excluded minimum-separation statistics.
-- `snap-anchored-per-play.csv`: per-play, per-model metrics at 0.5 and 1.0 s.
-- `snap-anchored-summary.json`: aggregate metrics and paired comparisons against constant velocity.
+- `snap-anchored-per-play.csv`: retained per-play metrics for the original superset, with canonical/supplement stratum labels.
+- `snap-anchored-summary.json`: original superset aggregate, explicitly marked noncanonical after reconciliation.
+- `snap-anchored-supplement-stratum.csv`: the 99 blank-formation supplement keys and audit classes.
 
 - M4d analysis checkout at run: `b4ba357db66fa21222cd31a3b9cf7a70a5ce6956`.
 - LP tracking checkout at run: `c780bcc6f0e5faf4818e4ea9aba82a5f3c5cc9cc`.
