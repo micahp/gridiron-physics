@@ -209,6 +209,26 @@ function advance(){
   else{playing=false;renderPlayButton();}
 }
 function startFrom(i){choose(i);playing=true;dwell=0;renderPlayButton();}
+// Special-teams events carry their own ownership: who kicked, who received,
+// and where the ball was spotted. A kickoff is not part of the receiving
+// team's offensive drive in NFL terms, so the timeline labels it as its own
+// special-teams event inside the drive it opens.
+function kickoffLabel(p){
+  const who=esc(p.kicking_team)+' → '+esc(p.receiving_team);
+  if(p.outcome==='returned')return who+' · '+esc(p.return_yards)+' yd return';
+  if(p.touchback_type==='landing_zone')return who+' · touchback, receiving 20';
+  if(p.touchback_type==='in_air')return who+' · touchback, receiving 35';
+  if(p.touchback_type==='midfield')return who+' · touchback, receiving 20 (from 50)';
+  if(p.outcome==='out_of_bounds')return who+' · out of bounds, receiving 40';
+  return who+' · '+esc(String(p.outcome||'').replace('_',' '));
+}
+function playLabel(p){
+  if(p.type==='kickoff')return kickoffLabel(p);
+  if(p.touchdown)return 'TOUCHDOWN';
+  if(p.type==='scrimmage')return esc(p.gain)+' yd';
+  if(p.type==='punt'||p.type==='field_goal')return esc(p.distance)+' yd';
+  return 'event';
+}
 function renderTimeline(){
   const drives=new Map();let shown=0;
   simulation.plays.forEach((p,i)=>{
@@ -221,7 +241,7 @@ function renderTimeline(){
   $('timeline').innerHTML=[...drives].map(([n,d])=>
     '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+(d.rows.length===1?' event':' events')+'</span></div>'+
     d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+esc(p.action)+' · '+
-      (p.touchdown?'TOUCHDOWN':p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='punt'||p.type==='field_goal'?esc(p.distance)+' yd':p.type==='kickoff'?(p.outcome==='returned'?esc(p.return_yards)+' yd return':esc(p.outcome.replace('_',' '))):'event')+'</span></button>').join('')+'</div>').join('');
+      playLabel(p)+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
 function scoreAtPlay(p) {
@@ -272,7 +292,9 @@ function choose(idx){
   scoreAtPlay(p); $('snap-title').textContent='Play '+p.index+' · '+p.action+' · '+p.offense;
   $('play-detail').innerHTML='<b>'+esc(p.action)+'</b> · '+(p.type==='scrimmage'?esc(p.gain)+' yards · ':'')+
     'Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
-    '<br>'+esc(p.note||'')+(p.try?'<br>'+esc(p.try):'');
+    '<br>'+esc(p.note||'')+(p.try?'<br>'+esc(p.try):'')+
+    (p.type==='kickoff'?'<br>'+kickoffLabel(p):'')+
+    (p.type==='field_goal'&&!p.good&&p.restart_rule?'<br>Restart: '+esc(p.restart_rule):'');
   current=null;playSeconds=0;lastTick=null;animating=false;dwell=0;$('scrub').value='0';
   if(p.type!=='scrimmage'){
     $('replay-type').textContent='Text-only event';
