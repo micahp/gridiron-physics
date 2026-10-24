@@ -1,0 +1,154 @@
+{
+  "provenance": {
+    "generatedAtUtc": "2026-10-24T05:38:17.640999+00:00",
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "cases": 45,
+    "engine": {
+      "sourceCommit": "a09329185451faad44ef7453c7c47bea9d7253a4",
+      "worldJsSha256": "bc82736164fcd06fffd379efea5b71f6a1373b3dadeb27fe5fa3c1be0f9c0dac",
+      "constantsJsSha256": "98c39f0e2c9deaf4ed390f5f11546de4556642b65c1e10011b4dbeacb132b498",
+      "checkout": "/root/gridiron-physics"
+    },
+    "m4dCommitAtRun": "357014ea008b12c8e0f5057f6f52606b3f2fa1f2",
+    "dataSource": "unofficial b00nk3r/NFL-Big-Data-Bowl-2025 copy, commit e28d3b25725799ef2213680016db5325f6f90014; 2022 season",
+    "inputHashesFromStagedManifestOrLocalSha256": {
+      "code-data/plays.csv": "a103cbc3a1ddf7678cb6d77ea5f9919c4292b5d55c7876f7cad6cce3d62dca04",
+      "code-data/player_play.csv": "4dfeba939d0b56e9fca6044c1df709879a22ed239389e155afba571915bd5852",
+      "code-data/players.csv": "dc2b5f923e84a16d789d999e88aea670b5495436ab88c24aef7b97b07d723626",
+      "code-data/tracking_week_1.csv": "dc47c829ef917cb6533c6baedd01964823939a4e9cba807090d2784aa1fd149c",
+      "code-data/tracking_week_2.csv": "d735b37f04bdf324132b9cb0f084a4ca583fadbbf02653e1873dad39c36924aa",
+      "code-data/tracking_week_3.csv": "db2965ad61a5ad3895a8878a3754c3d3e4bf4b2dce75732c0b6b4d9d094887bb",
+      "code-data/tracking_week_4.csv": "2e931bc9cd7f6126d6cd1e7eb71a3c711b748a0cece9d04dcace870e7298774f",
+      "code-data/tracking_week_5.csv": "1c10136562b82f3e2d5405247540d890fc02f38804109bdaaba5e63bd816c3e9",
+      "tackleManifestCsv": "3c16d3814847170edfc35ba3ca098ff3c82bbc5f8b36b22c05639780d6b41353"
+    },
+    "manifest": {
+      "path": "/root/lp-nfl-tracking/docs/research/bdb2025-observed-tackle-manifest-v1.csv",
+      "sourceCommit": "c780bcc6f0e5faf4818e4ea9aba82a5f3c5cc9cc",
+      "sha256": "3c16d3814847170edfc35ba3ca098ff3c82bbc5f8b36b22c05639780d6b41353",
+      "totalRows": 49,
+      "includedRows": 45,
+      "excludedRows": 4,
+      "includedBySplit": {
+        "development": 40,
+        "exploratory_visual": 5
+      }
+    },
+    "analysisCodeSha256": {
+      "run_observed_movement_comparison.py": "3c2673c2be31b8b688c8d4914c863318cd350a2784cb3228c3750dda3a7e00ed",
+      "run_locomotion_baseline.mjs": "a539fd92bcaf4c12155f41505d25de4ff867afb472ca791110e633999439dc33"
+    },
+    "referencePhysics": {
+      "vmaxMps": 9.0,
+      "f0N": 1100.0,
+      "lateralAccelerationMps2": 6.5,
+      "frictionCoefficient": 0.95,
+      "responseSeconds": 0.12,
+      "carrierSpeedCapFactor": 0.97
+    },
+    "controller": {
+      "method": "pursuit-independent Player.locomote response; past-only acceleration proposal",
+      "dtSeconds": 0.008333333333333333,
+      "forecastSeconds": 0.5,
+      "predictionOrigin": "eventFrame - 5"
+    }
+  },
+  "sampleCount": 45,
+  "perWeek": {
+    "1": 5,
+    "2": 8,
+    "3": 7,
+    "4": 11,
+    "5": 14
+  },
+  "perSplit": {
+    "development": 40,
+    "exploratory_visual": 5
+  },
+  "developmentAggregateMetrics": {
+    "constantVelocity": {
+      "carrierPositionRmseM": {
+        "mean": 0.2367953660264884,
+        "median": 0.2182524352174176
+      },
+      "defenderPositionRmseM": {
+        "mean": 0.2190432820873477,
+        "median": 0.21520883533794494
+      },
+      "separationRmseM": {
+        "mean": 0.197654959343425,
+        "median": 0.1704353461956714
+      },
+      "eventSeparationErrorM": {
+        "mean": 0.2583666130260667,
+        "median": 0.24488954153334963
+      },
+      "minimumPredictedSeparationM": {
+        "mean": 0.5537522670851464,
+        "median": 0.5343039267398006
+      },
+      "timeOfMinimumSecondsAfterOrigin": {
+        "mean": 0.105,
+        "median": 0.0
+      },
+      "minimumSeparationErrorM": {
+        "mean": 0.013329017465747791,
+        "median": 0.0
+      },
+      "timeOfMinimumErrorSeconds": {
+        "mean": -0.0725,
+        "median": 0.0
+      },
+      "predictedClosingSpeedMps": {
+        "mean": -0.4691627882332982,
+        "median": -0.6844897098254519
+      }
+    },
+    "locomotionController": {
+      "carrierPositionRmseM": {
+        "mean": 0.2029175245059249,
+        "median": 0.21224701314583047
+      },
+      "defenderPositionRmseM": {
+        "mean": 0.20232563533820297,
+        "median": 0.18047063276490383
+      },
+      "separationRmseM": {
+        "mean": 0.16092121517149208,
+        "median": 0.14073952278469476
+      },
+      "eventSeparationErrorM": {
+        "mean": 0.09774050111723838,
+        "median": 0.13314307541074405
+      },
+      "minimumPredictedSeparationM": {
+        "mean": 0.5128271671371839,
+        "median": 0.4753022098977998
+      },
+      "timeOfMinimumSecondsAfterOrigin": {
+        "mean": 0.17500000000000002,
+        "median": 0.1
+      },
+      "minimumSeparationErrorM": {
+        "mean": -0.02759608248221463,
+        "median": 0.0
+      },
+      "timeOfMinimumErrorSeconds": {
+        "mean": -0.0024999999999999966,
+        "median": 0.0
+      },
+      "predictedClosingSpeedMps": {
+        "mean": -0.14791056441564152,
+        "median": -0.4893850186002774
+      }
+    }
+  },
+  "outputDirectory": "/root/gridiron-physics-m4d-str-diagnosis/research/physics-3d-evaluation/m4b/m4d/football-tracking-feasibility/results/observed-tackle-movement-2026-10-24",
+  "engineCommit": "a09329185451faad44ef7453c7c47bea9d7253a4"
+}

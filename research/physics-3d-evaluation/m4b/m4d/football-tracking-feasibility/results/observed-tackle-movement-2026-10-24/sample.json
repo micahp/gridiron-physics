@@ -1,0 +1,1568 @@
+{
+  "provenance": {
+    "generatedAtUtc": "2026-10-24T05:38:17.640999+00:00",
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "cases": 45,
+    "engine": {
+      "sourceCommit": "a09329185451faad44ef7453c7c47bea9d7253a4",
+      "worldJsSha256": "bc82736164fcd06fffd379efea5b71f6a1373b3dadeb27fe5fa3c1be0f9c0dac",
+      "constantsJsSha256": "98c39f0e2c9deaf4ed390f5f11546de4556642b65c1e10011b4dbeacb132b498",
+      "checkout": "/root/gridiron-physics"
+    },
+    "m4dCommitAtRun": "357014ea008b12c8e0f5057f6f52606b3f2fa1f2",
+    "dataSource": "unofficial b00nk3r/NFL-Big-Data-Bowl-2025 copy, commit e28d3b25725799ef2213680016db5325f6f90014; 2022 season",
+    "inputHashesFromStagedManifestOrLocalSha256": {
+      "code-data/plays.csv": "a103cbc3a1ddf7678cb6d77ea5f9919c4292b5d55c7876f7cad6cce3d62dca04",
+      "code-data/player_play.csv": "4dfeba939d0b56e9fca6044c1df709879a22ed239389e155afba571915bd5852",
+      "code-data/players.csv": "dc2b5f923e84a16d789d999e88aea670b5495436ab88c24aef7b97b07d723626",
+      "code-data/tracking_week_1.csv": "dc47c829ef917cb6533c6baedd01964823939a4e9cba807090d2784aa1fd149c",
+      "code-data/tracking_week_2.csv": "d735b37f04bdf324132b9cb0f084a4ca583fadbbf02653e1873dad39c36924aa",
+      "code-data/tracking_week_3.csv": "db2965ad61a5ad3895a8878a3754c3d3e4bf4b2dce75732c0b6b4d9d094887bb",
+      "code-data/tracking_week_4.csv": "2e931bc9cd7f6126d6cd1e7eb71a3c711b748a0cece9d04dcace870e7298774f",
+      "code-data/tracking_week_5.csv": "1c10136562b82f3e2d5405247540d890fc02f38804109bdaaba5e63bd816c3e9",
+      "tackleManifestCsv": "3c16d3814847170edfc35ba3ca098ff3c82bbc5f8b36b22c05639780d6b41353"
+    },
+    "manifest": {
+      "path": "/root/lp-nfl-tracking/docs/research/bdb2025-observed-tackle-manifest-v1.csv",
+      "sourceCommit": "c780bcc6f0e5faf4818e4ea9aba82a5f3c5cc9cc",
+      "sha256": "3c16d3814847170edfc35ba3ca098ff3c82bbc5f8b36b22c05639780d6b41353",
+      "totalRows": 49,
+      "includedRows": 45,
+      "excludedRows": 4,
+      "includedBySplit": {
+        "development": 40,
+        "exploratory_visual": 5
+      }
+    },
+    "analysisCodeSha256": {
+      "run_observed_movement_comparison.py": "3c2673c2be31b8b688c8d4914c863318cd350a2784cb3228c3750dda3a7e00ed",
+      "run_locomotion_baseline.mjs": "a539fd92bcaf4c12155f41505d25de4ff867afb472ca791110e633999439dc33"
+    },
+    "referencePhysics": {
+      "vmaxMps": 9.0,
+      "f0N": 1100.0,
+      "lateralAccelerationMps2": 6.5,
+      "frictionCoefficient": 0.95,
+      "responseSeconds": 0.12,
+      "carrierSpeedCapFactor": 0.97
+    },
+    "controller": {
+      "method": "pursuit-independent Player.locomote response; past-only acceleration proposal",
+      "dtSeconds": 0.008333333333333333,
+      "forecastSeconds": 0.5,
+      "predictionOrigin": "eventFrame - 5"
+    }
+  },
+  "cases": [
+    {
+      "week": 1,
+      "gameId": "2022091111",
+      "playId": "878",
+      "sampleId": "w1-2022091111-878",
+      "split": "exploratory_visual",
+      "visualLabel": "V1 solo tackle, typical geometry",
+      "identityConfidence": "high",
+      "carrierId": "46100",
+      "creditedIds": [
+        "53596"
+      ],
+      "focalDefenderId": "53596",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "53596"
+      ],
+      "eventFrame": 77,
+      "defenderLabels": [
+        {
+          "nflId": "53596",
+          "team": "LV",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 1,
+      "gameId": "2022091103",
+      "playId": "4279",
+      "sampleId": "w1-2022091103-4279",
+      "split": "exploratory_visual",
+      "visualLabel": "V2 tackleAssist, typical geometry",
+      "identityConfidence": "high",
+      "carrierId": "44860",
+      "creditedIds": [
+        "44877",
+        "52510"
+      ],
+      "focalDefenderId": "44877",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "44877",
+        "52510"
+      ],
+      "eventFrame": 78,
+      "defenderLabels": [
+        {
+          "nflId": "44877",
+          "team": "PIT",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": false,
+            "assistedTackle": true
+          }
+        },
+        {
+          "nflId": "52510",
+          "team": "PIT",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 1,
+      "gameId": "2022091100",
+      "playId": "3379",
+      "sampleId": "w1-2022091100-3379",
+      "split": "exploratory_visual",
+      "visualLabel": "V3 assistedTackle, typical geometry",
+      "identityConfidence": "high",
+      "carrierId": "39975",
+      "creditedIds": [
+        "37097",
+        "48544"
+      ],
+      "focalDefenderId": "48544",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "37097",
+        "48544"
+      ],
+      "eventFrame": 197,
+      "defenderLabels": [
+        {
+          "nflId": "37097",
+          "team": "NO",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "48544",
+          "team": "NO",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": false,
+            "assistedTackle": true
+          }
+        }
+      ]
+    },
+    {
+      "week": 1,
+      "gameId": "2022091106",
+      "playId": "2384",
+      "sampleId": "w1-2022091106-2384",
+      "split": "exploratory_visual",
+      "visualLabel": "V4 two credited defenders",
+      "identityConfidence": "high",
+      "carrierId": "42718",
+      "creditedIds": [
+        "43435",
+        "44991"
+      ],
+      "focalDefenderId": "43435",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "43435",
+        "44991"
+      ],
+      "eventFrame": 125,
+      "defenderLabels": [
+        {
+          "nflId": "43435",
+          "team": "NE",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "44991",
+          "team": "NE",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 1,
+      "gameId": "2022091100",
+      "playId": "2114",
+      "sampleId": "w1-2022091100-2114",
+      "split": "exploratory_visual",
+      "visualLabel": "V5 unusual distance (credited > 3 m at tackle frame)",
+      "identityConfidence": "medium",
+      "carrierId": "45244",
+      "creditedIds": [
+        "53469"
+      ],
+      "focalDefenderId": "53469",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "53469"
+      ],
+      "eventFrame": 134,
+      "defenderLabels": [
+        {
+          "nflId": "53469",
+          "team": "ATL",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091812",
+      "playId": "2171",
+      "sampleId": "w2-2022091812-2171",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "40149",
+      "creditedIds": [
+        "47804"
+      ],
+      "focalDefenderId": "47804",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "47804"
+      ],
+      "eventFrame": 54,
+      "defenderLabels": [
+        {
+          "nflId": "47804",
+          "team": "GB",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091802",
+      "playId": "1303",
+      "sampleId": "w2-2022091802-1303",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "53541",
+      "creditedIds": [
+        "42488",
+        "53592"
+      ],
+      "focalDefenderId": "42488",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "42488",
+        "53592"
+      ],
+      "eventFrame": 264,
+      "defenderLabels": [
+        {
+          "nflId": "42488",
+          "team": "WAS",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "53592",
+          "team": "WAS",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091900",
+      "playId": "2781",
+      "sampleId": "w2-2022091900-2781",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "43334",
+      "creditedIds": [
+        "54488"
+      ],
+      "focalDefenderId": "54488",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "54488"
+      ],
+      "eventFrame": 151,
+      "defenderLabels": [
+        {
+          "nflId": "54488",
+          "team": "BUF",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091500",
+      "playId": "1279",
+      "sampleId": "w2-2022091500-1279",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "45573",
+      "creditedIds": [
+        "53487"
+      ],
+      "focalDefenderId": "53487",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "53487"
+      ],
+      "eventFrame": 178,
+      "defenderLabels": [
+        {
+          "nflId": "53487",
+          "team": "KC",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091809",
+      "playId": "1165",
+      "sampleId": "w2-2022091809-1165",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "53434",
+      "creditedIds": [
+        "47996"
+      ],
+      "focalDefenderId": "47996",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "47996"
+      ],
+      "eventFrame": 182,
+      "defenderLabels": [
+        {
+          "nflId": "47996",
+          "team": "DAL",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091802",
+      "playId": "2330",
+      "sampleId": "w2-2022091802-2330",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "52474",
+      "creditedIds": [
+        "47864",
+        "53501"
+      ],
+      "focalDefenderId": "53501",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "47864",
+        "53501"
+      ],
+      "eventFrame": 135,
+      "defenderLabels": [
+        {
+          "nflId": "47864",
+          "team": "DET",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "53501",
+          "team": "DET",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091810",
+      "playId": "2511",
+      "sampleId": "w2-2022091810-2511",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "54572",
+      "creditedIds": [
+        "35459",
+        "42929"
+      ],
+      "focalDefenderId": "42929",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "35459",
+        "42929"
+      ],
+      "eventFrame": 133,
+      "defenderLabels": [
+        {
+          "nflId": "35459",
+          "team": "DEN",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "42929",
+          "team": "DEN",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "gameId": "2022091901",
+      "playId": "2567",
+      "sampleId": "w2-2022091901-2567",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "47834",
+      "creditedIds": [
+        "54583"
+      ],
+      "focalDefenderId": "54583",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "54583"
+      ],
+      "eventFrame": 123,
+      "defenderLabels": [
+        {
+          "nflId": "54583",
+          "team": "MIN",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "gameId": "2022092512",
+      "playId": "1456",
+      "sampleId": "w3-2022092512-1456",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "46263",
+      "creditedIds": [
+        "43404"
+      ],
+      "focalDefenderId": "43404",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "43404"
+      ],
+      "eventFrame": 128,
+      "defenderLabels": [
+        {
+          "nflId": "43404",
+          "team": "GB",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "gameId": "2022092506",
+      "playId": "2086",
+      "sampleId": "w3-2022092506-2086",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "54501",
+      "creditedIds": [
+        "43350"
+      ],
+      "focalDefenderId": "43350",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "43350"
+      ],
+      "eventFrame": 110,
+      "defenderLabels": [
+        {
+          "nflId": "43350",
+          "team": "CIN",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "gameId": "2022092600",
+      "playId": "2095",
+      "sampleId": "w3-2022092600-2095",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "46071",
+      "creditedIds": [
+        "47841"
+      ],
+      "focalDefenderId": "47841",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "47841"
+      ],
+      "eventFrame": 178,
+      "defenderLabels": [
+        {
+          "nflId": "47841",
+          "team": "DAL",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "gameId": "2022092506",
+      "playId": "4206",
+      "sampleId": "w3-2022092506-4206",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "46226",
+      "creditedIds": [
+        "46215"
+      ],
+      "focalDefenderId": "46215",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "46215"
+      ],
+      "eventFrame": 64,
+      "defenderLabels": [
+        {
+          "nflId": "46215",
+          "team": "CIN",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "gameId": "2022092507",
+      "playId": "194",
+      "sampleId": "w3-2022092507-194",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "43334",
+      "creditedIds": [
+        "48581"
+      ],
+      "focalDefenderId": "48581",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "48581"
+      ],
+      "eventFrame": 181,
+      "defenderLabels": [
+        {
+          "nflId": "48581",
+          "team": "LV",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "gameId": "2022092511",
+      "playId": "3584",
+      "sampleId": "w3-2022092511-3584",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "47847",
+      "creditedIds": [
+        "52424"
+      ],
+      "focalDefenderId": "52424",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "52424"
+      ],
+      "eventFrame": 72,
+      "defenderLabels": [
+        {
+          "nflId": "52424",
+          "team": "ATL",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "gameId": "2022092510",
+      "playId": "504",
+      "sampleId": "w3-2022092510-504",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "52460",
+      "creditedIds": [
+        "46521"
+      ],
+      "focalDefenderId": "46521",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "46521"
+      ],
+      "eventFrame": 166,
+      "defenderLabels": [
+        {
+          "nflId": "46521",
+          "team": "ARI",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100300",
+      "playId": "251",
+      "sampleId": "w4-2022100300-251",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "52460",
+      "creditedIds": [
+        "46354",
+        "53609"
+      ],
+      "focalDefenderId": "53609",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "46354",
+        "53609"
+      ],
+      "eventFrame": 164,
+      "defenderLabels": [
+        {
+          "nflId": "46354",
+          "team": "SF",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": false,
+            "assistedTackle": true
+          }
+        },
+        {
+          "nflId": "53609",
+          "team": "SF",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100207",
+      "playId": "3093",
+      "sampleId": "w4-2022100207-3093",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "47842",
+      "creditedIds": [
+        "47971"
+      ],
+      "focalDefenderId": "47971",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "47971"
+      ],
+      "eventFrame": 198,
+      "defenderLabels": [
+        {
+          "nflId": "47971",
+          "team": "TEN",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100204",
+      "playId": "144",
+      "sampleId": "w4-2022100204-144",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "43293",
+      "creditedIds": [
+        "44829",
+        "53448"
+      ],
+      "focalDefenderId": "53448",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "44829",
+        "53448"
+      ],
+      "eventFrame": 124,
+      "defenderLabels": [
+        {
+          "nflId": "44829",
+          "team": "WAS",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "53448",
+          "team": "WAS",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100202",
+      "playId": "2661",
+      "sampleId": "w4-2022100202-2661",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "47857",
+      "creditedIds": [
+        "44854"
+      ],
+      "focalDefenderId": "44854",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "44854"
+      ],
+      "eventFrame": 170,
+      "defenderLabels": [
+        {
+          "nflId": "44854",
+          "team": "BAL",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100300",
+      "playId": "2665",
+      "sampleId": "w4-2022100300-2665",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "40078",
+      "creditedIds": [
+        "43294"
+      ],
+      "focalDefenderId": "43294",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "43294"
+      ],
+      "eventFrame": 131,
+      "defenderLabels": [
+        {
+          "nflId": "43294",
+          "team": "LA",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100210",
+      "playId": "3551",
+      "sampleId": "w4-2022100210-3551",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "46279",
+      "creditedIds": [
+        "53674"
+      ],
+      "focalDefenderId": "53674",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "53674"
+      ],
+      "eventFrame": 164,
+      "defenderLabels": [
+        {
+          "nflId": "53674",
+          "team": "PIT",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100201",
+      "playId": "1453",
+      "sampleId": "w4-2022100201-1453",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "46104",
+      "creditedIds": [
+        "46823",
+        "53537"
+      ],
+      "focalDefenderId": "53537",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "46823",
+        "53537"
+      ],
+      "eventFrame": 211,
+      "defenderLabels": [
+        {
+          "nflId": "46823",
+          "team": "ATL",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "53537",
+          "team": "ATL",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100210",
+      "playId": "2735",
+      "sampleId": "w4-2022100210-2735",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "54501",
+      "creditedIds": [
+        "44886",
+        "44905"
+      ],
+      "focalDefenderId": "44886",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "44886",
+        "44905"
+      ],
+      "eventFrame": 118,
+      "defenderLabels": [
+        {
+          "nflId": "44886",
+          "team": "PIT",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "44905",
+          "team": "PIT",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": false,
+            "assistedTackle": true
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100208",
+      "playId": "754",
+      "sampleId": "w4-2022100208-754",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "46071",
+      "creditedIds": [
+        "44925",
+        "54504"
+      ],
+      "focalDefenderId": "44925",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "44925",
+        "54504"
+      ],
+      "eventFrame": 117,
+      "defenderLabels": [
+        {
+          "nflId": "44925",
+          "team": "CHI",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": false,
+            "assistedTackle": true
+          }
+        },
+        {
+          "nflId": "54504",
+          "team": "CHI",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022092900",
+      "playId": "3329",
+      "sampleId": "w4-2022092900-3329",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "42718",
+      "creditedIds": [
+        "46123"
+      ],
+      "focalDefenderId": "46123",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "46123"
+      ],
+      "eventFrame": 160,
+      "defenderLabels": [
+        {
+          "nflId": "46123",
+          "team": "CIN",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "gameId": "2022100200",
+      "playId": "3558",
+      "sampleId": "w4-2022100200-3558",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "47885",
+      "creditedIds": [
+        "37097"
+      ],
+      "focalDefenderId": "37097",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "37097"
+      ],
+      "eventFrame": 120,
+      "defenderLabels": [
+        {
+          "nflId": "37097",
+          "team": "NO",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100909",
+      "playId": "170",
+      "sampleId": "w5-2022100909-170",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "43291",
+      "creditedIds": [
+        "45643"
+      ],
+      "focalDefenderId": "45643",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "45643"
+      ],
+      "eventFrame": 194,
+      "defenderLabels": [
+        {
+          "nflId": "45643",
+          "team": "TEN",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100902",
+      "playId": "470",
+      "sampleId": "w5-2022100902-470",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "42347",
+      "creditedIds": [
+        "53476"
+      ],
+      "focalDefenderId": "53476",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "53476"
+      ],
+      "eventFrame": 197,
+      "defenderLabels": [
+        {
+          "nflId": "53476",
+          "team": "LAC",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100912",
+      "playId": "2211",
+      "sampleId": "w5-2022100912-2211",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "43293",
+      "creditedIds": [
+        "41239",
+        "46686"
+      ],
+      "focalDefenderId": "46686",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "41239",
+        "46686"
+      ],
+      "eventFrame": 217,
+      "defenderLabels": [
+        {
+          "nflId": "41239",
+          "team": "LA",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "46686",
+          "team": "LA",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100900",
+      "playId": "393",
+      "sampleId": "w5-2022100900-393",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "52614",
+      "creditedIds": [
+        "52663"
+      ],
+      "focalDefenderId": "52663",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "52663"
+      ],
+      "eventFrame": 237,
+      "defenderLabels": [
+        {
+          "nflId": "52663",
+          "team": "NYG",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100911",
+      "playId": "3455",
+      "sampleId": "w5-2022100911-3455",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "53579",
+      "creditedIds": [
+        "52416"
+      ],
+      "focalDefenderId": "52416",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "52416"
+      ],
+      "eventFrame": 162,
+      "defenderLabels": [
+        {
+          "nflId": "52416",
+          "team": "ARI",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100906",
+      "playId": "4239",
+      "sampleId": "w5-2022100906-4239",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "44879",
+      "creditedIds": [
+        "46117"
+      ],
+      "focalDefenderId": "46117",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "46117"
+      ],
+      "eventFrame": 150,
+      "defenderLabels": [
+        {
+          "nflId": "46117",
+          "team": "SEA",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100902",
+      "playId": "3318",
+      "sampleId": "w5-2022100902-3318",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "45573",
+      "creditedIds": [
+        "46073"
+      ],
+      "focalDefenderId": "46073",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "46073"
+      ],
+      "eventFrame": 136,
+      "defenderLabels": [
+        {
+          "nflId": "46073",
+          "team": "CLE",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100910",
+      "playId": "3348",
+      "sampleId": "w5-2022100910-3348",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "44820",
+      "creditedIds": [
+        "47931"
+      ],
+      "focalDefenderId": "47931",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "47931"
+      ],
+      "eventFrame": 212,
+      "defenderLabels": [
+        {
+          "nflId": "47931",
+          "team": "SF",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100910",
+      "playId": "4059",
+      "sampleId": "w5-2022100910-4059",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "53633",
+      "creditedIds": [
+        "48117"
+      ],
+      "focalDefenderId": "48117",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "48117"
+      ],
+      "eventFrame": 176,
+      "defenderLabels": [
+        {
+          "nflId": "48117",
+          "team": "SF",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022101000",
+      "playId": "1842",
+      "sampleId": "w5-2022101000-1842",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "47807",
+      "creditedIds": [
+        "52546",
+        "54527"
+      ],
+      "focalDefenderId": "54527",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "52546",
+        "54527"
+      ],
+      "eventFrame": 143,
+      "defenderLabels": [
+        {
+          "nflId": "52546",
+          "team": "KC",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": false,
+            "assistedTackle": true
+          }
+        },
+        {
+          "nflId": "54527",
+          "team": "KC",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100909",
+      "playId": "2969",
+      "sampleId": "w5-2022100909-2969",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "43334",
+      "creditedIds": [
+        "47956"
+      ],
+      "focalDefenderId": "47956",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "47956"
+      ],
+      "eventFrame": 76,
+      "defenderLabels": [
+        {
+          "nflId": "47956",
+          "team": "WAS",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100901",
+      "playId": "3292",
+      "sampleId": "w5-2022100901-3292",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "52457",
+      "creditedIds": [
+        "54554"
+      ],
+      "focalDefenderId": "54554",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "54554"
+      ],
+      "eventFrame": 67,
+      "defenderLabels": [
+        {
+          "nflId": "54554",
+          "team": "BUF",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100905",
+      "playId": "193",
+      "sampleId": "w5-2022100905-193",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "44947",
+      "creditedIds": [
+        "44991",
+        "53467"
+      ],
+      "focalDefenderId": "53467",
+      "focalDefenderRule": "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)",
+      "allLabeledDefenderIds": [
+        "44991",
+        "53467"
+      ],
+      "eventFrame": 96,
+      "defenderLabels": [
+        {
+          "nflId": "44991",
+          "team": "NE",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        },
+        {
+          "nflId": "53467",
+          "team": "NE",
+          "flags": {
+            "soloTackle": false,
+            "tackleAssist": true,
+            "assistedTackle": false
+          }
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "gameId": "2022100600",
+      "playId": "2699",
+      "sampleId": "w5-2022100600-2699",
+      "split": "development",
+      "visualLabel": "",
+      "identityConfidence": "high",
+      "carrierId": "42358",
+      "creditedIds": [
+        "47872"
+      ],
+      "focalDefenderId": "47872",
+      "focalDefenderRule": "sole player_play-credited tackler",
+      "allLabeledDefenderIds": [
+        "47872"
+      ],
+      "eventFrame": 193,
+      "defenderLabels": [
+        {
+          "nflId": "47872",
+          "team": "IND",
+          "flags": {
+            "soloTackle": true,
+            "tackleAssist": false,
+            "assistedTackle": false
+          }
+        }
+      ]
+    }
+  ]
+}
