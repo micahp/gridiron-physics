@@ -13,7 +13,7 @@ import sqlite3
 import statistics
 import subprocess
 import sys
-from collections import Counter, defaultdict, deque
+from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -175,13 +175,6 @@ class HashingLines:
             yield raw.decode("utf-8")
 
 
-def _parse_bdb_key(row):
-    try:
-        return str(int(float(row["gameId"]))), int(float(row["playId"]))
-    except (KeyError, TypeError, ValueError):
-        return None
-
-
 def scan_tracking_week(path: Path, week: int, selected, expected_sha256: str):
     """Read verified joined plays; discard SNAP and later coordinates before parsing x/y."""
     digest = hashlib.sha256()
@@ -211,11 +204,8 @@ def scan_tracking_week(path: Path, week: int, selected, expected_sha256: str):
                 continue
             rows_scanned += 0  # selected groups increment once per row below
             meta = selected[key]
-            recent = deque(maxlen=3)
-            current_frame = None
-            current_players = {}
+            frame_players = defaultdict(dict)
             snap_frame = None
-            last_frame = None
             for row in group:
                 rows_scanned += 1
                 if len(row) <= max(ix.values()):
@@ -226,18 +216,12 @@ def scan_tracking_week(path: Path, week: int, selected, expected_sha256: str):
                 except (TypeError, ValueError):
                     exclusions["invalid_frame_id"] += 1
                     continue
-                if snap_frame is not None:
-                    continue
-                if last_frame is not None and frame < last_frame:
-                    raise ValueError(f"BDB rows are not frame ordered for {key} in week {week}")
-                last_frame = frame
-                if current_frame is None:
-                    current_frame = frame
-                elif frame != current_frame:
-                    recent.append((current_frame, current_players))
-                    current_frame, current_players = frame, {}
                 if row[ix["frameType"]] == "SNAP":
+                    if snap_frame is not None and snap_frame != frame:
+                        raise ValueError(f"multiple SNAP frame IDs for {key} in week {week}")
                     snap_frame = frame
+                    continue
+                if snap_frame is not None and not snap_frame - 3 <= frame < snap_frame:
                     continue
                 nfl_id = str(row[ix["nflId"]] or "").strip()
                 club = normalize_team(row[ix["club"]])
@@ -249,13 +233,13 @@ def scan_tracking_week(path: Path, week: int, selected, expected_sha256: str):
                     continue
                 if not math.isfinite(x) or not math.isfinite(y):
                     continue
-                if nfl_id in current_players:
+                if nfl_id in frame_players[frame]:
                     raise ValueError(f"duplicate player row at {key=} {frame=} {nfl_id=}")
-                current_players[nfl_id] = {"nfl_id": nfl_id, "club": club, "x": x, "y": y}
+                frame_players[frame][nfl_id] = {"nfl_id": nfl_id, "club": club, "x": x, "y": y}
             if snap_frame is None:
                 exclusions["missing_snap_frame"] += 1
                 continue
-            frame_map = dict(recent)
+            frame_map = {frame: frame_players.get(frame, {}) for frame in range(snap_frame - 3, snap_frame)}
             feature, reason = summarize_pre_snap_frames(
                 frame_map, snap_frame, meta["offense_team"], meta["defense_team"]
             )
@@ -630,7 +614,11 @@ def build(args):
             },
         })
     if not eval_prediction_rows:
-        raise ValueError("no common weeks 6-9 target rows have predictions from all three models")
+        raise ValueError(
+            "no common weeks 6-9 target rows have predictions from all three models: "
+            f"resolved_targets={len(target_eval)}, all22_tracking_features={len(eval_features)}, "
+            f"A_native={native['A_sampled_runoff']}, C_native={native['C_tracking_presnap']}"
+        )
 
     per_play, per_game, game_rows = _model_summaries(eval_prediction_rows)
     stoppage = _stoppage_summaries(eval_prediction_rows)

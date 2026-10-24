@@ -81,12 +81,11 @@ class TrackingPresnapClockHoldoutTests(unittest.TestCase):
     def test_streaming_tracker_stops_using_coordinates_at_snap(self):
         header = ["gameId", "playId", "nflId", "frameId", "frameType", "club", "x", "y", "event"]
         rows = []
-        for frame in (97, 98, 99):
-            for player in range(22):
+        for player in range(22):
+            for frame in (97, 98, 99):
                 rows.append(["1234567890", "1", str(player), str(frame), "BEFORE_SNAP",
                              "LA" if player < 11 else "WAS", str(10 + player + (frame - 97) * .1), str(10 + player), "MUST_NOT_BE_USED"])
-        for frame, frame_type in ((100, "SNAP"), (101, "AFTER_SNAP")):
-            for player in range(22):
+            for frame, frame_type in ((100, "SNAP"), (101, "AFTER_SNAP")):
                 rows.append(["1234567890", "1", str(player), str(frame), frame_type,
                              "LA" if player < 11 else "WAS", "999999999", "-999999999", "future_event"])
         with tempfile.TemporaryDirectory() as tmp:
