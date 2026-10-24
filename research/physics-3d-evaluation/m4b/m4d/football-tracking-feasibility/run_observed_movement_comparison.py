@@ -18,10 +18,8 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE / "results" / "observed-tackle-movement-2026-10-24"
 DATA = Path(os.environ.get("BDB2025_ROOT", "/root/nfl-tracking-data/bdb2025"))
 ENGINE = Path(os.environ.get("GRIDIRON_PHYSICS_ROOT", "/root/gridiron-physics"))
+MANIFEST = Path(os.environ.get("BDB2025_TACKLE_MANIFEST", "/root/lp-nfl-tracking/docs/research/bdb2025-observed-tackle-manifest-v1.csv"))
 WEEKS = (1, 2, 3, 4, 5)  # weeks 6-9 remain outside this descriptive sample
-PLAYS_PER_WEEK, SOLO_PER_WEEK = 5, 2
-FIXED_CASE = ("2022090800", "1009")
-SALT = "m4d-observed-movement-conditional-v1"
 YARDS_TO_METERS, TRACK_DT = 0.9144, 0.1
 ORIGIN_OFFSET, HISTORY_INTERVALS, HORIZON = 5, 5, 0.5
 REFERENCE = {"vmaxMps": 9.0, "f0N": 1100.0, "lateralAccelerationMps2": 6.5,
@@ -80,48 +78,41 @@ def defender_labels(rows, defensive_team):
     return out
 
 
-def rank_key(week, key):
-    raw = f"{SALT}|{week}|{key[0]}|{key[1]}".encode()
-    return hashlib.sha256(raw).hexdigest()
-
-
-def select_sample(plays, play_players):
+def select_sample(plays, play_players, manifest_rows):
+    if not MANIFEST.is_file():
+        raise RuntimeError(f"Frozen tackle manifest not found: {MANIFEST}")
     selected = []
-    for week in WEEKS:
-        source = json.loads((DATA / f"week{week}_tackle_event_plays.json").read_text())
-        event_keys = {tuple(k) for k in source["exact_tackle_event_plays"]}
-        pools = {"solo_only": [], "assisted_or_multi": []}
-        for key in event_keys:
-            play, rows = plays.get(key), play_players.get(key, [])
-            if not play:
-                continue
-            carrier_ids = {r["nflId"] for r in rows if r.get("hadRushAttempt") == "1" or r.get("hadPassReception") == "1"}
-            labels = defender_labels(rows, play.get("defensiveTeam", ""))
-            if len(carrier_ids) != 1 or not labels:
-                continue
-            is_solo = len(labels) == 1 and labels[0]["flags"]["soloTackle"] and not (
-                labels[0]["flags"]["tackleAssist"] or labels[0]["flags"]["assistedTackle"])
-            category = "solo_only" if is_solo else "assisted_or_multi"
-            pools[category].append({"week": week, "gameId": key[0], "playId": key[1],
-                "rank": rank_key(week, key), "category": category, "carrierId": next(iter(carrier_ids)),
-                "defenderLabels": labels, "play": play})
-        for pool in pools.values():
-            pool.sort(key=lambda x: x["rank"])
-        solo = pools["solo_only"]
-        weekly = []
-        if week == 1:
-            fixed = next((x for x in solo if (x["gameId"], x["playId"]) == FIXED_CASE), None)
-            if fixed is None:
-                raise RuntimeError("Frozen case 2022090800/1009 is not eligible")
-            weekly = [fixed] + [x for x in solo if x is not fixed][:SOLO_PER_WEEK-1]
-        else:
-            weekly = solo[:SOLO_PER_WEEK]
-        weekly += pools["assisted_or_multi"][:PLAYS_PER_WEEK-SOLO_PER_WEEK]
-        if len(weekly) != PLAYS_PER_WEEK:
-            raise RuntimeError(f"Insufficient eligible cases in week {week}")
-        for x in weekly:
-            x["sampleId"] = f"w{x['week']}-{x['gameId']}-{x['playId']}"
-        selected.extend(weekly)
+    seen = set()
+    for row in manifest_rows:
+        if row.get("included", "").lower() != "true":
+            continue
+        week = int(row["week"])
+        key = (row["game_id"], row["play_id"])
+        if week not in WEEKS or row["split"] not in ("exploratory_visual", "development"):
+            raise RuntimeError(f"Manifest includes a prohibited split/week: {row['split']} week {week}")
+        if key in seen:
+            raise RuntimeError(f"Duplicate included play in frozen manifest: {key}")
+        seen.add(key)
+        play, rows = plays.get(key), play_players.get(key, [])
+        if not play:
+            raise RuntimeError(f"Manifest play missing from plays.csv: {key}")
+        carrier_ids = {r["nflId"] for r in rows if r.get("hadRushAttempt") == "1" or r.get("hadPassReception") == "1"}
+        labels = defender_labels(rows, play.get("defensiveTeam", ""))
+        credited_ids = sorted(x for x in row["credited_ids"].split(";") if x)
+        label_ids = sorted(x["nflId"] for x in labels)
+        if len(carrier_ids) != 1 or next(iter(carrier_ids)) != row["carrier_id"]:
+            raise RuntimeError(f"Manifest carrier does not match player_play.csv for {key}")
+        if credited_ids != label_ids:
+            raise RuntimeError(f"Manifest credited defenders do not match player_play.csv for {key}: {credited_ids} vs {label_ids}")
+        if not row.get("tackle_frame"):
+            raise RuntimeError(f"Included manifest play has no tackle frame: {key}")
+        selected.append({"week": week, "gameId": key[0], "playId": key[1],
+            "sampleId": f"w{week}-{key[0]}-{key[1]}", "split": row["split"],
+            "visualLabel": row.get("visual_label", ""), "identityConfidence": row["identity_confidence"],
+            "manifestTackleFrame": int(row["tackle_frame"]), "carrierId": row["carrier_id"],
+            "creditedIds": credited_ids, "defenderLabels": labels, "play": play})
+    if not selected:
+        raise RuntimeError("Frozen manifest has no included plays in the permitted weeks/splits")
     return selected
 
 
@@ -163,6 +154,8 @@ def decorate_case(case, rows, players):
     if len(event_frames) != 1:
         raise RuntimeError(f"{case['sampleId']}: expected one tackle-event frame, found {sorted(event_frames)}")
     event = case["eventFrame"] = next(iter(event_frames))
+    if event != case["manifestTackleFrame"]:
+        raise RuntimeError(f"{case['sampleId']}: tracking event frame {event} != frozen manifest tackle frame {case['manifestTackleFrame']}")
     positions = defaultdict(dict)
     event_entities = 0
     for r in rows:
@@ -175,18 +168,16 @@ def decorate_case(case, rows, players):
     carrier_id = case["carrierId"]
     if carrier_id not in positions or event not in positions[carrier_id]:
         raise RuntimeError(f"{case['sampleId']}: missing carrier track")
-    labels = case["defenderLabels"]
-    labeled_ids = [x["nflId"] for x in labels if event in positions.get(x["nflId"], {})]
+    labeled_ids = [pid for pid in case["creditedIds"] if event in positions.get(pid, {})]
     if not labeled_ids:
-        raise RuntimeError(f"{case['sampleId']}: no labeled defender track at event")
-    solo_ids = [x["nflId"] for x in labels if x["flags"]["soloTackle"] and x["nflId"] in labeled_ids]
-    if len(solo_ids) == 1:
-        focal = solo_ids[0]
-        focal_rule = "sole solo-tackle label"
+        raise RuntimeError(f"{case['sampleId']}: no player_play-credited defender track at event")
+    if len(labeled_ids) == 1:
+        focal = labeled_ids[0]
+        focal_rule = "sole player_play-credited tackler"
     else:
         cpos = positions[carrier_id][event]["p"]
         focal = min(labeled_ids, key=lambda pid: norm(vsub(positions[pid][event]["p"], cpos)))
-        focal_rule = "nearest labeled defender at tackle-event frame (conditional post-event choice)"
+        focal_rule = "nearest player_play-credited tackler at tackle-event frame (conditional post-event choice)"
 
     case["focalDefenderId"], case["focalDefenderRule"] = focal, focal_rule
     case["allLabeledDefenderIds"] = labeled_ids
@@ -352,6 +343,7 @@ def svg(title, series, xmin, xmax, ymin, ymax, xlabel, ylabel, width, height, vl
 
 
 def render_html(cases, metrics):
+    metric_cases = [c for c in cases if c["split"] == "development"]
     lines = []
     for key, label in (("constantVelocity", "Constant velocity"), ("locomotionController", "Existing locomotion response")):
         m = metrics[key]
@@ -360,13 +352,13 @@ def render_html(cases, metrics):
     for c in cases:
         path_svg, path_legend = xy_chart(c)
         sep_svg, sep_legend = separation_chart(c)
-        cards.append(f'<details class="case"><summary>Week {c["week"]}: {c["gameId"]}/{c["playId"]} · {c["category"]} · {html.escape(c["carrierName"])} vs {html.escape(c["defenderName"])}</summary><p>{html.escape(c["playDescription"])}<br>tackle frame {c["eventFrame"]}; focal defender: {html.escape(c["focalDefenderRule"])}</p><small>{path_legend}<br>{sep_legend}</small><div class="grid">{path_svg}{sep_svg}</div></details>')
+        cards.append(f'<details class="case"><summary>Week {c["week"]}: {c["gameId"]}/{c["playId"]} · {html.escape(c["split"])} · {html.escape(c["carrierName"])} vs {html.escape(c["defenderName"])}</summary><p>{html.escape(c["visualLabel"])}<br>{html.escape(c["playDescription"])}<br>tackle frame {c["eventFrame"]}; focal defender: {html.escape(c["focalDefenderRule"])}</p><small>{path_legend}<br>{sep_legend}</small><div class="grid">{path_svg}{sep_svg}</div></details>')
     aggregate_lines = []
     times = [0, .1, .2, .3, .4, .5]
     for model, color, dash, label in (("observed", "#26834a", "", "observed"), ("constantVelocity", "#1769aa", "7 4", "constant velocity"), ("locomotionController", "#c46a15", "2 4", "existing controller")):
         vals = []
         for i in range(6):
-            sample = [c["observedSeparationForecastM"][i] if model == "observed" else c["separationModelsM"][model][i] for c in cases]
+            sample = [c["observedSeparationForecastM"][i] if model == "observed" else c["separationModelsM"][model][i] for c in metric_cases]
             vals.append(statistics.median(sample))
         aggregate_lines.append((label, color, dash, list(zip(times, vals))))
     all_vals = [y for _, _, _, series in aggregate_lines for _, y in series]
@@ -376,9 +368,9 @@ def render_html(cases, metrics):
     ag_table = "".join(lines)
     return f'''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Observed tackle movement</title>
 <style>body{{font:14px/1.45 system-ui,sans-serif;max-width:1500px;margin:24px auto;padding:0 18px;color:#17212b;background:#f7f9fb}}.box,.case{{background:#fff;border:1px solid #d5dde5;border-radius:8px;padding:14px 18px;margin:14px 0}}.warning{{background:#fff4d4;border-left:5px solid #d49b19;padding:12px 16px}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:10px}}svg{{width:100%;height:auto}}.charttitle{{font-size:13px;font-weight:650;fill:#253544}}.tick,.axis{{font-size:10px;fill:#596b7a}}table{{border-collapse:collapse;width:100%;margin:8px 0}}th,td{{border:1px solid #d5dde5;padding:5px 8px;text-align:right}}th:first-child,td:first-child{{text-align:left}}th{{background:#eef2f6}}summary{{font-weight:650;cursor:pointer}}small{{color:#425565}}@media(max-width:600px){{.grid{{grid-template-columns:1fr}}}}</style>
-<body><h1>Observed tackle movement comparison</h1><p>25 deterministic, week-stratified cases from the frozen exact-tackle-event lists (five per week, weeks 1–5). Prediction origin is 0.5 s before the tackle event.</p>
+<body><h1>Observed tackle movement comparison</h1><p>{len(cases)} manifest-included cases: {sum(c["split"] == "exploratory_visual" for c in cases)} exploratory-visual and {sum(c["split"] == "development" for c in cases)} development plays, weeks 1–5. Holdout weeks 6–9 are not sampled. Prediction origin is 0.5 s before the tackle event.</p>
 <div class="warning"><b>Conditional reconstruction only.</b> Every play has a tackle event; the sample has no misses, escapes, or non-tackle opportunities. It cannot estimate tackle-success probability. No tackle outcomes are trained and no grip forces are calibrated. Controller actuation values are fixed generic references, not historical player estimates.</div>
-<section class="box"><h2>Across-play separation</h2>{ag_svg}<small>{ag_legend}</small><table><thead><tr><th>Arm</th><th>Median carrier RMSE (m)</th><th>Median defender RMSE (m)</th><th>Median separation RMSE (m)</th><th>Signed event separation error (m)</th><th>Median minimum separation (m)</th><th>Median time of minimum (s)</th></tr></thead><tbody>{''.join(f'<tr><td>{label}</td><td>{m["carrierPositionRmseM"]["median"]:.3f}</td><td>{m["defenderPositionRmseM"]["median"]:.3f}</td><td>{m["separationRmseM"]["median"]:.3f}</td><td>{m["eventSeparationErrorM"]["median"]:+.3f}</td><td>{m["minimumPredictedSeparationM"]["median"]:.3f}</td><td>{m["timeOfMinimumSecondsAfterOrigin"]["median"]:.2f}</td></tr>' for label, m in (("Constant velocity", metrics["constantVelocity"]), ("Existing locomotion response", metrics["locomotionController"])))}</tbody></table><p>Metrics are descriptive medians across plays, not an inferential score.</p></section>
+<section class="box"><h2>Development-split summary (n={sum(c["split"] == "development" for c in cases)})</h2>{ag_svg}<small>{ag_legend}</small><table><thead><tr><th>Arm</th><th>Median carrier RMSE (m)</th><th>Median defender RMSE (m)</th><th>Median separation RMSE (m)</th><th>Signed event separation error (m)</th><th>Median minimum separation (m)</th><th>Median time of minimum (s)</th></tr></thead><tbody>{''.join(f'<tr><td>{label}</td><td>{m["carrierPositionRmseM"]["median"]:.3f}</td><td>{m["defenderPositionRmseM"]["median"]:.3f}</td><td>{m["separationRmseM"]["median"]:.3f}</td><td>{m["eventSeparationErrorM"]["median"]:+.3f}</td><td>{m["minimumPredictedSeparationM"]["median"]:.3f}</td><td>{m["timeOfMinimumSecondsAfterOrigin"]["median"]:.2f}</td></tr>' for label, m in (("Constant velocity", metrics["constantVelocity"]), ("Existing locomotion response", metrics["locomotionController"])))}</tbody></table><p>Development metrics are descriptive medians, with fixed generic inputs and no tuning. Exploratory-visual plays are shown per case and excluded from this aggregate.</p></section>
 <h2>Per-play paths and separation</h2>{''.join(cards)}
 <section class="box"><h2>Reproduce</h2><code>python3 research/physics-3d-evaluation/m4b/m4d/football-tracking-feasibility/run_observed_movement_comparison.py</code><p>Reads staged local files only. The controller arm uses <code>Player.locomote()</code> from pinned source {ENGINE_COMMIT}; acceleration is estimated from the preceding 0.5 s only and passed through the existing force–velocity, braking, lateral, and traction limits. There is no pursuit AI or contact resolution in this movement-only comparison.</p><p>Reference parameters: {html.escape(json.dumps(REFERENCE))}. Player mass uses the listed 2022 weight; other actuation values are common, uncalibrated inputs.</p></section></body></html>'''
 
@@ -388,11 +380,11 @@ def write_report(provenance, metrics):
         "# Observed tackle movement comparison", "",
         "**Status:** descriptive movement-only comparison; no outcome training or contact resolution.", "",
         "## Sample and method", "",
-        "Twenty-five deterministic cases were selected from the frozen exact-tackle-event lists, five per week for weeks 1–5. The sample includes ten solo-only labels and fifteen assist/multiple-tackler labels; the previously frozen `2022090800/1009` case is retained. It is a conditional tackle-reconstruction sample. It contains no misses, escapes, or non-tackle opportunities and cannot estimate tackle-success probability. Weeks 6–9 were not used.", "",
+        f"The comparison uses every manifest row marked included: {len(cases)} plays across weeks 1–5, comprising {sum(c['split'] == 'exploratory_visual' for c in cases)} exploratory-visual and {sum(c['split'] == 'development' for c in cases)} development plays. Manifest rows marked excluded are omitted; holdout weeks 6–9 are not sampled. The cohort is conditional on recorded tackle events, so it contains no misses, escapes, or non-tackle opportunities and cannot estimate tackle-success probability.", "",
         "The prediction origin is 0.5 s before the event. For each play, the ball carrier and a focal labeled defender start from the same observed positions and velocities. The constant-velocity arm holds the last observed velocity. The controller arm estimates acceleration from five observed velocity samples in the preceding 0.5 s and passes that proposal through the existing `Player.locomote()` response for 0.5 s. The two players move independently; pursuit AI, teammate avoidance, ball handling, collision and tackle logic are disabled.", "",
         f"Reference controller inputs are fixed across players: `vmax={REFERENCE['vmaxMps']} m/s`, `F0={REFERENCE['f0N']} N`, `alat={REFERENCE['lateralAccelerationMps2']} m/s²`, and `μ={REFERENCE['frictionCoefficient']}`. Mass comes from each player's listed 2022 weight. These are generic uncalibrated visualization inputs, not player measurements or Madden rating mappings.", "",
-        "## Aggregate descriptive metrics", "",
-        "Medians are computed across the 25 plays; no inferential test or decision threshold was used. Minimum separation and its timing are selected from the six 0.1 s samples from prediction origin through event; timing is therefore reported at 0.1 s resolution without interpolation.", "",
+        "## Development-split descriptive metrics", "",
+        "The aggregate below uses only the 40 included development plays. The included exploratory-visual plays are shown individually in the HTML and are excluded from aggregate scoring. No inference, model fitting, or parameter tuning was performed. Minimum separation and its timing are selected from the six 0.1 s samples from prediction origin through event; timing is therefore reported at 0.1 s resolution without interpolation.", "",
         "| Arm | Carrier position RMSE (m) | Defender position RMSE (m) | Separation RMSE (m) | Signed separation error at event (m) | Predicted minimum separation (m) | Time of minimum (s after origin) | Minimum-separation error (m) | Timing error (s) | Median predicted closing speed (m/s) |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
@@ -403,7 +395,7 @@ def write_report(provenance, metrics):
         "", "Open [comparison.html](comparison.html) for per-play trajectories and separation curves. `sample.json` freezes IDs and labels; `comparison.json` contains sampled movement series and metrics.", "",
         "## Interpretation limits", "",
         "This sample consists of recorded tackle events. It is useful for conditional movement reconstruction only; it cannot establish a tackle-success prediction claim. A later success-prediction study needs an opportunity-based cohort containing misses, escapes, and other non-tackle cases.", "",
-        "The tracking event records the event frame across entity rows, not the tackler ID. The focal defender is the sole solo-tackle label when available; otherwise it is the nearest labeled defender at the event frame. That event-frame choice is conditional and post-event. No grip force or tackle outcome is inferred.", "",
+        "The tracking event is broadcast across entity rows and does not identify the tackler. Carrier and credited defender IDs come from the frozen manifest, reconciled to `player_play.csv`. For multi-tackler plays, the focal defender is the nearest credited tackler at the event frame; that choice is conditional and post-event. No grip force or tackle outcome is inferred.", "",
         "The controller arm reuses the source locomotion response but not the play director's pursuit or carrier path-selection policy. It tests a past-only acceleration proposal under movement limits, not a complete pursuit model. Body orientation and 3D geometry are not modeled.", "",
         "## Provenance and reproduction", "",
         "Run from the M4d checkout: `python3 research/physics-3d-evaluation/m4b/m4d/football-tracking-feasibility/run_observed_movement_comparison.py`. The script reads staged local files and does not download data.", "",
@@ -411,7 +403,8 @@ def write_report(provenance, metrics):
         f"- Movement source: main commit `{provenance['engine']['sourceCommit']}`, `engine/world.js` SHA-256 `{provenance['engine']['worldJsSha256']}`, `engine/constants.js` SHA-256 `{provenance['engine']['constantsJsSha256']}`.",
         f"- M4d checkout at run: `{provenance['m4dCommitAtRun']}`.",
         f"- Analysis code SHA-256: `{json.dumps(provenance['analysisCodeSha256'], sort_keys=True)}`.",
-        f"- Selection rule: `{SALT}`; 2 solo-only and 3 assist/multiple cases per week; retain `{FIXED_CASE[0]}/{FIXED_CASE[1]}`.",
+        f"- Frozen manifest: `{provenance['manifest']['path']}`, source commit `{provenance['manifest']['sourceCommit']}`, SHA-256 `{provenance['manifest']['sha256']}`; {provenance['manifest']['totalRows']} rows total, {provenance['manifest']['includedRows']} included, {provenance['manifest']['excludedRows']} excluded.",
+        f"- Included split counts: `{json.dumps(provenance['manifest']['includedBySplit'], sort_keys=True)}`; only weeks 1–5 are included; holdout weeks 6–9 are untouched.",
         f"- Staged source hashes: `{json.dumps(provenance['inputHashesFromStagedManifestOrLocalSha256'], sort_keys=True)}`.",
         "- Rights are user-reported; no license text was independently assessed.", "",
     ]
@@ -422,7 +415,9 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     engine = engine_provenance()
     plays, players, play_players = load_tables()
-    selected = select_sample(plays, play_players)
+    with MANIFEST.open(newline="", encoding="utf-8") as f:
+        manifest_rows = list(csv.DictReader(f))
+    selected = select_sample(plays, play_players, manifest_rows)
     by_week = {w: [c for c in selected if c["week"] == w] for w in WEEKS}
     cases = []
     for week, week_cases in by_week.items():
@@ -440,33 +435,43 @@ def main():
         evaluate(c, movement)
 
     file_hashes = source_manifest()
-    used = ["code-data/plays.csv", "code-data/player_play.csv", "code-data/players.csv", "week_profiles.json"]
+    used = ["code-data/plays.csv", "code-data/player_play.csv", "code-data/players.csv"]
     used += [f"code-data/tracking_week_{w}.csv" for w in WEEKS]
-    used += [f"week{w}_tackle_event_plays.json" for w in WEEKS]
     missing = [x for x in used if x not in file_hashes and not (DATA / x).is_file()]
     if missing:
         raise RuntimeError(f"Missing source files: {missing}")
     input_hashes = {x: file_hashes[x] if x in file_hashes else digest(DATA / x) for x in used}
-    metrics = aggregate(cases)
+    manifest_commit = subprocess.run(["git", "-C", str(MANIFEST.parents[2]), "rev-parse", "HEAD"],
+                                     capture_output=True, text=True, check=True).stdout.strip()
+    included_rows = [r for r in manifest_rows if r.get("included", "").lower() == "true"]
+    included_by_split = {split: sum(r["split"] == split for r in included_rows)
+                         for split in sorted({r["split"] for r in included_rows})}
+    if len(selected) != len(included_rows):
+        raise RuntimeError(f"Selected {len(selected)} plays but manifest has {len(included_rows)} included rows")
+    development_cases = [c for c in cases if c["split"] == "development"]
+    metrics = aggregate(development_cases)
     provenance = {
         "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
-        "weeks": list(WEEKS), "selectionSalt": SALT, "cases": len(cases),
+        "weeks": list(WEEKS), "cases": len(cases),
         "engine": engine, "m4dCommitAtRun": subprocess.run(["git", "-C", str(HERE), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip(),
         "dataSource": "unofficial b00nk3r/NFL-Big-Data-Bowl-2025 copy, commit e28d3b25725799ef2213680016db5325f6f90014; 2022 season",
-        "inputHashesFromStagedManifestOrLocalSha256": input_hashes,
+        "inputHashesFromStagedManifestOrLocalSha256": {**input_hashes, "tackleManifestCsv": digest(MANIFEST)},
+        "manifest": {"path": str(MANIFEST), "sourceCommit": manifest_commit, "sha256": digest(MANIFEST),
+                     "totalRows": len(manifest_rows), "includedRows": len(included_rows),
+                     "excludedRows": len(manifest_rows)-len(included_rows), "includedBySplit": included_by_split},
         "analysisCodeSha256": {p.name: digest(p) for p in (HERE / "run_observed_movement_comparison.py", HERE / "run_locomotion_baseline.mjs")},
         "referencePhysics": REFERENCE,
         "controller": {"method": "pursuit-independent Player.locomote response; past-only acceleration proposal",
                        "dtSeconds": 1/120, "forecastSeconds": HORIZON, "predictionOrigin": "eventFrame - 5"},
     }
-    selection = [{k: c[k] for k in ("week", "gameId", "playId", "sampleId", "category", "carrierId", "focalDefenderId", "focalDefenderRule", "allLabeledDefenderIds", "eventFrame", "defenderLabels")} for c in cases]
+    selection = [{k: c[k] for k in ("week", "gameId", "playId", "sampleId", "split", "visualLabel", "identityConfidence", "carrierId", "creditedIds", "focalDefenderId", "focalDefenderRule", "allLabeledDefenderIds", "eventFrame", "defenderLabels")} for c in cases]
     (OUT / "sample.json").write_text(json.dumps({"provenance": provenance, "cases": selection}, indent=2))
-    (OUT / "comparison.json").write_text(json.dumps({"provenance": provenance, "aggregateMetrics": metrics, "cases": cases}, indent=2))
+    (OUT / "comparison.json").write_text(json.dumps({"provenance": provenance, "developmentAggregateMetrics": metrics, "cases": cases}, indent=2))
     (OUT / "comparison.html").write_text(render_html(cases, metrics))
     write_report(provenance, metrics)
     result = {"sampleCount": len(cases), "perWeek": {str(w): len(by_week[w]) for w in WEEKS},
-              "categories": {k: sum(c["category"] == k for c in cases) for k in ("solo_only", "assisted_or_multi")},
-              "aggregateMetrics": metrics, "outputDirectory": str(OUT), "engineCommit": ENGINE_COMMIT}
+              "perSplit": included_by_split,
+              "developmentAggregateMetrics": metrics, "outputDirectory": str(OUT), "engineCommit": ENGINE_COMMIT}
     (OUT / "summary.json").write_text(json.dumps({"provenance": provenance, **result}, indent=2))
     print(json.dumps(result, indent=2))
 
