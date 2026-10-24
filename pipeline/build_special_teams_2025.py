@@ -49,6 +49,11 @@ def main():
     punt_ret = collections.Counter()
     ko_cats = collections.Counter()
     ko_ret = collections.Counter()
+    # Touchback sub-split. 2026 Rule 6-1-5: a kick that touches the landing
+    # zone before it reaches the end zone is spotted at the receiving team's
+    # 20; a kick that reaches the end zone in the air is spotted at its 35.
+    ko_tb_zone = 0
+    ko_tb_air = 0
     punts = kickoffs = 0
 
     with gzip.open(RAW, "rt") as f:
@@ -85,6 +90,12 @@ def main():
                 kickoffs += 1
                 if r["touchback"] == "1":
                     cat = "touchback"
+                    # "to landing zone to end zone" means the kick touched the
+                    # landing zone before reaching the end zone (Rule 6-1-5).
+                    if "to landing zone" in r["desc"]:
+                        ko_tb_zone += 1
+                    else:
+                        ko_tb_air += 1
                 elif r["kickoff_out_of_bounds"] == "1":
                     cat = "out_of_bounds"
                 elif r["kickoff_fair_catch"] == "1":
@@ -124,6 +135,12 @@ def main():
             "n": kickoffs,
             "outcomes": dict(ko_cats),
             "return_yards": {str(k): v for k, v in sorted(ko_ret.items())},
+            # Touchback sub-split used to place the spot under 2026 Rule 6-1-5.
+            # landing_zone -> receiving team's 20; in_air -> receiving team's 35.
+            "touchback_spot": {
+                "landing_zone": ko_tb_zone,
+                "in_air": ko_tb_air,
+            },
         },
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)

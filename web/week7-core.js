@@ -31,8 +31,68 @@ function pickCount(counts, rand) {
   return entries[entries.length - 1][0];
 }
 
-export function createPuntSampler(puntTables) {
-  const zeroDistanceCount = Number(puntTables?.distance_yards?.['0'] ?? 0);
+// Kickoff placement under the 2026 rules (Rule 6-1-5, page 23).
+//
+// Landing zone runs from the receiving team's goal line to its own 20. A
+// touchback is spotted by whether the kick touched the landing zone first:
+//   - touched the landing zone, then rolled into the end zone -> receiving team's 20
+//   - reached the end zone in the air without touching the zone       -> receiving team's 35
+//   - kickoff from midfield (the 50), either touchback type          -> receiving team's 20
+// Short of the landing zone or out of bounds -> the receiving team's 40 under the
+// standard election (25 yards from a kickoff at the kicking team's 35).
+//
+// yardline_100 is 0 at the opponent's goal and 100 at the offense's own goal,
+// so a receiving team's own N is yardline_100 100 - N.
+export const KICKOFF_SPOTS = {
+  landing_zone_touchback: 80, // receiving team's own 20
+  in_air_touchback: 65,      // receiving team's own 35
+  midfield_touchback: 80,    // receiving team's own 20 (2026 midfield exception)
+  out_of_bounds: 60,         // receiving team's own 40
+  short_of_landing_zone: 60, // receiving team's own 40
+};
+
+export function createKickoffSampler(kickoffTables) {
+  const outcomes = kickoffTables?.outcomes;
+  if (!outcomes) throw new Error('missing kickoff outcome table');
+  const split = kickoffTables.touchback_spot || { landing_zone: 0, in_air: 0 };
+  const tbTotal = Number(split.landing_zone || 0) + Number(split.in_air || 0);
+  if (!tbTotal) throw new Error('missing kickoff touchback landing-zone split');
+  // Fraction of touchbacks that touched the landing zone before the end zone.
+  const zoneShare = Number(split.landing_zone) / tbTotal;
+  const returns = kickoffTables.return_yards || {};
+
+  return (kickSpotOwn, rand) => {
+    const outcome = pickCount(outcomes, rand);
+    const ret = outcome === 'returned' ? sampleHist(returns, rand) : 0;
+    if (outcome === 'touchback') {
+      // A kickoff from midfield takes the 2026 exception regardless of type.
+      if (kickSpotOwn === 50) {
+        return { outcome, return_yards: 0, spot: KICKOFF_SPOTS.midfield_touchback,
+          touchback_type: 'midfield', note: '2026 Rule 6-1-5: touchback on a kickoff from the 50 is the receiving team\'s 20.' };
+      }
+      const zone = rand() < zoneShare;
+      const spot = zone ? KICKOFF_SPOTS.landing_zone_touchback : KICKOFF_SPOTS.in_air_touchback;
+      return { outcome, return_yards: 0, spot,
+        touchback_type: zone ? 'landing_zone' : 'in_air',
+        note: zone
+          ? '2026 Rule 6-1-5: the kick touched the landing zone, so the touchback is the receiving team\'s 20.'
+          : '2026 Rule 6-1-5: the kick reached the end zone in the air, so the touchback is the receiving team\'s 35.' };
+    }
+    if (outcome === 'out_of_bounds') {
+      return { outcome, return_yards: 0, spot: KICKOFF_SPOTS.out_of_bounds,
+        touchback_type: null,
+        note: '2026 Rule 6-2-4: out of bounds, the receiving team takes the ball at its 40 under the standard election.' };
+    }
+    // A returned or dead kick: the receiving team starts where the ball came to
+    // rest. The 2025 landing spot is not modelled, so the return is applied from
+    // the receiving team's 25 and the result is clamped into the field.
+    const spot = clamp(75 - ret, 1, 99);
+    return { outcome, return_yards: ret, spot, touchback_type: null,
+      note: 'Outcome and return from 2025 league kickoffs (nflverse). Kick flight is not simulated.' };
+  };
+}
+
+export function createPuntSampler(puntTables) {  const zeroDistanceCount = Number(puntTables?.distance_yards?.['0'] ?? 0);
   const blockedCount = Number(puntTables?.outcomes?.blocked ?? 0);
   if (zeroDistanceCount !== blockedCount) {
     throw new Error(`punt table mismatch: zero-yard rows=${zeroDistanceCount}, blocked outcomes=${blockedCount}`);
@@ -122,6 +182,7 @@ export function generateGame(match, books, seed = '1042', league = null) {
   if (!league?.kickoffs || !league?.punts || !league?.field_goals || !league?.extra_points) throw new Error('missing 2025 special-teams tables');
   const rand = seeded(match.id + '|' + seed);
   const puntSampler = createPuntSampler(league.punts);
+  const kickoffSampler = createKickoffSampler(league.kickoffs);
   const scores = { [match.home]:0, [match.away]:0 };
   const firstReceiver = rand() < 0.5 ? match.home : match.away;
   let offense = other(match.home, match.away, firstReceiver), quarter = 1, clock = 900, down = 1, togo = 10, yl = 75, drive = 1;
@@ -141,10 +202,18 @@ export function generateGame(match, books, seed = '1042', league = null) {
     drive++;
     driveStart = plays.length;
   }
+  // A new series for `offense` at `nextYl`. Yards to go is the smaller of 10
+  // and the distance to the goal line, so a first down inside the 10 sets
+  // goal-to-go rather than a full 10 yards.
+  function newSeries(nextYl) {
+    down = 1;
+    yl = clamp(nextYl, 1, 99);
+    togo = Math.min(10, yl);
+  }
   function turnover(reason, nextYl = 75) {
     finishDrive(reason);
     offense = other(match.home, match.away, offense);
-    down = 1; togo = 10; yl = clamp(nextYl, 2, 99);
+    newSeries(nextYl);
   }
   function score(points, label) {
     scores[offense] += points;
@@ -152,18 +221,44 @@ export function generateGame(match, books, seed = '1042', league = null) {
       note:'Illustrative scoring/restart. No special-teams physics claimed.'});
     turnover(label, 75);
   }
-  // Kickoff by the kicking team. The receiving spot is yards to the goal the receiver attacks:
-  // touchback = own 25, out of bounds = own 35, otherwise own 25 plus the return.
-  function kickoff(kicking, endReason) {
+  // Schedule the kickoff that follows a score. If the period has expired, the
+  // kickoff belongs to the next period and is deferred until the quarter loop
+  // advances, rather than being recorded at 00:00 of the period that ended.
+  function scheduleKickoff(kicking, reason) {
+    if (clock <= 0) { pendingKickoff = { kicking, reason }; return null; }
+    return kickoff(kicking, reason, { reason });
+  }
+  // Kickoff is a special-teams event between drives: the kicking team and the
+  // receiving team are recorded separately, and the event is not attributed to
+  // the receiving team's offensive drive. `endReason` closes the drive that
+  // preceded the kick (a score, a punt, or the end of a half).
+  //
+  // A kickoff scheduled after a quarter expires is deferred: the quarter and
+  // clock are advanced to the next period before the kickoff is recorded, so
+  // the kickoff never appears at 00:00 in the period that just ended.
+  let pendingKickoff = null;
+  function kickoff(kicking, endReason, options = {}) {
     if (endReason) finishDrive(endReason);
-    const outcome = pickCount(league.kickoffs.outcomes, rand);
-    const ret = outcome === 'returned' ? sampleHist(league.kickoffs.return_yards, rand) : 0;
-    const spot = outcome === 'out_of_bounds' ? 65 : clamp(75 - ret, 1, 99);
-    offense = kicking;
-    event({type:'kickoff',kind:'kickoff',action:'KICKOFF',outcome,return_yards:ret,points:0,
-      note:'Outcome and return from 2025 league kickoffs (nflverse). Kick flight is not simulated.'});
-    offense = other(match.home, match.away, kicking);
-    down = 1; togo = 10; yl = spot;
+    const receiving = other(match.home, match.away, kicking);
+    // The kickoff is normally taken from the kicking team's 35.
+    const kickSpotOwn = options.fromMidfield ? 50 : 35;
+    const sampled = kickoffSampler(kickSpotOwn, rand);
+    // The receiving team takes over before the event is recorded, so the
+    // kickoff is never attributed to the kicking team's offensive drive and
+    // it opens the receiving team's drive.
+    offense = receiving;
+    newSeries(sampled.spot);
+    return event({
+      type:'kickoff', kind:'kickoff', action:'KICKOFF', outcome:sampled.outcome,
+      return_yards:sampled.return_yards, points:0,
+      // Special-teams ownership: who kicked and who receives. `offense` on the
+      // event is the receiving team, because they have the ball next.
+      kicking_team:kicking, receiving_team:receiving,
+      touchback_type:sampled.touchback_type,
+      receiving_spot:sampled.spot,
+      possession_after:receiving,
+      reason:options.reason || null,
+      note:sampled.note });
   }
   // Estimate the punt spot from kickYl and the sampled distance/return. The
   // generator does not model the full kick trajectory or the outcome-distance
@@ -176,8 +271,18 @@ export function generateGame(match, books, seed = '1042', league = null) {
   for (quarter = 1; quarter <= 4; quarter++) {
     clock = 900;
     if (quarter === 3) {
+      // Halftime ends the half and resolves a new kickoff. The kickoff belongs
+      // to the second half, so it is recorded after the clock is reset and is
+      // not attributed to the closing drive of the first half.
       if (driveStart < plays.length) finishDrive('halftime');
       kickoff(firstReceiver, null);
+    } else if (pendingKickoff) {
+      // A post-score kickoff deferred out of the previous period belongs to
+      // this period. It is recorded at the start of the period, never at 00:00
+      // of the period that ended.
+      const { kicking, reason } = pendingKickoff;
+      pendingKickoff = null;
+      kickoff(kicking, reason, { reason });
     }
     let qSnaps = 0;
     while (clock > 0 && snaps < 220 && qSnaps < 80) {
@@ -193,8 +298,30 @@ export function generateGame(match, books, seed = '1042', league = null) {
             good,distance,points:good?3:0,runoff:kickClock,
             note:'Make rate from 2025 league field goals by distance (nflverse). Kick flight is not simulated.'});
           clock -= kickClock;
-          if (good) { scores[offense] += 3; kickoff(offense, 'field_goal_good'); }
-          else turnover('field_goal_miss',clamp(100-yl,20,95));
+          if (good) {
+            scores[offense] += 3;
+            scheduleKickoff(offense, 'field_goal_good');
+          } else {
+            // 2026 Rule 9-4-2: an untouched missed field goal is the receiving
+            // team's ball at the 20-yard line if the spot of the kick was
+            // inside their 20, otherwise at the spot of the kick. The ball
+            // touching the ground in the end zone is what makes it dead
+            // untouched; a kick the receivers touch takes the general scrimmage
+            // kick rules instead, which this generator does not model, so the
+            // untouched case is labelled as such.
+            const kickSpotOwn = 100 - yl;          // kicker's own number at the try
+            const receiverOwnSpot = yl;             // distance from the receivers' goal to the kick
+            const untouched = receiverOwnSpot < 20; // try was inside the receivers' 20
+            const restartOwn = untouched ? 20 : receiverOwnSpot;
+            finishDrive('field_goal_miss');
+            offense = other(match.home, match.away, offense);
+            newSeries(100 - restartOwn);
+            plays[plays.length - 1].restart_spot = 100 - restartOwn;
+            plays[plays.length - 1].restart_rule = untouched
+              ? '2026 Rule 9-4-2(a): untouched miss from inside the 20, the receiving team takes the ball at its 20.'
+              : '2026 Rule 9-4-2(b): untouched miss from the 20 or beyond, the receiving team takes the ball at the spot of the kick.';
+            plays[plays.length - 1].restart_untouched = true;
+          }
         } else {
           const pt = puntSampler(yl, rand);
           event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff:kickClock,distance:pt.distance,
@@ -229,7 +356,7 @@ export function generateGame(match, books, seed = '1042', league = null) {
         if (rand() < xpRate) { scores[offense] += 1; item.try='XP good (2025 league rate)'; }
         else item.try='XP missed (2025 league rate)';
         item.scoreAfter = {...scores};
-        kickoff(offense,'touchdown');
+        scheduleKickoff(offense,'touchdown');
       } else if (result.interception) {
         turnover('interception',clamp(100-yl,2,99));
       } else {
@@ -242,6 +369,9 @@ export function generateGame(match, books, seed = '1042', league = null) {
     if (qSnaps >= 80 || snaps >= 220) break;
     if (quarter === 2 && driveStart < plays.length) finishDrive('halftime');
     else if (quarter === 4 && driveStart < plays.length) finishDrive('end_regulation');
+    // A post-score kickoff deferred out of Q2 is superseded by the second
+    // half's own half-opening kickoff.
+    if (quarter === 2 && pendingKickoff) pendingKickoff = null;
   }
   if (driveStart < plays.length && !drives.some(d=>d.end===plays.length-1))
     finishDrive('end_regulation');
