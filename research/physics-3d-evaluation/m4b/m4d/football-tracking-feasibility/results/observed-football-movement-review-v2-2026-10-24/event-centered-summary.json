@@ -1,0 +1,422 @@
+{
+  "nDevelopmentPlays": 40,
+  "models": {
+    "constantVelocity": {
+      "carrierPositionMaeM": {
+        "n": 40,
+        "mean": 0.21263362560562185,
+        "median": 0.19725029114213788,
+        "rmse": 0.24334584053899838
+      },
+      "defenderPositionMaeM": {
+        "n": 40,
+        "mean": 0.19608774741688095,
+        "median": 0.19103243618269872,
+        "rmse": 0.22121454163020554
+      },
+      "positionMaeM": {
+        "n": 40,
+        "mean": 0.2043606865112514,
+        "median": 0.20702380598355058,
+        "rmse": 0.2220957784296245
+      },
+      "separationMaeM": {
+        "n": 40,
+        "mean": 0.17695604642763454,
+        "median": 0.16067986666830278,
+        "rmse": 0.21100190462651514
+      },
+      "eventSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.3538899430397386,
+        "median": 0.2671202016625116,
+        "rmse": 0.4450091178466179
+      },
+      "eventSeparationSignedErrorM": {
+        "n": 40,
+        "mean": 0.2583666130260667,
+        "median": 0.24488954153334963,
+        "rmse": 0.4450091178466179
+      },
+      "minimumSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.1227112927641748,
+        "median": 0.05416998563912734,
+        "rmse": 0.22198822718436723
+      },
+      "minimumSeparationSignedErrorM": {
+        "n": 40,
+        "mean": 0.023057713484598504,
+        "median": 0.022819557929617262,
+        "rmse": 0.22198822718436723
+      },
+      "minimumTimeAbsErrorSeconds": {
+        "n": 40,
+        "mean": 0.075,
+        "median": 0.0,
+        "rmse": 0.15968719422671313
+      },
+      "observedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5758290698280137,
+        "median": 0.5613616473493713,
+        "rmse": 0.6671831107574597
+      },
+      "predictedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5988867833126122,
+        "median": 0.6103187617976612,
+        "rmse": 0.68409404618722
+      },
+      "observedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.23500000000000001,
+        "median": 0.1,
+        "rmse": 0.29495762407505255
+      },
+      "predictedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.165,
+        "median": 0.1,
+        "rmse": 0.20856653614614212
+      },
+      "fullWindowMinimumAtOriginCount": 24
+    },
+    "constantAcceleration": {
+      "carrierPositionMaeM": {
+        "n": 40,
+        "mean": 0.17870687544024533,
+        "median": 0.1706734804629363,
+        "rmse": 0.20364836624565483
+      },
+      "defenderPositionMaeM": {
+        "n": 40,
+        "mean": 0.17766064341634033,
+        "median": 0.1662614550134774,
+        "rmse": 0.20252624070036387
+      },
+      "positionMaeM": {
+        "n": 40,
+        "mean": 0.17818375942829281,
+        "median": 0.17219875566568538,
+        "rmse": 0.19430411619736127
+      },
+      "separationMaeM": {
+        "n": 40,
+        "mean": 0.14036791265565496,
+        "median": 0.12548419896203802,
+        "rmse": 0.16754351173119203
+      },
+      "eventSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.30181039304831253,
+        "median": 0.2747760929660106,
+        "rmse": 0.36756582356363254
+      },
+      "eventSeparationSignedErrorM": {
+        "n": 40,
+        "mean": 0.09945841092207418,
+        "median": 0.1343687358596532,
+        "rmse": 0.36756582356363254
+      },
+      "minimumSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.12282073512711865,
+        "median": 0.044006034975898396,
+        "rmse": 0.20985550513324816
+      },
+      "minimumSeparationSignedErrorM": {
+        "n": 40,
+        "mean": -0.027702200668944372,
+        "median": 0.0049428865953959275,
+        "rmse": 0.20985550513324816
+      },
+      "minimumTimeAbsErrorSeconds": {
+        "n": 40,
+        "mean": 0.085,
+        "median": 0.0,
+        "rmse": 0.1717556403731767
+      },
+      "observedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5758290698280137,
+        "median": 0.5613616473493713,
+        "rmse": 0.6671831107574597
+      },
+      "predictedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5481268691590694,
+        "median": 0.5764122104104081,
+        "rmse": 0.6226621596289098
+      },
+      "observedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.23500000000000001,
+        "median": 0.1,
+        "rmse": 0.29495762407505255
+      },
+      "predictedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.225,
+        "median": 0.1,
+        "rmse": 0.2783882181415011
+      },
+      "fullWindowMinimumAtOriginCount": 19
+    },
+    "boundedAcceleration": {
+      "carrierPositionMaeM": {
+        "n": 40,
+        "mean": 0.1777603777959917,
+        "median": 0.17067348046300895,
+        "rmse": 0.20129628433664917
+      },
+      "defenderPositionMaeM": {
+        "n": 40,
+        "mean": 0.17766064341634505,
+        "median": 0.16626145501344647,
+        "rmse": 0.20252624070036057
+      },
+      "positionMaeM": {
+        "n": 40,
+        "mean": 0.17771051060616835,
+        "median": 0.17236473778120415,
+        "rmse": 0.1934235612063837
+      },
+      "separationMaeM": {
+        "n": 40,
+        "mean": 0.1439577819116807,
+        "median": 0.12548419896204285,
+        "rmse": 0.17214684795878488
+      },
+      "eventSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.30945733870217396,
+        "median": 0.27837942140979655,
+        "rmse": 0.37388124549396806
+      },
+      "eventSeparationSignedErrorM": {
+        "n": 40,
+        "mean": 0.09181146526822759,
+        "median": 0.13436873585965045,
+        "rmse": 0.37388124549396806
+      },
+      "minimumSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.12512850951130344,
+        "median": 0.04400603497586671,
+        "rmse": 0.21167388341495544
+      },
+      "minimumSeparationSignedErrorM": {
+        "n": 40,
+        "mean": -0.03000997505312591,
+        "median": 0.004942886595365049,
+        "rmse": 0.21167388341495544
+      },
+      "minimumTimeAbsErrorSeconds": {
+        "n": 40,
+        "mean": 0.08750000000000001,
+        "median": 0.0,
+        "rmse": 0.17248188310660342
+      },
+      "observedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5758290698280137,
+        "median": 0.5613616473493713,
+        "rmse": 0.6671831107574597
+      },
+      "predictedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5458190947748879,
+        "median": 0.5738606817484333,
+        "rmse": 0.6210557960758981
+      },
+      "observedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.23500000000000001,
+        "median": 0.1,
+        "rmse": 0.29495762407505255
+      },
+      "predictedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.2275,
+        "median": 0.1,
+        "rmse": 0.2806243040080456
+      },
+      "fullWindowMinimumAtOriginCount": 19
+    },
+    "locomotionController": {
+      "carrierPositionMaeM": {
+        "n": 40,
+        "mean": 0.17931002539679086,
+        "median": 0.17266531417659053,
+        "rmse": 0.2040277872844067
+      },
+      "defenderPositionMaeM": {
+        "n": 40,
+        "mean": 0.17765968929192366,
+        "median": 0.16761062289861722,
+        "rmse": 0.20253775990540027
+      },
+      "positionMaeM": {
+        "n": 40,
+        "mean": 0.17848485734435726,
+        "median": 0.17229209189058575,
+        "rmse": 0.19446073895740237
+      },
+      "separationMaeM": {
+        "n": 40,
+        "mean": 0.14065905984580043,
+        "median": 0.1275301029345711,
+        "rmse": 0.1684379700593978
+      },
+      "eventSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.303068973468403,
+        "median": 0.2771061545804719,
+        "rmse": 0.36884930731894167
+      },
+      "eventSeparationSignedErrorM": {
+        "n": 40,
+        "mean": 0.09774050111723838,
+        "median": 0.13314307541074405,
+        "rmse": 0.36884930731894167
+      },
+      "minimumSeparationAbsErrorM": {
+        "n": 40,
+        "mean": 0.12189182164282722,
+        "median": 0.0439428721234604,
+        "rmse": 0.20928018768273182
+      },
+      "minimumSeparationSignedErrorM": {
+        "n": 40,
+        "mean": -0.027597769051520116,
+        "median": 0.003924486211891932,
+        "rmse": 0.20928018768273182
+      },
+      "minimumTimeAbsErrorSeconds": {
+        "n": 40,
+        "mean": 0.08750000000000001,
+        "median": 0.0,
+        "rmse": 0.1739252713092609
+      },
+      "observedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5758290698280137,
+        "median": 0.5613616473493713,
+        "rmse": 0.6671831107574597
+      },
+      "predictedMinimumSeparationM": {
+        "n": 40,
+        "mean": 0.5482313007764936,
+        "median": 0.5762527125204335,
+        "rmse": 0.6229066516053318
+      },
+      "observedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.23500000000000001,
+        "median": 0.1,
+        "rmse": 0.29495762407505255
+      },
+      "predictedMinimumTimeSeconds": {
+        "n": 40,
+        "mean": 0.2225,
+        "median": 0.1,
+        "rmse": 0.2752271788904577
+      },
+      "fullWindowMinimumAtOriginCount": 19
+    }
+  },
+  "pairedVsConstantVelocity": {
+    "constantAcceleration": {
+      "positionMaeM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.026176927082958573,
+        "medianDeltaVsBaseline": -0.01808700014947063,
+        "improvementShare": 0.6,
+        "tieShare": 0.0
+      },
+      "separationMaeM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.03658813377197957,
+        "medianDeltaVsBaseline": -0.024544198222143862,
+        "improvementShare": 0.6,
+        "tieShare": 0.0
+      },
+      "eventSeparationAbsErrorM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.052079549991426076,
+        "medianDeltaVsBaseline": -0.008089600237053407,
+        "improvementShare": 0.5,
+        "tieShare": 0.0
+      },
+      "minimumSeparationAbsErrorM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": 0.00010944236294384776,
+        "medianDeltaVsBaseline": -0.0034574488107827414,
+        "improvementShare": 0.675,
+        "tieShare": 0.0
+      }
+    },
+    "boundedAcceleration": {
+      "positionMaeM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.02665017590508303,
+        "medianDeltaVsBaseline": -0.018087000149455468,
+        "improvementShare": 0.6,
+        "tieShare": 0.0
+      },
+      "separationMaeM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.03299826451595383,
+        "medianDeltaVsBaseline": -0.01431994295002361,
+        "improvementShare": 0.575,
+        "tieShare": 0.0
+      },
+      "eventSeparationAbsErrorM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.044432604337564616,
+        "medianDeltaVsBaseline": 0.001407502626983359,
+        "improvementShare": 0.475,
+        "tieShare": 0.0
+      },
+      "minimumSeparationAbsErrorM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": 0.0024172167471286274,
+        "medianDeltaVsBaseline": -0.0034574488106511383,
+        "improvementShare": 0.675,
+        "tieShare": 0.0
+      }
+    },
+    "locomotionController": {
+      "positionMaeM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.02587582916689414,
+        "medianDeltaVsBaseline": -0.017520683982748482,
+        "improvementShare": 0.625,
+        "tieShare": 0.0
+      },
+      "separationMaeM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.0362969865818341,
+        "medianDeltaVsBaseline": -0.02461295093431115,
+        "improvementShare": 0.6,
+        "tieShare": 0.0
+      },
+      "eventSeparationAbsErrorM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.05082096957133558,
+        "medianDeltaVsBaseline": -0.016760461470934906,
+        "improvementShare": 0.525,
+        "tieShare": 0.0
+      },
+      "minimumSeparationAbsErrorM": {
+        "nPairedPlays": 40,
+        "meanDeltaVsBaseline": -0.0008194711213475852,
+        "medianDeltaVsBaseline": -0.003183551066064473,
+        "improvementShare": 0.65,
+        "tieShare": 0.0
+      }
+    }
+  },
+  "observedMinimumAtOriginCount": 19
+}

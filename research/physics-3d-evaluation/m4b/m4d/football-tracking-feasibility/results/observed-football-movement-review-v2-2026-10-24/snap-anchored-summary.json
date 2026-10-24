@@ -1,0 +1,1284 @@
+{
+  "nPlays": 9388,
+  "perWeek": {
+    "1": 1938,
+    "2": 1798,
+    "3": 1946,
+    "4": 1817,
+    "5": 1889
+  },
+  "metrics": {
+    "0.5": {
+      "constantVelocity": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 0.23893637384853705,
+          "median": 0.23651969902218856,
+          "rmse": 0.2497314365197184
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 0.28061275870428304,
+          "median": 0.27757041556733164,
+          "rmse": 0.30682427723470457
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 0.8958699291684085,
+          "median": 0.8957628411854269,
+          "rmse": 0.9290407564162696
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 0.8958699291684085,
+          "median": 0.8957628411854269,
+          "rmse": 0.9290407564162696
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9297,
+          "mean": 20.250212302084567,
+          "median": 17.042858249292586,
+          "rmse": 24.153891217115937
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 6.945675330208777,
+          "median": 6.0,
+          "rmse": 7.902432842054308
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.18465584920263964,
+          "median": 0.18209585252017185,
+          "rmse": 0.19616264860630994
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.21198280304776682,
+          "median": 0.20960204401479238,
+          "rmse": 0.22126003760782456
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.2179602258501827,
+          "median": 0.2167113273596006,
+          "rmse": 0.22737943852363032
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.9308401440911027,
+          "median": 0.9090909090909091,
+          "rmse": 0.9342172024476676
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.11273671349293066,
+          "median": 0.08525510961898267,
+          "rmse": 0.14159882065031096
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.11796557957393021,
+          "median": 0.11117787133024548,
+          "rmse": 0.13733315382317915
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.11535114653343043,
+          "median": 0.1019046589860241,
+          "rmse": 0.13185371393473422
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.4260023386819574,
+          "median": 0.37144534570953835,
+          "rmse": 0.4831647824780941
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.12117748998990521,
+          "median": 0.11682422859489194,
+          "rmse": 0.1438410666498168
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 1.4525312778401829e-05,
+          "median": 0.0,
+          "rmse": 0.0008125524536467513
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 0.0,
+          "median": 0.0,
+          "rmse": 0.0
+        }
+      },
+      "constantAcceleration": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 0.20663902064563242,
+          "median": 0.20536188511825423,
+          "rmse": 0.21576565416571683
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 0.24598388319284686,
+          "median": 0.24107916807063468,
+          "rmse": 0.3009707647551127
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 0.7823390928989802,
+          "median": 0.7831685585717573,
+          "rmse": 0.8092024815873524
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 0.6574202665090709,
+          "median": 0.6585957258046018,
+          "rmse": 0.6822209186021714
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9282,
+          "mean": 18.912910142105623,
+          "median": 15.869127929732848,
+          "rmse": 22.671412660366222
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 6.8056028973157225,
+          "median": 6.0,
+          "rmse": 7.77187937859405
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.1646826355193145,
+          "median": 0.16141256015897013,
+          "rmse": 0.18324059512951818
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.1890583756805533,
+          "median": 0.18479441760815274,
+          "rmse": 0.1978589031340125
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.19071983734588166,
+          "median": 0.18698672769386432,
+          "rmse": 0.19918344301782342
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.9357206491846458,
+          "median": 0.9090909090909091,
+          "rmse": 0.9389309936701639
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.0938140852939083,
+          "median": 0.07482262680063503,
+          "rmse": 0.115636292433378
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.09834546542108612,
+          "median": 0.09251025838362867,
+          "rmse": 0.12896216153871304
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.09607977535749722,
+          "median": 0.08586845756480677,
+          "rmse": 0.11236314689310237
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.357584410967062,
+          "median": 0.3188516432922398,
+          "rmse": 0.41086128236820224
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.10354940931386028,
+          "median": 0.09979908471863208,
+          "rmse": 0.13259428474838275
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 0.00010651896037494675,
+          "median": 0.0,
+          "rmse": 0.002200402446402463
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 8.231010574427703e-05,
+          "median": 0.0,
+          "rmse": 0.0019342617307183854
+        }
+      },
+      "boundedAcceleration": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 0.20632184358810865,
+          "median": 0.20533758814990974,
+          "rmse": 0.21365617808904908
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 0.24463666826021707,
+          "median": 0.2410321142507467,
+          "rmse": 0.27173211666933034
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 0.7810182636185746,
+          "median": 0.7829317498850419,
+          "rmse": 0.8023669439188721
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 0.657495313662928,
+          "median": 0.658177896325517,
+          "rmse": 0.6843211985857678
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9282,
+          "mean": 18.91249983901828,
+          "median": 15.869127929732844,
+          "rmse": 22.67088029672054
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 6.8056028973157225,
+          "median": 6.0,
+          "rmse": 7.77187937859405
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.16418781891752643,
+          "median": 0.1613969274694354,
+          "rmse": 0.1746464542497254
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.18872373963862696,
+          "median": 0.1847850333621056,
+          "rmse": 0.19702523788814158
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.1904594301439786,
+          "median": 0.18698549648317964,
+          "rmse": 0.19866104600526696
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.9358465352287253,
+          "median": 0.9090909090909091,
+          "rmse": 0.9390327154820151
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.09372045429987247,
+          "median": 0.07482262680062163,
+          "rmse": 0.11529510561588767
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.09788349323462653,
+          "median": 0.09249146576598656,
+          "rmse": 0.11693155648699811
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.0958019737672495,
+          "median": 0.08577841682883625,
+          "rmse": 0.10884739499716359
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.35648463291632676,
+          "median": 0.318339559760793,
+          "rmse": 0.39985775158451
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.10314653173113728,
+          "median": 0.0997560606349348,
+          "rmse": 0.12380379009986403
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 5.3259480187473374e-05,
+          "median": 0.0,
+          "rmse": 0.00155591949119065
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 0.0,
+          "median": 0.0,
+          "rmse": 0.0
+        }
+      },
+      "locomotionController": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 0.20589769470696656,
+          "median": 0.20496179942742226,
+          "rmse": 0.2130680684684723
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 0.24398520028336124,
+          "median": 0.24084878604649018,
+          "rmse": 0.26920717271975764
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 0.7796300593635411,
+          "median": 0.7818646478422562,
+          "rmse": 0.8006242803829926
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 0.656414147767545,
+          "median": 0.657155146029947,
+          "rmse": 0.68320471950128
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9282,
+          "mean": 18.91286265185868,
+          "median": 15.869127929732844,
+          "rmse": 22.67140289151754
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 6.8056028973157225,
+          "median": 6.0,
+          "rmse": 7.77187937859405
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.16395184125096077,
+          "median": 0.16111786975886688,
+          "rmse": 0.17390643483496612
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.18831111587737553,
+          "median": 0.18434527349570468,
+          "rmse": 0.19649653598938321
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.1900890059851376,
+          "median": 0.18672380821040585,
+          "rmse": 0.19821917569409211
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.9359724212728048,
+          "median": 0.9090909090909091,
+          "rmse": 0.939146612083685
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.09338597007060928,
+          "median": 0.07470353132822077,
+          "rmse": 0.11474776512410417
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.09758142268751513,
+          "median": 0.09221838022578369,
+          "rmse": 0.11599079408527627
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.0954836963790622,
+          "median": 0.08557634570330123,
+          "rmse": 0.10828724442224527
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.3560377144040293,
+          "median": 0.3180957715835757,
+          "rmse": 0.3989133483187039
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.102781998676885,
+          "median": 0.0994085512175773,
+          "rmse": 0.12298728169272506
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 1.4525312778401829e-05,
+          "median": 0.0,
+          "rmse": 0.0008125524536467513
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 4.3575938335205484e-05,
+          "median": 0.0,
+          "rmse": 0.0014073821335309283
+        }
+      },
+      "pairedVsConstantVelocity": {
+        "constantAcceleration": {
+          "positionMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.03229735320290463,
+            "medianDeltaVsBaseline": -0.029701306139409953,
+            "improvementShare": 0.9007243289305497,
+            "tieShare": 0.0
+          },
+          "velocityVectorMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.11353083626942823,
+            "medianDeltaVsBaseline": -0.1063325522565321,
+            "improvementShare": 0.8853855986365573,
+            "tieShare": 0.0
+          },
+          "speedChangeMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.23844966265933754,
+            "medianDeltaVsBaseline": -0.22371971351402176,
+            "improvementShare": 0.9988282914358756,
+            "tieShare": 0.0
+          },
+          "spacingPairMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.01997321368332513,
+            "medianDeltaVsBaseline": -0.019324249592775664,
+            "improvementShare": 0.8203025138474649,
+            "tieShare": 0.0
+          },
+          "snapNearestPairDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.02292442736721351,
+            "medianDeltaVsBaseline": -0.022869069790785235,
+            "improvementShare": 0.8021942905837239,
+            "tieShare": 0.0
+          },
+          "nearestDefenderDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.02724038850430106,
+            "medianDeltaVsBaseline": -0.026663709339431053,
+            "improvementShare": 0.8313804857264593,
+            "tieShare": 0.0
+          },
+          "nearestDefenderIdentityAgreement": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": 0.004880505093543014,
+            "medianDeltaVsBaseline": 0.0,
+            "improvementShare": 0.1390072432893055,
+            "tieShare": 0.7721559437579889
+          },
+          "meanTeamCentroidDisplacementErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.019271371175933215,
+            "medianDeltaVsBaseline": -0.015818432822927185,
+            "improvementShare": 0.8286109927567107,
+            "tieShare": 0.0
+          },
+          "teamCentroidVelocityErrorMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.06841792771489542,
+            "medianDeltaVsBaseline": -0.05461774891454324,
+            "improvementShare": 0.7886663826161057,
+            "tieShare": 0.0
+          },
+          "interTeamCentroidSeparationErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.01762808067604493,
+            "medianDeltaVsBaseline": -0.014816321107651742,
+            "improvementShare": 0.7066467831273967,
+            "tieShare": 0.00021303792074989347
+          }
+        },
+        "boundedAcceleration": {
+          "positionMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.0326145302604284,
+            "medianDeltaVsBaseline": -0.029758775153142195,
+            "improvementShare": 0.902002556455049,
+            "tieShare": 0.0
+          },
+          "velocityVectorMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.11485166554983385,
+            "medianDeltaVsBaseline": -0.1064256614182365,
+            "improvementShare": 0.8868768640818065,
+            "tieShare": 0.0
+          },
+          "speedChangeMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.23837461550548047,
+            "medianDeltaVsBaseline": -0.22402302473838887,
+            "improvementShare": 0.9992543672773754,
+            "tieShare": 0.0
+          },
+          "spacingPairMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.02046803028511321,
+            "medianDeltaVsBaseline": -0.019356108993878657,
+            "improvementShare": 0.8216872603323392,
+            "tieShare": 0.0
+          },
+          "snapNearestPairDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.023259063409139857,
+            "medianDeltaVsBaseline": -0.02289413418582841,
+            "improvementShare": 0.8026203664252237,
+            "tieShare": 0.0
+          },
+          "nearestDefenderDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.027500795706204118,
+            "medianDeltaVsBaseline": -0.026669094473726403,
+            "improvementShare": 0.8322326374094589,
+            "tieShare": 0.0
+          },
+          "nearestDefenderIdentityAgreement": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": 0.0050063911376224965,
+            "medianDeltaVsBaseline": 0.0,
+            "improvementShare": 0.13890072432893055,
+            "tieShare": 0.7729015764806135
+          },
+          "meanTeamCentroidDisplacementErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.019549172766180935,
+            "medianDeltaVsBaseline": -0.015852183411648686,
+            "improvementShare": 0.8295696634000852,
+            "tieShare": 0.0
+          },
+          "teamCentroidVelocityErrorMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.06951770576563067,
+            "medianDeltaVsBaseline": -0.05480598334185165,
+            "improvementShare": 0.7895185342991052,
+            "tieShare": 0.0
+          },
+          "interTeamCentroidSeparationErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.018030958258767927,
+            "medianDeltaVsBaseline": -0.014845236295119024,
+            "improvementShare": 0.7070728589688965,
+            "tieShare": 0.0
+          }
+        },
+        "locomotionController": {
+          "positionMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.03303867914157047,
+            "medianDeltaVsBaseline": -0.030023781753471923,
+            "improvementShare": 0.9007243289305497,
+            "tieShare": 0.0
+          },
+          "velocityVectorMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.1162398698048673,
+            "medianDeltaVsBaseline": -0.10771157220477512,
+            "improvementShare": 0.8891137622496804,
+            "tieShare": 0.0
+          },
+          "speedChangeMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.23945578140086343,
+            "medianDeltaVsBaseline": -0.22480612059581895,
+            "improvementShare": 0.9991478483170004,
+            "tieShare": 0.0
+          },
+          "spacingPairMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.020704007951678868,
+            "medianDeltaVsBaseline": -0.019561659922033847,
+            "improvementShare": 0.8210481465700895,
+            "tieShare": 0.0
+          },
+          "snapNearestPairDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.023671687170391288,
+            "medianDeltaVsBaseline": -0.023257101986730824,
+            "improvementShare": 0.8034725181082233,
+            "tieShare": 0.0
+          },
+          "nearestDefenderDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.027871219865045125,
+            "medianDeltaVsBaseline": -0.027020525822622793,
+            "improvementShare": 0.8314870046868342,
+            "tieShare": 0.0
+          },
+          "nearestDefenderIdentityAgreement": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": 0.005132277181701979,
+            "medianDeltaVsBaseline": 0.0,
+            "improvementShare": 0.14028547081380485,
+            "tieShare": 0.7710907541542394
+          },
+          "meanTeamCentroidDisplacementErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.01986745015436823,
+            "medianDeltaVsBaseline": -0.01613525637810133,
+            "improvementShare": 0.8305283340434597,
+            "tieShare": 0.0
+          },
+          "teamCentroidVelocityErrorMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.06996462427792814,
+            "medianDeltaVsBaseline": -0.055340818207550574,
+            "improvementShare": 0.7928206220707286,
+            "tieShare": 0.0
+          },
+          "interTeamCentroidSeparationErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.018395491313020207,
+            "medianDeltaVsBaseline": -0.01516964528924758,
+            "improvementShare": 0.7071793779292714,
+            "tieShare": 0.0
+          }
+        }
+      }
+    },
+    "1.0": {
+      "constantVelocity": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 1.0297158206964447,
+          "median": 1.0293656167024952,
+          "rmse": 1.05739055724119
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 1.152750621486249,
+          "median": 1.1573064452605342,
+          "rmse": 1.1974558886503655
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 2.0542023814170762,
+          "median": 2.0847781717612297,
+          "rmse": 2.096254205931125
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 2.0542023814170762,
+          "median": 2.0847781717612297,
+          "rmse": 2.096254205931125
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9316,
+          "mean": 36.936857109633564,
+          "median": 33.33589720139541,
+          "rmse": 41.79754382755214
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 7.101832126118449,
+          "median": 7.0,
+          "rmse": 8.029053549127648
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.7460804235093337,
+          "median": 0.7395290297376826,
+          "rmse": 0.7726355412865399
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.7158745312881735,
+          "median": 0.7012481670308035,
+          "rmse": 0.7393171969733628
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.737681925198984,
+          "median": 0.7323595871602467,
+          "rmse": 0.7560719215997236
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.7632567687957548,
+          "median": 0.7272727272727273,
+          "rmse": 0.7750609002700529
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.45580921588371426,
+          "median": 0.3514268520414234,
+          "rmse": 0.5724204575023152
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.45613874330735327,
+          "median": 0.421914108491294,
+          "rmse": 0.517539558021218
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.45597397959553376,
+          "median": 0.3835057562304466,
+          "rmse": 0.5245576080890144
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.8533867573585049,
+          "median": 0.7029195411906203,
+          "rmse": 0.9933418009618638
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.516251049916334,
+          "median": 0.5171304994947117,
+          "rmse": 0.568966553959852
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 1.4525312778401829e-05,
+          "median": 0.0,
+          "rmse": 0.0008125524536467513
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 0.0,
+          "median": 0.0,
+          "rmse": 0.0
+        }
+      },
+      "constantAcceleration": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 0.9187465638381488,
+          "median": 0.9214838914670918,
+          "rmse": 0.9416031666534385
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 1.0477396308303244,
+          "median": 1.0465368736720908,
+          "rmse": 1.1640520787188657
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 1.8971482346672022,
+          "median": 1.9115184052342142,
+          "rmse": 1.9319867781843718
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 1.580843920096549,
+          "median": 1.5943469094043583,
+          "rmse": 1.620338450259723
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9300,
+          "mean": 37.09281783280496,
+          "median": 33.52386216437691,
+          "rmse": 42.020082296432214
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 6.954835960801023,
+          "median": 6.0,
+          "rmse": 7.895906184190361
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.6987603428053513,
+          "median": 0.6912597212072251,
+          "rmse": 0.7425440832154115
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.6865281223682947,
+          "median": 0.6643507361668985,
+          "rmse": 0.7146991352374829
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.6676472246295434,
+          "median": 0.6589630717268404,
+          "rmse": 0.6880432954351561
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.7741217027539993,
+          "median": 0.8181818181818182,
+          "rmse": 0.7854117053730532
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.4020498209130867,
+          "median": 0.33571173172480895,
+          "rmse": 0.48640807808223435
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.38964783849687956,
+          "median": 0.35749028317343723,
+          "rmse": 0.48274958570126014
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.39584882970498314,
+          "median": 0.3404942827018577,
+          "rmse": 0.45772151874863265
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.7715516519750956,
+          "median": 0.6624325556618529,
+          "rmse": 0.8905009295678061
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.4474903584131796,
+          "median": 0.44566553989955837,
+          "rmse": 0.5261146978731533
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 0.002968005577720107,
+          "median": 0.0,
+          "rmse": 0.01233189454949783
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 8.231010574427703e-05,
+          "median": 0.0,
+          "rmse": 0.0019342617307183854
+        }
+      },
+      "boundedAcceleration": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 0.9174201514213683,
+          "median": 0.9210317090785735,
+          "rmse": 0.9358753965659987
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 1.0423962612141087,
+          "median": 1.046398864790668,
+          "rmse": 1.0837525687501073
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 1.8944646862750982,
+          "median": 1.9109390901968328,
+          "rmse": 1.9231713178970764
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 1.5793109975662654,
+          "median": 1.59343624382922,
+          "rmse": 1.6186417484678126
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9300,
+          "mean": 37.092716638606916,
+          "median": 33.52386216437691,
+          "rmse": 42.01985534679574
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 6.954835960801023,
+          "median": 6.0,
+          "rmse": 7.895906184190361
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.6966221129227366,
+          "median": 0.6910711573985369,
+          "rmse": 0.7189934208596662
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.68477226326948,
+          "median": 0.6643307488233503,
+          "rmse": 0.7100055093791876
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.667253552214631,
+          "median": 0.6587223281123968,
+          "rmse": 0.6872740699139187
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.7741313862958515,
+          "median": 0.8181818181818182,
+          "rmse": 0.7854279574057815
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.401675742301246,
+          "median": 0.3356335032537879,
+          "rmse": 0.4855331822314074
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.3877858637708082,
+          "median": 0.3570570381320372,
+          "rmse": 0.4486478569422142
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.3947308030360271,
+          "median": 0.3402514384850303,
+          "rmse": 0.4484617359274076
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.7692771631979366,
+          "median": 0.6616414830097064,
+          "rmse": 0.8765740011637148
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.4458091986862723,
+          "median": 0.44537271208703455,
+          "rmse": 0.4984736816111694
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 0.0028033853662315527,
+          "median": 0.0,
+          "rmse": 0.012024678219981228
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 0.0,
+          "median": 0.0,
+          "rmse": 0.0
+        }
+      },
+      "locomotionController": {
+        "positionMaeM": {
+          "n": 9388,
+          "mean": 0.9150122976469985,
+          "median": 0.9187494758989538,
+          "rmse": 0.9331197223805628
+        },
+        "positionRmseM": {
+          "n": 9388,
+          "mean": 1.0388750877007884,
+          "median": 1.0439236409638635,
+          "rmse": 1.0762632686803588
+        },
+        "velocityVectorMaeMps": {
+          "n": 9388,
+          "mean": 1.8871757825089557,
+          "median": 1.9061791295335015,
+          "rmse": 1.9154374467665503
+        },
+        "speedChangeMaeMps": {
+          "n": 9388,
+          "mean": 1.5723507264507972,
+          "median": 1.5864204106791664,
+          "rmse": 1.6117604007760258
+        },
+        "turnAngleErrorMeanDegrees": {
+          "n": 9300,
+          "mean": 37.09245322480145,
+          "median": 33.52383610098434,
+          "rmse": 42.01992505434062
+        },
+        "turnAngleEligiblePlayers": {
+          "n": 9388,
+          "mean": 6.954835960801023,
+          "median": 6.0,
+          "rmse": 7.895906184190361
+        },
+        "spacingPairMaeM": {
+          "n": 9388,
+          "mean": 0.6943665961005866,
+          "median": 0.6898178438337426,
+          "rmse": 0.7154801072334152
+        },
+        "snapNearestPairDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.6814691010395036,
+          "median": 0.6610389444853534,
+          "rmse": 0.7058202818065094
+        },
+        "nearestDefenderDistanceMaeM": {
+          "n": 9388,
+          "mean": 0.666005172094125,
+          "median": 0.6576849121793504,
+          "rmse": 0.6858788116990407
+        },
+        "nearestDefenderIdentityAgreement": {
+          "n": 9388,
+          "mean": 0.7742863229654878,
+          "median": 0.8181818181818182,
+          "rmse": 0.7855893386539499
+        },
+        "offenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.4007289691825163,
+          "median": 0.33558300998204227,
+          "rmse": 0.48410789309794267
+        },
+        "defenseCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.38686628086871017,
+          "median": 0.35637080790032777,
+          "rmse": 0.4462559978755354
+        },
+        "meanTeamCentroidDisplacementErrorM": {
+          "n": 9388,
+          "mean": 0.3937976250256133,
+          "median": 0.33950496471139047,
+          "rmse": 0.44698635105268913
+        },
+        "teamCentroidVelocityErrorMps": {
+          "n": 9388,
+          "mean": 0.7672031837284987,
+          "median": 0.6599022817517337,
+          "rmse": 0.8737479825942219
+        },
+        "interTeamCentroidSeparationErrorM": {
+          "n": 9388,
+          "mean": 0.44473996865248655,
+          "median": 0.4441199920959229,
+          "rmse": 0.4962565183656423
+        },
+        "predictedSpeedOver9mpsShare": {
+          "n": 9388,
+          "mean": 1.4525312778401829e-05,
+          "median": 0.0,
+          "rmse": 0.0008125524536467513
+        },
+        "predictedLateralAccelerationOver6p5Share": {
+          "n": 9388,
+          "mean": 9.683541852267886e-06,
+          "median": 0.0,
+          "rmse": 0.000663446300227007
+        }
+      },
+      "pairedVsConstantVelocity": {
+        "constantAcceleration": {
+          "positionMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.11096925685829603,
+            "medianDeltaVsBaseline": -0.10408250324432128,
+            "improvementShare": 0.891989774179804,
+            "tieShare": 0.0
+          },
+          "velocityVectorMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.15705414674987395,
+            "medianDeltaVsBaseline": -0.15148445488781725,
+            "improvementShare": 0.8292501065189604,
+            "tieShare": 0.0
+          },
+          "speedChangeMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.4733584613205273,
+            "medianDeltaVsBaseline": -0.45122146038958366,
+            "improvementShare": 0.9971239880698765,
+            "tieShare": 0.0
+          },
+          "spacingPairMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.04732008070398247,
+            "medianDeltaVsBaseline": -0.048754058566890246,
+            "improvementShare": 0.7463783553472518,
+            "tieShare": 0.0
+          },
+          "snapNearestPairDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.029346408919878695,
+            "medianDeltaVsBaseline": -0.03764313560415139,
+            "improvementShare": 0.6555176821474222,
+            "tieShare": 0.0
+          },
+          "nearestDefenderDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.0700347005694407,
+            "medianDeltaVsBaseline": -0.07013477111326522,
+            "improvementShare": 0.7775884107371112,
+            "tieShare": 0.0
+          },
+          "nearestDefenderIdentityAgreement": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": 0.010864933958244569,
+            "medianDeltaVsBaseline": 0.0,
+            "improvementShare": 0.3109288453344695,
+            "tieShare": 0.4713463996591393
+          },
+          "meanTeamCentroidDisplacementErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.06012514989055065,
+            "medianDeltaVsBaseline": -0.04658102693528268,
+            "improvementShare": 0.7495739241585002,
+            "tieShare": 0.0
+          },
+          "teamCentroidVelocityErrorMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.08183510538340938,
+            "medianDeltaVsBaseline": -0.05998225403523055,
+            "improvementShare": 0.662015338730294,
+            "tieShare": 0.0
+          },
+          "interTeamCentroidSeparationErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.06876069150315439,
+            "medianDeltaVsBaseline": -0.05951760927645866,
+            "improvementShare": 0.7055815935236472,
+            "tieShare": 0.0
+          }
+        },
+        "boundedAcceleration": {
+          "positionMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.11229566927507642,
+            "medianDeltaVsBaseline": -0.10439341439670968,
+            "improvementShare": 0.8933745206646783,
+            "tieShare": 0.0
+          },
+          "velocityVectorMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.1597376951419779,
+            "medianDeltaVsBaseline": -0.15176121501453443,
+            "improvementShare": 0.8306348530038347,
+            "tieShare": 0.0
+          },
+          "speedChangeMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.4748913838508108,
+            "medianDeltaVsBaseline": -0.45225047464032453,
+            "improvementShare": 0.9976565828717512,
+            "tieShare": 0.0
+          },
+          "spacingPairMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.049458310586597116,
+            "medianDeltaVsBaseline": -0.04907543305035206,
+            "improvementShare": 0.7474435449510013,
+            "tieShare": 0.0
+          },
+          "snapNearestPairDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.031102268018693462,
+            "medianDeltaVsBaseline": -0.03771828720524728,
+            "improvementShare": 0.6558372390285471,
+            "tieShare": 0.0
+          },
+          "nearestDefenderDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.07042837298435306,
+            "medianDeltaVsBaseline": -0.07013477111333083,
+            "improvementShare": 0.7781210055389859,
+            "tieShare": 0.0
+          },
+          "nearestDefenderIdentityAgreement": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": 0.010874617500096837,
+            "medianDeltaVsBaseline": 0.0,
+            "improvementShare": 0.31082232637409457,
+            "tieShare": 0.4715594375798892
+          },
+          "meanTeamCentroidDisplacementErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.06124317655950671,
+            "medianDeltaVsBaseline": -0.04659844769751295,
+            "improvementShare": 0.7509586706433745,
+            "tieShare": 0.0
+          },
+          "teamCentroidVelocityErrorMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.08410959416056837,
+            "medianDeltaVsBaseline": -0.060206587085352925,
+            "improvementShare": 0.6628674904132935,
+            "tieShare": 0.0
+          },
+          "interTeamCentroidSeparationErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.07044185123006165,
+            "medianDeltaVsBaseline": -0.05953294652821439,
+            "improvementShare": 0.7057946314443971,
+            "tieShare": 0.0
+          }
+        },
+        "locomotionController": {
+          "positionMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.11470352304944625,
+            "medianDeltaVsBaseline": -0.10643046075548124,
+            "improvementShare": 0.8966766084363017,
+            "tieShare": 0.0
+          },
+          "velocityVectorMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.16702659890812058,
+            "medianDeltaVsBaseline": -0.15759839504694728,
+            "improvementShare": 0.8451214316148274,
+            "tieShare": 0.0
+          },
+          "speedChangeMaeMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.4818516549662791,
+            "medianDeltaVsBaseline": -0.45975278112684614,
+            "improvementShare": 0.9977631018321261,
+            "tieShare": 0.0
+          },
+          "spacingPairMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.05171382740874713,
+            "medianDeltaVsBaseline": -0.05040415544038063,
+            "improvementShare": 0.7524499360886238,
+            "tieShare": 0.0
+          },
+          "snapNearestPairDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.034405430248669884,
+            "medianDeltaVsBaseline": -0.0392392434357165,
+            "improvementShare": 0.6656369833830422,
+            "tieShare": 0.0
+          },
+          "nearestDefenderDistanceMaeM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.07167675310485902,
+            "medianDeltaVsBaseline": -0.07128341071941718,
+            "improvementShare": 0.7796122709842352,
+            "tieShare": 0.0
+          },
+          "nearestDefenderIdentityAgreement": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": 0.011029554169733122,
+            "medianDeltaVsBaseline": 0.0,
+            "improvementShare": 0.3121005538985939,
+            "tieShare": 0.4703877290157648
+          },
+          "meanTeamCentroidDisplacementErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.06217635456992053,
+            "medianDeltaVsBaseline": -0.04755121130882703,
+            "improvementShare": 0.7547933532168726,
+            "tieShare": 0.0
+          },
+          "teamCentroidVelocityErrorMps": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.08618357363000619,
+            "medianDeltaVsBaseline": -0.06235188254379942,
+            "improvementShare": 0.6695781849169152,
+            "tieShare": 0.0
+          },
+          "interTeamCentroidSeparationErrorM": {
+            "nPairedPlays": 9388,
+            "meanDeltaVsBaseline": -0.07151108126384736,
+            "medianDeltaVsBaseline": -0.06115912575349247,
+            "improvementShare": 0.7070728589688965,
+            "tieShare": 0.00010651896037494674
+          }
+        }
+      }
+    }
+  }
+}
