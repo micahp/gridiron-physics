@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LP E2 Full Game · Gridiron Research Viewer</title>
+  <link rel="stylesheet" href="web/e2-game-viewer.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">Gridiron Physics · E2 research viewer</p>
+      <h1>Full game record</h1>
+      <p id="mode-label" class="mode-label">Loading pinned LP record…</p>
+      <p id="record-status" class="record-status" role="status">Loading</p>
+    </header>
+
+    <section id="load-error" class="notice error" role="alert" hidden></section>
+    <section id="validation" class="notice" hidden></section>
+
+    <section id="e3-comparison" class="card e3-panel" aria-labelledby="e3-heading" hidden>
+      <h2 id="e3-heading">E3 observed distribution comparison</h2>
+      <p id="e3-load-status" class="audit-label"></p>
+      <p id="e3-source-label" class="muted"></p>
+      <p id="e3-clock-caveat" class="notice caveat">Clock clamp census loading…</p>
+
+      <h3>Independent football-state baseline</h3>
+      <div id="state-audit-summary"></div>
+      <div id="state-audit-table" class="table-wrap"></div>
+
+      <h3>Play distribution</h3>
+      <div id="e3-play-table" class="table-wrap"></div>
+      <p id="e3-play-note" class="muted"></p>
+
+      <h3>Drive distribution</h3>
+      <div id="e3-drive-table" class="table-wrap"></div>
+      <p id="e3-drive-note" class="muted"></p>
+
+      <h3>Game distribution</h3>
+      <div id="e3-game-table" class="table-wrap"></div>
+      <p id="e3-game-note" class="muted"></p>
+
+      <h3>Source semantics and unsupported rules</h3>
+      <p id="conversion-source-status" class="audit-label"></p>
+      <p class="muted">Unsupported-rules labels from the LP record:</p>
+      <ul id="e3-unsupported-list" class="rule-list"></ul>
+    </section>
+
+    <div id="viewer-content" hidden>
+    <section class="scoreboard" aria-label="Final score">
+      <div><span>Team A</span><strong id="score-a">—</strong></div>
+      <div class="score-separator">FINAL</div>
+      <div><span>Team B</span><strong id="score-b">—</strong></div>
+      <p id="game-state" class="score-note"></p>
+    </section>
+
+    <section class="source-grid" aria-label="Game record provenance">
+      <article class="card">
+        <h2>Record</h2>
+        <dl id="record-meta" class="meta-grid"></dl>
+      </article>
+      <article class="card">
+        <h2>Not supplied</h2>
+        <p>This is event and field-state inspection. No game roster, lineup, route, or motion is present, so no 3D player replay is inferred.</p>
+        <p id="producer-note" class="muted"></p>
+      </article>
+    </section>
+
+    <section class="card navigation">
+      <div class="selectors">
+        <label>Drive<select id="drive-select"></select></label>
+        <label>Play<select id="play-select"></select></label>
+      </div>
+      <p id="drive-summary" class="drive-summary"></p>
+      <div class="timeline-wrap">
+        <ol id="play-list" class="play-list"></ol>
+      </div>
+    </section>
+
+    <section class="details-grid">
+      <article class="card">
+        <h2>Selected play</h2>
+        <dl id="play-meta" class="meta-grid"></dl>
+        <h3>LP outcome and state</h3>
+        <pre id="play-json" class="json-view"></pre>
+      </article>
+      <article class="card">
+        <h2>Game transitions</h2>
+        <h3>Coin toss</h3>
+        <pre id="ledger-json" class="json-view"></pre>
+        <h3>Kickoffs</h3>
+        <ol id="kickoff-list" class="event-list"></ol>
+        <h3>Unsupported rules</h3>
+        <ul id="unsupported-list" class="event-list"></ul>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Team lines</h2>
+      <p class="muted">Lines are copied from LP. Player attribution describes participants from sampled historical plays, not this game's roster.</p>
+      <div class="table-wrap"><table><thead><tr><th>Team</th><th>Statistic</th><th>Value</th></tr></thead><tbody id="team-stats"></tbody></table></div>
+    </section>
+    </div>
+    <footer>Read-only research display · source IDs, outcomes, and nulls are preserved.</footer>
+  </main>
+  <script type="module" src="web/e2-game-viewer.js"></script>
+</body>
+</html>

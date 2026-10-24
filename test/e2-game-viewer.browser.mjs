@@ -1,0 +1,150 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { extname, resolve, sep } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const playwrightModule = process.env.PLAYWRIGHT_MODULE;
+const chromePath = process.env.CHROME_BIN;
+if (!playwrightModule || !chromePath) {
+  throw new Error('Set PLAYWRIGHT_MODULE and CHROME_BIN to run the real-browser navigation test.');
+}
+const { chromium } = await import(pathToFileURL(resolve(playwrightModule)).href);
+const contentTypes = {
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.csv': 'text/csv; charset=utf-8',
+};
+const server = createServer(async (request, response) => {
+  try {
+    const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+    const file = resolve(root, `.${pathname}`);
+    if (file !== root && !file.startsWith(root + sep)) {
+      response.writeHead(403).end('forbidden');
+      return;
+    }
+    const bytes = await readFile(file);
+    response.writeHead(200, { 'content-type': contentTypes[extname(file)] ?? 'application/octet-stream' });
+    response.end(bytes);
+  } catch {
+    response.writeHead(404).end('not found');
+  }
+});
+
+await new Promise((done) => server.listen(0, '127.0.0.1', done));
+const { port } = server.address();
+const browser = await chromium.launch({ executablePath: chromePath, headless: true, args: ['--no-sandbox'] });
+const pageErrors = [];
+
+try {
+  const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
+  const entry = manifest.fixtures[0];
+  const regression = manifest.regression_fixtures[0];
+  const currentEnvelope = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', entry.file), 'utf8'));
+  const driveCount = currentEnvelope.record.drives.length;
+  const playCount = currentEnvelope.record.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
+  const eventTypeCounts = new Map();
+  for (const drive of currentEnvelope.record.drives) {
+    for (const play of drive.plays) eventTypeCounts.set(play.event_type, (eventTypeCounts.get(play.event_type) ?? 0) + 1);
+  }
+  const supportedEventTypes = new Set([
+    'field_goal_attempt', 'fumble_lost', 'interception', 'pass_complete',
+    'pass_incomplete', 'punt', 'run', 'sack',
+  ]);
+  assert.deepEqual([...eventTypeCounts.keys()].sort(), [...supportedEventTypes].sort(),
+    'the accepted seed-1 fixture must use only the enumerated E2 play event types');
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await page.goto(`http://127.0.0.1:${port}/e2-game-viewer.html`);
+  await page.locator('#viewer-content:not([hidden])').waitFor({ timeout: 15000 });
+  assert.equal(await page.locator('#load-error').isHidden(), true);
+  assert.equal(await page.locator('#drive-select option').count(), driveCount);
+  assert.equal(await page.locator('#score-a').innerText(), String(currentEnvelope.record.points.A));
+  assert.equal(await page.locator('#score-b').innerText(), String(currentEnvelope.record.points.B));
+  const renderedEventCounts = new Map();
+  let renderedPlays = 0;
+  for (const [driveOffset, drive] of currentEnvelope.record.drives.entries()) {
+    await page.locator('#drive-select').selectOption(String(driveOffset));
+    assert.match(await page.locator('#drive-summary').innerText(), new RegExp(`Drive ${drive.index}`));
+    assert.equal(await page.locator('#play-select option').count(), drive.plays.length,
+      `Drive ${drive.index} must expose every source play`);
+    for (const [playOffset, play] of drive.plays.entries()) {
+      await page.locator('#play-select').selectOption(String(playOffset));
+      const metadata = await page.locator('#play-meta dd').allInnerTexts();
+      assert.equal(metadata[1], play.id, `Drive ${drive.index} play ${play.sequence} source ID`);
+      assert.equal(metadata[2], `${drive.index} / ${play.sequence}`, `Drive ${drive.index} play ${play.sequence} sequence`);
+      assert.equal(metadata[3], play.event_type, `Drive ${drive.index} play ${play.sequence} event type`);
+      assert.deepEqual(JSON.parse(await page.locator('#play-json').innerText()), {
+        outcome: play.outcome,
+        participants: play.participants,
+        decision: play.decision,
+        sampling: play.sampling,
+        field: play.field,
+      }, `Drive ${drive.index} play ${play.sequence} source fields must render unchanged`);
+      renderedEventCounts.set(play.event_type, (renderedEventCounts.get(play.event_type) ?? 0) + 1);
+      renderedPlays += 1;
+    }
+  }
+  assert.equal(renderedPlays, playCount);
+  assert.deepEqual([...renderedEventCounts.entries()].sort(), [...eventTypeCounts.entries()].sort(),
+    'every source event type and event count must be visible through the browser viewer');
+  assert.match(await page.locator('#state-audit-summary').innerText(), /0 findings/);
+  assert.match(await page.locator('#e3-clock-caveat').innerText(), /594 \/ 7016/);
+  assert.match(await page.locator('#e3-load-status').innerText(), /verified by SHA-256/);
+  assert.match(await page.locator('#e3-unsupported-list').innerText(), /timeouts[\s\S]*two_minute_warning/);
+  assert.match(await page.locator('#conversion-source-status').innerText(), /PASS/);
+  assert.match(await page.locator('#validation').innerText(), /NOT CONFORMING/,
+    'the viewer must visibly keep the shared-v1/pregame gate open for this retrospective record');
+  assert.match(await page.locator('#e3-play-table').innerText(), new RegExp(`Generated · n=${playCount}`));
+  assert.equal(await page.locator('#e3-play-table tbody tr').count(), 4);
+  assert.equal(await page.locator('#e3-drive-table tbody tr').count(), 5);
+  assert.equal(await page.locator('#e3-game-table tbody tr').count(), 13);
+  await context.close();
+
+  const oldEnvelope = await readFile(resolve(root, 'docs/fixtures/e2', regression.file), 'utf8');
+  const oldRaw = await readFile(resolve(root, 'docs/fixtures/e2', regression.upstream_source_file), 'utf8');
+  const legacyManifest = structuredClone(manifest);
+  legacyManifest.fixtures = [{
+    file: regression.file,
+    sha256: regression.sha256,
+    upstream_source_file: regression.upstream_source_file,
+    upstream_source_sha256: regression.upstream_source_sha256,
+  }];
+  legacyManifest.lp_source.base_commit = regression.producer_commit;
+  legacyManifest.lp_source.conversion_source_script_commit = regression.conversion_source_script_commit;
+  legacyManifest.lp_source.conversion_source_script_file = regression.conversion_source_script_file;
+  legacyManifest.lp_source.conversion_source_script_sha256 = regression.conversion_source_script_sha256;
+  const regressionContext = await browser.newContext();
+  await regressionContext.route('**/docs/fixtures/e2/MANIFEST.json', (route) => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify(legacyManifest),
+  }));
+  await regressionContext.route(`**/docs/fixtures/e2/${regression.file}`, (route) => route.fulfill({
+    status: 200, contentType: 'application/json', body: oldEnvelope,
+  }));
+  await regressionContext.route(`**/docs/fixtures/e2/${regression.upstream_source_file}`, (route) => route.fulfill({
+    status: 200, contentType: 'application/json', body: oldRaw,
+  }));
+  const regressionPage = await regressionContext.newPage();
+  regressionPage.on('pageerror', (error) => pageErrors.push(error.message));
+  await regressionPage.goto(`http://127.0.0.1:${port}/e2-game-viewer.html`);
+  await regressionPage.locator('#load-error:not([hidden])').waitFor({ timeout: 15000 });
+  assert.match(await regressionPage.locator('#load-error').innerText(), /23 drive-index mismatches/);
+  assert.equal(await regressionPage.locator('#viewer-content').isHidden(), true);
+  assert.match(await regressionPage.locator('#state-audit-summary').innerText(), /1175 findings/);
+  assert.match(await regressionPage.locator('#conversion-source-status').innerText(), /EPA-positive success/);
+  assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
+  await regressionContext.close();
+
+  console.log(`Real Chromium play render: LP ${manifest.lp_source.base_commit} rendered ${renderedPlays}/${playCount} plays across ${renderedEventCounts.size}/${supportedEventTypes.size} supported event types`);
+  console.log(`Rendered event counts: ${[...renderedEventCounts].sort().map(([type, count]) => `${type}=${count}`).join(', ')}`);
+  console.log('OPEN shared-v1/pregame gate: viewer displays NOT CONFORMING for the retrospective E2 payload');
+  console.log(`Regression: archived 5fc payload hard-rejected; v1 regression fixture sha256=${manifest.v1_regression_fixture?.sha256 ?? 'not pinned'}`);
+  console.log(`Browser runtime errors: ${pageErrors.length}`);
+} finally {
+  await browser.close();
+  await new Promise((done, reject) => server.close((error) => error ? reject(error) : done()));
+}
