@@ -1,5 +1,7 @@
 # Ratings-to-physics integration review — 2026-10-23
 
+> **2026-10-23 priority supersession:** The [football-first agent directive](../FOOTBALL-FIRST-AGENT-DIRECTIVE-2026-10-23.md) replaces the **next-task priorities** under “Owned next actions” below. Keep this integration report as frozen evidence and its **no-adoption/no-merge verdict**. Prioritize actual NFL tracking/play/drive evaluation and established tools. Do not start new M4d contact-boundary or Madden sweep experiments unless a measured football-play mismatch or a narrowly necessary numerical safety fix warrants them.
+
 **Decision:** Retain all rating-to-contact behavior changes in research. **No production solver, live rating pipeline, or model adoption.** The 3D test harness, pinned movement/force traces, common schema, and replay tooling are candidates for **selective infrastructure integration**, subject to baseline/test and artifact-size review. The legacy role-centered post-wrap implementation is explicitly **not merge-ready** due to strict speed-validation failure and a pre-existing far-wrap force pathology.
 
 **Authority:** [Shared coordination protocol](RATINGS-TO-PHYSICS-COORDINATION-2026-10-23.md); [Gridiron roadmap](../../ROADMAP.md). This is an integration synthesis of the published research artifacts, **not** a new execution of 376 physics runs or a new independent reproduction.
