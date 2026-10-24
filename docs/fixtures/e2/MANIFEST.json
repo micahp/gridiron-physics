@@ -5,7 +5,8 @@
   },
   "gridiron": {
     "branch": "research/gridiron-e2-game-viewer-2026-10-24",
-    "base_commit": "2b70ef3"
+    "base_commit": "2b70ef3",
+    "implementation_commit": "0e4db756f7a1f9b19a68e5df373666e45efe44e3"
   },
   "lp_source": {
     "repository": "micahp/legendarypicks",
