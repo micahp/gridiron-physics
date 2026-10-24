@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { adaptLpPlayRecord, collectNullPaths, displayRecordValue } from '../web/lp-play-record-adapter.js';
 
-const fixture = JSON.parse(readFileSync(new URL('../docs/fixtures/nfl-seq-e0-play-record-seed1042.json', import.meta.url)));
+const fixtureBytes = readFileSync(new URL('../docs/fixtures/nfl-seq-e0-play-record-seed1042.json', import.meta.url));
+assert.equal(createHash('sha256').update(fixtureBytes).digest('hex'), '37478127345c80d44664c30481ea9adbf372450223d1c89822b4b27b450808f6');
+const fixture = JSON.parse(fixtureBytes);
 
 function deepFreeze(value) {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -29,8 +32,14 @@ assert.equal(adapted.plays[0].stateAfter.clock_seconds, null);
 assert.deepEqual(adapted.plays[0].stateBefore, fixture.plays[0].state_before);
 assert.deepEqual(adapted.plays[0].stateAfter, fixture.plays[0].state_after);
 assert.deepEqual(adapted.plays[0].outcome, fixture.plays[0].outcome);
+assert.deepEqual(adapted.plays[0].field, fixture.plays[0].field);
 assert.notEqual(adapted.plays[0].outcome, fixture.plays[0].outcome, 'adapter exposes a detached display copy');
 assert.ok(Object.isFrozen(adapted.plays[0].outcome), 'display copy is read-only');
+assert.ok(Object.isFrozen(adapted.plays[0].field), 'field assignment is read-only');
+assert.equal(adapted.plays[0].field.assignment_version, 'e0-field-end-v1');
+assert.equal(adapted.plays[0].field.source, 'authored_demo_convention');
+assert.equal(adapted.plays[0].field.before.dir, 1);
+assert.equal(adapted.plays[0].field.before.los, 12);
 assert.ok(adapted.plays[0].nullPaths.includes('outcome.rusher_id'));
 assert.ok(adapted.plays[0].nullPaths.includes('state_after.clock_seconds'));
 assert.equal(adapted.replay.status, 'not_attempted');
@@ -52,5 +61,8 @@ rejected((record) => { record.plays[0].id = 'wrong-id'; }, /id must match simula
 rejected((record) => { record.mode = 'pregame_full_game'; }, /unsupported mode/);
 rejected((record) => { record.summary.valid_full_game = true; }, /summary.valid_full_game must match/);
 rejected((record) => { delete record.outcome_pool.temporal_eligibility.cell_rows_total; }, /row counts must be valid/);
+rejected((record) => { record.plays[0].field.source = 'observed'; }, /field.source is unsupported/);
+rejected((record) => { record.plays[0].field.before.los = 11; }, /does not match the stated dir/);
+rejected((record) => { record.plays[0].field.before = { dir: -1, los: 88 }; }, /conflicts with the authored quarter convention/);
 
 console.log('LP play record E0a adapter checks passed');

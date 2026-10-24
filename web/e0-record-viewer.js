@@ -170,6 +170,21 @@ function renderRecord(record, inputName) {
     }
     card.append(states);
 
+    const field = document.createElement('section');
+    field.className = 'state-panel field-panel';
+    field.append(textElement('h4', 'Field coordinates · authored, not observed'));
+    const afterField = play.field.after;
+    appendMetadata(field, [
+      ['Assignment version', play.field.assignment_version],
+      ['Assignment source', play.field.source],
+      ['Before direction', play.field.before.dir],
+      ['Before LOS (x)', play.field.before.los],
+      ['After direction', afterField === null ? null : afterField?.dir],
+      ['After LOS (x)', afterField === null ? null : afterField?.los],
+    ]);
+    field.append(textElement('p', 'LOS is shown only under the authored demo convention; it is not observed field orientation or an observed play result.', 'muted'));
+    card.append(field);
+
     const bottom = document.createElement('div');
     bottom.className = 'play-bottom';
     const decisionPanel = document.createElement('section');

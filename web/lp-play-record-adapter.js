@@ -5,6 +5,8 @@ const EVENT_TYPES = new Set([
 ]);
 
 const SINGLE_PLAY_MODE = 'single_play_statistical_demo';
+const FIELD_ASSIGNMENT_VERSION = 'e0-field-end-v1';
+const FIELD_ASSIGNMENT_SOURCE = 'authored_demo_convention';
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -28,6 +30,28 @@ function freezeDeep(value) {
   return value;
 }
 
+function validateFieldEndpoint(endpoint, state, label) {
+  requireObject(endpoint, label);
+  if (endpoint.dir !== 1 && endpoint.dir !== -1) {
+    throw new TypeError(`${label}.dir must be 1 or -1`);
+  }
+  if (Number.isInteger(state.quarter) && state.quarter >= 1 && state.quarter <= 4) {
+    const expectedDir = state.quarter <= 2 ? 1 : -1;
+    if (endpoint.dir !== expectedDir) {
+      throw new TypeError(`${label}.dir conflicts with the authored quarter convention`);
+    }
+  }
+  if (!Number.isFinite(endpoint.los) || endpoint.los < 0 || endpoint.los > 100) {
+    throw new TypeError(`${label}.los must be between 0 and 100`);
+  }
+  if (Number.isFinite(state.yardline_100)) {
+    const expectedLos = endpoint.dir === 1 ? 100 - state.yardline_100 : state.yardline_100;
+    if (endpoint.los !== expectedLos) {
+      throw new TypeError(`${label}.los does not match the stated dir and yardline_100`);
+    }
+  }
+}
+
 function validatePlay(play, index, ids, sequences) {
   const label = `plays[${index}]`;
   requireObject(play, label);
@@ -48,6 +72,17 @@ function validatePlay(play, index, ids, sequences) {
   requireObject(play.decision, `${label}.decision`);
   requireObject(play.outcome, `${label}.outcome`);
   requireObject(play.outcome.sampled_from, `${label}.outcome.sampled_from`);
+  requireObject(play.field, `${label}.field`);
+  if (play.field.assignment_version !== FIELD_ASSIGNMENT_VERSION) {
+    throw new TypeError(`${label}.field.assignment_version is unsupported: ${play.field.assignment_version ?? 'not provided'}`);
+  }
+  if (play.field.source !== FIELD_ASSIGNMENT_SOURCE) {
+    throw new TypeError(`${label}.field.source is unsupported: ${play.field.source ?? 'not provided'}`);
+  }
+  validateFieldEndpoint(play.field.before, play.state_before, `${label}.field.before`);
+  if (play.field.after !== null) {
+    validateFieldEndpoint(play.field.after, play.state_after, `${label}.field.after`);
+  }
 }
 
 export function collectNullPaths(value, prefix = '') {
@@ -135,11 +170,13 @@ export function adaptLpPlayRecord(record) {
     stateBefore: play.state_before,
     decision: play.decision,
     outcome: play.outcome,
+    field: play.field,
     stateAfter: play.state_after,
     nullPaths: collectNullPaths({
       state_before: play.state_before,
       decision: play.decision,
       outcome: play.outcome,
+      field: play.field,
       state_after: play.state_after,
     }),
   }));
