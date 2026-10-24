@@ -1,0 +1,486 @@
+{
+  "provenance": {
+    "generatedAtUtc": "2026-10-24T06:37:02.509308+00:00",
+    "engine": {
+      "sourceCommit": "a09329185451faad44ef7453c7c47bea9d7253a4",
+      "worldJsSha256": "bc82736164fcd06fffd379efea5b71f6a1373b3dadeb27fe5fa3c1be0f9c0dac",
+      "constantsJsSha256": "98c39f0e2c9deaf4ed390f5f11546de4556642b65c1e10011b4dbeacb132b498",
+      "checkout": "/root/gridiron-physics"
+    },
+    "manifest": {
+      "path": "/root/lp-nfl-tracking/docs/research/bdb2025-observed-tackle-manifest-v1.csv",
+      "sha256": "3c16d3814847170edfc35ba3ca098ff3c82bbc5f8b36b22c05639780d6b41353"
+    },
+    "runnerSha256": "94054d150fe4d7332e33caea5da8d2435aad9921a52ac7ca4b994fcf2d276ebe",
+    "analysisCodeSha256": {
+      "movement_arms.py": "4fd323d6003edde0b0625d3c8cf84f5da9ad3857340bde45c4af42e5ec439f4c",
+      "run_identical_history_comparison.py": "df2a5e2761f6f17fe5cdf8d09f22baa19591be0682648aaa90f2a6d511675b5a"
+    },
+    "reproductionMaxAbsDiffM": 0.0,
+    "horizonSeconds": 0.5,
+    "origin": "eventFrame - 5 (earlier decoded origin, unchanged)",
+    "seed": 20261024,
+    "bootstrapResamples": 2000,
+    "boundMps2": 6.5
+  },
+  "developmentPlays": 40,
+  "exploratoryPlays": 5,
+  "arms": {
+    "constantVelocity": {
+      "carrierMae": {
+        "median": 0.19725029114213785,
+        "mean": 0.21263362560562185
+      },
+      "carrierEnd": {
+        "median": 0.4116264629931868,
+        "mean": 0.44479337951566894
+      },
+      "defenderMae": {
+        "median": 0.19103243618269872,
+        "mean": 0.19608774741688095
+      },
+      "defenderEnd": {
+        "median": 0.4069889614899155,
+        "mean": 0.4136801704370171
+      },
+      "sepMae": {
+        "median": 0.16067986666830275,
+        "mean": 0.17695604642763452
+      },
+      "sepEnd": {
+        "median": 0.24488954153334963,
+        "mean": 0.2583666130260667
+      },
+      "minErr": {
+        "median": 0.022819557929617262,
+        "mean": 0.023057713484598504
+      },
+      "timingErr": {
+        "median": 0.0,
+        "mean": -0.07
+      },
+      "oldStyle_carrierRmse": {
+        "median": 0.2182524352174176,
+        "mean": 0.2367953660264884
+      },
+      "oldStyle_defenderRmse": {
+        "median": 0.21520883533794494,
+        "mean": 0.2190432820873477
+      },
+      "oldStyle_sepRmse": {
+        "median": 0.1704353461956714,
+        "mean": 0.197654959343425
+      },
+      "oldStyle_minErr": {
+        "median": 0.0,
+        "mean": 0.013329017465747791
+      },
+      "oldStyle_eventSepErr": {
+        "median": 0.24488954153334963,
+        "mean": 0.2583666130260667
+      },
+      "share_originIsMinPred": 0.6,
+      "share_originIsMinObs": 0.475
+    },
+    "constantAcceleration": {
+      "carrierMae": {
+        "median": 0.1706734804629363,
+        "mean": 0.17870687544024524
+      },
+      "carrierEnd": {
+        "median": 0.4031833948074284,
+        "mean": 0.3920228492188797
+      },
+      "defenderMae": {
+        "median": 0.1662614550134774,
+        "mean": 0.17766064341634033
+      },
+      "defenderEnd": {
+        "median": 0.3427818887253634,
+        "mean": 0.39089078384735026
+      },
+      "sepMae": {
+        "median": 0.12548419896203772,
+        "mean": 0.14036791265565499
+      },
+      "sepEnd": {
+        "median": 0.1343687358596532,
+        "mean": 0.09945841092207337
+      },
+      "minErr": {
+        "median": 0.0049428865953959275,
+        "mean": -0.027702200668944483
+      },
+      "timingErr": {
+        "median": 0.0,
+        "mean": -0.009999999999999997
+      },
+      "oldStyle_carrierRmse": {
+        "median": 0.20982619907847697,
+        "mean": 0.2026258323542583
+      },
+      "oldStyle_defenderRmse": {
+        "median": 0.1817291175381842,
+        "mean": 0.2023968623456828
+      },
+      "oldStyle_sepRmse": {
+        "median": 0.13962692520742268,
+        "mean": 0.1605245121299538
+      },
+      "oldStyle_minErr": {
+        "median": 0.0,
+        "mean": -0.028007592965663495
+      },
+      "oldStyle_eventSepErr": {
+        "median": 0.1343687358596532,
+        "mean": 0.09945841092207337
+      },
+      "share_originIsMinPred": 0.475,
+      "share_originIsMinObs": 0.475
+    },
+    "boundedAcceleration": {
+      "carrierMae": {
+        "median": 0.1706734804629363,
+        "mean": 0.17776037779599643
+      },
+      "carrierEnd": {
+        "median": 0.4031833948074284,
+        "mean": 0.38576640722362154
+      },
+      "defenderMae": {
+        "median": 0.1662614550134774,
+        "mean": 0.17766064341634033
+      },
+      "defenderEnd": {
+        "median": 0.3427818887253634,
+        "mean": 0.39089078384735026
+      },
+      "sepMae": {
+        "median": 0.12548419896203772,
+        "mean": 0.14395778191168085
+      },
+      "sepEnd": {
+        "median": 0.1343687358596532,
+        "mean": 0.09181146526821676
+      },
+      "minErr": {
+        "median": 0.0049428865953959275,
+        "mean": -0.03000997505312749
+      },
+      "timingErr": {
+        "median": 0.0,
+        "mean": -0.007499999999999997
+      },
+      "oldStyle_carrierRmse": {
+        "median": 0.20982619907847697,
+        "mean": 0.20087204265717268
+      },
+      "oldStyle_defenderRmse": {
+        "median": 0.1817291175381842,
+        "mean": 0.2023968623456828
+      },
+      "oldStyle_sepRmse": {
+        "median": 0.13962692520742268,
+        "mean": 0.16428944238705834
+      },
+      "oldStyle_minErr": {
+        "median": 0.0,
+        "mean": -0.030315367349846502
+      },
+      "oldStyle_eventSepErr": {
+        "median": 0.1343687358596532,
+        "mean": 0.09181146526821676
+      },
+      "share_originIsMinPred": 0.475,
+      "share_originIsMinObs": 0.475
+    },
+    "locomotionController": {
+      "carrierMae": {
+        "median": 0.17266531417659053,
+        "mean": 0.17931002539679086
+      },
+      "carrierEnd": {
+        "median": 0.4034954866638981,
+        "mean": 0.3911594994713031
+      },
+      "defenderMae": {
+        "median": 0.16761062289861722,
+        "mean": 0.17765968929192366
+      },
+      "defenderEnd": {
+        "median": 0.342849957339173,
+        "mean": 0.3906311235292141
+      },
+      "sepMae": {
+        "median": 0.1275301029345711,
+        "mean": 0.14065905984580043
+      },
+      "sepEnd": {
+        "median": 0.13314307541074405,
+        "mean": 0.09774050111723838
+      },
+      "minErr": {
+        "median": 0.003924486211891932,
+        "mean": -0.027597769051520116
+      },
+      "timingErr": {
+        "median": 0.0,
+        "mean": -0.012499999999999997
+      },
+      "oldStyle_carrierRmse": {
+        "median": 0.21224701314583047,
+        "mean": 0.2029175245059249
+      },
+      "oldStyle_defenderRmse": {
+        "median": 0.18047063276490383,
+        "mean": 0.20232563533820294
+      },
+      "oldStyle_sepRmse": {
+        "median": 0.14073952278469476,
+        "mean": 0.16092121517149208
+      },
+      "oldStyle_minErr": {
+        "median": 0.0,
+        "mean": -0.02759608248221463
+      },
+      "oldStyle_eventSepErr": {
+        "median": 0.13314307541074405,
+        "mean": 0.09774050111723838
+      },
+      "share_originIsMinPred": 0.475,
+      "share_originIsMinObs": 0.475
+    }
+  },
+  "pairedComparisons": {
+    "constantAcceleration_minus_constantVelocity:carrierMae": {
+      "n": 40,
+      "meanDiff": -0.033926750165376614,
+      "medianDiff": -0.018566620533993966,
+      "shareALower": 0.725,
+      "ci95": [
+        -0.06280079977951326,
+        -0.007429846321193564
+      ]
+    },
+    "boundedAcceleration_minus_constantVelocity:carrierMae": {
+      "n": 40,
+      "meanDiff": -0.03487324780962542,
+      "medianDiff": -0.018566620533993966,
+      "shareALower": 0.725,
+      "ci95": [
+        -0.06211376606617884,
+        -0.007459619663539564
+      ]
+    },
+    "locomotionController_minus_constantVelocity:carrierMae": {
+      "n": 40,
+      "meanDiff": -0.03332360020883099,
+      "medianDiff": -0.018583391814421854,
+      "shareALower": 0.725,
+      "ci95": [
+        -0.06382717485278797,
+        -0.004819394337383552
+      ]
+    },
+    "locomotionController_minus_constantAcceleration:carrierMae": {
+      "n": 40,
+      "meanDiff": 0.0006031499565456238,
+      "medianDiff": 0.0002221096821257429,
+      "shareALower": 0.45,
+      "ci95": [
+        -4.852071047063387e-05,
+        0.0013578245572386499
+      ]
+    },
+    "locomotionController_minus_boundedAcceleration:carrierMae": {
+      "n": 40,
+      "meanDiff": 0.0015496476007944313,
+      "medianDiff": 0.0002221096821257429,
+      "shareALower": 0.45,
+      "ci95": [
+        -0.0007201381867988523,
+        0.005255038319523505
+      ]
+    },
+    "constantAcceleration_minus_constantVelocity:defenderMae": {
+      "n": 40,
+      "meanDiff": -0.018427104000540616,
+      "medianDiff": -0.01692438326347838,
+      "shareALower": 0.575,
+      "ci95": [
+        -0.04825121593069888,
+        0.012877674882943923
+      ]
+    },
+    "boundedAcceleration_minus_constantVelocity:defenderMae": {
+      "n": 40,
+      "meanDiff": -0.018427104000540616,
+      "medianDiff": -0.01692438326347838,
+      "shareALower": 0.575,
+      "ci95": [
+        -0.049281814779247514,
+        0.010894015197066082
+      ]
+    },
+    "locomotionController_minus_constantVelocity:defenderMae": {
+      "n": 40,
+      "meanDiff": -0.018428058124957288,
+      "medianDiff": -0.015939644803210737,
+      "shareALower": 0.575,
+      "ci95": [
+        -0.049157088842760724,
+        0.012389586286020618
+      ]
+    },
+    "locomotionController_minus_constantAcceleration:defenderMae": {
+      "n": 40,
+      "meanDiff": -9.541244166731167e-07,
+      "medianDiff": 0.0006922380699316,
+      "shareALower": 0.4,
+      "ci95": [
+        -0.00164063464727136,
+        0.0011757888389764728
+      ]
+    },
+    "locomotionController_minus_boundedAcceleration:defenderMae": {
+      "n": 40,
+      "meanDiff": -9.541244166731167e-07,
+      "medianDiff": 0.0006922380699316,
+      "shareALower": 0.4,
+      "ci95": [
+        -0.0015726455911163847,
+        0.001219535869045376
+      ]
+    },
+    "constantAcceleration_minus_constantVelocity:sepMae": {
+      "n": 40,
+      "meanDiff": -0.03658813377197954,
+      "medianDiff": -0.024544198222143876,
+      "shareALower": 0.6,
+      "ci95": [
+        -0.07205883997521981,
+        -0.001524800177285906
+      ]
+    },
+    "boundedAcceleration_minus_constantVelocity:sepMae": {
+      "n": 40,
+      "meanDiff": -0.03299826451595367,
+      "medianDiff": -0.014319942950023846,
+      "shareALower": 0.575,
+      "ci95": [
+        -0.06785680076026791,
+        3.899622975038798e-05
+      ]
+    },
+    "locomotionController_minus_constantVelocity:sepMae": {
+      "n": 40,
+      "meanDiff": -0.0362969865818341,
+      "medianDiff": -0.024612950934311165,
+      "shareALower": 0.6,
+      "ci95": [
+        -0.07109369979172625,
+        -0.0032189652236663787
+      ]
+    },
+    "locomotionController_minus_constantAcceleration:sepMae": {
+      "n": 40,
+      "meanDiff": 0.00029114719014544367,
+      "medianDiff": 0.0002816649355412981,
+      "shareALower": 0.425,
+      "ci95": [
+        -0.001416269084647106,
+        0.002194868461690424
+      ]
+    },
+    "locomotionController_minus_boundedAcceleration:sepMae": {
+      "n": 40,
+      "meanDiff": -0.003298722065880423,
+      "medianDiff": 0.0001388818370218481,
+      "shareALower": 0.475,
+      "ci95": [
+        -0.007623111949113523,
+        0.00013341903853638604
+      ]
+    },
+    "constantAcceleration_minus_constantVelocity:sepEnd": {
+      "n": 40,
+      "meanDiff": -0.15890820210399334,
+      "medianDiff": -0.11471228558899149,
+      "shareALower": 0.625,
+      "ci95": [
+        -0.24661808994915643,
+        -0.07098118804825022
+      ]
+    },
+    "boundedAcceleration_minus_constantVelocity:sepEnd": {
+      "n": 40,
+      "meanDiff": -0.16655514775784996,
+      "medianDiff": -0.1180796035040611,
+      "shareALower": 0.65,
+      "ci95": [
+        -0.2526063137566668,
+        -0.07397327438253312
+      ]
+    },
+    "locomotionController_minus_constantVelocity:sepEnd": {
+      "n": 40,
+      "meanDiff": -0.16062611190882833,
+      "medianDiff": -0.11742609086988898,
+      "shareALower": 0.6,
+      "ci95": [
+        -0.25335759745298947,
+        -0.07044831589771573
+      ]
+    },
+    "locomotionController_minus_constantAcceleration:sepEnd": {
+      "n": 40,
+      "meanDiff": -0.0017179098048349891,
+      "medianDiff": 0.0005126019118941727,
+      "shareALower": 0.475,
+      "ci95": [
+        -0.0067964041316557425,
+        0.0033500004233775428
+      ]
+    },
+    "locomotionController_minus_boundedAcceleration:sepEnd": {
+      "n": 40,
+      "meanDiff": 0.005929035849021622,
+      "medianDiff": 0.0008970778683028424,
+      "shareALower": 0.425,
+      "ci95": [
+        -0.0012445587970528714,
+        0.015253062601693327
+      ]
+    },
+    "locomotionController_minus_constantVelocity:absMinErr": {
+      "n": 40,
+      "meanDiff": -0.0008194711213475852,
+      "medianDiff": -0.003183551066064473,
+      "shareALower": 0.65,
+      "ci95": [
+        -0.028809930115971594,
+        0.027840487810922
+      ]
+    },
+    "locomotionController_minus_constantAcceleration:absMinErr": {
+      "n": 40,
+      "meanDiff": -0.000928913484291544,
+      "medianDiff": -0.00015949788997460246,
+      "shareALower": 0.6,
+      "ci95": [
+        -0.004613789451122227,
+        0.001709029456092314
+      ]
+    },
+    "locomotionController_minus_boundedAcceleration:absMinErr": {
+      "n": 40,
+      "meanDiff": -0.0032366878684745486,
+      "medianDiff": -0.0002543473254996709,
+      "shareALower": 0.625,
+      "ci95": [
+        -0.008206258120271204,
+        0.0005266228864733713
+      ]
+    }
+  }
+}
