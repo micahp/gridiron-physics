@@ -2,6 +2,7 @@ import { Renderer } from './render.js';
 import { selectPlay } from './prototype-model.js';
 import { executeSelectedPlay } from './prototype-execution.js';
 import { MATCHUPS, generateGame } from './week7-core.js';
+import { describeWeek7Play } from './week7-play-description.js';
 
 const $ = id => document.getElementById(id);
 const esc = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -25,6 +26,8 @@ for (const [side, id] of [['away', match.away], ['home', match.home]]) {
 
 let snapshot, books, physicsGame, renderer, simulation, selected = 0, current = null, currentSelection = null;
 let animating = false, lastTick = null, playSeconds = 0;
+// Reuse the same 2026 lineups for timeline credits and the actual 3D play.
+const selectedDemos = new Map();
 
 function status(message, failure=false){$('status').textContent=message; $('status').style.color=failure?'#ffc3b8':'#c9eaff';}
 function clock(v){return Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0');}
@@ -220,8 +223,8 @@ function renderTimeline(){
   $('timeline-head').textContent=shown+' of '+simulation.plays.length+' events · '+drives.size+' drives';
   $('timeline').innerHTML=[...drives].map(([n,d])=>
     '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+(d.rows.length===1?' event':' events')+'</span></div>'+
-    d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+esc(p.action)+' · '+
-      (p.touchdown?'TOUCHDOWN':p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='punt'||p.type==='field_goal'?esc(p.distance)+' yd':p.type==='kickoff'?(p.outcome==='returned'?esc(p.return_yards)+' yd return':esc(p.outcome.replace('_',' '))):'event')+'</span></button>').join('')+'</div>').join('');
+    d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+
+      esc(describeWeek7Play(p, selectionFor(p)?.demo, physicsGame?.players).line)+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
 function scoreAtPlay(p) {
@@ -264,23 +267,40 @@ function makeSelected(p){
   demo.execution_contract.unsupported.push('2025 sampled outcome anchors the 2026 visualization; physics does not predict the result');
   return demo;
 }
+function selectionFor(p){
+  if(p.type!=='scrimmage')return null;
+  if(!selectedDemos.has(p.id)){
+    try{selectedDemos.set(p.id,{demo:makeSelected(p)});}
+    catch(error){selectedDemos.set(p.id,{error});}
+  }
+  return selectedDemos.get(p.id);
+}
 function choose(idx){
   if(!simulation)return;
   selected=Math.max(0,Math.min(simulation.plays.length-1,idx));
   const p=simulation.plays[selected];
   currentPlay=p;
-  scoreAtPlay(p); $('snap-title').textContent='Play '+p.index+' · '+p.action+' · '+p.offense;
-  $('play-detail').innerHTML='<b>'+esc(p.action)+'</b> · '+(p.type==='scrimmage'?esc(p.gain)+' yards · ':'')+
-    'Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
-    '<br>'+esc(p.note||'')+(p.try?'<br>'+esc(p.try):'');
+  const credit=describeWeek7Play(p, selectionFor(p)?.demo, physicsGame?.players);
+  scoreAtPlay(p);
+  $('snap-title').textContent='Play '+p.index+' · '+p.action+' · '+(credit.actors||p.offense);
+  $('play-detail').innerHTML='<b>'+esc(p.action)+'</b>'+
+    (credit.actors?' · '+esc(credit.actors):'')+(credit.result?' · '+esc(credit.result):'')+
+    ' · Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
+    '<br>'+esc(p.note||'')+
+    (credit.actors?'<br><span class="note">Illustrative 2026 roster assignment for the 3D replay, not a historical player credit.</span>':'')+
+    (p.try?'<br>'+esc(p.try):'');
   current=null;playSeconds=0;lastTick=null;animating=false;dwell=0;$('scrub').value='0';
   if(p.type!=='scrimmage'){
+    currentSelection=null;
     $('replay-type').textContent='Text-only event';
     $('roster-t').hidden=true;rosterSlots=[];
     $('players').innerHTML='<p class="note">No physical special-teams animation for this event.</p>';
   }else{
     try{
-      const demo=makeSelected(p);
+      const resolved=selectionFor(p);
+      if(resolved?.error)throw resolved.error;
+      const demo=resolved?.demo;
+      if(!demo)throw new Error('missing 2026 replay lineup');
       currentSelection=demo;
       renderer.clearTrail();
       const roster=[...Object.entries(demo.lineups.offense).map(([slot,id])=>({id,team:p.offense,slot})),
@@ -307,6 +327,7 @@ function simulate(){
   try{
     const seed=$('seed').value.trim()||'1042';
     simulation=generateGame(match,books,seed,league);
+    selectedDemos.clear();
     ({scoring:scoringAt,key:keyAt}=classify(simulation));
     playing=false;
     renderFilter();renderTimeline();renderBox();choose(playable(-1,1)??0);renderPlayButton();
