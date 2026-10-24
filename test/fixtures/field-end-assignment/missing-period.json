@@ -1,0 +1,7 @@
+{
+  "assignment_version": "team-period-field-end-v1",
+  "source": "missing_period_rejection_fixture",
+  "assignments": [
+    { "team_id": "NE", "period": "Q1", "dir": 1 }
+  ]
+}
