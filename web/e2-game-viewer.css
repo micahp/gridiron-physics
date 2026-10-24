@@ -26,6 +26,14 @@ p { line-height: 1.5; }
 .notice { margin: 12px 0; padding: 12px 16px; border: 1px solid var(--accent); border-radius: 8px; background: #322b1d; line-height: 1.5; }
 .notice.error { border-color: var(--danger); background: #351f22; color: #ffd5d0; }
 .notice ul { margin: 8px 0 0; }
+.e3-panel { margin: 18px 0; }
+.e3-panel h3 { margin-top: 24px; }
+.audit-label { padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: #101820; }
+.audit-label.pass { border-color: #4a9875; color: #a4e2c3; }
+.audit-label.fail { border-color: var(--danger); color: #ffd5d0; }
+.caveat { margin: 12px 0; }
+.rule-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; }
+.rule-chip { border: 1px solid #7b6335; border-radius: 999px; padding: 5px 10px; background: #322b1d; color: #f5d28b; font-size: .82rem; }
 .scoreboard { display: flex; align-items: center; justify-content: center; gap: 38px; position: relative; padding: 22px; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 10px; background: #0d151c; }
 .scoreboard div { display: grid; gap: 2px; text-align: center; }
 .scoreboard span, .score-separator { color: var(--muted); font-size: .78rem; letter-spacing: .08em; }

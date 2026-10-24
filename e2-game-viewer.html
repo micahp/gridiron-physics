@@ -18,6 +18,35 @@
     <section id="load-error" class="notice error" role="alert" hidden></section>
     <section id="validation" class="notice" hidden></section>
 
+    <section id="e3-comparison" class="card e3-panel" aria-labelledby="e3-heading" hidden>
+      <h2 id="e3-heading">E3 observed distribution comparison</h2>
+      <p id="e3-load-status" class="audit-label"></p>
+      <p id="e3-source-label" class="muted"></p>
+      <p id="e3-clock-caveat" class="notice caveat">Clock clamp census loading…</p>
+
+      <h3>Independent football-state baseline</h3>
+      <div id="state-audit-summary"></div>
+      <div id="state-audit-table" class="table-wrap"></div>
+
+      <h3>Play distribution</h3>
+      <div id="e3-play-table" class="table-wrap"></div>
+      <p id="e3-play-note" class="muted"></p>
+
+      <h3>Drive distribution</h3>
+      <div id="e3-drive-table" class="table-wrap"></div>
+      <p id="e3-drive-note" class="muted"></p>
+
+      <h3>Game distribution</h3>
+      <div id="e3-game-table" class="table-wrap"></div>
+      <p id="e3-game-note" class="muted"></p>
+
+      <h3>Source semantics and unsupported rules</h3>
+      <p id="conversion-source-status" class="audit-label"></p>
+      <p class="muted">Unsupported-rules labels from the LP record:</p>
+      <ul id="e3-unsupported-list" class="rule-list"></ul>
+    </section>
+
+    <div id="viewer-content" hidden>
     <section class="scoreboard" aria-label="Final score">
       <div><span>Team A</span><strong id="score-a">—</strong></div>
       <div class="score-separator">FINAL</div>
@@ -71,6 +100,7 @@
       <p class="muted">Lines are copied from LP. Player attribution describes participants from sampled historical plays, not this game's roster.</p>
       <div class="table-wrap"><table><thead><tr><th>Team</th><th>Statistic</th><th>Value</th></tr></thead><tbody id="team-stats"></tbody></table></div>
     </section>
+    </div>
     <footer>Read-only research display · source IDs, outcomes, and nulls are preserved.</footer>
   </main>
   <script type="module" src="web/e2-game-viewer.js"></script>

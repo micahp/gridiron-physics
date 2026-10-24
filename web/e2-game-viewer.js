@@ -1,4 +1,5 @@
 import { adaptLpGamePayload } from './lp-game-record-adapter.js';
+import { renderE3Comparison } from './e3-game-comparison.js';
 
 const MANIFEST_URL = 'docs/fixtures/e2/MANIFEST.json';
 const FIXTURE_DIR = 'docs/fixtures/e2/';
@@ -6,6 +7,7 @@ const $ = (selector) => document.querySelector(selector);
 const status = $('#record-status');
 const errorPanel = $('#load-error');
 const validationPanel = $('#validation');
+const viewerContent = $('#viewer-content');
 let adapted;
 
 function el(tag, text, className) {
@@ -176,6 +178,7 @@ function showError(error) {
   errorPanel.hidden = false;
   errorPanel.textContent = `Record rejected: ${error.message}`;
   status.textContent = 'No record displayed';
+  viewerContent.hidden = true;
 }
 
 async function loadFixture() {
@@ -210,7 +213,9 @@ async function loadFixture() {
     if (canonicalJson(upstream.record) !== canonicalJson(payload.record)) {
       throw new Error('Gridiron transport record differs from the pinned LP source record');
     }
+    await renderE3Comparison(payload);
     adapted = adaptLpGamePayload(payload);
+    viewerContent.hidden = false;
     renderMetadata(`matches manifest (${hash.slice(0, 12)})`);
     renderValidation();
     renderLedgerAndKickoffs();

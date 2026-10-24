@@ -1,5 +1,7 @@
 // Read-only adapter for the versioned LP E2 game envelope. It validates the source, freezes a copy, and adds only display
 // indexes; source event IDs and outcomes are never rewritten.
+import { auditDriveIndex, auditFootballState } from './lp-game-state-audit.js';
+
 export const GAME_PAYLOAD_NAME = 'gridiron.lp-full-game-payload';
 export const GAME_PAYLOAD_VERSION = '1.0.0';
 export const GAME_DISPLAY_LABEL = 'RETROSPECTIVE STATISTICAL GAME · NOT A FORECAST · LP OUTCOMES UNCHANGED';
@@ -62,9 +64,6 @@ function validatePlay(play, label, drive, gameSequence, driveOffset, ids, simula
   requireString(play.event_type, `${label}.event_type`);
   validateState(play.state_before, `${label}.state_before`);
   validateState(play.state_after, `${label}.state_after`);
-  if (play.state_before.drive_index !== drive.index || play.state_after.drive_index !== drive.index) {
-    findings.add(`Drive ${drive.index}: source play state uses drive_index ${play.state_before.drive_index}/${play.state_after.drive_index}.`);
-  }
   if (play.state_before.offense_team !== drive.offense_team) {
     findings.add(`Drive ${drive.index}: source play offense disagrees with the drive offense.`);
   }
@@ -321,6 +320,11 @@ export function adaptLpGamePayload(payload, { requireCompleteRegulation = true }
     requireHash(hash, `payload.source.producer_file_sha256.${path}`);
   }
   const { sourcePlayCount, findings } = validateRecord(payload.record, { requireCompleteRegulation });
+  const footballStateAudit = auditFootballState(payload.record);
+  const driveIndexFindings = auditDriveIndex(payload.record);
+  if (driveIndexFindings.length) {
+    fail(`independent football-state audit rejected ${driveIndexFindings.length} drive-index mismatches; first: ${driveIndexFindings[0].path}`);
+  }
   const record = deepFreeze(structuredClone(payload.record));
   const drives = record.drives.map((drive) => ({
     index: drive.index,
@@ -346,6 +350,7 @@ export function adaptLpGamePayload(payload, { requireCompleteRegulation = true }
     drives: deepFreeze(drives),
     sourcePlayCount,
     validation: deepFreeze({ passed: findings.length === 0, findings }),
+    footballStateAudit: deepFreeze(footballStateAudit),
     sharedV1Audit: deepFreeze(audit),
   });
 }

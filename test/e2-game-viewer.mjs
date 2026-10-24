@@ -75,7 +75,8 @@ globalThis.document = {
     assert.match(selector, /^#[\w-]+$/);
     if (!nodes.has(selector)) {
       const node = new FakeNode();
-      if (selector === '#load-error' || selector === '#validation') node.hidden = true;
+      if (selector === '#load-error' || selector === '#validation' || selector === '#viewer-content'
+          || selector === '#e3-comparison') node.hidden = true;
       nodes.set(selector, node);
     }
     return nodes.get(selector);
@@ -97,28 +98,19 @@ globalThis.fetch = async (url) => {
 
 await import('../web/e2-game-viewer.js');
 const get = (id) => nodes.get(`#${id}`);
-for (let attempt = 0; attempt < 100 && !get('record-status')?.textContent.includes('complete_regulation'); attempt += 1) {
+for (let attempt = 0; attempt < 300 && get('load-error')?.hidden !== false; attempt += 1) {
   await new Promise((resolveWait) => setTimeout(resolveWait, 10));
 }
 
-assert.equal(get('load-error').hidden, true, `the pinned full-game payload must load: ${get('load-error').textContent}`);
-assert.match(get('record-status').textContent, /complete_regulation/);
-assert.equal(get('drive-select').children.length, 24, 'all source drives must be navigable');
-assert.match(get('record-meta').textContent, /5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f/);
-assert.match(get('validation').textContent, /NOT CONFORMING/,
-  'the E2 payload must remain visibly outside shared pregame v1');
-assert.match(get('validation').textContent, /Drive 24: source play state uses drive_index 1\/1/,
-  'the final LP drive-index finding must be visible');
+assert.equal(get('load-error').hidden, false, `the pinned source must hard-reject its drive-index defect: ${get('load-error').textContent}`);
+assert.match(get('load-error').textContent, /23 drive-index mismatches/);
+assert.equal(get('viewer-content').hidden, true, 'the rejected record must not render as a navigable game');
+assert.match(get('e3-clock-caveat').textContent, /594 \/ 7016/);
+assert.match(get('e3-unsupported-list').textContent, /timeouts/);
+assert.match(get('conversion-source-status').textContent, /EPA-positive success/);
+assert.match(get('state-audit-summary').textContent, /1175 findings/);
+assert.equal(get('e3-play-table').querySelectorAll('tr').length, 5);
+assert.equal(get('e3-drive-table').querySelectorAll('tr').length, 6);
+assert.equal(get('e3-game-table').querySelectorAll('tr').length, 14);
 
-const driveSelect = get('drive-select');
-driveSelect.value = '23';
-driveSelect.listeners.change();
-assert.match(get('drive-summary').textContent, /Drive 24/);
-assert.equal(get('play-select').children.length, sourceRecord.drives.at(-1).plays.length,
-  'the final drive must expose every source play');
-get('play-select').value = String(sourceRecord.drives.at(-1).plays.length - 1);
-get('play-select').onchange();
-assert.match(get('play-meta').textContent, /24 \/ 144/,
-  'the viewer must reach the final source play without renumbering');
-
-console.log('E2 drive viewer DOM render: 24 drives and 144 plays navigable; pinned LP source verified');
+console.log('E2 viewer DOM audit: pinned record rejected with 23 drive-index findings; E3 diagnostics and caveats rendered');

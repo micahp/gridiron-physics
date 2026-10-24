@@ -71,7 +71,7 @@ timeout, roster, lineup, route, movement, or kick result. The game-wide source `
 The research fixture is not `pregame_full_game` v1. The current E2 record has no scheduled `game_id`, pregame `as_of` snapshot,
 real team identities, or eligible roster. Its participants and event outcomes are sampled
 retrospectively. The source records explicitly mark `valid_full_game: false` where appropriate. The adapter reports these
-as shared-v1 violations and still permits a read-only inspection when the record reaches the end of regulation.
+as shared-v1 violations. Read-only inspection is only available after the independent drive-index hard gate passes.
 
 The earlier E2 commit `60b7708b` stored drive play counts without nested play records. LP commit
 `3daa0ed6dc99c3bdc666d5c0f226af02173e05cc` added the committed nested-play refactor and `emit_game.py`; LP commit
@@ -82,12 +82,29 @@ wrapper and hash-pinned in `docs/fixtures/e2/MANIFEST.json`. Gridiron never reco
 The re-pinned game (seed 1) has 24 drives and 144 plays, score A 11–B 17, and rules-matrix counts of 13 PASS, 5
 UNSUPPORTED, 1 PARTIAL, and 4 NOT_APPLICABLE. It is complete through regulation, while `valid_full_game` correctly remains
 false because rules are unsupported. Drives 2–24 have `drive.index` 2–24, while every embedded E1 play state still says
-`drive_index: 1`. The validator reports these 23 findings and leaves the source values unchanged. Kickoff `after_drive`
-links, receiver-to-next-drive linkage, drive order, and score reconciliation pass for this fixture.
+`drive_index: 1`. The adapter hard-rejects these 23 grouped findings and leaves source values unchanged. The independent
+football-state audit also records each missing score and timeout field and checks downs, possession, field position, kick
+restarts, quarter/halftime transitions, score monotonicity where snapshots exist, and termination. See
+`docs/research/GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-2026-10-24.md` for all baseline findings. Kickoff `after_drive`
+links, receiver-to-next-drive linkage, drive order, and the separate drive-score ledger reconcile for this fixture.
+
+LP's later committed producer `a78558554ec9f0643b4857c7c4bb46104852c1df` writes the correct drive index to both embedded
+state boundaries. Its clean seed-1 output is preserved as an audit-only record at
+`docs/fixtures/e2/audit-current-seed1-a785-record.json`; this does not alter the 5fc viewer pin. The later record still
+lacks per-play score and timeout snapshots and remains `valid_full_game: false`, so it has not replaced the viewer fixture.
+
+The latest checked-in producer is `f12c1c6bf9faaf3f070726ead017f2c5854353f2`. Its clean seed-1 output has 24 drives,
+143 plays, A 14–B 10, and raw payload SHA-256
+`0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`. The audit-only record is
+`docs/fixtures/e2/audit-current-seed1-f12-record.json`; its SHA-256 is
+`622ce2881e64dacb31135fe36a2972da620b7ccd70a41ae41a17c80108ecb1e1`. Its independent football-state audit has zero
+findings, including score reconciliation and timeout snapshot range/transition checks. The consumer's shared-v1 audit
+closes score and timeout state coverage, with eight other v1 violations open. Timeout rules remain unsupported and
+`valid_full_game` remains false. This record is not the viewer pin and does not change the 5fc regression fixture.
 
 ## Viewer behavior
 
-The viewer navigates game → drive → play, shows the LP score and event outcome, and offers the raw selected play for inspection.
+When the record passes the hard drive-index gate, the viewer navigates game → drive → play, shows the LP score and event outcome, and offers the raw selected play for inspection. Rejected records retain the independent audit and E3 diagnostics while game navigation stays hidden.
 It is an event/field-state viewer, not a 3D physical replay: the record does not contain this game's roster, lineups, routes,
 or motion. It prominently labels the game as a retrospective statistical simulation and leaves the LP result untouched.
 
