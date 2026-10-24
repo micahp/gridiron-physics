@@ -1,0 +1,30 @@
+name: Week 7 player labels and 3D regression
+on:
+  pull_request:
+    paths:
+      - 'web/week7.js'
+      - 'web/week7-play-description.js'
+      - 'test/week7-play-description.mjs'
+      - 'test/week7.browser.mjs'
+      - '.github/workflows/week7-player-labels.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Check player descriptions and core game generation
+        run: node --test test/week7-play-description.mjs test/week7-core.mjs
+      - name: Install Chromium for six-matchup 3D smoke
+        run: npx playwright install --with-deps chromium
+      - name: Run original six-matchup browser replay test
+        run: npm run test:ui
