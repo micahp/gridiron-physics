@@ -525,7 +525,9 @@ const profileAnchoredPhases = new Set(['physical-wrap-capacity', 'uncalibrated-t
 for (const treatment of reportRows) {
   const configId = treatment.conditions.config_id;
   if (configId === 'm4c-neutral' || configId === 'old-barkley-baun-lost-contact') continue;
-  const anchorConfigId = profileAnchoredPhases.has(treatment.conditions.phase) ? 'madden-pair-combined' : 'm4c-neutral';
+  const anchorConfigId = treatment.conditions.phase === 'uncalibrated-btk-breakaway-force-hypothesis'
+    ? 'btk-drive-rating-50'
+    : profileAnchoredPhases.has(treatment.conditions.phase) ? 'madden-pair-combined' : 'm4c-neutral';
   const seed = treatment.seed_or_fixture_label.seed;
   const baseline = rowsByPairingKey.get(`${treatment.scenario_id}::${anchorConfigId}::${treatment.solver_or_engine}::${seed}`);
   if (!baseline) continue;
@@ -654,11 +656,12 @@ function markdownReport(data) {
     '| Scenario | Input | Engine | Min gap (m) | Opportunity samples | Contact samples / events | First contact (s) | Grip load (N) | Takedown | Post-contact travel (m / 1 s) | p95 (m) | weighted mean (m) | Status |',
     '|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---|',
     '## Paired responses within each solver', '',
-    'Every treatment is paired to its same-engine, same-seed anchor: mass/STR substitutions use `m4c-neutral`; capacity, balance, TKL, BTK, and STR-continuity hypotheses use `madden-pair-combined`. The JSON includes per-seed paired values and min/median/max distributions for separation, opportunities, contact samples/events, contact time, grip load, torque, drive force, penetration, and post-contact travel. Only two deterministic fixture seeds are used; these ranges are not confidence intervals.',
+    'Every treatment is paired to its same-engine, same-seed anchor: mass/STR substitutions use `m4c-neutral`; capacity, balance, TKL, and STR-continuity hypotheses use `madden-pair-combined`; BTK added-force values use the rating-50, 1200 N base-drive control so only the extra force changes. The JSON includes per-seed paired values and min/median/max distributions for separation, opportunities, contact samples/events, contact time, grip load, torque, drive force, penetration, and post-contact travel. Only two deterministic fixture seeds are used; these ranges are not confidence intervals.',
     '| Scenario | Input | Engine | Anchor | Δ min gap (m) | Δ opportunities | Δ contact samples | Δ grip load (N) | Δ peak torque (N·m) | Δ p95 (m) | Δ weighted mean (m) | Outcome gate pass count |',
     '|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|',
     '## STR continuity around 80–81', '',
     'At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace.',
+    'The pre-player-contact request is continuous: at tick 5 (0.04167 s), while all players are still on their approach trajectories, controller torque rose monotonically at every sampled STR for both actors in both engines. Across STR 79→82, Henderson’s request changed 224.356→228.936 N·m in Rapier and 153.267→156.414 N·m in Jolt; Bush’s changed 127.053→129.663 N·m and 86.612→88.390 N·m, respectively. Contact itself was discontinuous in Rapier near grazing separation: for Henderson STR 79.75, Rapier reached −0.00018 m and recorded contact; at 80.00 it stayed +0.01671 m with no contact; at 80.10 it returned to −0.00002 m with contact. Bush STR 80.10 contacted at −0.00003 m, STR 80.20–80.50 had no contact at positive gaps, and contact returned near 80.60. Jolt retained contact at 0.09167 s through these sweeps. These are trajectory/geometry threshold transitions after smooth torque changes; across the full matrix, the 30 cases with nonpositive Rapier proxy gap but no Rapier contact remain flagged as candidate proxy/contact-boundary discrepancies, so detection cannot be ruled out in every case.',
     '| Actor | STR | Engine | Min gap (m) | First contact (s) | Contact samples | Peak torque request (N·m) | Status |',
     '|---|---:|---|---:|---:|---:|---:|---|',
     '## Matched Rapier/Jolt trajectory and contact diagnosis', '',
@@ -717,9 +720,12 @@ function markdownReport(data) {
   const continuityRows = data.runs.filter((row) => row.conditions.config_id.startsWith('str-continuity-')
     && row.seed_or_fixture_label.seed === SEEDS[0]);
   for (const row of [...continuityRows].reverse()) {
-    const actorId = row.conditions.config_id.includes('henderson') ? row.player_roles.carrier : row.player_roles.tackler;
-    const torque = row.balance_torque_requests_Nm[actorId] ?? 0;
-    const values = [actorId, row.conditions.base_role_inputs[actorId === row.player_roles.carrier ? 'carrier' : 'tackler'].strength,
+    const isCarrier = row.conditions.config_id.includes('henderson');
+    const role = isCarrier ? 'carrier' : 'tackler';
+    const fixtureActorId = row.conditions.base_role_inputs[role].id;
+    const actorLabel = isCarrier ? 'Henderson (carrier)' : 'Bush (tackler)';
+    const torque = row.balance_torque_requests_Nm[fixtureActorId] ?? 0;
+    const values = [actorLabel, row.conditions.base_role_inputs[role].strength,
       row.solver_or_engine, row.focus_pair_minimum_surface_gap_m.toFixed(5),
       row.first_contact_seconds == null ? '—' : row.first_contact_seconds.toFixed(4), row.actual_contact_count,
       torque.toFixed(2), row.result_status];
