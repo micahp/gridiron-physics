@@ -280,7 +280,7 @@ def main():
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=1, sort_keys=True)
         f.write("\n")
-    print(f"wrote {OUT}; NE={team_payload['NE']['active_available_count']} available, CHI={team_payload['CHI']['active_available_count']} available, league calibration={len(league_raw)}")
+    print(f"wrote {OUT}; " + ", ".join(f"{code}={team_payload[code]['active_available_count']} available" for code in TEAMS) + f"; league calibration={len(league_raw)}")
 
 
 if __name__ == "__main__":
