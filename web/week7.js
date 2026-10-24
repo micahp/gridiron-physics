@@ -40,10 +40,14 @@ function playersMap(a,b) {
 function makeViewer(){
   const home=snapshot.teams[match.home],away=snapshot.teams[match.away];
   if(!home || !away)throw new Error('one or both 2026 team rosters are missing');
-  physicsGame = {home:match.home,away:match.away,
+  physicsGame = {home:match.home,away:match.away,seed:$('seed').value.trim()||'1042',
     teams:{[match.home]:teamStyle(match.home),[match.away]:teamStyle(match.away)},
     players:playersMap(home,away)};
   renderer = new Renderer($('view'),physicsGame,{displayFont:'"Saira Condensed", "Arial Narrow", sans-serif'});
+  if(new URLSearchParams(location.search).has('debug')){
+    window.__gridironRenderer=renderer;
+    window.__gridironState=()=>({selected,hasRecord:Boolean(current),duration:current?.duration,animating,playing,playerCount:renderer.players.size});
+  }
   renderer.setCamera('broadcast');renderer.resize();
   window.addEventListener('resize',()=>renderer.resize());
   $('view').addEventListener('click',e=>{const id=renderer.pick(e.clientX,e.clientY);if(id)inspectPlayer(id);});
@@ -351,6 +355,7 @@ function choose(idx){
 function simulate(){
   try{
     const seed=$('seed').value.trim()||'1042';
+    if(physicsGame)physicsGame.seed=seed;
     simulation=generateGame(match,books,seed,league);
     selectedDemos.clear();
     stadiumAudio.setPlay(null, null);
