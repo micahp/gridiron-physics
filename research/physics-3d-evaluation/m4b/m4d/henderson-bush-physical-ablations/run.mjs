@@ -629,7 +629,7 @@ for (const row of reportRows.filter((candidate) => candidate.conditions.config_i
   const actor = match[1];
   const role = actor === 'henderson' ? 'carrier' : 'tackler';
   const playerId = row.conditions.base_role_inputs[role].id;
-  const pairId = [row.player_roles.carrier, row.player_roles.tackler].sort().join('::');
+  const pairId = [...ROLES[row.scenario_id].focusPair].sort().join('::');
   const trace = await traceFor(row);
   const frame = trace.frames.find((candidate) => candidate.tick === 5);
   const pair = frame?.pairSurfaceGaps?.find((candidate) => candidate.pairId === pairId);
@@ -663,7 +663,7 @@ const continuityMonotonicity = [...continuityGroups.values()].map((group) => {
 });
 async function closestBoundarySample(row) {
   const trace = await traceFor(row);
-  const pairId = [row.player_roles.carrier, row.player_roles.tackler].sort().join('::');
+  const pairId = [...ROLES[row.scenario_id].focusPair].sort().join('::');
   let closest = null;
   for (const frame of trace.frames) {
     const pair = frame.pairSurfaceGaps?.find((candidate) => candidate.pairId === pairId);
@@ -951,7 +951,7 @@ function markdownReport(data) {
       row.solver_or_engine, row.focus_pair_minimum_surface_gap_m.toFixed(5),
       row.first_contact_seconds == null ? '—' : row.first_contact_seconds.toFixed(4), row.actual_contact_count,
       torque.toFixed(2), row.result_status];
-    lines.splice(lines.indexOf('## Matched Rapier/Jolt trajectory and contact diagnosis'), 0, '|' + values.join('|') + '|');
+    lines.splice(lines.indexOf('### Adjacent STR contact transitions and closest approach'), 0, '|' + values.join('|') + '|');
   }
   for (const transition of [...data.str_continuity_diagnostics.contact_transitions].reverse()) {
     const closestText = (sample) => sample
