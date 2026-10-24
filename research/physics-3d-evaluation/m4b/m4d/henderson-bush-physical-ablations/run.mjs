@@ -664,16 +664,20 @@ const continuityMonotonicity = [...continuityGroups.values()].map((group) => {
 async function closestBoundarySample(row) {
   const trace = await traceFor(row);
   const pairId = [...ROLES[row.scenario_id].focusPair].sort().join('::');
-  let closest = null;
+  const samples = [];
   for (const frame of trace.frames) {
     const pair = frame.pairSurfaceGaps?.find((candidate) => candidate.pairId === pairId);
     if (!pair || !Number.isFinite(pair.minimumSurfaceGapM)) continue;
-    if (!closest || Math.abs(pair.minimumSurfaceGapM) < Math.abs(closest.signed_gap_m)) {
-      closest = { tick: frame.tick, time_seconds: frame.timeSeconds, signed_gap_m: pair.minimumSurfaceGapM,
-        contact_opportunity: pair.contactOpportunity, actual_contact: pair.physicalContact };
-    }
+    samples.push({ tick: frame.tick, time_seconds: frame.timeSeconds, signed_gap_m: pair.minimumSurfaceGapM,
+      contact_opportunity: pair.contactOpportunity, actual_contact: pair.physicalContact });
   }
-  return closest;
+  const firstContact = samples.find((sample) => sample.actual_contact);
+  if (firstContact) return { ...firstContact, reference: 'first actual-contact sample' };
+  const opportunities = samples.filter((sample) => sample.contact_opportunity);
+  const candidates = opportunities.length ? opportunities : samples;
+  const closest = candidates.reduce((best, sample) => !best
+    || Math.abs(sample.signed_gap_m) < Math.abs(best.signed_gap_m) ? sample : best, null);
+  return closest ? { ...closest, reference: opportunities.length ? 'closest opportunity sample' : 'closest full-trace sample' } : null;
 }
 const continuityTransitions = [];
 for (const group of continuityGroups.values()) {
@@ -880,7 +884,7 @@ function markdownReport(data) {
     'At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace. The additional step-5 audit samples controller torque at 0.04167 s, before the players reach contact.',
     'At step 5 the tested torque series is nondecreasing for every actor, solver, and seed: ' + data.str_continuity_diagnostics.all_precontact_torque_series_nondecreasing + '. Representative 79→82 requests at seed ' + SEEDS[0] + ': ' + [
       torqueEndpointText('henderson', 'rapier3d-compat', 79, 82), torqueEndpointText('henderson', 'jolt-physics-js', 79, 82),
-      torqueEndpointText('bush', 'rapier3d-compat', 79, 82), torqueEndpointText('bush', 'jolt-physics-js', 79, 82)].join('; ') + '. Smooth controller-input changes can legitimately alter subsequent feedback-driven trajectories. Contact formation remains discrete: adjacent STR values can cross the geometric contact boundary. Each observed transition below includes the closest signed proxy gap and time for both adjacent runs. Across the full matrix, 30 cases with nonpositive Rapier proxy gap but no Rapier contact remain candidate proxy/contact-boundary discrepancies, so detection cannot be ruled out in every case.',
+      torqueEndpointText('bush', 'rapier3d-compat', 79, 82), torqueEndpointText('bush', 'jolt-physics-js', 79, 82)].join('; ') + '. Smooth controller-input changes can legitimately alter subsequent feedback-driven trajectories. Contact formation remains discrete: adjacent STR values can cross the geometric contact boundary. Transition rows report the signed gap at first contact on the contact side and the closest analytic opportunity sample on the no-contact side. Across the full matrix, 30 cases with nonpositive Rapier proxy gap but no Rapier contact remain candidate proxy/contact-boundary discrepancies, so detection cannot be ruled out in every case.',
     '| Actor | STR | Engine | Min gap (m) | First contact (s) | Contact samples | Peak torque request (N·m) | Status |',
     '|---|---:|---|---:|---:|---:|---:|---|',
     '### Adjacent STR contact transitions and closest approach',
