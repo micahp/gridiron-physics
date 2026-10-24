@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createPuntSampler, MATCHUPS, generateGame, seeded, missedFieldGoalRestart,
-  sampleBlockedPuntOutcome, sampleCoinTossLedger, validateHalfStartKickoffs } from '../web/week7-core.js';
+  sampleBlockedPuntOutcome, sampleCoinTossLedger, validateHalfStartKickoffs, validateCoinTossLedger } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
 
@@ -97,12 +97,13 @@ assert.throws(()=>createPuntSampler({
   distance_yards:{...league.punts.distance_yards,'0':8},
 }),/punt table mismatch/,'reject a changed blocked/zero-distance relationship');
 
-// Missed-FG restart boundary: the kick spot at the receivers' 20 is not untouched.
+// Missed-FG restart boundary: the kick spot is inside the receivers' 20 (kick position only, no contact claim).
 assert.deepEqual(missedFieldGoalRestart(11).restartOwn, 20, 'kick spot 19 restarts at the 20');
-assert.equal(missedFieldGoalRestart(11).untouched, true);
+assert.equal(missedFieldGoalRestart(11).kickSpotInside20, true);
 assert.equal(missedFieldGoalRestart(12).restartOwn, 20, 'kick spot 20 restarts at the kick spot, which is the 20');
-assert.equal(missedFieldGoalRestart(12).untouched, false);
+assert.equal(missedFieldGoalRestart(12).kickSpotInside20, false);
 assert.equal(missedFieldGoalRestart(13).restartOwn, 21, 'kick spot 21 restarts at the kick spot');
+assert.equal('untouched' in missedFieldGoalRestart(11), false, 'old untouched name is gone');
 
 // Blocked punts: fail closed without a resolution table.
 const rngBlocked = seeded('blocked-core');
@@ -138,6 +139,121 @@ for (const m of MATCHUPS.slice(0, 2)) {
     ? {...p, kicking_team:q1.kicking_team, receiving_team:q1.receiving_team} : p);
   assert.throws(()=>validateHalfStartKickoffs(bad, g.coin_toss_ledger), /same team|does not match/,
     'same team kicking both half-start kickoffs is rejected');
+}
+
+// ---- Review corrections: targeted positive and negative fixtures -----------
+const punts = league.punts;
+const forcedBlocked = (outcome) => ({...league, punts:{outcomes:{blocked:1}, distance_yards:{'0':1,'40':1},
+  blocked_resolution:Object.fromEntries(['receiving_recovery','kicking_recovery','out_of_bounds','safety']
+    .map(k=>[k,k===outcome?1:0]))}});
+const findGame = (predicate, league_, count=8) => {
+  for (const m of MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2','3','4','5','6','7'].slice(0,count)) {
+    const books = {[m.home]:book(m.home), [m.away]:book(m.away)};
+    const g = generateGame(m, books, seed, league_);
+    if (predicate(g)) return g;
+  }
+  return null;
+};
+
+// (2) Blocked-punt recovery by the kicking team: refused, no automatic first down.
+{
+  const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('kicking_recovery'));
+  assert.ok(g, 'a forced kicking-recovery game has a punt');
+  assert.equal(g.status, 'UNSUPPORTED_RULE_REFUSAL');
+  assert.equal(g.refusal.rule, 'blocked_punt_kicking_recovery');
+  const last = g.plays.at(-1);
+  assert.equal(last.type, 'unsupported_rule', 'game ends at the refusal, with no sampled next series');
+  const punt = g.plays.find(p=>p.type==='punt');
+  assert.equal(punt.possession_resolution, 'kicking_recovery');
+  assert.equal(punt.possession_after, punt.offense, 'kicking team keeps the ball, not an automatic first down');
+}
+// (2) Negative: a receiving-team recovery is a turnover, not a refusal or a kicking-team first down.
+{
+  const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('receiving_recovery'));
+  assert.equal(g.status, 'ILLUSTRATIVE_REGULATION_REPLAY_NOT_LEGAL_GAME');
+  const punt = g.plays.find(p=>p.type==='punt');
+  const nxt = g.plays[punt.index];
+  assert.notEqual(nxt.offense, punt.offense, 'receiving team takes over after a receiving recovery');
+  assert.equal(nxt.down, 1);
+  assert.equal(nxt.togo, Math.min(10, nxt.yl));
+}
+
+// (1) Safety: a distinct free kick from the kicking team's own 20, not an ordinary kickoff.
+{
+  const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('safety'));
+  assert.equal(g.refusal.rule, 'safety_kick');
+  const sk = g.plays.find(p=>p.type==='safety_kick');
+  assert.ok(sk, 'safety kick is an explicit event');
+  assert.equal(sk.kick_spot_own, 20, 'safety kick is taken from the own 20');
+  assert.equal(sk.receiving_spot, null, 'receiving spot is not sampled');
+  assert.equal(sk.possession_after, sk.receiving_team, 'receiving team takes possession');
+  assert.ok(!g.plays.some(p=>p.type==='kickoff' && p.reason==='safety'), 'no ordinary kickoff for a safety');
+  const punt = g.plays.find(p=>p.type==='punt');
+  assert.equal(punt.scoreAfter[sk.receiving_team], punt.score[sk.receiving_team]+2, 'safety scores 2 for the receiving team');
+}
+// (1) Negative: the real 2025 table has no safety counts, so no safety kick is ever generated.
+{
+  for (const m of MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2']) {
+    const g = generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed, league);
+    assert.ok(!g.plays.some(p=>p.type==='safety_kick'), 'no sampled safety kick under the observed table');
+  }
+}
+
+// (3) Observed blocked-punt counts are preserved; zero-count outcomes are never sampled.
+assert.deepEqual(punts.blocked_resolution, {receiving_recovery:7, kicking_recovery:2, out_of_bounds:0, safety:0},
+  'observed 2025 blocked-punt counts');
+{
+  const rngReal = seeded('blocked-zero-count');
+  const seen = new Set();
+  for (let i = 0; i < 20000; i++) seen.add(sampleBlockedPuntOutcome(punts, rngReal));
+  assert.deepEqual([...seen].sort(), ['kicking_recovery', 'receiving_recovery'],
+    'only nonzero observed outcomes are sampled');
+}
+
+// (4) Ledger: recomputed from the toss alone; tampered stored fields fail closed.
+{
+  const m = MATCHUPS[0];
+  const books = {[m.home]:book(m.home), [m.away]:book(m.away)};
+  const g = generateGame(m, books, '7', league, {coinToss:{winner:m.home, choice:'defer'}});
+  const L = g.coin_toss_ledger;
+  assert.equal(validateCoinTossLedger(L), true);
+  assert.equal(L.first_half.first_choice_team, m.away, 'defer: loser has first-half choice');
+  assert.equal(L.first_half.other_team_choice, 'goal_to_defend', 'other team takes the remaining goal privilege');
+  assert.equal(L.first_half.defended_goal_by_team, m.home, 'winner defends the first-half goal the loser chose');
+  assert.equal(L.second_half.defended_goal_by_team, m.away);
+  const clone = () => structuredClone(L);
+  const tampered = clone(); tampered.first_half.other_team_choice = 'kick';
+  assert.throws(()=>validateCoinTossLedger(tampered), /other_team_choice/, 'old kick/defer value is rejected');
+  const flipped = clone(); flipped.first_half.defended_goal_by_team = m.away;
+  assert.throws(()=>validateCoinTossLedger(flipped), /defended_goal_by_team/, 'defended goal must follow the toss');
+  const swapped = clone(); swapped.second_half.receiving_team = swapped.second_half.kicking_team;
+  assert.throws(()=>validateCoinTossLedger(swapped), /receiving_team|same team/, 'kicker and receiver must differ');
+}
+
+// (5) FG runoff: the successful-FG cap is rule-based; miss runoff is an unverified estimate.
+{
+  const goods = [], misses = [];
+  for (const m of MATCHUPS.slice(0,3)) for (const seed of ['1042','1','2','3','4','5']) {
+    const g = generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed, league);
+    for (const p of g.plays) if (p.type==='field_goal') (p.good ? goods : misses).push(p);
+  }
+  assert.ok(goods.length && misses.length, 'fixtures cover made and missed field goals');
+  for (const p of goods) {
+    assert.equal(p.runoff_basis, 'rule_11_4_2_note_5_cap');
+    assert.ok(p.runoff <= 5, 'successful FG runoff is capped by Note (5)');
+  }
+  for (const p of misses) {
+    assert.equal(p.runoff_basis, 'unverified_miss_estimate', 'miss runoff is not labelled as the verified cap');
+    assert.ok(p.runoff >= 1 && p.runoff <= 5);
+  }
+}
+
+// (6) Missed-FG output names kick position, not contact.
+{
+  const g = findGame(g=>g.plays.some(p=>p.type==='field_goal' && !p.good), league);
+  const miss = g.plays.find(p=>p.type==='field_goal' && !p.good);
+  assert.equal(typeof miss.kick_spot_inside_20, 'boolean');
+  assert.equal('restart_untouched' in miss, false, 'old restart_untouched field is gone');
 }
 
 console.log('PASS six matchup playbooks, deterministic 4-period experimental logs, explicit scope guards');

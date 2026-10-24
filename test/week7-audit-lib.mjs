@@ -47,6 +47,11 @@ export function auditModule(core, league, book) {
       }
     }
 
+    // ---- Coin-toss ledger: the remaining privilege is the goal to defend -----
+    // Checked against the rule's wording, not the generator's own derivation.
+    if(g.coin_toss_ledger.first_half.other_team_choice!=='goal_to_defend')
+      tag('ledger',`other_team_choice is ${g.coin_toss_ledger.first_half.other_team_choice}, expected goal_to_defend`);
+
     // ---- 2/3. Kickoff placement and ownership ----------------------------
     for(const p of plays){
       if(p.type!=='kickoff') continue;
@@ -95,8 +100,9 @@ export function auditModule(core, league, book) {
       if(cur.quarter===prev.quarter && cur.clock>prev.clock)
         tag('quarter_transition',`${cur.id} clock rose from ${prev.clock} to ${cur.clock} within Q${cur.quarter}`);
     }
-    // Q1 and Q3 each open with a kickoff at 15:00.
-    for(const q of [1,3]){
+    // Q1 and Q3 each open with a kickoff at 15:00. A refused game stops early
+    // and has no Q3 opening, so the check applies only to complete games.
+    for(const q of (g.refusal ? [1] : [1,3])){
       const open=plays.find(p=>p.quarter===q && p.type==='kickoff');
       if(!open) tag('quarter_transition',`no kickoff opens Q${q}`);
       else if(open.clock!==900) tag('quarter_transition',`Q${q} opening kickoff at clock ${open.clock}, expected 900`);
@@ -243,6 +249,12 @@ export function auditKickoffSampler(core, league, book) {
       for(const p of g.plays){
         if(p.type!=='punt') continue;
         seen.add(p.possession_resolution);
+        if(p.possession_resolution==='safety')
+          assert.equal(p.scoreAfter[p.possession_after],p.score[p.possession_after]+2,'safety scores 2 for the receiving team');
+        if(p.possession_resolution==='kicking_recovery'||p.possession_resolution==='safety'){
+          assert.ok(g.refusal, `${p.id} ${p.possession_resolution} must refuse the game, not continue`);
+          continue;
+        }
         if(p.possession_resolution==='safety')
           assert.equal(p.scoreAfter[p.possession_after],p.score[p.possession_after]+2,'safety scores 2 for the receiving team');
         const next=g.plays[p.index];

@@ -124,12 +124,13 @@ export function createPuntSampler(puntTables) {  const zeroDistanceCount = Numbe
 export const FG_HOLDER_OFFSET_ESTIMATE = 8;
 // 2026 Rule 11-4-2 Field Goal Attempt Note (5): at most 5 seconds of runoff for
 // a successful field goal or an unsuccessful attempt that leaves the field of
-// play. Miss location is not sampled, so every miss is capped (conservative).
+// play. Miss location is not sampled, so miss runoff is an unverified estimate
+// and is not claimed to follow the Note (5) cap.
 export const FG_RUNOFF_CAP = 5;
 export function missedFieldGoalRestart(yl) {
   const kickSpotOwn = yl + FG_HOLDER_OFFSET_ESTIMATE;
-  const untouched = kickSpotOwn < 20;
-  return { kickSpotOwn, untouched, restartOwn: untouched ? 20 : kickSpotOwn };
+  const kickSpotInside20 = kickSpotOwn < 20;
+  return { kickSpotOwn, kickSpotInside20, restartOwn: kickSpotInside20 ? 20 : kickSpotOwn };
 }
 export const BLOCKED_PUNT_OUTCOMES = ['receiving_recovery', 'kicking_recovery', 'out_of_bounds', 'safety'];
 const BLOCKED_PUNT_NOTES = {
@@ -160,27 +161,46 @@ export function sampleBlockedPuntOutcome(puntTable, rand) {
 // The winner's receive/defer choice is an authored simulation assumption, not
 // an observed or verified rate.
 export const TOSS_RECEIVE_PROBABILITY = 0.5;
+// Rule 4-2-2: the winner's first choice is receive, or defer to the second half.
+// The other team takes the remaining privilege, which is the goal to defend.
+// Normal mode always elects receive for the first-choice team.
+function deriveNormalLedger(winner, loser, deferred) {
+  const firstChooser = deferred ? loser : winner;
+  const secondChooser = other(winner, loser, firstChooser);
+  return {
+    first_half: { first_choice_team: firstChooser, choice_type: 'receive', choice_value: 'receive',
+      other_team_choice: 'goal_to_defend', kicking_team: other(winner, loser, firstChooser),
+      receiving_team: firstChooser, defended_goal_by_team: other(winner, loser, firstChooser) },
+    second_half: { first_choice_team: secondChooser, choice_type: 'receive', choice_value: 'receive',
+      kicking_team: firstChooser, receiving_team: secondChooser, defended_goal_by_team: firstChooser },
+  };
+}
 export function sampleCoinTossLedger(match, rand, { winner, choice } = {}) {
   const w = winner ?? (rand() < 0.5 ? match.home : match.away);
   const l = other(match.home, match.away, w);
   const c = choice ?? (rand() < TOSS_RECEIVE_PROBABILITY ? 'receive' : 'defer');
   if (c !== 'receive' && c !== 'defer') throw new Error(`normal-mode toss choice must be receive or defer, got ${c}`);
-  const q1Receiver = c === 'receive' ? w : l;
-  const q1Kicker = other(match.home, match.away, q1Receiver);
-  const firstHalfChooser = c === 'receive' ? w : l;
-  const secondHalfChooser = other(match.home, match.away, firstHalfChooser);
   return {
     rules_version: '2026', source: 'authored_simulation_choice',
     coin_toss: { winner: w, loser: l, winner_deferred: c === 'defer' },
-    first_half: { first_choice_team: firstHalfChooser, choice_type: 'receive', choice_value: 'receive',
-      other_team_choice: c === 'receive' ? 'kick' : 'defer', kicking_team: q1Kicker, receiving_team: q1Receiver },
-    second_half: { first_choice_team: secondHalfChooser, choice_type: 'receive', choice_value: 'receive',
-      kicking_team: q1Receiver, receiving_team: q1Kicker },
+    ...deriveNormalLedger(w, l, c === 'defer'),
   };
+}
+// Recomputes every ledger role from the coin toss alone and throws on any
+// stored field that disagrees, so a hand-edited or inconsistent ledger fails closed.
+export function validateCoinTossLedger(ledger) {
+  const { winner, loser, winner_deferred: deferred } = ledger.coin_toss;
+  if (!winner || !loser || winner === loser) throw new Error('coin toss must name distinct winner and loser');
+  const expected = deriveNormalLedger(winner, loser, deferred);
+  for (const half of ['first_half', 'second_half']) for (const [k, v] of Object.entries(expected[half]))
+    if (ledger[half]?.[k] !== v) throw new Error(`${half}.${k} is ${ledger[half]?.[k]}, toss implies ${v}`);
+  if (ledger.first_half.kicking_team === ledger.first_half.receiving_team) throw new Error('kicker and receiver are the same team');
+  return true;
 }
 // Checks that Q1 and Q3 open with exactly one half-start kickoff each, with
 // distinct kickers that match the ledger. Throws so invalid games fail closed.
 export function validateHalfStartKickoffs(plays, ledger) {
+  validateCoinTossLedger(ledger);
   const starts = plays.filter(p => p.type === 'kickoff' && p.reason === 'half_start');
   if (starts.length !== 2) throw new Error(`expected 2 half-start kickoffs, found ${starts.length}`);
   const [q1, q3] = starts;
@@ -341,6 +361,14 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
     const b = league.field_goals.buckets[distance < 30 ? 0 : distance < 40 ? 1 : distance < 50 ? 2 : distance < 60 ? 3 : 4];
     return b.attempts ? b.made / b.attempts : 0;
   }
+  // A rule the inputs cannot resolve stops the game with an explicit refusal
+  // event rather than a sampled or assumed outcome.
+  let refusal = null;
+  function refuse(rule, detail) {
+    refusal = { rule, detail };
+    event({type:'unsupported_rule', kind:'unsupported_rule', action:'REFUSED', points:0, runoff:0,
+      rule, detail, note:detail});
+  }
   kickoff(offense, null, { reason: 'half_start' });
   for (quarter = 1; quarter <= 4; quarter++) {
     clock = 900;
@@ -359,7 +387,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
       kickoff(kicking, reason, { reason });
     }
     let qSnaps = 0;
-    while (clock > 0 && snaps < 220 && qSnaps < 80) {
+    while (clock > 0 && snaps < 220 && qSnaps < 80 && !refusal) {
       const def = other(match.home, match.away, offense);
       const trailing = scores[offense] < scores[def];
       const lateGo = quarter === 4 && trailing && clock < 210 && togo <= 7;
@@ -368,9 +396,12 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
           const distance = yl + 10 + FG_HOLDER_OFFSET_ESTIMATE;
           const good = rand() < fieldGoalMake(distance);
           // Misses are capped at 5 s too: the miss type (in or out of the field of play) is not modeled.
-          const runoff = Math.min(clock, FG_RUNOFF_CAP, good ? FG_RUNOFF_CAP : 4 + Math.floor(rand() * 2));
+          const runoff = good
+            ? Math.min(clock, FG_RUNOFF_CAP)
+            : Math.min(clock, 4 + Math.floor(rand() * 2));
           event({type:'field_goal',kind:'field_goal',action:good?'FIELD GOAL GOOD':'FIELD GOAL MISSED',
             good,distance,points:good?3:0,runoff,
+            runoff_basis: good ? 'rule_11_4_2_note_5_cap' : 'unverified_miss_estimate',
             note:'Make rate from 2025 league field goals by distance (nflverse). Kick flight is not simulated.'});
           clock -= runoff;
           if (good) {
@@ -380,17 +411,17 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
             // Kick spot is estimated as the LOS plus the holder offset, measured
             // from the receivers' goal. Touch-beyond-LOS and kick-behind-LOS
             // exceptions are not modeled.
-            const { kickSpotOwn, untouched, restartOwn } = missedFieldGoalRestart(yl);
+            const { kickSpotOwn, kickSpotInside20, restartOwn } = missedFieldGoalRestart(yl);
             finishDrive('field_goal_miss');
             offense = other(match.home, match.away, offense);
             newSeries(100 - restartOwn);
             const missed = plays[plays.length - 1];
             missed.restart_spot = 100 - restartOwn;
             missed.kick_spot_own_estimate = kickSpotOwn;
-            missed.restart_rule = untouched
+            missed.restart_rule = kickSpotInside20
               ? '2026 Rule 11-4-2(a): untouched miss with the estimated kick spot inside the receivers\' 20; the receiving team takes the ball at its 20.'
               : '2026 Rule 11-4-2(b): untouched miss with the estimated kick spot at or beyond the receivers\' 20; the receiving team takes the ball at the kick spot (estimate: 8 yards behind the LOS).';
-            missed.restart_untouched = true;
+            missed.kick_spot_inside_20 = kickSpotInside20;
           }
         } else {
           const pt = puntSampler(yl, rand);
@@ -406,11 +437,18 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
               possession_resolution:resolution,
               note:BLOCKED_PUNT_NOTES[resolution]});
             clock -= runoff;
-            if (resolution === 'kicking_recovery') { finishDrive('blocked_punt'); newSeries(yl); }
-            else if (resolution === 'safety') {
+            if (resolution === 'kicking_recovery') {
+              refuse('blocked_punt_kicking_recovery',
+                'Kicking-team recovery at the line of scrimmage: Rule 2-3-1 (series continues) versus 2-3-2 (first and 10) depends on whether the recovery is behind or beyond the line, which the inputs do not record.');
+            } else if (resolution === 'safety') {
               scores[receiving] += 2;
               punt.scoreAfter = {...scores};
-              scheduleKickoff(offense, 'safety');
+              event({type:'safety_kick',kind:'free_kick',action:'SAFETY KICK',points:0,
+                offense:receiving, defense:offense, kicking_team:offense, receiving_team:receiving,
+                kick_spot_own:20, receiving_spot:null, outcome:null, possession_after:receiving,
+                note:'Safety kick from the kicking team\'s own 20. The 2025 data has no safety-kick outcome table, so the receiving spot is not sampled.'});
+              refuse('safety_kick',
+                'Safety kick receiving spot has no observed outcome table. The 2025 data has no safety-kick counts, so none are sampled.');
             }
             else turnover('blocked_punt', pt.spot);
           } else {
@@ -455,7 +493,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
         if (down > 4) turnover('turnover_on_downs',clamp(100-yl,2,99));
       }
     }
-    if (qSnaps >= 80 || snaps >= 220) break;
+    if (refusal || qSnaps >= 80 || snaps >= 220) break;
     if (quarter === 2 && driveStart < plays.length) finishDrive('halftime');
     else if (quarter === 4 && driveStart < plays.length) finishDrive('end_regulation');
     // A post-score kickoff deferred out of Q2 is superseded by the second
@@ -463,14 +501,15 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
     if (quarter === 2 && pendingKickoff) pendingKickoff = null;
   }
   if (driveStart < plays.length && !drives.some(d=>d.end===plays.length-1))
-    finishDrive('end_regulation');
-  validateHalfStartKickoffs(plays, ledger);
+    finishDrive(refusal ? 'unsupported_rule' : 'end_regulation');
+  if (!refusal) validateHalfStartKickoffs(plays, ledger);
   return {
     schema_version:'gridiron.week7-experimental.v1', game_id:match.id, seed:String(seed), match, coin_toss_ledger:ledger,
     provenance:{play_selection:'team 2025 observed rates + situational heuristic',
       outcome:'historical 2025 offense/defense resampling',rosters:'week-7 projected',
       physical_motion:'Gridiron outcome-constrained 3D',model_validated:false},
-    status:'ILLUSTRATIVE_REGULATION_REPLAY_NOT_LEGAL_GAME',complete_regulation:false,
+    status: refusal ? 'UNSUPPORTED_RULE_REFUSAL' : 'ILLUSTRATIVE_REGULATION_REPLAY_NOT_LEGAL_GAME',
+    refusal, complete_regulation:false,
     score:{...scores}, plays, drives, source_play_count:snaps,
     warnings:['Not a validated NFL full-game simulator or betting forecast.',
       'Timeouts, penalties, play clock, onside kicks and overtime are unsupported.',
