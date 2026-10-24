@@ -2,6 +2,12 @@
 
 **Read this before editing or launching an experiment.**
 
+## NON-NEGOTIABLE NORMAL-GAME HALF KICKOFFS — 2026-10-24
+
+**In all ordinary simulated NFL games, LP MUST provide exactly two half-opening kickoff events: one in Q1, one in Q3, with DIFFERENT kicking teams.** The Q1 kickoff receiver is the Q3 kicking team and vice versa. This is **not an NFL legal impossibility claim**: a rare different coin-toss choice could legally cause one team to kick twice, but normal game simulation must give that choice **zero probability**, not merely a low weight. The rare scenario requires verified history or explicit user-requested `explicit_exception_scenario`, visibly flagged and never mixed into normal predictions.
+
+Gridiron **must validate and visibly reject** a normal `valid_full_game` record when both `half_start` kickoffs have the same kicker, kickoff states contradict toss/defer/half choices, or a kickoff is missing. Keep post-score kickoffs separate; do not count them as half starts. **Do not infer or swap receiving teams at halftime yourself:** LP's validated kickoff and its result control possession and spot. Follow the [revised LP rules file](https://github.com/micahp/legendarypicks/blob/dev/docs/rules/NFL-2026-GAME-STATE-RULES.md), which supersedes any older language saying repeated half-kicker is just another normal simulation option.
+
 ## CANONICAL NFL 2026 GAME RULES — 2026-10-24 (LP-owned)
 
 **Read [LP's official-rule-grounded game-state reference](https://github.com/micahp/legendarypicks/blob/dev/docs/rules/NFL-2026-GAME-STATE-RULES.md) before E0b/E1/E2 direction, quarter, kickoff, possession or game-viewer changes**, along with the [current cross-repo delivery plan](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md). A kickoff starts each half; who receives is determined by the toss/deferral/half-choice ledger, **not** simply the opposite of opening receiver. Q1/Q3 end changes goals and preserves the drive, with **no kickoff**; halftime ends the half and resolves **a new kickoff event**. Direction comes from the **possessing team's period-specific field-end assignment**, not a Q1/Q2 versus Q3/Q4 default or home/away. The Q2 seed-1042 `dir=+1`, `los=12` remains an explicitly authored research display assumption only.
