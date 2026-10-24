@@ -13,6 +13,9 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; background: radial-gradient(ellipse at top, #21313e, #101820 70%); }
+.retrospective-banner { position: sticky; top: 0; z-index: 10; padding: 10px 14px; background: #f4bd50; color: #17212a; text-align: center; font-weight: 800; box-shadow: 0 2px 12px #0008; }
+.index-link { color: var(--accent); font-weight: 600; text-decoration: none; }
+.index-link:hover, .index-link:focus-visible { text-decoration: underline; }
 button, select { font: inherit; color: inherit; }
 .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; }
 .hero { padding: 8px 0 20px; }

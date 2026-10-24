@@ -1,5 +1,12 @@
 import { adaptLpGamePayload } from './lp-game-record-adapter.js';
 import { renderE3Comparison } from './e3-game-comparison.js';
+import {
+  MATCHUP_INDEX_URL,
+  MATCHUPS,
+  findMatchup,
+  matchupFixture,
+  matchupLpSource,
+} from './e2-matchup-index.js';
 
 const MANIFEST_URL = 'docs/fixtures/e2/MANIFEST.json';
 const FIXTURE_DIR = 'docs/fixtures/e2/';
@@ -9,6 +16,7 @@ const errorPanel = $('#load-error');
 const validationPanel = $('#validation');
 const viewerContent = $('#viewer-content');
 let adapted;
+let activeMatchupLabel = null;
 
 function el(tag, text, className) {
   const node = document.createElement(tag);
@@ -54,7 +62,9 @@ function appendMeta(container, pairs) {
 
 function renderMetadata(verification, sourcePayloadSha256) {
   const record = adapted.record;
-  $('#mode-label').textContent = adapted.displayLabel;
+  $('#mode-label').textContent = activeMatchupLabel
+    ? `${activeMatchupLabel} · ${adapted.displayLabel}`
+    : adapted.displayLabel;
   status.textContent = `${record.status} · Q${record.final_quarter} ${formatClock(record.final_clock_seconds)} · seed ${record.seed}`;
   $('#score-a').textContent = record.points.A;
   $('#score-b').textContent = record.points.B;
@@ -67,7 +77,7 @@ function renderMetadata(verification, sourcePayloadSha256) {
     ['Plays', adapted.sourcePlayCount],
     ['LP producer commit', adapted.source.base_commit],
     ['Fixture hash', verification],
-    ['LP source payload SHA-256 (manifest pin)', sourcePayloadSha256],
+    ['LP source payload SHA-256 (index/manifest pin)', sourcePayloadSha256],
     ['Producer tree', adapted.source.producer_worktree_dirty ? 'dirty; file hashes pinned' : 'committed'],
     ['Team identities', 'A/B labels only'],
   ]);
@@ -185,55 +195,102 @@ async function loadFixture() {
   try {
     const manifestResponse = await fetch(MANIFEST_URL);
     if (!manifestResponse.ok) throw new Error(`manifest HTTP ${manifestResponse.status}`);
-    const manifest = await manifestResponse.json();
+    const baseManifest = await manifestResponse.json();
+    const requestedMatchup = new URLSearchParams(globalThis.window?.location?.search ?? '').get('matchup');
+    let manifest = baseManifest;
+    let matchupRow = null;
+    if (requestedMatchup) {
+      const indexResponse = await fetch(MATCHUP_INDEX_URL, { cache: 'no-store' });
+      if (!indexResponse.ok) throw new Error(`LP matchup index HTTP ${indexResponse.status}`);
+      const index = await indexResponse.json();
+      matchupRow = findMatchup(index, requestedMatchup);
+      if (!matchupRow) throw new Error(`LP matchup index has no ${requestedMatchup} entry`);
+      const indexedFixture = matchupFixture(matchupRow);
+      if (!indexedFixture) throw new Error('LP matchup entry does not pin a game payload file and SHA-256');
+      manifest = {
+        ...baseManifest,
+        lp_source: matchupLpSource(index, matchupRow, {}),
+      };
+      manifest.fixtures = [indexedFixture];
+      activeMatchupLabel = MATCHUPS.find((item) => item.slug === requestedMatchup)?.label ?? requestedMatchup;
+    }
     const entry = manifest.fixtures[0];
     if (!entry) throw new Error('the game fixture is missing from its manifest');
-    const fixtureResponse = await fetch(FIXTURE_DIR + entry.file);
+    const fixturePath = entry.file.startsWith('docs/') ? entry.file : FIXTURE_DIR + entry.file;
+    const fixtureResponse = await fetch(fixturePath);
     if (!fixtureResponse.ok) throw new Error(`fixture HTTP ${fixtureResponse.status}`);
     const bytes = await fixtureResponse.arrayBuffer();
     const hash = await sha256Hex(bytes);
     if (hash !== entry.sha256) throw new Error('pinned fixture SHA-256 mismatch');
-    const payload = JSON.parse(new TextDecoder().decode(bytes));
-    if (!entry.upstream_source_file || !entry.upstream_source_sha256) {
+    let payload = JSON.parse(new TextDecoder().decode(bytes));
+    if (!payload.record && payload.game && typeof payload.game === 'object') payload = { ...payload, record: payload.game };
+    if (!payload.record && payload.drives) payload = { ...payload, record: payload };
+    if (!payload.record) throw new Error('indexed payload has no game record');
+    payload.source = payload.source ?? {};
+    let upstream = null;
+    let upstreamHash = 'not separately supplied';
+    if (entry.upstream_source_file && entry.upstream_source_sha256) {
+      const sourcePath = entry.upstream_source_file.startsWith('docs/')
+        ? entry.upstream_source_file
+        : FIXTURE_DIR + entry.upstream_source_file;
+      const upstreamResponse = await fetch(sourcePath);
+      if (!upstreamResponse.ok) throw new Error(`LP source payload HTTP ${upstreamResponse.status}`);
+      const upstreamBytes = await upstreamResponse.arrayBuffer();
+      upstreamHash = await sha256Hex(upstreamBytes);
+      if (upstreamHash !== entry.upstream_source_sha256
+          || (payload.source?.payload_sha256 && payload.source.payload_sha256 !== upstreamHash)) {
+        throw new Error('pinned LP source payload SHA-256 mismatch');
+      }
+      upstream = JSON.parse(new TextDecoder().decode(upstreamBytes));
+      if (canonicalJson(upstream.record) !== canonicalJson(payload.record)) {
+        throw new Error('Gridiron transport record differs from the pinned LP source record');
+      }
+    } else if (requestedMatchup) {
+      const declaredSourceHash = matchupRow.source_payload_sha256 ?? matchupRow.lp_payload_sha256;
+      if (declaredSourceHash && payload.source?.payload_sha256 !== declaredSourceHash) {
+        throw new Error('LP source payload SHA-256 differs from the matchup index');
+      }
+      upstream = { record: payload.record, sources: payload.sources ?? matchupRow.sources ?? {} };
+      upstreamHash = declaredSourceHash ?? payload.source?.payload_sha256 ?? 'not separately supplied';
+    } else {
       throw new Error('manifest does not pin the original LP source payload');
     }
-    const upstreamResponse = await fetch(FIXTURE_DIR + entry.upstream_source_file);
-    if (!upstreamResponse.ok) throw new Error(`LP source payload HTTP ${upstreamResponse.status}`);
-    const upstreamBytes = await upstreamResponse.arrayBuffer();
-    const upstreamHash = await sha256Hex(upstreamBytes);
-    if (upstreamHash !== entry.upstream_source_sha256
-        || (payload.source?.payload_sha256 && payload.source.payload_sha256 !== upstreamHash)) {
-      throw new Error('pinned LP source payload SHA-256 mismatch');
+    const lpSource = manifest.lp_source ?? {};
+    if ((lpSource.base_commit && payload.source.base_commit !== lpSource.base_commit)
+        || (lpSource.branch && payload.source.branch !== lpSource.branch)
+        || (payload.source.payload_path && lpSource.payload_file && payload.source.payload_path !== lpSource.payload_file)) {
+      throw new Error('LP producer revision or source path does not match its matchup index');
     }
-    if (payload.source.base_commit !== manifest.lp_source?.base_commit
-        || payload.source.branch !== manifest.lp_source?.branch
-        || (payload.source.payload_path && payload.source.payload_path !== manifest.lp_source?.payload_file)) {
-      throw new Error('LP producer revision or source path does not match its manifest');
-    }
-    const upstream = JSON.parse(new TextDecoder().decode(upstreamBytes));
-    if (canonicalJson(upstream.record) !== canonicalJson(payload.record)) {
-      throw new Error('Gridiron transport record differs from the pinned LP source record');
-    }
-    const conversionSource = manifest.lp_source?.conversion_source_script_sha256;
-    if (manifest.lp_source?.conversion_source_script_commit !== manifest.lp_source?.base_commit
-        || !/^[a-f0-9]{64}$/i.test(conversionSource ?? '')) {
-      throw new Error('conversion source semantics are not pinned to the LP producer commit');
-    }
-    const auditPayload = {
-      ...payload,
-      sources: upstream.sources,
-      source: {
-        ...payload.source,
-        producer_file_sha256: {
-          ...payload.source.producer_file_sha256,
-          [manifest.lp_source.conversion_source_script_file]: conversionSource,
+    if (!requestedMatchup) {
+      const conversionSource = lpSource.conversion_source_script_sha256;
+      if (lpSource.conversion_source_script_commit !== lpSource.base_commit
+          || !/^[a-f0-9]{64}$/i.test(conversionSource ?? '')) {
+        throw new Error('conversion source semantics are not pinned to the LP producer commit');
+      }
+      const auditPayload = {
+        ...payload,
+        sources: upstream.sources,
+        source: {
+          ...payload.source,
+          producer_file_sha256: {
+            ...payload.source.producer_file_sha256,
+            [lpSource.conversion_source_script_file]: conversionSource,
+          },
         },
-      },
-    };
-    await renderE3Comparison(auditPayload);
+      };
+      await renderE3Comparison(auditPayload);
+    } else {
+      $('#e3-comparison').hidden = true;
+      const sides = matchupRow.score_sides ?? matchupRow.team_labels ?? matchupRow.teams ?? {};
+      const a = sides.A ?? sides.a ?? matchupRow.team_a ?? matchupRow.teamA;
+      const b = sides.B ?? sides.b ?? matchupRow.team_b ?? matchupRow.teamB;
+      const label = (value) => typeof value === 'object' ? value.name ?? value.abbr ?? value.code : value;
+      if (a) $('#team-a-label').textContent = label(a);
+      if (b) $('#team-b-label').textContent = label(b);
+    }
     adapted = adaptLpGamePayload(payload);
     viewerContent.hidden = false;
-    renderMetadata(`matches manifest (${hash.slice(0, 12)})`, upstreamHash);
+    renderMetadata(`matches index (${hash.slice(0, 12)})`, upstreamHash);
     renderValidation();
     renderLedgerAndKickoffs();
     renderTeamStats();

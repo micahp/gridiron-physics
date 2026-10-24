@@ -1,5 +1,6 @@
 import { auditFootballState } from './lp-game-state-audit.js';
 import { auditConversionSource } from './conversion-source-semantics.js';
+import { loadLpClockDecomposition } from './lp-clock-decomposition-adapter.js';
 
 const DATA_ROOT = 'docs/fixtures/e3/observed-2022-2025/';
 const $ = (selector) => document.querySelector(selector);
@@ -193,6 +194,22 @@ function renderGameComparison(generated, observedRows) {
   $('#e3-game-note').textContent = 'Each observed bin is shown. The generated value comes from one seed, so this is a descriptive location, not a distributional fit or forecast evaluation.';
 }
 
+function renderLpClockJoin(result) {
+  const summary = result.joinSummary;
+  const source = result.manifest.source;
+  const counts = summary.counts;
+  const status = $('#e3-lp-clock-status');
+  status.className = counts.no_source_row ? 'audit-label fail' : 'audit-label pass';
+  status.textContent = `Verified LP clock artifact: ${source.rows.toLocaleString()} rows from ${source.commit}; SHA-256 ${source.artifact_sha256}. Exact-key join: ${counts.matched.toLocaleString()} matched, ${counts.no_lp_key.toLocaleString()} physical records without LP keys, ${counts.no_source_row.toLocaleString()} keyed records without an LP source row.`;
+  const fields = Object.entries(summary.fields).map(([field, labels]) => [
+    field,
+    labels.observed ?? 0,
+    labels.inferred ?? 0,
+    labels.unresolvable ?? 0,
+  ]);
+  renderTable($('#e3-lp-clock-table'), ['LP source field', 'Observed', 'Inferred', 'Unresolvable'], fields);
+}
+
 export async function renderE3Comparison(payload) {
   const panel = $('#e3-comparison');
   panel.hidden = false;
@@ -219,5 +236,12 @@ export async function renderE3Comparison(payload) {
   } catch (error) {
     $('#e3-load-status').textContent = `E3 reference unavailable: ${error.message}`;
     $('#e3-load-status').className = 'audit-label fail';
+  }
+  try {
+    renderLpClockJoin(await loadLpClockDecomposition());
+  } catch (error) {
+    const status = $('#e3-lp-clock-status');
+    status.className = 'audit-label fail';
+    status.textContent = `LP clock source unavailable: ${error.message}`;
   }
 }
