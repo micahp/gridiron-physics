@@ -173,7 +173,8 @@ function boxScore(sim){
     if(p.type==='field_goal'){s.fgAtt++;if(p.good)s.fgMade++;}
     if(p.type==='punt')s.punts++;
     const pts=(p.touchdown?6:0)+(p.try?.startsWith('XP good')?1:0)+(p.type==='field_goal'&&p.good?3:0);
-    s.score+=pts;s.quarters[p.quarter-1]+=pts;
+    const scoringTeam=p.type==='punt'&&p.punt_event?.scoring_team?p.punt_event.scoring_team:p.offense;
+    if(out[scoringTeam]){out[scoringTeam].score+=pts;out[scoringTeam].quarters[p.quarter-1]+=pts;}
     s.top+=Number(p.runoff)||0;
   }
   for(const d of sim.drives)if(out[d.offense])out[d.offense].drives++;
@@ -366,6 +367,9 @@ async function start(){
     const lr=await fetch('./data/special_teams/2025-league.json');
     if(!lr.ok)throw new Error('missing 2025 special-teams tables. Run python3 pipeline/build_special_teams_2025.py.');
     league=await lr.json();
+    const pr=await fetch('./data/special_teams/2025-punt-events.json');
+    if(!pr.ok)throw new Error('missing joint 2025 punt-event samples. Run python3 pipeline/build_punt_events_2025.py.');
+    league.punt_event_samples=await pr.json();
     makeViewer();
     $('simulate').disabled=false;$('again').disabled=false;
     $('simulate').addEventListener('click',simulate);
