@@ -1,0 +1,16 @@
+{
+  "asset": "football-player-rigged.glb",
+  "format": "glTF 2.0 binary",
+  "originalBlenderVersion": "2.79",
+  "license": "CC BY 3.0",
+  "source": "https://blendswap.com/blend/22654",
+  "author": "Hikky",
+  "boneCount": 56,
+  "skinnedMeshCount": 2,
+  "triangleCount": 39638,
+  "embeddedTextures": 9,
+  "animationClips": 0,
+  "expectedExternalPoseStates": 12,
+  "meshFacing": "Original Blender local forward -Y; glTF root converts Blender Z-up to glTF Y-up",
+  "sha256": "3c88cff0a02f5a6235cf33644809f699c921170e33b0ca1e28362e2a323eee98"
+}
