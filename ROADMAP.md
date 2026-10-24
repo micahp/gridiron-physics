@@ -9,6 +9,16 @@
 
 This document translates the cross-project research notebook into **concrete Gridiron Physics milestones**. It is a roadmap, not proof that the proposed architecture has been implemented. Keep research claims, existing behavior, hypotheses and accepted implementation separate.
 
+## ACTIVE PRIORITY OVERRIDE — 2026-10-23: observed NFL football first
+
+**Source of truth:** [Football-first Agent Directive](docs/FOOTBALL-FIRST-AGENT-DIRECTIVE-2026-10-23.md) and [repo agent instructions](AGENTS.md). This **supersedes the work ordering** of older M1–M4d "next" experiments, not their measured results. We are not building a general-purpose physics engine or treating Madden ratings as physical laws.
+
+**Next evidence, in order:** (1) establish actual available NFL tracking and permitted post-cutoff outcomes; (2) run cheap historical movement baselines and one behavior challenger on the *same eligible* NFL intervals; (3) replay from permitted initial information in existing Three.js / movement / Rapier/Jolt research adapters and compare against recorded trajectories/interactions; (4) use the existing LP NFL sequence baseline to evaluate real plays, drives and game results; (5) open a **narrow, observed-failure-driven** physics defect task only when needed. If tracking does not contain full post-snap play intervals, benchmark the explicitly narrower throw-time conditional motion task; **do not fake a full-play holdout**.
+
+**Stop by default:** further free-standing synthetic contact sweeps, generically inventing solvers/controllers/grip algorithms, broad Madden rating model training, solver adoption and new production physics code. Existing M4c/M4d/legacy failures stay recorded, and explicit safety defect fixes remain possible after controlled reproduction. Statistical/hybrid contact fallbacks are valid challengers, not cheating when disclosed and fairly evaluated.
+
+**Owners:** LP tracking and movement agents own data, information cutoffs and baselines; Gridiron owns execution/replay; LP sequence agent owns play/drive/game grading; one integrator owns adoption decisions. Reproducibility, no future leakage, source rights and no unauthorized production changes remain mandatory.
+
 ## Ground rules
 
 1. **Everything physically modeled should live in 3D.** Preserve the existing **Three.js 3D viewer**, camera modes, and assets. The existing ball flies in 3D, but the custom player's underlying collision/contact model is primarily horizontal circles and impulses with 3D character animation. That is **not** the final player-contact architecture. Use actual 3D rigid bodies, orientations, volumetric collision shapes, forces/torques and, where required, physically effective articulated joints. A visually 3D animation does not satisfy this.
@@ -51,7 +61,7 @@ This document translates the cross-project research notebook into **concrete Gri
 
 **Gate:** Existing historical replay, prospective mock outputs and statistical sequence evaluation remain reproducible, distinguishable and independently runnable. No observed outcome can leak into the prospective result.
 
-### M1. Evaluate a real 3D physics foundation **(next architecture decision)**
+### M1. Evaluate a real 3D physics foundation **(historical milestone; see active priority override)**
 
 **Goal:** Stop depending on horizontal-only player contact in a project intended to simulate 3D physical interactions.
 
@@ -261,7 +271,11 @@ Two independently completed, isolated experiments use the same NE–CHI player p
 
 **Immediate action:** Run the same *questions* using separately controlled within-engine ablations and publish one normalized, failure-aware comparison, including the Barkley/Baun Rapier contact disappearance, no completed tackle in the NE–CHI M4d fixture, and legacy post-wrap carrier-travel reversal. Neither pilot satisfies the existing M4c penetration distribution gates. Integration choice follows coordinator review, not two independent agent completion messages.
 
-### 2026-10-23 research gate: role-centred tackle hold exposes far-wrap acceleration defect### Integrated ratings-to-physics review — 2026-10-23: M4d audit completed### M5. Rare events and special teams
+### 2026-10-23 research gate: role-centred tackle hold exposes far-wrap acceleration defect
+
+### Integrated ratings-to-physics review — 2026-10-23: M4d audit completed
+
+### M5. Rare events and special teams
 
 **Goal:** The engine can eventually produce both ordinary and exceptional outcomes for football reasons.
 
@@ -361,14 +375,16 @@ The mean gap of **3.24 points per team** is “roughly one field goal,” **not*
 | 2026-10-22 | **Research result, not adoption** | Both Rapier and Jolt passed 3D contact/fall feasibility and receiver-ball contact; neither demonstrated wrap escape or secure catches. Rapier remains first candidate; Jolt's simpler proxy benchmark was faster. Require grip/balance/ball possession and full-play comparisons before solver promotion. |
 | 2026-10-22 | **Keep separate** | Historical reconstruction, statistical-script playback and free prospective physics have different sources and claims. |
 | 2026-10-22 | **Metric priority** | Evaluate realistic **drives** and scoring pathways, not just isolated plays or final averages. |
+| 2026-10-23 | **Priority change: football-first** | Stop generic synthetic contact/Ratings sweeps by default; reproduce real NFL tracked movement, play and drive outcomes using established solvers, cheap baselines and explicit input cutoffs. [Agent directive](docs/FOOTBALL-FIRST-AGENT-DIRECTIVE-2026-10-23.md) is authoritative for the next task. |
 | 2026-10-22 | **No premature forecasting claims** | LP sequence v0.1 and prototype free-physics distributions are research baselines until validated. |
 | 2026-10-22 | **Rating audit, not adoption** | 16/35 attribute reads; QB PBK sack mismatch, defender CIT placeholder, THA near-inert and 6,000 unpressured/uncontested pass probes. Fix opportunities, mapping and uncertainty before rating-model promotion. |
 
-## Next actions
+## Next actions — active as of 2026-10-23
 
-1. **Immediately:** Continue physically resolved wrap/grip break, balance recovery and secure hand-ball capture, **then prioritize M4b's many-body adversarial fixtures and pinned Three.js visual replay archive**. Do not merge a solver on contact-only evidence.
-2. **In parallel:** LP team fixes/diagnoses the statistical sequence engine's drive failures (clock/kneels, down-specific pass gains, fourth-down policy, red-zone TDs, turnover returns) without modifying the physics benchmark to make up the scoring gap.
-3. **Then:** Select a solver by evidence, integrate a minimal prospective play with real 3D contacts, run a complete **Patriots and Bears drive**, and compare those possessions to both real drives and the unchanged statistical baseline.
-4. **Only after that:** Expand to rare events, full games, player-stat coherence and prospective forecast tests.
+1. **Reality and access check (LP tracking owner):** Inventory locally available *real* NFL tracking and game/play joins, source permissions and observed time intervals. Distinguish BDB 2025 pre-snap from BDB 2026's conditional throw-to-ball-arrival task. Name the allowed model information at the cutoff and the unavailable full-play labels.
+2. **Freeze a small, fair benchmark (LP movement owner):** Choose 5–10 eligible tracked situations, then a 20–50-play development cohort if coverage exists. Establish hold-last, constant velocity, bounded kinematics and one documented role-aware baseline before making physics claims. Hide future tracking from open-loop simulations.
+3. **Replay and compare real motion (Gridiron owner):** Reuse the existing movement interface, Three.js archive and mature physics solver only where necessary. Compare observed, statistical, policy and research-physics trajectories at the same timestamps and valid input cutoffs; report pair distances, movement realism, terminal events when actually observed and numerical failures.
+4. **Scale evaluation to drives (LP sequence owner):** Keep v0.2 PBP as statistical baseline. Test clock/kneels, fourth downs, red-zone outcomes, drive endings, and score/player-stat coherence independently of isolated clips. Compare physics-assisted and statistical/hybrid systems on aligned cohorts without backfitting inspected 2022–2023 holdouts.
+5. **Integration decision (one coordinator):** Review predeclared real-data metrics, model complexity, errors and compute cost. Authorize narrow infrastructure PR review only. Only commission a targeted contact/safety fix when a validated play mismatch or existing clear numerical failure needs it; do not accept a new Madden-to-force mapping or production solver without empirical support and explicit approval.
 
-**The standard:** Our goal is not to make simulated football merely *look* convincing. The motion, decisions, contact and ball interactions should explain **why** a play happened, and repeated plays should produce believable drives and measurable improvements when compared to reality.
+**The standard:** Produce *the right football movement and outcomes for defensible reasons*, not merely a plausible animation or a physics engine that passes its own synthetic fixtures. Keep prior M1b–M4d evidence and known failures for traceability.
