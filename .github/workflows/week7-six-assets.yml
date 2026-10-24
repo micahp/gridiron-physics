@@ -20,8 +20,19 @@ jobs:
         with: { fetch-depth: 1 }
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - name: Fetch pinned 2025 and 2026 inputs
-        run: python3 pipeline/fetch_prototype_data.py
+      - name: Fetch pinned 2025 and current 2026 sources
+        run: |
+          python3 - <<'PY'
+          import pipeline.fetch_prototype_data as fetch
+          # 2026 season files are rolling releases. The 2022/2025 sources stay
+          # SHA-pinned, while each 2026 asset is independently hashed and
+          # recorded in the generated snapshot. The builders limit
+          # performance inputs to weeks 1-6, before these six week-7 games.
+          for name in ('pbp_2026.csv.gz', 'roster_weekly_2026.csv.gz', 'stats_player_week_2026.csv.gz'):
+              url, _ = fetch.FILES[name]
+              fetch.FILES[name] = (url, None)
+          fetch.main()
+          PY
       - name: Build twelve teams and six matchups
         run: python3 pipeline/build_week7_six.py
       - name: Check all six are loadable
