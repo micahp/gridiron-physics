@@ -31,30 +31,109 @@ function pickCount(counts, rand) {
   return entries[entries.length - 1][0];
 }
 
-export function createPuntSampler(puntTables) {
+export function createPuntSampler(puntTables, eventTable, sourceSha256) {
   const zeroDistanceCount = Number(puntTables?.distance_yards?.['0'] ?? 0);
   const blockedCount = Number(puntTables?.outcomes?.blocked ?? 0);
   if (zeroDistanceCount !== blockedCount) {
     throw new Error(`punt table mismatch: zero-yard rows=${zeroDistanceCount}, blocked outcomes=${blockedCount}`);
   }
-  const nonBlockedPuntDistances = Object.fromEntries(
-    Object.entries(puntTables.distance_yards).filter(([yards, count]) => Number(yards) > 0 && count > 0),
-  );
-  if (!Object.keys(nonBlockedPuntDistances).length) throw new Error('missing positive-distance punts');
-
-  // Keep the empirical outcome and positive-distance marginals; couple only
-  // the observed blocked/zero-distance pair.
-  return (kickYl, rand) => {
-    const outcome = pickCount(puntTables.outcomes, rand);
-    const distance = outcome === 'blocked' ? 0 : Math.round(sampleHist(nonBlockedPuntDistances, rand));
-    if (outcome === 'blocked') {
-      // Zero is the recorded kick-distance value, not a modeled recovery path.
-      return { distance, outcome, return_yards:0, spot:clamp(100 - kickYl, 1, 99) };
+  const events = eventTable?.events;
+  if (eventTable?.schema_version !== 'gridiron.punt-event-samples.v1' || !Array.isArray(events) || !events.length) {
+    throw new Error('missing versioned joint punt-event samples');
+  }
+  if (eventTable?.source?.sha256 !== sourceSha256) {
+    throw new Error('punt event and league tables have different source hashes');
+  }
+  const policy = eventTable.field_position_binning;
+  if (!Array.isArray(policy?.levels) || !policy.levels.length || policy.levels.some(level =>
+      !Number.isInteger(level.width_yards) || level.width_yards < 1 ||
+      !Number.isInteger(level.minimum_events) || level.minimum_events < 1) ||
+      policy.levels.some((level,index) => index>0 && level.width_yards<=policy.levels[index-1].width_yards)) {
+    throw new Error('invalid punt field-position bin policy');
+  }
+  const validOutcomes = new Set(['touchback', 'fair_catch', 'downed', 'out_of_bounds', 'blocked', 'returned']);
+  for (const e of events) {
+    const spotStatusValid = e.touchdown
+      ? e.final_spot_yardline_100 === null && e.final_spot_status === 'not_applicable_touchdown' &&
+        ['receiving_team','kicking_team'].includes(e.scoring_team) && e.possession_after === 'scoring_team'
+      : Number.isFinite(e.final_spot_yardline_100) && e.final_spot_yardline_100 >= 1 &&
+        e.final_spot_yardline_100 <= 99 && e.final_spot_status === 'observed_next_series_first_down_snap_proxy' &&
+        e.scoring_team === null && ['receiving_team','kicking_team'].includes(e.possession_after);
+    if (typeof e.touchdown !== 'boolean' ||
+        !Number.isFinite(e.field_position_yardline_100) || e.field_position_yardline_100 < 1 || e.field_position_yardline_100 > 99 ||
+        !Number.isFinite(e.gross_distance_yards) || e.gross_distance_yards < 0 ||
+        !Number.isFinite(e.return_yards) || typeof e.touchdown !== 'boolean' || !spotStatusValid ||
+        !validOutcomes.has(e.outcome) ||
+        e.landing_status !== 'estimated_unresolved' || e.recovery_status !== 'estimated_unresolved') {
+      throw new Error(`invalid joint punt event: ${e.source_game_id ?? '?'}:${e.source_play_id ?? '?'}`);
     }
-    const landing = kickYl - distance;
-    const ret = outcome === 'returned' ? sampleHist(puntTables.return_yards, rand) : 0;
-    const spot = outcome === 'touchback' ? 80 : clamp(100 - (landing + ret), 1, 99);
-    return { distance, outcome, return_yards:ret, spot };
+    if ((e.outcome === 'blocked') !== (e.gross_distance_yards === 0)) {
+      throw new Error(`punt event blocked/distance mismatch: ${e.source_game_id}:${e.source_play_id}`);
+    }
+  }
+  const outcomeTotals = Object.fromEntries(Object.keys(puntTables.outcomes).map(key => [key,0]));
+  const distanceTotals = {};
+  for (const e of events) {
+    outcomeTotals[e.outcome] = (outcomeTotals[e.outcome] ?? 0) + 1;
+    distanceTotals[e.gross_distance_yards] = (distanceTotals[e.gross_distance_yards] ?? 0) + 1;
+  }
+  if (events.length !== Number(eventTable.n) ||
+      Object.entries(puntTables.outcomes).some(([key,count]) => outcomeTotals[key] !== Number(count)) ||
+      Object.entries(puntTables.distance_yards).some(([key,count]) => distanceTotals[key] !== Number(count)) ||
+      Object.entries(distanceTotals).some(([key,count]) => Number(puntTables.distance_yards[key] ?? 0) !== count)) {
+    throw new Error('joint punt events do not reconcile to the pinned outcome and distance tables');
+  }
+  const rowsForBin = (yardline, width) => {
+    const lower = Math.floor((yardline - 1) / width) * width + 1;
+    const upper = Math.min(100, lower + width - 1);
+    // A recorded touchback must have enough recorded kick distance to reach
+    // the goal line from this snap. This is a consistency constraint only;
+    // distance is never used to assign the landing point or final spot.
+    return { rows:events.filter(e => e.field_position_yardline_100 >= lower &&
+      e.field_position_yardline_100 <= upper &&
+      (e.outcome !== 'touchback' || e.gross_distance_yards >= yardline)), lower, upper };
+  };
+
+  // Select a complete historical punt tuple conditional on the snap field
+  // position. Gross distance is metadata; final spot comes from the sampled
+  // event record and is never calculated from distance or return yards.
+  return (kickYl, rand) => {
+    if (!Number.isFinite(kickYl) || kickYl < 1 || kickYl > 99) throw new Error('invalid punt field position');
+    let selected = null;
+    let binWidth = null;
+    for (const level of policy.levels) {
+      const candidate = rowsForBin(kickYl, level.width_yards);
+      if (candidate.rows.length >= level.minimum_events) {
+        selected = candidate;
+        binWidth = level.width_yards;
+        break;
+      }
+    }
+    if (!selected) {
+      selected = rowsForBin(kickYl,100);
+      if (!selected.rows.length) throw new Error(`no compatible punt event at field position ${kickYl}`);
+    }
+    const record = selected.rows[Math.min(selected.rows.length - 1, Math.floor(rand() * selected.rows.length))];
+    return {
+      distance:record.gross_distance_yards,
+      outcome:record.outcome,
+      return_yards:record.return_yards,
+      spot:record.final_spot_yardline_100,
+      possession_after:record.possession_after,
+      touchdown:record.touchdown,
+      scoring_team:record.scoring_team,
+      landing_yardline_100:null,
+      landing_status:record.landing_status,
+      recovery_yardline_100:null,
+      recovery_status:record.recovery_status,
+      final_spot_status:record.final_spot_status,
+      sample:{kick_field_position_yardline_100:kickYl,
+        source_field_position_yardline_100:record.field_position_yardline_100,
+        source_game_id:record.source_game_id,source_play_id:record.source_play_id,
+        field_position_yardline_100:record.field_position_yardline_100,
+        bin_width_yards:binWidth,bin_lower_yardline_100:selected.lower,
+        bin_upper_yardline_100:selected.upper,bin_sample_count:selected.rows.length},
+    };
   };
 }
 
@@ -119,9 +198,9 @@ function playbookCandidate(book, kind, rand) {
 
 export function generateGame(match, books, seed = '1042', league = null) {
   if (!match || !books?.[match.home] || !books?.[match.away]) throw new Error('missing pregame matchup or playbook');
-  if (!league?.kickoffs || !league?.punts || !league?.field_goals || !league?.extra_points) throw new Error('missing 2025 special-teams tables');
+  if (!league?.kickoffs || !league?.punts || !league?.punt_event_samples || !league?.field_goals || !league?.extra_points) throw new Error('missing 2025 special-teams and joint punt-event tables');
   const rand = seeded(match.id + '|' + seed);
-  const puntSampler = createPuntSampler(league.punts);
+  const puntSampler = createPuntSampler(league.punts, league.punt_event_samples, league.source?.sha256);
   const scores = { [match.home]:0, [match.away]:0 };
   const firstReceiver = rand() < 0.5 ? match.home : match.away;
   let offense = other(match.home, match.away, firstReceiver), quarter = 1, clock = 900, down = 1, togo = 10, yl = 75, drive = 1;
@@ -165,9 +244,6 @@ export function generateGame(match, books, seed = '1042', league = null) {
     offense = other(match.home, match.away, kicking);
     down = 1; togo = 10; yl = spot;
   }
-  // Estimate the punt spot from kickYl and the sampled distance/return. The
-  // generator does not model the full kick trajectory or the outcome-distance
-  // relationship beyond the blocked/zero-distance pairing.
   function fieldGoalMake(distance) {
     const b = league.field_goals.buckets[distance < 30 ? 0 : distance < 40 ? 1 : distance < 50 ? 2 : distance < 60 ? 3 : 4];
     return b.attempts ? b.made / b.attempts : 0;
@@ -197,13 +273,35 @@ export function generateGame(match, books, seed = '1042', league = null) {
           else turnover('field_goal_miss',clamp(100-yl,20,95));
         } else {
           const pt = puntSampler(yl, rand);
-          event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff:kickClock,distance:pt.distance,
+          const scoringTeam = pt.touchdown
+            ? (pt.scoring_team === 'receiving_team' ? other(match.home, match.away, offense) : offense)
+            : null;
+          const puntPlay = event({type:'punt',kind:'punt',action:pt.touchdown?'PUNT RETURN TOUCHDOWN':'PUNT',
+            points:pt.touchdown?6:0,touchdown:pt.touchdown,runoff:kickClock,distance:pt.distance,
             outcome:pt.outcome,return_yards:pt.return_yards,
-            note:pt.outcome==='blocked'
-              ? 'Blocked punt: zero is the recorded distance; recovery location is an illustrative spot assumption.'
-              : 'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
+            punt_event:{...pt.sample,touchdown:pt.touchdown,
+              scoring_team_side:pt.scoring_team,scoring_team:scoringTeam,
+              final_spot_yardline_100:pt.spot,
+              final_spot_status:pt.final_spot_status,possession_after:pt.possession_after,
+              landing_yardline_100:pt.landing_yardline_100,landing_status:pt.landing_status,
+              recovery_yardline_100:pt.recovery_yardline_100,recovery_status:pt.recovery_status},
+            note:pt.touchdown
+              ? `Joint 2025 punt-return touchdown sampled conditional on field position (bin ${pt.sample.bin_lower_yardline_100}-${pt.sample.bin_upper_yardline_100}, n=${pt.sample.bin_sample_count}); scoring side ${pt.scoring_team}. Restart spot is not applicable after a touchdown. Landing and recovery coordinates are estimated_unresolved; gross distance is not used as a landing point.`
+              : `Joint 2025 punt event sampled conditional on field position (bin ${pt.sample.bin_lower_yardline_100}-${pt.sample.bin_upper_yardline_100}, n=${pt.sample.bin_sample_count}). Restart spot uses the observed next-series opening spot and may include intervening enforcement. Landing and recovery coordinates are estimated_unresolved; gross distance is not used as a landing point.`});
           clock -= kickClock;
-          turnover('punt',pt.spot);
+          if (pt.touchdown) {
+            finishDrive('punt_return_touchdown');
+            scores[scoringTeam] += 6;
+            if (rand() < xpRate) { scores[scoringTeam] += 1; puntPlay.try='XP good (2025 league rate)'; }
+            else puntPlay.try='XP missed (2025 league rate)';
+            puntPlay.scoreAfter = {...scores};
+            offense = scoringTeam;
+            kickoff(scoringTeam,null);
+          } else {
+            finishDrive('punt');
+            if (pt.possession_after === 'receiving_team') offense = other(match.home, match.away, offense);
+            down = 1; togo = Math.min(10, pt.spot); yl = pt.spot;
+          }
         }
         continue;
       }

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createPuntSampler, MATCHUPS, generateGame, seeded } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
+league.punt_event_samples = JSON.parse(readFileSync(new URL('../data/special_teams/2025-punt-events.json', import.meta.url), 'utf8'));
 
 const sample = (type, down, gain, i) => ({
   attributes:{play_type:type,down,ydstogo:down===3?6:10,yardline_100:65},
@@ -51,24 +52,73 @@ for(const m of MATCHUPS){
       // Blocked punts are zero-yard punts; a punt with positive distance is never blocked.
       if(p.outcome==='blocked') assert.equal(p.distance,0,'blocked punt is a zero-yard punt');
       else assert.ok(p.distance>0,'non-blocked punt has positive distance');
+      assert.ok(p.punt_event, 'punt carries joint-event provenance');
+      assert.equal(p.punt_event.kick_field_position_yardline_100,p.yl);
+      if(p.touchdown){
+        assert.equal(p.punt_event.final_spot_status,'not_applicable_touchdown');
+        assert.equal(p.punt_event.final_spot_yardline_100,null);
+        assert.ok(p.punt_event.scoring_team);
+        assert.equal(a.plays[p.index]?.type,'kickoff','punt return touchdown is followed by a kickoff');
+      }else{
+        assert.equal(p.punt_event.final_spot_status,'observed_next_series_first_down_snap_proxy');
+        assert.ok(Number.isFinite(p.punt_event.final_spot_yardline_100));
+      }
+      assert.equal(p.punt_event.landing_yardline_100,null);
+      assert.equal(p.punt_event.landing_status,'estimated_unresolved');
+      assert.equal(p.punt_event.recovery_yardline_100,null);
+      assert.equal(p.punt_event.recovery_status,'estimated_unresolved');
+      assert.ok(['receiving_team','kicking_team','scoring_team'].includes(p.punt_event.possession_after));
     }
     if(p.type==='kickoff') assert.ok(['touchback','out_of_bounds','returned','fair_catch','downed'].includes(p.outcome));
     if(p.type==='scrimmage' || p.type==='punt' || p.type==='field_goal') assert.ok(p.yl>=1 && p.yl<=99, 'yardline in range at '+p.id);
   });
 }
 
-// Sample independently seeded punts to verify the empirical marginals and
-// the observed zero-distance/blocked-punt pairing without relying on a game
-// seed happening to include a block.
-const samplePunt = createPuntSampler(league.punts);
+// Sample at the source field-position mix, then verify the joint event row and
+// its historical marginals. Landing and recovery coordinates stay unresolved.
+const eventRecords = league.punt_event_samples.events;
+const sourceById = new Map(eventRecords.map(e=>[e.source_game_id+':'+e.source_play_id,e]));
+const fieldPositionHist = Object.fromEntries(eventRecords.reduce((hist,e)=>{
+  hist.set(e.field_position_yardline_100,(hist.get(e.field_position_yardline_100)||0)+1);return hist;
+},new Map()));
+const samplePunt = createPuntSampler(league.punts,league.punt_event_samples,league.source.sha256);
 const sampleN = 50000;
 const outcomeCounts = Object.fromEntries(Object.keys(league.punts.outcomes).map(k=>[k,0]));
 const distanceCounts = Object.fromEntries(Object.keys(league.punts.distance_yards)
   .filter(k=>Number(k)>0).map(k=>[Number(k),0]));
 let blockedCount = 0;
+let touchbackShort = 0, otherDistanceReachesGoal = 0, puntTouchdowns = 0;
 for(let i=0;i<sampleN;i++){
-  const punt = samplePunt(60,seeded('punt-sample-'+i));
+  const fieldRand=seeded('punt-field-'+i)();
+  const fieldEntries=Object.entries(fieldPositionHist).map(([k,v])=>[Number(k),v]);
+  let fieldPick=fieldRand*fieldEntries.reduce((n,[,v])=>n+v,0), kickYl=fieldEntries.at(-1)[0];
+  for(const [y,n] of fieldEntries)if((fieldPick-=n)<0){kickYl=y;break;}
+  const punt = samplePunt(kickYl,seeded('punt-sample-'+i));
   outcomeCounts[punt.outcome]++;
+  if(punt.outcome==='touchback' && punt.distance<kickYl) touchbackShort++;
+  if(punt.outcome!=='touchback' && punt.distance>=kickYl) otherDistanceReachesGoal++;
+  assert.equal(punt.landing_yardline_100,null,'gross distance does not invent a landing coordinate');
+  assert.equal(punt.landing_status,'estimated_unresolved');
+  assert.equal(punt.recovery_yardline_100,null);
+  assert.equal(punt.recovery_status,'estimated_unresolved');
+  const source=sourceById.get(punt.sample.source_game_id+':'+punt.sample.source_play_id);
+  assert.ok(source,'sample provenance resolves to source event');
+  assert.equal(punt.possession_after,source.possession_after);
+  assert.ok(source.field_position_yardline_100>=punt.sample.bin_lower_yardline_100 &&
+    source.field_position_yardline_100<=punt.sample.bin_upper_yardline_100,
+    'sampled event belongs to its reported conditioning bin');
+  if(punt.touchdown){
+    puntTouchdowns++;
+    assert.equal(punt.spot,null);
+    assert.equal(punt.final_spot_status,'not_applicable_touchdown');
+    assert.equal(punt.possession_after,'scoring_team');
+    assert.equal(punt.scoring_team,source.scoring_team);
+  }else{
+    assert.equal(punt.spot,source.final_spot_yardline_100,'restart spot comes from the joint record');
+    assert.equal(punt.final_spot_status,'observed_next_series_first_down_snap_proxy');
+  }
+  if(punt.outcome==='touchback') assert.ok(punt.distance>=kickYl,
+    'touchback kick distance reaches the goal line from the generated snap');
   if(punt.outcome==='blocked'){
     blockedCount++;
     assert.equal(punt.distance,0,'blocked outcome has zero recorded distance');
@@ -91,9 +141,16 @@ assert.ok(distanceTv<0.025,`non-blocked punt distance distribution drifted (TV=$
 const expectedBlocked=Number(league.punts.outcomes.blocked)/outcomeTotal;
 assert.ok(Math.abs(blockedCount/sampleN-expectedBlocked)<0.0011,
   `blocked punt rate drifted (${blockedCount/sampleN} vs ${expectedBlocked})`);
+assert.equal(touchbackShort,0,'touchback distance must reach the goal line from its generated snap');
+assert.ok(puntTouchdowns>0,'50,000-sample fixture includes punt-return touchdowns');
 assert.throws(()=>createPuntSampler({
   ...league.punts,
   distance_yards:{...league.punts.distance_yards,'0':8},
-}),/punt table mismatch/,'reject a changed blocked/zero-distance relationship');
+},league.punt_event_samples,league.source.sha256),/punt table mismatch/,'reject a changed blocked/zero-distance relationship');
+assert.equal(samplePunt(25,seeded('punt-fallback')).sample.bin_width_yards,20,
+  'sparse primary field-position bin falls back to the broader bin');
+assert.throws(()=>createPuntSampler(league.punts,{...league.punt_event_samples,source:{sha256:'drift'}},league.source.sha256),
+  /different source hashes/,'reject joint event data from a different source version');
 
 console.log('PASS six matchup playbooks, deterministic 4-period experimental logs, explicit scope guards');
+console.log(`PASS 50,000 joint punt-event samples; outcome TV=${outcomeTv.toFixed(4)}, positive-distance TV=${distanceTv.toFixed(4)}, blocked=${blockedCount}, punt touchdowns=${puntTouchdowns}, short touchbacks=${touchbackShort}, non-touchback distance reaching goal=${otherDistanceReachesGoal}; field-position fallback and estimated landing semantics`);
