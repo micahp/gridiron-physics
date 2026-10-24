@@ -33,6 +33,10 @@ try{
     // first scrimmage play to exercise the physical 22-player animation.
     await page.locator('#timeline button[data-index="0"]').click();
     assert.match(await page.locator('#replay-type').innerText(),/Text-only event/,game.id+' opening kickoff should be text-only');
+    // The kickoff is a special-teams event and must show both teams.
+    const koText=await page.locator('#play-detail').innerText();
+    assert.match(koText,/→/,game.id+' kickoff detail should name the kicking and receiving teams: '+koText);
+    assert.match(koText,/touchback|return|out of bounds/i,game.id+' kickoff detail should name the outcome: '+koText);
     await page.locator('#timeline button.pl:not(.admin)').first().click();
     const event=await page.locator('#replay-type').innerText();
     assert.match(event,/22-player 3D/,game.id+' physical animation unavailable: '+await page.locator('#play-detail').innerText());

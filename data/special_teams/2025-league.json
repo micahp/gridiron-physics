@@ -4,7 +4,7 @@
  "season_type": "REG",
  "source": {
   "name": "nflverse play_by_play_2025.csv.gz",
-  "path": "pbp_2025.csv.gz",
+  "path": "pbp_2025-nflverse-audit.csv.gz",
   "sha256": "2f135887790a013fd004e609e37096bb4816d5cc80b9f19122e1bad478961978"
  },
  "scope": "League-wide 2025 regular-season rates. Not team or kicker rates.",
@@ -262,6 +262,10 @@
    "98": 2,
    "99": 1,
    "100": 1
+  },
+  "touchback_spot": {
+   "landing_zone": 81,
+   "in_air": 495
   }
  }
 }

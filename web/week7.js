@@ -212,6 +212,26 @@ function advance(){
   else{playing=false;renderPlayButton();}
 }
 function startFrom(i){choose(i);playing=true;dwell=0;renderPlayButton();}
+// Special-teams events carry their own ownership: who kicked, who received,
+// and where the ball was spotted. A kickoff is not part of the receiving
+// team's offensive drive in NFL terms, so the timeline labels it as its own
+// special-teams event inside the drive it opens.
+function kickoffLabel(p){
+  const who=esc(p.kicking_team)+' → '+esc(p.receiving_team);
+  if(p.outcome==='returned')return who+' · '+esc(p.return_yards)+' yd return';
+  if(p.touchback_type==='landing_zone')return who+' · touchback, receiving 20';
+  if(p.touchback_type==='in_air')return who+' · touchback, receiving 35';
+  if(p.touchback_type==='midfield')return who+' · touchback, receiving 20 (from 50)';
+  if(p.outcome==='out_of_bounds')return who+' · out of bounds, receiving 40';
+  return who+' · '+esc(String(p.outcome||'').replace('_',' '));
+}
+function playLabel(p){
+  if(p.type==='kickoff')return kickoffLabel(p);
+  if(p.touchdown)return 'TOUCHDOWN';
+  if(p.type==='scrimmage')return esc(p.gain)+' yd';
+  if(p.type==='punt'||p.type==='field_goal')return esc(p.distance)+' yd';
+  return 'event';
+}
 function renderTimeline(){
   const drives=new Map();let shown=0;
   simulation.plays.forEach((p,i)=>{
@@ -288,7 +308,9 @@ function choose(idx){
     ' · Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
     '<br>'+esc(p.note||'')+
     (credit.actors?'<br><span class="note">Illustrative 2026 roster assignment for the 3D replay, not a historical player credit.</span>':'')+
-    (p.try?'<br>'+esc(p.try):'');
+    (p.try?'<br>'+esc(p.try):'')+
+    (p.type==='kickoff'?'<br>'+kickoffLabel(p):'')+
+    (p.type==='field_goal'&&!p.good&&p.restart_rule?'<br>Restart: '+esc(p.restart_rule):'');
   current=null;playSeconds=0;lastTick=null;animating=false;dwell=0;$('scrub').value='0';
   if(p.type!=='scrimmage'){
     currentSelection=null;
