@@ -123,7 +123,7 @@ function renderTimeline(){
   $('timeline').innerHTML=[...drives].map(([n,d])=>
     '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+(d.rows.length===1?' event':' events')+'</span></div>'+
     d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+esc(p.action)+' · '+
-      (p.touchdown?'touchdown':p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='field_goal'?'kick':'event')+'</span></button>').join('')+'</div>').join('');
+      (p.touchdown?'TOUCHDOWN':p.type==='scrimmage'?esc(p.gain)+' yd':p.type==='field_goal'?'kick':'event')+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
 function scoreAtPlay(p) {
