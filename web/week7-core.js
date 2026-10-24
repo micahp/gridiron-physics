@@ -138,10 +138,15 @@ export function generateGame(match, books, seed = '1042', league = null) {
   // goal the kicker attacks. A landing in the end zone is a touchback to the receiver's own 20.
   function samplePunt(kickYl) {
     const distance = Math.round(sampleHist(league.punts.distance_yards));
+    // A zero-yard punt is a block: the 9 zero-yard rows and the 9 blocked
+    // outcomes are the same punts, so keep them coupled instead of sampling
+    // distance and outcome independently.
+    if (distance <= 0) return { distance:0, outcome:'blocked', return_yards:0, spot:clamp(100 - kickYl, 1, 99) };
     const landing = kickYl - distance;
     if (landing <= 0) return { distance, outcome:'touchback', return_yards:0, spot:80 };
     const cats = { ...league.punts.outcomes };
     delete cats.touchback;
+    delete cats.blocked;
     const outcome = pickCount(cats);
     const ret = outcome === 'returned' ? sampleHist(league.punts.return_yards) : 0;
     return { distance, outcome, return_yards:ret, spot:clamp(100 - (landing + ret), 1, 99) };

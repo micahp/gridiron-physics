@@ -48,6 +48,9 @@ for(const m of MATCHUPS){
     if(p.type==='punt'){
       assert.ok(Number.isFinite(p.distance) && p.outcome, 'punt has distance and outcome');
       assert.ok(p.yl>40, 'punts only from beyond the 40');
+      // Blocked punts are zero-yard punts; a punt with positive distance is never blocked.
+      if(p.outcome==='blocked') assert.equal(p.distance,0,'blocked punt is a zero-yard punt');
+      else assert.ok(p.distance>0,'non-blocked punt has positive distance');
     }
     if(p.type==='kickoff') assert.ok(['touchback','out_of_bounds','returned','fair_catch','downed'].includes(p.outcome));
     if(p.type==='scrimmage' || p.type==='punt' || p.type==='field_goal') assert.ok(p.yl>=1 && p.yl<=99, 'yardline in range at '+p.id);
