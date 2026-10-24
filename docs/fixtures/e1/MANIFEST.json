@@ -1,0 +1,48 @@
+{
+  "lp_repo": "micahp/legendarypicks",
+  "lp_commit": "945754080086a1f9ae6dac06740041826395b017",
+  "lp_branch": "feat/nfl-sequence-e1-2026-10-24",
+  "note": "Pinned copies of the ten E1 fixtures at the LP commit named in the handoff. Later LP head 641e1b2e regenerated these with different hashes; see E1-DRIVE-VIEWER-HANDSHAKE.",
+  "fixtures": [
+    {
+      "file": "own25_q1_060-seed1-quarter_change_then_punt.json",
+      "sha256": "eb8d0d8bafad81f3053233b87b7c47172bfe276de4d9d7e70488ff4845d61f3f"
+    },
+    {
+      "file": "own25_q1_900-seed1-punt.json",
+      "sha256": "cd1bf00a38257bf33935af9161cd39e0f5034f89d511f426de235b154c39b0b3"
+    },
+    {
+      "file": "own25_q1_900-seed12-turnover.json",
+      "sha256": "c3404c15eae702e886ea8f0e9500fd8f08440ce83a2624a4f6e308fdecc9371a"
+    },
+    {
+      "file": "own25_q1_900-seed2-field_goal_attempt.json",
+      "sha256": "6eca1064d391e1510d69cd4f344a882286b9c0b77f4fa1eb461b9515d15bccdd"
+    },
+    {
+      "file": "own25_q1_900-seed6-touchdown.json",
+      "sha256": "12a5e26518966c8ef4ad3ed54f5f406b28d03374b2bd33b3f2072486f09eea38"
+    },
+    {
+      "file": "own25_q2_120-seed1-halftime.json",
+      "sha256": "67785be05b4ae869f4cc93387442f044214e6466e86b21892f9465ec6d37c9bf"
+    },
+    {
+      "file": "own25_q2_120-seed15-turnover_on_downs.json",
+      "sha256": "7c5d49a5a0cc39ed1e8d15e24217f0a210451b68a53a6fb6bbf9912ab569ac3b"
+    },
+    {
+      "file": "own25_q3_060-seed1-quarter_change_then_punt.json",
+      "sha256": "351e6197bc408e7474151d80e18871f4510ad69a7a3fda1e3831c86cb0bb5624"
+    },
+    {
+      "file": "own25_q4_150-seed1-end_of_regulation.json",
+      "sha256": "19b866af330cd3315d9bfe28974f9c26972ac7c49e4c04313cc005b52c2c79b0"
+    },
+    {
+      "file": "own5_q1_900-seed14-safety.json",
+      "sha256": "81e062cebc30b6bfd649a269deec8c16206438d2a6b53c8ad1745c2dbc7fcf95"
+    }
+  ]
+}

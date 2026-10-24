@@ -1,0 +1,10 @@
+.drive-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.drive-table th, .drive-table td { border-top: 1px solid rgba(255,255,255,0.12); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+.drive-table th { font-weight: 600; }
+.drive-table tr.quarter-change td { background: rgba(255, 200, 80, 0.08); }
+.drive-table-wrap { overflow-x: auto; }
+.terminal-text { font-weight: 600; }
+.gaps li { margin: 0.25rem 0; }
+@media (max-width: 720px) {
+  .drive-table { min-width: 720px; }
+}
