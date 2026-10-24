@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="../">
+<title>Rigged Player Pose Studio</title>
+<style>
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101722;color:#eef4fa;font:13px system-ui,sans-serif}
+  #view{display:block;width:100%;height:100%}
+  #status{position:fixed;left:14px;top:12px;padding:9px 12px;background:#08111de8;border:1px solid #3c4c5f;border-radius:6px;z-index:2}
+</style>
+</head>
+<body>
+<div id="status">Loading rigged pose studio…</div>
+<canvas id="view"></canvas>
+<script type="module">
+import * as THREE from '../web/vendor/three.module.js';
+import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, POSE } from '../web/rigged-player.js';
+import { WEEK7_TEAM_KITS } from '../web/football-kits.js';
+
+const labels = ['STANCE','RUN','BLOCK','DOWN','THROW','CATCH','KICK','HOLD','CELEBRATE','BACKPEDAL','WRAP','KNEEL'];
+const canvas = document.getElementById('view');
+const status = document.getElementById('status');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(1.5,devicePixelRatio||1));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.2;
+renderer.shadowMap.enabled=true;
+renderer.setSize(innerWidth,innerHeight,false);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color('#101722');
+scene.fog=new THREE.Fog('#101722',30,70);
+const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
+camera.position.set(0,8.3,22);
+camera.lookAt(0,1.4,0);
+scene.add(new THREE.HemisphereLight('#eaf2ff','#344455',2));
+const key=new THREE.DirectionalLight('#fff0d9',3);
+key.position.set(-7,13,9);scene.add(key);
+const fill=new THREE.DirectionalLight('#a6c6ff',1.1);
+fill.position.set(8,7,-9);scene.add(fill);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(28,24),new THREE.MeshStandardMaterial({color:'#263646',roughness:.92}));
+ground.rotation.x=-Math.PI/2;ground.position.y=-.02;scene.add(ground);
+const grid=new THREE.GridHelper(28,28,'#657485','#3e5060');grid.position.y=.005;scene.add(grid);
+const report=[];
+let players=[];
+const labelSprite=(text,x,z)=>{
+ const c=document.createElement('canvas');c.width=320;c.height=64;
+ const g=c.getContext('2d');g.fillStyle='rgba(5,11,18,.84)';g.fillRect(0,0,320,64);
+ g.font='700 32px system-ui';g.fillStyle='#eef4fa';g.textAlign='center';g.textBaseline='middle';g.fillText(text,160,33);
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false}));s.scale.set(2.5,.5,1);s.position.set(x,2.35,z);scene.add(s);
+};
+
+try{
+ const gltf=await loadRiggedPlayer();
+ const kits=[WEEK7_TEAM_KITS.BAL.home,WEEK7_TEAM_KITS.CIN.away];
+ for(let i=0;i<labels.length;i++){
+   const col=i%4,row=Math.floor(i/4),x=(col-1.5)*3.4,z=(row-1)*4.0;
+   const info={id:'studio-'+labels[i].toLowerCase(),jersey:String(10+i),physics:{height:1.88,mass:100},animationSeed:'pose-studio'};
+   const root=buildRiggedPlayer(gltf,info,kits[i%2]);
+   root.position.set(x,0,z);scene.add(root);
+   labelSprite(labels[i],x,z);
+   players.push({root,pose:POSE[labels[i]],label:labels[i],speed:labels[i]==='RUN'||labels[i]==='BACKPEDAL'?5.2:1.8});
+ }
+ status.textContent='12 procedural poses · deterministic phase · screenshot-ready';
+ window.__studio={players,renderer,scene,report,labels};
+}catch(error){status.textContent='FAILED: '+error.stack;window.__studioError=String(error.stack||error);}
+
+let previous=performance.now();
+function frame(now){
+ const dt=Math.min(.05,(now-previous)/1000);previous=now;
+ for(const item of players){
+   animateRigged(item.root,item.pose,item.speed,dt,false);
+   item.root.updateMatrixWorld(true);
+ }
+ renderer.render(scene,camera);
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});
+window.__poseReport=()=>players.map(({root,pose,label})=>{
+ const box=new THREE.Box3().setFromObject(root);
+ const bones=new Set();root.traverse(o=>{if(o.isBone)bones.add(o);});
+ const finite=[...bones].every(b=>[b.quaternion.x,b.quaternion.y,b.quaternion.z,b.quaternion.w].every(Number.isFinite));
+ return {label,pose,bones:bones.size,jersey:root.userData.jerseyNumber,finite,minY:+box.min.y.toFixed(3),maxY:+box.max.y.toFixed(3)};
+});
+</script>
+</body>
+</html>

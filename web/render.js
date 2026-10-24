@@ -3,7 +3,8 @@
 // (0..53.33), Y is up. Player bodies are built in metres and scaled.
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, setNeutralMode } from './rigged-player.js';
+import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, setNeutralMode, stablePhase } from './rigged-player.js';
+import { kitsForGame } from './football-kits.js';
 
 // ?neutral=1 keeps the imported rig in its bind pose (no procedural posing).
 if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('neutral')) {
@@ -177,7 +178,27 @@ function buildPlayer(info, kit) {
   ring.position.y = 0.03;
   ring.visible = false;
   root.add(ring);
-  root.userData = { legs, arms, torso, body, ring, phase: Math.random() * 6, lie: 0, id: info.id };
+  root.userData = {
+    legs, arms, torso, body, ring, phase: stablePhase(info.id, kit.seed ?? ''), lie: 0, id: info.id,
+    dispose() {
+      const geometries = new Set();
+      const materials = new Set([ring.material]);
+      const textures = new Set();
+      root.traverse((object) => {
+        if (object.geometry) geometries.add(object.geometry);
+        for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
+          if (!material) continue;
+          materials.add(material);
+          for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'alphaMap']) {
+            if (material[key]) textures.add(material[key]);
+          }
+        }
+      });
+      for (const texture of textures) texture.dispose();
+      for (const material of materials) material.dispose();
+      for (const geometry of geometries) geometry.dispose();
+    },
+  };
   return root;
 }
 
@@ -316,7 +337,10 @@ export class Renderer {
 
     this.players = new Map();
     this.riggedGltf = null;
+    this.rigLoadStarted = performance.now();
+    this.rigLoadMs = null;
     loadRiggedPlayer().then((gltf) => {
+      this.rigLoadMs = performance.now() - this.rigLoadStarted;
       this.riggedGltf = gltf;
       const names = new Set();
       gltf.scene.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.bones.forEach((b) => names.add(b.name)); });
@@ -336,12 +360,7 @@ export class Renderer {
 
   makeKits() {
     const g = this.game;
-    const H = g.teams[g.home], A = g.teams[g.away];
-    // home in team colour, visitors in white (NFL convention)
-    return {
-      [g.home]: { jersey: H.alt, number: '#ffffff', trim: H.color, pants: H.color, sock: H.color, helmet: H.color, mask: '#c8ccd2' },
-      [g.away]: { jersey: '#f4f5f2', number: A.color, trim: A.alt, pants: '#f4f5f2', sock: A.color, helmet: A.color, mask: '#9aa3ad' },
-    };
+    return kitsForGame(g.home, g.away, g.teams, g.seed ?? '');
   }
 
   buildStadium() {
@@ -393,11 +412,16 @@ export class Renderer {
 
   /** Swap in the 22 bodies for a play. */
   setRoster(roster) {
-    for (const [, o] of this.players) this.scene.remove(o);
+    for (const [, o] of this.players) {
+      this.scene.remove(o);
+      o.userData.dispose?.();
+    }
     this.players.clear();
     this.roster = roster;
+    this.kits = this.makeKits();
     roster.forEach((r, i) => {
-      const info = this.game.players[r.id];
+      const sourceInfo = this.game.players[r.id];
+      const info = { ...sourceInfo, animationSeed: this.game.seed ?? '' };
       const o = this.riggedGltf
         ? buildRiggedPlayer(this.riggedGltf, info, this.kits[r.team])
         : buildPlayer(info, this.kits[r.team]);
@@ -450,6 +474,7 @@ export class Renderer {
     const f0 = rec.frames[k0], f1 = rec.frames[Math.min(rec.frames.length - 1, k0 + 1)];
     const L = (i) => f0[i] + (f1[i] - f0[i]) * a;
     const n = rec.roster.length;
+    const playerUpdateStart = performance.now();
     for (let i = 0; i < n; i++) {
       const o = this.players.get(rec.roster[i].id);
       if (!o) continue;
@@ -463,6 +488,7 @@ export class Renderer {
       if (o.userData.rigged) animateRigged(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
       else animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
     }
+    this.lastPlayerUpdateMs = performance.now() - playerUpdateStart;
     const B = n * 6;
     const bx = L(B), by = L(B + 1), bz = L(B + 2) / YD;
     this.ball.position.set(bx, Math.max(0.12, bz), by);
@@ -554,7 +580,52 @@ export class Renderer {
   }
 
   render() {
+    const start = performance.now();
     this.r3.render(this.scene, this.camera);
+    this.lastRenderMs = performance.now() - start;
+  }
+
+  getPerformanceMetrics() {
+    const geometries = new Set();
+    const textures = new Set();
+    for (const root of this.players.values()) {
+      root.traverse((object) => {
+        if (object.geometry) geometries.add(object.geometry);
+        if (object.skeleton?.boneTexture) textures.add(object.skeleton.boneTexture);
+        for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
+          if (!material) continue;
+          for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'alphaMap']) {
+            if (material[key]) textures.add(material[key]);
+          }
+        }
+      });
+    }
+    let geometryBytes = 0;
+    for (const geometry of geometries) {
+      for (const attribute of Object.values(geometry.attributes || {})) geometryBytes += attribute.array?.byteLength || 0;
+      geometryBytes += geometry.index?.array?.byteLength || 0;
+    }
+    let textureBytes = 0;
+    for (const texture of textures) {
+      const image = texture.image || texture.source?.data;
+      const width = image?.width || image?.videoWidth || 0;
+      const height = image?.height || image?.videoHeight || 0;
+      textureBytes += width * height * 4;
+    }
+    return {
+      players: this.players.size,
+      rigLoadMs: this.rigLoadMs,
+      playerUpdateMs: this.lastPlayerUpdateMs ?? null,
+      renderMs: this.lastRenderMs ?? null,
+      triangles: this.r3.info.render.triangles,
+      drawCalls: this.r3.info.render.calls,
+      rendererGeometries: this.r3.info.memory.geometries,
+      rendererTextures: this.r3.info.memory.textures,
+      playerGeometryBytes: geometryBytes,
+      playerTextureBytes: textureBytes,
+      playerGpuBytesEstimate: geometryBytes + textureBytes,
+      gpuEstimateNote: 'CPU-side buffer and decoded RGBA texture sizes; not driver VRAM telemetry',
+    };
   }
 
   project(x, y, z) {
