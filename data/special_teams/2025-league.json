@@ -9,7 +9,7 @@
  },
  "scope": "League-wide 2025 regular-season rates. Not team or kicker rates.",
  "field_goals": {
-  "distance_is_yards_to_goal_plus": 17,
+  "distance_is_yards_to_goal_plus": 18,
   "buckets": [
    {
     "name": "<30",
@@ -116,6 +116,12 @@
    "downed": 221,
    "touchback": 149,
    "blocked": 9
+  },
+  "blocked_resolution": {
+   "receiving_recovery": 7,
+   "kicking_recovery": 2,
+   "out_of_bounds": 0,
+   "safety": 0
   },
   "return_yards": {
    "-10": 1,

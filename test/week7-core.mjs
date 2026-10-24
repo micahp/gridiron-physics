@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createPuntSampler, MATCHUPS, generateGame, seeded } from '../web/week7-core.js';
+import { createPuntSampler, MATCHUPS, generateGame, seeded, missedFieldGoalRestart,
+  sampleBlockedPuntOutcome, sampleCoinTossLedger, validateHalfStartKickoffs } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
 
@@ -44,7 +45,7 @@ for(const m of MATCHUPS){
     if((p.type==='scrimmage' && p.touchdown) || (p.type==='field_goal' && p.good)){
       assert.equal(a.plays[i+1]?.type ?? 'kickoff', 'kickoff', 'score not followed by a kickoff at '+p.id);
     }
-    if(p.type==='field_goal') assert.equal(p.distance, p.yl+17, 'field goal distance is yards to goal plus 17');
+    if(p.type==='field_goal') assert.equal(p.distance, p.yl+18, 'field goal distance is yards to goal plus 10 end zone plus the 8-yard holder offset');
     if(p.type==='punt'){
       assert.ok(Number.isFinite(p.distance) && p.outcome, 'punt has distance and outcome');
       assert.ok(p.yl>40, 'punts only from beyond the 40');
@@ -95,5 +96,48 @@ assert.throws(()=>createPuntSampler({
   ...league.punts,
   distance_yards:{...league.punts.distance_yards,'0':8},
 }),/punt table mismatch/,'reject a changed blocked/zero-distance relationship');
+
+// Missed-FG restart boundary: the kick spot at the receivers' 20 is not untouched.
+assert.deepEqual(missedFieldGoalRestart(11).restartOwn, 20, 'kick spot 19 restarts at the 20');
+assert.equal(missedFieldGoalRestart(11).untouched, true);
+assert.equal(missedFieldGoalRestart(12).restartOwn, 20, 'kick spot 20 restarts at the kick spot, which is the 20');
+assert.equal(missedFieldGoalRestart(12).untouched, false);
+assert.equal(missedFieldGoalRestart(13).restartOwn, 21, 'kick spot 21 restarts at the kick spot');
+
+// Blocked punts: fail closed without a resolution table.
+const rngBlocked = seeded('blocked-core');
+assert.throws(()=>sampleBlockedPuntOutcome({}, rngBlocked), /missing blocked-punt/);
+assert.equal(sampleBlockedPuntOutcome({blocked_resolution:{safety:3}}, rngBlocked), 'safety');
+
+// Coin-toss ledger: both winners, both normal choices, Q3 kicker is the Q1 receiver.
+const other = (m, t) => t === m.home ? m.away : m.home;
+for (const m of MATCHUPS.slice(0, 2)) {
+  const books = {[m.home]:book(m.home), [m.away]:book(m.away)};
+  for (const winner of [m.home, m.away]) for (const choice of ['receive', 'defer']) {
+    const g = generateGame(m, books, '7', league, {coinToss:{winner, choice}});
+    const L = g.coin_toss_ledger;
+    assert.equal(L.coin_toss.winner, winner);
+    assert.equal(L.coin_toss.winner_deferred, choice === 'defer');
+    assert.equal(L.source, 'authored_simulation_choice');
+    const q1 = g.plays.find(p=>p.type==='kickoff' && p.reason==='half_start' && p.quarter===1);
+    const q3 = g.plays.find(p=>p.type==='kickoff' && p.reason==='half_start' && p.quarter===3);
+    const q1Receiver = choice === 'receive' ? winner : other(m, winner);
+    assert.equal(q1.receiving_team, q1Receiver, `${m.id} ${winner} ${choice}: Q1 receiver`);
+    assert.equal(q1.kicking_team, other(m, q1Receiver), `${m.id} ${winner} ${choice}: Q1 kicker`);
+    assert.equal(q3.kicking_team, q1Receiver, `${m.id} ${winner} ${choice}: Q3 kicker is the Q1 receiver`);
+    assert.equal(q3.receiving_team, q1.kicking_team, `${m.id} ${winner} ${choice}: Q3 receiver is the Q1 kicker`);
+    assert.equal(validateHalfStartKickoffs(g.plays, L), true);
+  }
+  // A non-normal choice is rejected in normal mode.
+  assert.throws(()=>generateGame(m, books, '7', league, {coinToss:{winner:m.home, choice:'kick'}}),
+    /receive or defer/, 'kick choice is rejected in normal mode');
+  // An inconsistent halftime kickoff, where the Q1 kicker kicks Q3 too, is rejected.
+  const g = generateGame(m, books, '7', league, {coinToss:{winner:m.home, choice:'receive'}});
+  const q1 = g.plays.find(p=>p.type==='kickoff' && p.reason==='half_start' && p.quarter===1);
+  const bad = g.plays.map(p => p.type==='kickoff' && p.reason==='half_start' && p.quarter===3
+    ? {...p, kicking_team:q1.kicking_team, receiving_team:q1.receiving_team} : p);
+  assert.throws(()=>validateHalfStartKickoffs(bad, g.coin_toss_ledger), /same team|does not match/,
+    'same team kicking both half-start kickoffs is rejected');
+}
 
 console.log('PASS six matchup playbooks, deterministic 4-period experimental logs, explicit scope guards');
