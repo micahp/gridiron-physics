@@ -2,6 +2,12 @@
 
 **Read this before editing or launching an experiment.**
 
+## E0a IMPLEMENTED AND ACCEPTED — 2026-10-24
+
+Research branch [`research/gridiron-e0-adapter-viewer-2026-10-24` commit `629705da`](https://github.com/micahp/gridiron-physics/commit/629705da81bfc7baa75b9eb55137c9b4239ba07f) now contains a **working read-only LP record adapter and viewer**, tests and LP's pinned seed-1042 JSON copied **exactly** (matching Git blob SHA `c65a9b6699e2ca64b3e6312f9f5c64cc9e7a7a47`). See the [active gate-status update](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md#2026-10-24-e0a-implementation-accepted--move-to-e1-after-lp-acknowledgement). The coordinator inspected source and tests; implementing agent reported checks passing, but the coordinator did **not** independently run the browser or node tests. **E0a accepted for retrospective demo transport only**, not 3D playback or full v1 game validity.
+
+**Next:** LP sequence agent explicitly acknowledges schema/null and outcome authority; then it may begin E1 drive reducer in parallel with Gridiron's E0b work. **Gridiron E0b** must obtain valid roster/participant identities and a versioned field-end direction assignment, implement/test both `los` formulas, and preserve the original LP record. Do not fabricate player movement, silently substitute historical rosters or claim this viewer resolves a physically generated play. No merges/production changes.
+
 ## E0 AGREEMENT UPDATE — 2026-10-24: adapter first, real replay when supported
 
 [Gridiron's E0 agreement at `83749b33`](https://github.com/micahp/gridiron-physics/blob/83749b33b9a3193fb87ac7a73583ad665621376a/docs/research/GRIDIRON-E0-ADAPTER-VIEWER-INVENTORY-2026-10-24.md) is now visible remotely. It agrees to a source-immutable record, explicit `null` handling and direction-dependent `los` mapping. **It does not implement an adapter.** Read the [updated shared delivery-plan handoff](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md#2026-10-24-gridiron-e0-agreement-received--implement-transport-without-fabricated-replay) before further E0 work.
