@@ -26,6 +26,11 @@
 .warn { color: var(--firstdown); }
 .note { font-size: 12px; color: var(--dim); }
 .pdetail { padding: 12px; margin: 2px 0 10px; background: var(--rail); border-left: 3px solid var(--firstdown); }
+.box { width: 100%; border-collapse: collapse; font: 12px/1.3 var(--f-data); margin-bottom: 6px; }
+.box th, .box td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--rail); }
+.box th { font: 600 12px var(--f-display); letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.box th:first-child, .box td:first-child { text-align: left; }
+.box td:first-child { font: 600 14px var(--f-display); letter-spacing: 0.04em; }
 .bug-meta p { margin: 0; }
 </style>
 </head>
@@ -89,7 +94,7 @@
       <button role="tab" data-tab="drives" class="on">Drives</button>
       <button role="tab" data-tab="playbook">Playbook</button>
       <button role="tab" data-tab="ratings">Ratings</button>
-      <button role="tab" data-tab="scope">Scope</button>
+      <button role="tab" data-tab="box">Box score</button>
     </nav>
     <div class="tab" id="tab-drives">
       <div class="sec" id="timeline-head">Drives and plays</div>
@@ -107,11 +112,12 @@
       <div class="roster-t" id="roster-t" hidden></div>
       <div id="players"></div>
     </div>
-    <div class="tab" id="tab-scope" hidden>
-      <div class="sec">Scope and limitations</div>
-      <p class="warn">This is an experimental historical-resampling simulation, not a validated NFL forecast. Outcomes and current-player motion are hypothetical.</p>
-      <p class="note">2022 team movement research is not yet integrated. Current physics uses generic, outcome-constrained assignments. Official gameday availability is unverified for the six games. Kickoffs, penalties, timeouts and overtime are not simulated to full NFL rules.</p>
-      <p class="note">Powered by Gridiron Physics and 2025 nflverse tendencies. New games use generated play logs, not actual results from the upcoming 2026 games.</p>
+    <div class="tab" id="tab-box" hidden>
+      <div class="sec">Line score</div>
+      <table class="box" id="linescore"></table>
+      <div class="sec">Team stats</div>
+      <table class="box" id="teamstats"></table>
+      <p class="note">Simulated game, not a forecast and not a result. Plays are sampled from 2025 play tendencies. Extra points are estimated. Fumbles, penalties and kick returns are not modelled, and overtime is not simulated. Time of possession is the modelled play clock.</p>
     </div>
   </aside>
 </div>

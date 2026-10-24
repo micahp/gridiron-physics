@@ -114,6 +114,48 @@ function setFilter(v){
   filter=v;renderFilter();renderTimeline();
   if(!matches(selected)){const j=playable(selected,1)??playable(selected,-1);if(j!=null)choose(j);}
 }
+function boxScore(sim){
+  const teams=[match.away,match.home], out={};
+  for(const t of teams)out[t]={quarters:[0,0,0,0],score:0,yards:0,rushAtt:0,rushYds:0,rushTD:0,passAtt:0,passComp:0,passYds:0,passTD:0,ints:0,thirdAtt:0,thirdConv:0,fgAtt:0,fgMade:0,punts:0,drives:0,top:0};
+  for(const p of sim.plays){
+    const s=out[p.offense]; if(!s)continue;
+    if(p.type==='scrimmage'){
+      const gain=Number(p.gain)||0;
+      s.yards+=gain;
+      if(p.kind==='run'){s.rushAtt++;s.rushYds+=gain;if(p.touchdown)s.rushTD++;}
+      if(p.kind==='pass'){s.passAtt++;if(p.completed){s.passComp++;s.passYds+=gain;}if(p.interception)s.ints++;if(p.touchdown)s.passTD++;}
+      if(p.down===3){s.thirdAtt++;if(p.touchdown||gain>=p.togo)s.thirdConv++;}
+    }
+    if(p.type==='field_goal'){s.fgAtt++;if(p.good)s.fgMade++;}
+    if(p.type==='punt')s.punts++;
+    const pts=(p.touchdown?6:0)+(p.try?.startsWith('XP good')?1:0)+(p.type==='field_goal'&&p.good?3:0);
+    s.score+=pts;s.quarters[p.quarter-1]+=pts;
+    s.top+=Number(p.runoff)||0;
+  }
+  for(const d of sim.drives)if(out[d.offense])out[d.offense].drives++;
+  return out;
+}
+function renderBox(){
+  const box=boxScore(simulation), teams=[match.away,match.home];
+  const mmss=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+  $('linescore').innerHTML='<thead><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>T</th></tr></thead><tbody>'+
+    teams.map(t=>'<tr><td>'+esc(t)+'</td>'+box[t].quarters.map(n=>'<td>'+n+'</td>').join('')+'<td><b>'+box[t].score+'</b></td></tr>').join('')+'</tbody>';
+  const rows=[
+    ['Total yards', s=>s.yards],
+    ['Rushing', s=>s.rushAtt+'–'+s.rushYds],
+    ['Passing', s=>s.passComp+'/'+s.passAtt],
+    ['Passing yards', s=>s.passYds],
+    ['TD rush / pass', s=>s.rushTD+' / '+s.passTD],
+    ['Interceptions', s=>s.ints],
+    ['3rd down', s=>s.thirdConv+'/'+s.thirdAtt],
+    ['Field goals', s=>s.fgMade+'/'+s.fgAtt],
+    ['Punts', s=>s.punts],
+    ['Drives', s=>s.drives],
+    ['Time of possession', s=>mmss(s.top)],
+  ];
+  $('teamstats').innerHTML='<thead><tr><th></th>'+teams.map(t=>'<th>'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+
+    rows.map(([label,f])=>'<tr><td>'+label+'</td>'+teams.map(t=>'<td>'+esc(f(box[t]))+'</td>').join('')+'</tr>').join('')+'</tbody>';
+}
 function renderPlayButton(){
   $('play').textContent=playing?'❚❚':'▶';
   $('play').setAttribute('aria-label',playing?'Pause':'Play through the plays');
@@ -226,7 +268,7 @@ function simulate(){
     simulation=generateGame(match,books,seed);
     ({scoring:scoringAt,key:keyAt}=classify(simulation));
     playing=false;
-    renderFilter();renderTimeline();choose(playable(-1,1)??0);renderPlayButton();
+    renderFilter();renderTimeline();renderBox();choose(playable(-1,1)??0);renderPlayButton();
     status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
       ' drives · '+match.away+' '+simulation.score[match.away]+' / '+match.home+' '+simulation.score[match.home]+
       ' · experimental, not legally validated');
