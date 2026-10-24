@@ -1,5 +1,7 @@
 # Observed football movement — coordinated benchmark review (2026-10-24)
 
+> **2026-10-24 delivery reprioritization:** [End-to-end simulator delivery plan](../END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md) supersedes this review's suggested *immediate next experiment*. The conditional movement results, source hashes, interpretation limits and proposed fair snap-anchored benchmark remain valid, but the tracking/model-agent tasks here are **non-blocking support** for E3. LP sequence/drive/game E0–E2 integration and Gridiron full-game playback are now the primary deliverables.
+
 **Decision:** Accept as a reproducible **conditional movement baseline**; do **not** claim open-loop from-snap play prediction, tackle-success prediction, calibrated player physics, or a general solver improvement. Move to an information-fair, snap-anchored **all-player movement benchmark**, and only then selective observed tackle/contact work. No production or solver adoption.
 
 ## Pinned sources and verification
