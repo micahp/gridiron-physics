@@ -25,6 +25,133 @@ const ASSET_URL = 'web/assets/football-player-rigged.glb';
 const AX_FWD = new THREE.Vector3(1, 0, 0);
 const AX_SIDE = new THREE.Vector3(0, 0, 1);
 
+export function stablePhase(playerId, seed = '') {
+  const input = `${seed}:${playerId}`;
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return ((hash >>> 0) / 0x100000000) * Math.PI * 2;
+}
+
+export function composeBindRelativeQuaternion(restQuat, restParentQuat, rotations) {
+  const worldDelta = new THREE.Quaternion();
+  const axisRotation = new THREE.Quaternion();
+  for (const { axis, angle } of rotations) {
+    axisRotation.setFromAxisAngle(axis, angle);
+    worldDelta.premultiply(axisRotation);
+  }
+  return restParentQuat.clone().invert().multiply(worldDelta).multiply(restParentQuat).multiply(restQuat);
+}
+
+export function splitUniformGeometry(geometry, threshold = 0.9) {
+  const position = geometry.getAttribute('position');
+  if (!position || (!geometry.index && position.count % 3 !== 0)) throw new Error('Uniform geometry must contain triangle positions');
+  const source = geometry.getIndex()?.array || Array.from({ length: position.count }, (_, i) => i);
+  if (source.length % 3 !== 0) throw new Error('Uniform geometry index must contain complete triangles');
+  const pants = [];
+  const jersey = [];
+  for (let i = 0; i < source.length; i += 3) {
+    const triangle = [source[i], source[i + 1], source[i + 2]];
+    const meanY = (position.getY(triangle[0]) + position.getY(triangle[1]) + position.getY(triangle[2])) / 3;
+    (meanY < threshold ? pants : jersey).push(...triangle);
+  }
+  geometry.setIndex([...pants, ...jersey]);
+  geometry.clearGroups();
+  if (pants.length) geometry.addGroup(0, pants.length, 0);
+  if (jersey.length) geometry.addGroup(pants.length, jersey.length, 1);
+  return { geometry, pantsIndexCount: pants.length, jerseyIndexCount: jersey.length };
+}
+
+function fabricMaterial(source, color) {
+  const material = source.clone();
+  material.map = null; // discard the dark atlas with its baked #21 uniform
+  material.color.set(color);
+  material.roughness = 0.78;
+  material.userData.riggedPlayerOwned = true;
+  material.needsUpdate = true;
+  return material;
+}
+
+function helmetMaterial(source, kit) {
+  const material = source.clone();
+  material.map = null;
+  material.color.set(kit.helmet);
+  material.roughness = 0.3;
+  material.metalness = 0.18;
+  material.userData.riggedPlayerOwned = true;
+  material.needsUpdate = true;
+  return material;
+}
+
+function applyRiggedKit(clone, kit) {
+  if (!kit) return;
+  clone.traverse((object) => {
+    if (!object.isMesh || !object.material) return;
+    const sources = Array.isArray(object.material) ? object.material : [object.material];
+    const uniformIndex = sources.findIndex((material) => String(material.name || '').toUpperCase() === 'ROUPA_MAT');
+    if (uniformIndex >= 0) {
+      if (sources.length !== 1) throw new Error('Expected the apparel primitive to have its own material group');
+      const split = splitUniformGeometry(object.geometry.clone());
+      split.geometry.userData.riggedPlayerOwned = true;
+      object.geometry = split.geometry;
+      object.material = [fabricMaterial(sources[uniformIndex], kit.pants), fabricMaterial(sources[uniformIndex], kit.jersey)];
+      return;
+    }
+    const apply = (source) => String(source.name || '').toUpperCase() === 'HELMET.001'
+      ? helmetMaterial(source, kit)
+      : source; // skin, face mask, straps, gloves, shoes and other gear stay intact
+    object.material = Array.isArray(object.material) ? object.material.map(apply) : apply(object.material);
+  });
+}
+
+function numberDecal(info, kit) {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 256;
+  const context = canvas.getContext('2d');
+  const number = String(info.jersey ?? '').trim();
+  if (!number) return null;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.font = '900 188px Arial, sans-serif';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.lineJoin = 'round';
+  context.lineWidth = 20;
+  context.strokeStyle = kit.trim;
+  context.strokeText(number, 128, 132, 236);
+  context.fillStyle = kit.number;
+  context.fillText(number, 128, 132, 236);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  texture.userData.riggedPlayerOwned = true;
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.04, side: THREE.DoubleSide, depthWrite: false, toneMapped: false });
+  material.userData.riggedPlayerOwned = true;
+  return material;
+}
+
+function attachNumberDecals(clone, bones, info, kit) {
+  const material = numberDecal(info, kit);
+  const torso = bones.chest || bones.hip;
+  if (!material || !torso) return;
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.22), material);
+  front.position.set(0, 1.13, 0.198);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.22), material);
+  front.geometry.userData.riggedPlayerOwned = true;
+  back.geometry.userData.riggedPlayerOwned = true;
+  front.userData.riggedNumberDecal = back.userData.riggedNumberDecal = true;
+  back.position.set(0, 1.13, -0.176);
+  back.rotation.y = Math.PI;
+  front.renderOrder = back.renderOrder = 2;
+  front.castShadow = back.castShadow = false;
+  clone.add(front, back);
+  clone.updateMatrixWorld(true);
+  torso.attach(front);
+  torso.attach(back);
+}
+
 let loaderPromise = null;
 export function loadRiggedPlayer() {
   if (!loaderPromise) {
@@ -58,6 +185,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
   root.add(body);
 
   const clone = cloneSkeleton(gltf.scene);
+  applyRiggedKit(clone, kit);
   const bones = {};
   clone.traverse((o) => {
     if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; }
@@ -103,6 +231,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
   for (const b of Object.values(bones)) {
     if (!b || !b.isBone) continue;
     b.userData.restQuat = b.quaternion.clone();
+    b.userData.restPosition = b.position.clone();
     const pq = new THREE.Quaternion();
     if (b.parent) b.parent.getWorldQuaternion(pq);
     b.userData.restParentQuat = pq;
@@ -112,6 +241,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
     const b = bones[name] || bones[name.replace(/\./g, '')];
     if (b) bones[key] = b;
   }
+  attachNumberDecals(clone, bones, info, kit);
 
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.85, 1.05, 32),
@@ -123,26 +253,55 @@ export function buildRiggedPlayer(gltf, info, kit) {
   root.add(ring);
 
   root.userData = {
-    rigged: true, id: info.id, body, ring, bones, phase: Math.random() * 6, lie: 0,
+    rigged: true, id: info.id, jerseyNumber: String(info.jersey ?? ''), body, ring, bones,
+    phase: stablePhase(info.id, info.animationSeed ?? info.seed ?? kit?.seed ?? ''), lie: 0,
     hinge: {
       shinL: hinge('thighL', 'shinL'), shinR: hinge('thighR', 'shinR'),
       foreL: hinge('upper_armL', 'forearmL'), foreR: hinge('upper_armR', 'forearmR'),
+    },
+    dispose() {
+      const geometries = new Set([ring.geometry]);
+      const materials = new Set([ring.material]);
+      const textures = new Set();
+      root.traverse((object) => {
+        if (object.geometry?.userData?.riggedPlayerOwned) geometries.add(object.geometry);
+        if (object.skeleton?.boneTexture) textures.add(object.skeleton.boneTexture);
+        for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
+          if (!material?.userData?.riggedPlayerOwned) continue;
+          materials.add(material);
+          if (material.map?.userData?.riggedPlayerOwned) textures.add(material.map);
+        }
+      });
+      for (const texture of textures) texture.dispose();
+      for (const material of materials) material.dispose();
+      for (const geometry of geometries) geometry.dispose();
     },
   };
   return root;
 }
 
-// Rotate a bone by `angle` about a world-space axis, on top of its bind pose.
-// The bone's local quaternion is derived from the parent's bind-pose rotation so
-// the rig's own bone roll never matters.
+// Compose world-space deltas first, then express the result relative to the bind
+// pose. A later shoulder axis must not replace an earlier flexion rotation.
 const _q = new THREE.Quaternion();
 const _pq = new THREE.Quaternion();
+const _parentInverse = new THREE.Quaternion();
+const _worldDelta = new THREE.Quaternion();
+const _axisRotation = new THREE.Quaternion();
 function rotWorld(bone, axis, angle, k) {
-  if (!bone || !axis || !bone.userData.restQuat || !bone.userData.restParentQuat) return;
+  return rotWorldComposed(bone, [{ axis, angle }], k);
+}
+function rotWorldComposed(bone, rotations, k) {
+  if (!bone || !rotations?.length || !bone.userData.restQuat || !bone.userData.restParentQuat) return;
   _pq.copy(bone.userData.restParentQuat);
-  _q.setFromAxisAngle(axis, angle);
-  const desired = _pq.clone().invert().multiply(_q).multiply(_pq).multiply(bone.userData.restQuat);
-  bone.quaternion.slerp(desired, k);
+  _parentInverse.copy(_pq).invert();
+  _worldDelta.identity();
+  for (const { axis, angle } of rotations) {
+    if (!axis || !Number.isFinite(angle)) continue;
+    _axisRotation.setFromAxisAngle(axis, angle);
+    _worldDelta.premultiply(_axisRotation);
+  }
+  _q.copy(_parentInverse).multiply(_worldDelta).multiply(_pq).multiply(bone.userData.restQuat);
+  bone.quaternion.slerp(_q, k);
 }
 
 export function animateRigged(root, pose, speed, dt, carrying) {
@@ -154,15 +313,15 @@ export function animateRigged(root, pose, speed, dt, carrying) {
   const swing = Math.min(0.95, speed * 0.11);
   let lean = Math.min(0.38, speed * 0.04);
   let crouch = 0;
-  const armF = [Math.sin(u.phase) * swing * 0.8, -Math.sin(u.phase) * swing * 0.8];
+  const armF = [-Math.sin(u.phase) * swing * 0.8, Math.sin(u.phase) * swing * 0.8];
   let armOut = 0.12;
   const legA = [Math.sin(u.phase) * swing, -Math.sin(u.phase) * swing];
   const kneeB = [Math.max(0, -Math.cos(u.phase)) * swing * 1.4, Math.max(0, Math.cos(u.phase)) * swing * 1.4];
   let lieT = 0, lift = 0, elbow = 0.55;
   switch (pose) {
     case POSE.STANCE:
-      crouch = 0.32; lean = 0.55; legA[0] = 0.55; legA[1] = 0.35; kneeB[0] = 0.9; kneeB[1] = 0.8;
-      armF[0] = 0.5; armF[1] = 0.2; armOut = 0.18; elbow = 0.9; break;
+      crouch = 0.3; lean = 0.42; legA[0] = 0.35; legA[1] = 0.2; kneeB[0] = 0.72; kneeB[1] = 0.62;
+      armF[0] = 0.38; armF[1] = 0.16; armOut = 0.12; elbow = 0.78; break;
     case POSE.BLOCK:
       lean = 0.4; crouch = 0.12; armF[0] = armF[1] = 0.6; armOut = 0.05; elbow = 1.1;
       legA[0] = 0.35 + Math.sin(u.phase) * 0.2; legA[1] = -0.15 - Math.sin(u.phase) * 0.2;
@@ -180,9 +339,11 @@ export function animateRigged(root, pose, speed, dt, carrying) {
       legA[0] = -0.9; legA[1] = 0.2; kneeB[0] = 0.1; kneeB[1] = 0.3; lean = -0.15;
       armF[0] = 0.4; armF[1] = -0.5; armOut = 0.45; elbow = 0.6; break;
     case POSE.HOLD:
+      crouch = 0.12; legA[0] = 0.12; legA[1] = -0.08; kneeB[0] = 0.42; kneeB[1] = 0.32; lean = 0.08;
+      armF[0] = 0.45; armF[1] = 0.78; elbow = 1.0; break;
     case POSE.KNEEL:
-      crouch = 0.42; legA[0] = 1.0; legA[1] = -0.2; kneeB[0] = 1.2; kneeB[1] = 1.6; lean = 0.15;
-      armF[0] = armF[1] = 0.6; elbow = 1.2; break;
+      crouch = 0.48; legA[0] = 0.82; legA[1] = -0.28; kneeB[0] = 1.35; kneeB[1] = 1.8; lean = 0.12;
+      armF[0] = armF[1] = 0.52; elbow = 1.1; break;
     case POSE.CELEBRATE:
       armF[0] = armF[1] = 2.2; armOut = 0.4; lift = Math.abs(Math.sin(u.phase * 1.3)) * 0.18; elbow = 0.3; break;
     case POSE.BACKPEDAL:
@@ -196,18 +357,22 @@ export function animateRigged(root, pose, speed, dt, carrying) {
   rotWorld(b.thighR, AX_SIDE, legA[1], k);
   rotWorld(b.shinL, u.hinge.shinL, kneeB[0], k);
   rotWorld(b.shinR, u.hinge.shinR, kneeB[1], k);
-  // arms: shoulder flexion about the left-right axis, abduction about forward
-  rotWorld(b.upL, AX_SIDE, armF[0], k);
-  rotWorld(b.upR, AX_SIDE, armF[1], k);
-  rotWorld(b.upL, AX_FWD, armOut, k);
-  rotWorld(b.upR, AX_FWD, -armOut, k);
+  // arms: flexion and abduction are one bind-relative transform per shoulder.
+  rotWorldComposed(b.upL, [{ axis: AX_SIDE, angle: armF[0] }, { axis: AX_FWD, angle: armOut }], k);
+  rotWorldComposed(b.upR, [{ axis: AX_SIDE, angle: armF[1] }, { axis: AX_FWD, angle: -armOut }], k);
   rotWorld(b.foreL, u.hinge.foreL, elbow, k);
   rotWorld(b.foreR, u.hinge.foreR, elbow, k);
-  // torso lean and crouch
+  // torso lean and crouch. Lower the pelvis/spine, not the entire character root,
+  // so stance transitions do not push the cleats through the field.
   rotWorld(b.hip, AX_SIDE, -lean * 0.5, k);
   rotWorld(b.chest, AX_SIDE, -lean * 0.5, k);
+  for (const [bone, amount] of [[b.hip, 0.16], [b.chest, 0.12]]) {
+    if (!bone?.userData.restPosition) continue;
+    const targetY = bone.userData.restPosition.y - crouch * amount;
+    bone.position.y += (targetY - bone.position.y) * k;
+  }
 
   u.lie += (lieT - u.lie) * (1 - Math.exp(-dt * 8));
   u.body.rotation.z = -u.lie;
-  u.body.position.y = lift + (u.lie > 0.1 ? 0.12 : 0) - crouch * 0.25;
+  u.body.position.y = lift + (u.lie > 0.1 ? 0.24 : 0);
 }
