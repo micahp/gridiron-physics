@@ -39,7 +39,7 @@ def main():
     # All mutable module constants are used only by this one CLI invocation.
     roster_builder.TEAMS = dict(TEAMS)
     roster_builder.TARGET = dt.date(2026, 10, 24)
-    roster_builder.INACTIVES = {}  # No unverified gameday inactive names.
+    roster_builder.INACTIVES = {team: [] for team in TEAMS}  # No invented gameday inactive names.
     roster_builder.OUT = str(OUT)
     roster_builder.main()
 
