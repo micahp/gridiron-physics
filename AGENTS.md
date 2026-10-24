@@ -2,6 +2,10 @@
 
 **Read this before editing or launching an experiment.**
 
+## E0 field-direction correction, E1 unblocked — 2026-10-24
+
+Read [NFL field-end decision](docs/research/E0-FIELD-END-CONVENTION-DECISION-2026-10-24.md). Pushed LP E0 `693e1767` and Gridiron adapter `15b0b34` share the exact same updated seed-1042 JSON. The Q2 `dir=+1`, `los=12` is **approved solely as a labeled `authored_demo_convention`**, not historical field-end evidence or NFL period logic. **Do not generalize `dir=+1` in Q1–Q2 / `dir=-1` in Q3–Q4**. NFL teams switch ends after Q1 and Q3; second-half ends are explicitly assigned. E1/E2 require **team × period** field-end assignments and tests for possession, quarter change, halftime, touchdown/turnover and los consistency. Gridiron must remove the universal quarter-to-dir validation before supporting full games; keep this fixture labeled authored, not observed. LP **may begin E1 now** on its research branch, in parallel with E0b player-specific replay prerequisites. No production edits/merge.
+
 ## E0a IMPLEMENTED AND ACCEPTED — 2026-10-24
 
 Research branch [`research/gridiron-e0-adapter-viewer-2026-10-24` commit `629705da`](https://github.com/micahp/gridiron-physics/commit/629705da81bfc7baa75b9eb55137c9b4239ba07f) now contains a **working read-only LP record adapter and viewer**, tests and LP's pinned seed-1042 JSON copied **exactly** (matching Git blob SHA `c65a9b6699e2ca64b3e6312f9f5c64cc9e7a7a47`). See the [active gate-status update](docs/END-TO-END-FOOTBALL-SIMULATOR-DELIVERY-PLAN-2026-10-24.md#2026-10-24-e0a-implementation-accepted--move-to-e1-after-lp-acknowledgement). The coordinator inspected source and tests; implementing agent reported checks passing, but the coordinator did **not** independently run the browser or node tests. **E0a accepted for retrospective demo transport only**, not 3D playback or full v1 game validity.
