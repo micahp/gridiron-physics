@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "ea-madden27-week6-henderson-bush-2026-10-23",
+  "game": "EA Madden NFL 27",
+  "ratings_snapshot": "Week 6",
+  "accessed_at": "2026-10-23",
+  "source_of_truth": {
+    "repository": "micahp/gridiron-physics",
+    "ref": "main",
+    "commit": "053093a1ef0da912b19fc3a7566fdac68385e8b5",
+    "path": "docs/research/RATINGS-TO-PHYSICS-COORDINATION-2026-10-23.md",
+    "sha256": "204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde"
+  },
+  "players": [
+    {
+      "canonical_id": "00-0040734",
+      "ea_player_id": "14810",
+      "name": "TreVeyon Henderson",
+      "team": "New England Patriots",
+      "position": "HB",
+      "source_url": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/tre-veyon-henderson/14810",
+      "mass_kg": 92,
+      "mass_status": "publisher-displayed body-weight estimate; not independently measured",
+      "ratings": {
+        "STR": 71,
+        "BTK": 81,
+        "TKL": 33,
+        "HTP": 31
+      },
+      "ratings_status": "EA-published game ratings; not measured physical capacities"
+    },
+    {
+      "canonical_id": "00-0035525",
+      "ea_player_id": "20583",
+      "name": "Devin Bush",
+      "team": "Chicago Bears",
+      "position": "MIKE",
+      "source_url": "https://www.ea.com/games/madden-nfl/ratings/player-ratings/devin-bush/20583",
+      "mass_kg": 106,
+      "mass_status": "publisher-displayed body-weight estimate; not independently measured",
+      "ratings": {
+        "STR": 74,
+        "BTK": 19,
+        "TKL": 89,
+        "HTP": 88
+      },
+      "ratings_status": "EA-published game ratings; not measured physical capacities"
+    }
+  ],
+  "legacy_only_fields": {
+    "ELU": {
+      "player_id": "00-0040734",
+      "value": 76,
+      "status": "legacy estimate; not an EA Madden 27 Week 6 field and not used in M4c"
+    }
+  }
+}
