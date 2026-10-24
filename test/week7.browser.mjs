@@ -18,7 +18,7 @@ try{
     await page.waitForFunction(()=>{
       const s=document.querySelector('#status')?.textContent||'';
       return s.includes('Ready ·')||s.includes('Assets not ready:')||s.includes('Simulation failed:');
-    },{timeout:100000});
+    },null,{timeout:100000});
     const status=await page.locator('#status').innerText();
     assert.match(status,/Ready ·/,'matchup '+game.id+' did not initialize: '+status);
     const n=await page.locator('#timeline button[data-index]').count();
