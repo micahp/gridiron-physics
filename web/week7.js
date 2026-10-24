@@ -45,6 +45,8 @@ function makeViewer(){
 }
 function inspectPlayer(id){
   const p=physicsGame.players[id]; if(!p)return;
+  const slot=rosterSlots.find(x=>x.id===id);
+  if(slot&&slot.side!==rosterTeam){rosterTeam=slot.side;renderRoster();}
   renderer.select(id);
   document.querySelector('.tabs button[data-tab="ratings"]').click();
   for(const old of document.querySelectorAll('.pdetail'))old.remove();
@@ -58,9 +60,14 @@ function inspectPlayer(id){
   else{$('players').prepend(detail);detail.scrollIntoView({block:'start'});}
 }
 function drawPlayerList(demo) {
-  const slots = [...Object.entries(demo.lineups.offense).map(([slot,id])=>({side:demo.play.off,slot,id})),
+  rosterSlots = [...Object.entries(demo.lineups.offense).map(([slot,id])=>({side:demo.play.off,slot,id})),
     ...Object.entries(demo.lineups.defense).map(([slot,id])=>({side:demo.play.def,slot,id}))];
-  $('players').innerHTML=slots.map(x=>{const p=physicsGame.players[x.id];return '<button class="rrow" data-player="'+esc(x.id)+'"><span class="pos">'+esc(x.slot)+'</span><span>'+esc(p?.name||'Unknown')+'</span><span class="pos">'+esc(x.side)+'</span><span class="ovr">'+esc(p?.overall_estimate??'—')+'</span></button>';}).join('');
+  renderRoster();
+}
+function renderRoster(){
+  $('roster-t').hidden=false;
+  $('roster-t').innerHTML=[match.away,match.home].map(t=>'<button data-team="'+esc(t)+'" class="'+(t===rosterTeam?'on':'')+'">'+esc(t)+'</button>').join('');
+  $('players').innerHTML=rosterSlots.filter(x=>x.side===rosterTeam).map(x=>{const p=physicsGame.players[x.id];return '<button class="rrow" data-player="'+esc(x.id)+'"><span class="pos">'+esc(x.slot)+'</span><span>'+esc(p?.name||'Unknown')+'</span><span class="pos">'+esc(x.side)+'</span><span class="ovr">'+esc(p?.overall_estimate??'—')+'</span></button>';}).join('');
   for(const b of $('players').querySelectorAll('[data-player]'))b.addEventListener('click',()=>inspectPlayer(b.dataset.player));
 }
 function showPlaybook(p,demo){
@@ -79,6 +86,7 @@ function showPlaybook(p,demo){
 }
 const POST_CLIP_PAUSE=.9, TEXT_EVENT_SECONDS=2.5;
 let filter='all', playing=false, dwell=0, scoringAt=new Set(), keyAt=new Set();
+let rosterSlots=[], rosterTeam=match.away;
 function classify(sim){
   // Scoring: touchdowns and made field goals. Key: those, plus interceptions, 20+ yard gains and
   // turnovers on downs. There is no win-probability model here, so this is not ESPN's ranked list.
@@ -184,6 +192,7 @@ function choose(idx){
   current=null;playSeconds=0;lastTick=null;animating=false;dwell=0;$('scrub').value='0';
   if(p.type!=='scrimmage'){
     $('replay-type').textContent='Text-only event';
+    $('roster-t').hidden=true;rosterSlots=[];
     $('players').innerHTML='<p class="note">No physical special-teams animation for this event.</p>';
     $('playbook-detail').textContent='Administrative/special-teams event; no observed tracking trajectory asserted.';
   }else{
@@ -268,6 +277,7 @@ async function start(){
       for(const o of document.querySelectorAll('.tabs button'))o.classList.toggle('on',o===b);
       for(const t of document.querySelectorAll('.tab'))t.hidden=t.id!=='tab-'+b.dataset.tab;
     });
+    $('roster-t').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;rosterTeam=b.dataset.team;renderRoster();});
     $('matchup').addEventListener('change',()=>{location.search='?game='+encodeURIComponent($('matchup').value);});
     simulate();
     requestAnimationFrame(animate);
