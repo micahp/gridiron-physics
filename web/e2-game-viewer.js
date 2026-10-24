@@ -48,6 +48,7 @@ function renderMetadata(verification) {
   appendMeta($('#record-meta'), [
     ['LP mode', record.mode],
     ['Seed', record.seed],
+    ['Game simulation ID', record.simulation_id],
     ['Drives', adapted.drives.length],
     ['Plays', adapted.sourcePlayCount],
     ['Producer base', adapted.source.base_commit],
@@ -103,9 +104,9 @@ function renderTeamStats() {
 function renderPlay(playEntry, drive) {
   const play = playEntry.source;
   appendMeta($('#play-meta'), [
-    ['Game order (display only)', playEntry.gamePlayIndex],
+    ['Game sequence', playEntry.gamePlayIndex],
     ['LP play ID', playEntry.sourceId],
-    ['Drive / local sequence', `${drive.index} / ${playEntry.sourceSequence}`],
+    ['Drive / game sequence', `${drive.index} / ${playEntry.sourceSequence}`],
     ['Event', play.event_type],
     ['Before', `Q${play.state_before.quarter} ${formatClock(play.state_before.clock_seconds)} · ${play.state_before.offense_team} · ${play.state_before.down} & ${play.state_before.yards_to_go} · ydline100 ${play.state_before.yardline_100}`],
     ['After', `Q${play.state_after.quarter} ${formatClock(play.state_after.clock_seconds)} · ${play.state_after.offense_team} · ${play.state_after.down} & ${play.state_after.yards_to_go} · ydline100 ${play.state_after.yardline_100}`],

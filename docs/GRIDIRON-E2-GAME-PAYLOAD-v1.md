@@ -10,8 +10,8 @@ record, retained without rewriting plays, events, results, score, player attribu
 display-only indexes and labels, but every displayed play links back to the same source object.
 
 The current E2 record uses team labels `A` and `B`, a coin-toss ledger, kickoffs, drive summaries, and nested play arrays.
-Its generated plays have drive-local identifiers such as `e2-<seed>-drive1:1`. The viewer preserves those identifiers.
-It does not pretend they form the single game-wide `simulation_id:sequence` namespace required by the shared v1 contract.
+Each game has one `simulation_id`; play `sequence` is contiguous across drive boundaries, and every ID is
+`<simulation_id>:<sequence>`. The viewer validates and preserves this game-wide namespace.
 
 ## Envelope
 
@@ -47,13 +47,13 @@ state explicit but do not replace an LP commit.
 
 ## Required game record fields
 
-- `mode`, `seed`, `ledger`, `kickoffs`, `drives`, `points`, `stats`, `status`, `blocker`, `tied`, `complete_regulation`,
-  `final_quarter`, `final_clock_seconds`, `valid_full_game`, `unsupported_rules`, and `gaps`.
+- `mode`, `seed`, `simulation_id`, `ledger`, `kickoffs`, `drives`, `points`, `stats`, `status`, `blocker`, `tied`,
+  `complete_regulation`, `final_quarter`, `final_clock_seconds`, `valid_full_game`, `unsupported_rules`, and `gaps`.
 - `drives` is chronological. Every drive has a one-based contiguous `index`, `offense_team`, start/end quarter and clock,
   `terminal`, and a non-empty `plays` array.
 - Plays remain in drive order and carry `sequence`, source `id`, `event_type`, `state_before`, `state_after`, `outcome`,
-  `decision`, `sampling`, `field`, and `participants`. A drive's local `sequence` starts at 1. Source IDs must end in
-  `:<sequence>` and be unique across the game. Their original scope is preserved; the adapter does not mint replacement IDs.
+  `decision`, `sampling`, `field`, and `participants`. Game `sequence` starts at 1 and increments across drive boundaries.
+  IDs must equal `<record.simulation_id>:<sequence>` and be unique across the game. The adapter does not mint replacement IDs.
 - `participants.attribution` and each `outcome.sampled_from` are displayed as supplied. Sampled historical participants are
   not presented as the simulated game's roster.
 - A complete regulation record ends in Q4 at 0 seconds. It may still have `valid_full_game: false` because unsupported rules,
@@ -64,19 +64,19 @@ state explicit but do not replace an LP commit.
   completed; it is not interpreted as a play or added to the LP outcome stream.
 
 Null, absent, and unsupported values stay distinct. The viewer must not fill a missing team identity, score-at-play state,
-timeout, roster, lineup, route, movement, or kick result. A display-only game-play ordinal is permitted; it must never replace
-the source drive-local `sequence` or `id`.
+timeout, roster, lineup, route, movement, or kick result. The game-wide source `sequence` and `id` remain unchanged.
 
 ## Shared v1 boundary
 
 The research fixture is not `pregame_full_game` v1. The current E2 record has no scheduled `game_id`, pregame `as_of` snapshot,
-real team identities, eligible roster, or single game-wide simulation ID. Its participants and event outcomes are sampled
+real team identities, or eligible roster. Its participants and event outcomes are sampled
 retrospectively. The source records explicitly mark `valid_full_game: false` where appropriate. The adapter reports these
 as shared-v1 violations and still permits a read-only inspection when the record reaches the end of regulation.
 
 The earlier E2 commit `60b7708b` stored drive play counts without nested play records. LP commit
-`3daa0ed6dc99c3bdc666d5c0f226af02173e05cc` adds the committed nested-play refactor and `emit_game.py`. The pinned example
-was emitted by that commit. Gridiron never reconstructs missing plays from drive counts.
+`3daa0ed6dc99c3bdc666d5c0f226af02173e05cc` added the committed nested-play refactor and `emit_game.py`; LP commit
+`702f41db569de04a962b6f1336460d5273b66ce0` added the game-wide play ID namespace. The current pinned example was emitted
+by the latter commit. Gridiron never reconstructs missing plays from drive counts.
 
 The first emitted game (seed 1) has 24 drives and 144 plays, score A 11–B 17, and rules-matrix counts of 13 PASS, 5
 UNSUPPORTED, 1 PARTIAL, and 3 NOT_APPLICABLE. It is complete through regulation, while `valid_full_game` correctly remains

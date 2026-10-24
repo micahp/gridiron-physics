@@ -52,14 +52,13 @@ function validateState(state, label) {
   }
 }
 
-function validatePlay(play, label, drive, localSequence, ids, prefixes, findings) {
+function validatePlay(play, label, drive, gameSequence, driveOffset, ids, simulationId, findings) {
   requireObject(play, label);
-  if (play.sequence !== localSequence) fail(`${label}.sequence must be ${localSequence} within its drive`);
+  if (play.sequence !== gameSequence) fail(`${label}.sequence must be ${gameSequence} across the game`);
   requireString(play.id, `${label}.id`);
-  if (!play.id.endsWith(`:${localSequence}`)) fail(`${label}.id must retain its source sequence suffix`);
+  if (play.id !== `${simulationId}:${gameSequence}`) fail(`${label}.id must be ${simulationId}:${gameSequence}`);
   if (ids.has(play.id)) fail(`duplicate source play ID ${play.id}`);
   ids.add(play.id);
-  prefixes.add(play.id.slice(0, play.id.lastIndexOf(':')));
   requireString(play.event_type, `${label}.event_type`);
   validateState(play.state_before, `${label}.state_before`);
   validateState(play.state_after, `${label}.state_after`);
@@ -82,8 +81,8 @@ function validatePlay(play, label, drive, localSequence, ids, prefixes, findings
       && !equal(play.outcome.sampled_from, play.participants.sampled_from)) {
     fail(`${label} participant source must match the outcome source`);
   }
-  if (localSequence > 1) {
-    const previous = drive.plays[localSequence - 2].state_after;
+  if (driveOffset > 0) {
+    const previous = drive.plays[driveOffset - 1].state_after;
     for (const key of STATE_KEYS) {
       if (!equal(play.state_before[key] ?? null, previous[key] ?? null)) {
         fail(`${label}.state_before.${key} must equal the previous play's state_after`);
@@ -129,6 +128,7 @@ function validateRecord(record, { requireCompleteRegulation }) {
   requireObject(record, 'record');
   if (record.mode !== 'legal_game_state_first_piece') fail('record.mode is not the supported LP E2 mode');
   requireInteger(record.seed, 'record.seed', 0, Number.MAX_SAFE_INTEGER);
+  requireString(record.simulation_id, 'record.simulation_id');
   requireString(record.status, 'record.status');
   if (typeof record.complete_regulation !== 'boolean' || typeof record.valid_full_game !== 'boolean') {
     fail('record completion flags must be booleans');
@@ -148,8 +148,8 @@ function validateRecord(record, { requireCompleteRegulation }) {
 
   validateLedger(record, findings);
   const ids = new Set();
-  const prefixesByDrive = [];
   const pointsByTeam = { A: 0, B: 0 };
+  let gameSequence = 1;
   let previousDrive = null;
   for (let driveOffset = 0; driveOffset < record.drives.length; driveOffset += 1) {
     const drive = record.drives[driveOffset];
@@ -164,12 +164,11 @@ function validateRecord(record, { requireCompleteRegulation }) {
     requireInteger(drive.end_clock, `${label}.end_clock`, 0, 900);
     requireString(drive.terminal, `${label}.terminal`);
     if (!Array.isArray(drive.plays) || drive.plays.length === 0) fail(`${label}.plays must contain the source plays`);
-    const prefixes = new Set();
     for (let playOffset = 0; playOffset < drive.plays.length; playOffset += 1) {
-      validatePlay(drive.plays[playOffset], `${label}.plays[${playOffset}]`, drive, playOffset + 1, ids, prefixes, findings);
+      validatePlay(drive.plays[playOffset], `${label}.plays[${playOffset}]`, drive, gameSequence, playOffset,
+        ids, record.simulation_id, findings);
+      gameSequence += 1;
     }
-    if (prefixes.size !== 1) fail(`${label} must retain one source simulation-ID prefix for its local plays`);
-    prefixesByDrive.push([...prefixes][0]);
     const first = drive.plays[0].state_before;
     const last = drive.plays.at(-1).state_after;
     if (first.quarter !== drive.quarter_start || first.clock_seconds !== drive.clock_start) {
@@ -240,7 +239,7 @@ function validateRecord(record, { requireCompleteRegulation }) {
       }
     }
   }
-  return { prefixesByDrive, sourcePlayCount: ids.size, findings: [...findings] };
+  return { sourcePlayCount: ids.size, findings: [...findings] };
 }
 
 function deepFreeze(value) {
@@ -251,11 +250,10 @@ function deepFreeze(value) {
   return value;
 }
 
-function sharedV1Audit(record, prefixesByDrive) {
+function sharedV1Audit(record) {
   const violations = [];
   if (record.mode !== 'pregame_full_game') violations.push('mode is not pregame_full_game');
   if (!record.game_id) violations.push('missing stable game_id');
-  if (!record.simulation_id) violations.push('missing game-wide simulation_id');
   if (!record.model_version) violations.push('missing model_version');
   if (!record.rules_version) violations.push('missing rules_version');
   if (!record.provenance?.as_of_utc) violations.push('missing pregame as_of provenance');
@@ -265,7 +263,6 @@ function sharedV1Audit(record, prefixesByDrive) {
       || play.state_before.away_score == null))) violations.push('play states do not carry home/away score');
   if (record.drives.some((drive) => drive.plays.some((play) => play.state_before.home_timeouts == null
       || play.state_before.away_timeouts == null))) violations.push('play states do not carry timeout counts');
-  if (prefixesByDrive.length > 1) violations.push('play IDs use drive-local simulation prefixes');
   if (record.valid_full_game !== true) violations.push('record.valid_full_game is not true');
   return { conforms: violations.length === 0, violations };
 }
@@ -284,7 +281,7 @@ export function adaptLpGamePayload(payload, { requireCompleteRegulation = true }
     requireString(path, 'payload.source.producer_file_sha256 path');
     requireHash(hash, `payload.source.producer_file_sha256.${path}`);
   }
-  const { prefixesByDrive, sourcePlayCount, findings } = validateRecord(payload.record, { requireCompleteRegulation });
+  const { sourcePlayCount, findings } = validateRecord(payload.record, { requireCompleteRegulation });
   const record = deepFreeze(structuredClone(payload.record));
   const drives = record.drives.map((drive) => ({
     index: drive.index,
@@ -294,13 +291,13 @@ export function adaptLpGamePayload(payload, { requireCompleteRegulation = true }
     terminal: drive.terminal,
     source: drive,
     plays: drive.plays.map((play, localOffset) => ({
-      gamePlayIndex: record.drives.slice(0, drive.index - 1).reduce((n, prior) => n + prior.plays.length, 0) + localOffset + 1,
+      gamePlayIndex: play.sequence,
       sourceSequence: play.sequence,
       sourceId: play.id,
       source: play,
     })),
   }));
-  const audit = sharedV1Audit(record, prefixesByDrive);
+  const audit = sharedV1Audit(record);
   return Object.freeze({
     contractName: GAME_PAYLOAD_NAME,
     contractVersion: GAME_PAYLOAD_VERSION,

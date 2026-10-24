@@ -25,18 +25,27 @@ assert.equal(adapted.validation.passed, false, 'known LP drive-index defect must
 assert.equal(adapted.validation.findings.length, 23);
 assert.ok(adapted.validation.findings.every((finding) => finding.includes('drive_index 1/1')));
 assert.equal(adapted.sharedV1Audit.conforms, false);
-assert.ok(adapted.sharedV1Audit.violations.some((issue) => issue.includes('drive-local simulation prefixes')));
+assert.equal(adapted.sharedV1Audit.violations.length, 10);
+assert.ok(!adapted.sharedV1Audit.violations.some((issue) => /play ID|simulation_id/.test(issue)));
+const allPlays = adapted.record.drives.flatMap((drive) => drive.plays);
+assert.deepEqual(allPlays.map((play) => play.sequence), allPlays.map((_, index) => index + 1));
+assert.deepEqual(allPlays.map((play) => play.id), allPlays.map((_, index) => `${adapted.record.simulation_id}:${index + 1}`));
 assert.equal(JSON.stringify(adapted.record), before, 'adapter must preserve the LP record exactly');
 assert.ok(Object.isFrozen(adapted.record.drives[0].plays[0].outcome), 'source copy must be immutable');
 assert.equal(adapted.drives[0].plays[0].source, adapted.record.drives[0].plays[0]);
 
 const duplicateId = structuredClone(payload);
 duplicateId.record.drives[1].plays[0].id = duplicateId.record.drives[0].plays[0].id;
-assert.throws(() => adaptLpGamePayload(duplicateId), /duplicate source play ID/);
+assert.throws(() => adaptLpGamePayload(duplicateId), /id must be .*:5/);
 
 const wrongSequence = structuredClone(payload);
-wrongSequence.record.drives[0].plays[0].id = 'e2-1-drive1:2';
-assert.throws(() => adaptLpGamePayload(wrongSequence), /source sequence suffix/);
+wrongSequence.record.drives[1].plays[0].sequence = 1;
+wrongSequence.record.drives[1].plays[0].id = `${payload.record.simulation_id}:1`;
+assert.throws(() => adaptLpGamePayload(wrongSequence), /sequence must be 5 across the game/);
+
+const missingSimulationId = structuredClone(payload);
+delete missingSimulationId.record.simulation_id;
+assert.throws(() => adaptLpGamePayload(missingSimulationId), /record.simulation_id must be a non-empty string/);
 
 const countOnly = structuredClone(payload);
 delete countOnly.record.drives[0].plays;
