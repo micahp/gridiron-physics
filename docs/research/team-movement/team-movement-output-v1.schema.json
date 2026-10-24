@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gridiron-physics/research/team-movement-output-v1.schema.json",
+  "title": "Gridiron Team Movement Output v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "input_sha256",
+    "prediction_mode",
+    "coordinate_frame",
+    "source_layers",
+    "player_trajectories",
+    "group_motion"
+  ],
+  "properties": {
+    "schema_version": {"const": "gridiron.team-movement-output.v1"},
+    "input_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prediction_mode": {"const": "prospective_from_snap"},
+    "coordinate_frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "units", "x_axis", "y_axis", "attack_direction_sign", "assignment_version"],
+      "properties": {
+        "origin": {"const": "snap_ball"},
+        "units": {"const": "meters"},
+        "x_axis": {"const": "offense_forward"},
+        "y_axis": {"const": "lateral"},
+        "attack_direction_sign": {"enum": [-1, 1]},
+        "assignment_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "source_layers": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/sourceLayer"},
+      "minItems": 1
+    },
+    "player_trajectories": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 22,
+      "allOf": [
+        {"contains": {"type": "object", "properties": {"side": {"const": "offense"}}}, "minContains": 11, "maxContains": 11},
+        {"contains": {"type": "object", "properties": {"side": {"const": "defense"}}}, "minContains": 11, "maxContains": 11}
+      ],
+      "items": {"$ref": "#/$defs/playerTrajectory"}
+    },
+    "group_motion": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "allOf": [
+        {"contains": {"type": "object", "properties": {"side": {"const": "offense"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"type": "object", "properties": {"side": {"const": "defense"}}}, "minContains": 1, "maxContains": 1}
+      ],
+      "items": {"$ref": "#/$defs/groupMotion"}
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Visible provenance/coverage labels; never imply that movement establishes football outcomes."
+    }
+  },
+  "$defs": {
+    "vector2": {
+      "type": "array",
+      "prefixItems": [{"type": "number"}, {"type": "number"}],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "sourceLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layer", "source_id", "source_sha256", "claim_label"],
+      "properties": {
+        "layer": {
+          "enum": ["league_role_prior", "team_tendency", "player_physics_constraints", "reconstructed_assignment", "generated_physical_motion"]
+        },
+        "source_id": {"type": "string", "minLength": 1},
+        "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "claim_label": {"type": "string", "minLength": 1}
+      }
+    },
+    "playerTrajectory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["player_id", "side", "role", "samples"],
+      "properties": {
+        "player_id": {"type": "string", "minLength": 1},
+        "side": {"enum": ["offense", "defense"]},
+        "role": {"type": "string", "minLength": 1},
+        "samples": {
+          "type": "array",
+          "minItems": 2,
+          "allOf": [
+            {"contains": {"type": "object", "properties": {"seconds_from_snap": {"const": 0.5}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"type": "object", "properties": {"seconds_from_snap": {"const": 1.0}}}, "minContains": 1, "maxContains": 1}
+          ],
+          "items": {"$ref": "#/$defs/trajectorySample"}
+        }
+      }
+    },
+    "trajectorySample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seconds_from_snap", "position_relative_to_ball_m", "velocity_mps", "position_uncertainty_radius_m"],
+      "properties": {
+        "seconds_from_snap": {"type": "number", "exclusiveMinimum": 0, "maximum": 2},
+        "position_relative_to_ball_m": {"$ref": "#/$defs/vector2"},
+        "velocity_mps": {"$ref": "#/$defs/vector2"},
+        "position_uncertainty_radius_m": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "groupMotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "seconds_from_snap", "centroid_relative_to_ball_m", "centroid_velocity_mps", "pairwise_spacing_summary_m"],
+      "properties": {
+        "side": {"enum": ["offense", "defense"]},
+        "seconds_from_snap": {"type": "number", "exclusiveMinimum": 0, "maximum": 2},
+        "centroid_relative_to_ball_m": {"$ref": "#/$defs/vector2"},
+        "centroid_velocity_mps": {"$ref": "#/$defs/vector2"},
+        "pairwise_spacing_summary_m": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["median", "p10", "p90"],
+          "properties": {
+            "median": {"type": "number", "minimum": 0},
+            "p10": {"type": "number", "minimum": 0},
+            "p90": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    }
+  }
+}

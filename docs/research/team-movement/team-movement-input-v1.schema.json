@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gridiron-physics/research/team-movement-input-v1.schema.json",
+  "title": "Gridiron Team Movement Input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_mode",
+    "as_of",
+    "coordinate_frame",
+    "context",
+    "team_priors",
+    "ball_at_snap",
+    "players"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "gridiron.team-movement-input.v1"
+    },
+    "task_mode": {
+      "const": "prospective_from_snap"
+    },
+    "as_of": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "origin_frame", "sample_rate_hz", "history_frame_offsets"],
+      "properties": {
+        "origin": {"const": "ball_snap"},
+        "origin_frame": {"type": "integer"},
+        "sample_rate_hz": {"const": 10},
+        "history_frame_offsets": {
+          "const": [-10, -5, 0],
+          "description": "The same 1.0-second history is supplied to every ablation arm."
+        }
+      }
+    },
+    "coordinate_frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "units", "x_axis", "y_axis", "attack_direction_sign", "assignment_version", "assignment_source"],
+      "properties": {
+        "origin": {"const": "snap_ball"},
+        "units": {"const": "meters"},
+        "x_axis": {"const": "offense_forward"},
+        "y_axis": {"const": "lateral"},
+        "attack_direction_sign": {"enum": [-1, 1]},
+        "assignment_version": {"type": "string", "minLength": 1},
+        "assignment_source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Explicit source/convention label; never infer direction from quarter or home/away."
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample_id", "offense_team_id", "defense_team_id", "play_call_source", "play_family", "formation", "down", "yards_to_go", "quarter", "clock_seconds"],
+      "properties": {
+        "sample_id": {"type": "string", "minLength": 1},
+        "offense_team_id": {"type": "string", "minLength": 1},
+        "defense_team_id": {"type": "string", "minLength": 1},
+        "play_call_source": {
+          "enum": ["lp_selected_pregame_call", "observed_pre_snap_call", "unavailable"],
+          "description": "Labels whether the call is a generated input or a verified snap-available observation."
+        },
+        "play_family": {"type": ["string", "null"]},
+        "formation": {"type": ["string", "null"]},
+        "down": {"type": ["integer", "null"], "minimum": 1, "maximum": 4},
+        "yards_to_go": {"type": ["number", "null"], "minimum": 0},
+        "quarter": {"type": ["integer", "null"], "minimum": 1, "maximum": 5},
+        "clock_seconds": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "team_priors": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "allOf": [
+        {"contains": {"type": "object", "properties": {"side": {"const": "offense"}}}, "minContains": 1, "maxContains": 1},
+        {"contains": {"type": "object", "properties": {"side": {"const": "defense"}}}, "minContains": 1, "maxContains": 1}
+      ],
+      "items": {"$ref": "#/$defs/teamPrior"}
+    },
+    "ball_at_snap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position_relative_m", "velocity_relative_mps"],
+      "properties": {
+        "position_relative_m": {"$ref": "#/$defs/vector2"},
+        "velocity_relative_mps": {"oneOf": [{"$ref": "#/$defs/vector2"}, {"type": "null"}]}
+      }
+    },
+    "players": {
+      "type": "array",
+      "minItems": 22,
+      "maxItems": 22,
+      "allOf": [
+        {"contains": {"type": "object", "properties": {"side": {"const": "offense"}}}, "minContains": 11, "maxContains": 11},
+        {"contains": {"type": "object", "properties": {"side": {"const": "defense"}}}, "minContains": 11, "maxContains": 11}
+      ],
+      "items": {"$ref": "#/$defs/player"},
+      "description": "Exactly 22 current participants. The carrier candidate and credited tackler are not interface fields."
+    }
+  },
+  "$defs": {
+    "vector2": {
+      "type": "array",
+      "prefixItems": [{"type": "number"}, {"type": "number"}],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "teamPrior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "team_id", "league_role_prior_id", "team_tendency"],
+      "properties": {
+        "side": {"enum": ["offense", "defense"]},
+        "team_id": {"type": "string", "minLength": 1},
+        "league_role_prior_id": {"type": "string", "minLength": 1},
+        "team_tendency": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["prior_id", "source_season", "continuity_status", "shrinkage_weight"],
+              "properties": {
+                "prior_id": {"type": "string", "minLength": 1},
+                "source_season": {"type": "integer"},
+                "continuity_status": {"enum": ["confirmed", "partial", "unknown", "historical_only"]},
+                "shrinkage_weight": {"type": "number", "minimum": 0, "maximum": 1}
+              }
+            }
+          ]
+        }
+      }
+    },
+    "player": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["player_id", "team_id", "side", "role", "position_group", "snap_history", "roster_snapshot_id", "physical_profile", "ratings"],
+      "properties": {
+        "player_id": {"type": "string", "minLength": 1},
+        "team_id": {"type": "string", "minLength": 1},
+        "side": {"enum": ["offense", "defense"]},
+        "role": {"type": "string", "minLength": 1},
+        "position_group": {"type": "string", "minLength": 1},
+        "snap_history": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "allOf": [
+            {"contains": {"type": "object", "properties": {"frame_offset": {"const": -10}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"type": "object", "properties": {"frame_offset": {"const": -5}}}, "minContains": 1, "maxContains": 1},
+            {"contains": {"type": "object", "properties": {"frame_offset": {"const": 0}}}, "minContains": 1, "maxContains": 1}
+          ],
+          "items": {"$ref": "#/$defs/historyPoint"}
+        },
+        "roster_snapshot_id": {"type": ["string", "null"]},
+        "physical_profile": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["profile_id", "vmax_mps", "accel_limit_mps2", "lateral_accel_limit_mps2"],
+              "properties": {
+                "profile_id": {"type": "string", "minLength": 1},
+                "vmax_mps": {"type": ["number", "null"], "exclusiveMinimum": 0},
+                "accel_limit_mps2": {"type": ["number", "null"], "exclusiveMinimum": 0},
+                "lateral_accel_limit_mps2": {"type": ["number", "null"], "exclusiveMinimum": 0}
+              }
+            }
+          ]
+        },
+        "ratings": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_snapshot_id", "effective_as_of_utc", "confidence", "values"],
+              "properties": {
+                "source_snapshot_id": {"type": "string", "minLength": 1},
+                "effective_as_of_utc": {"type": "string", "format": "date-time"},
+                "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+                "values": {
+                  "type": "object",
+                  "additionalProperties": {"type": ["number", "null"]}
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "historyPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frame_offset", "position_relative_to_ball_m"],
+      "properties": {
+        "frame_offset": {"enum": [-10, -5, 0]},
+        "position_relative_to_ball_m": {"$ref": "#/$defs/vector2"}
+      }
+    }
+  }
+}
