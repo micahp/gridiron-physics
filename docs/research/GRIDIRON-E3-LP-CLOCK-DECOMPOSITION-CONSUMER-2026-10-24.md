@@ -41,4 +41,14 @@ The artifact's tracking-based in-play duration remains sampled at 10 Hz; it has 
 
 ## Consumer verification
 
-`node test/lp-clock-decomposition-adapter.mjs` passes 8/8 scenario groups. It verifies the source pins and label summary, joins 9,066 of 9,066 keyed physical records, preserves 223 no-key records and zero missing-source rows, rejects values attached to an `unresolvable` label, and rejects source hash drift. `node test/e2-game-viewer.mjs` confirms that the viewer renders the clock join, source labels, and null policy. `python3 test/test_e3_physical_timing_guard.py` passes both physical-cohort and weeks-6–9 reservation checks.
+`node test/lp-clock-decomposition-adapter.mjs` passes 8/8 scenario groups. It verifies the source pins and label summary, joins 9,066 of 9,066 keyed physical records, preserves 223 no-key records and zero missing-source rows, rejects values attached to an `unresolvable` label, and rejects source hash drift. `node test/e2-game-viewer.mjs` confirms the DOM audit for the clock join, source labels, and null policy. `python3 test/test_e3_physical_timing_guard.py` passes both physical-cohort and weeks-6–9 reservation checks.
+
+The real-browser test was run with Playwright 1.64.1 and cached Chromium 1248 using:
+
+```sh
+env PLAYWRIGHT_MODULE=/tmp/gridiron-e3-playwright/node_modules/playwright/index.mjs \
+  CHROME_BIN=/root/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome \
+  node test/e2-game-viewer.browser.mjs
+```
+
+Output: `Real Chromium navigation: final 1ca payload navigated Drive 24 / Play 143; archived 5fc hard-rejected` and `Browser runtime errors: 0`. This is a real headless Chromium run, separate from the DOM audit.
