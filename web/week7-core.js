@@ -118,6 +118,19 @@ export function createPuntSampler(puntTables) {  const zeroDistanceCount = Numbe
   };
 }
 
+// 2026 Rule 11-4-2. The holder sits 7 yards behind the line of scrimmage; the
+// engine's field-goal distance (yl + 17) implies the same offset after the
+// 10-yard end zone. This is an estimate, not a tracked kick spot.
+export const FG_HOLDER_OFFSET_ESTIMATE = 7;
+// 2026 Rule 4 Note (5): at most 5 seconds of runoff for a successful field goal.
+export const FG_RUNOFF_CAP = 5;
+// 2025 nflverse: the receiving team recovered 7 of 9 blocked punts. Small
+// sample, so the recovery team is a generated estimate, not a fact.
+export const BLOCKED_PUNT_RECEIVING_RECOVERY_SHARE = 7 / 9;
+export function blockedPuntRecovery(rand) {
+  return rand() < BLOCKED_PUNT_RECEIVING_RECOVERY_SHARE ? 'receiving' : 'kicking';
+}
+
 export const MATCHUPS = [
   { id:'2026_07_CIN_BAL',away:'CIN',home:'BAL',ref:'2022_05_CIN_BAL',day:'Oct 25' },
   { id:'2026_07_MIA_NYJ',away:'MIA',home:'NYJ',ref:'2022_05_MIA_NYJ',day:'Oct 25' },
@@ -290,47 +303,58 @@ export function generateGame(match, books, seed = '1042', league = null) {
       const trailing = scores[offense] < scores[def];
       const lateGo = quarter === 4 && trailing && clock < 210 && togo <= 7;
       if (down === 4 && !lateGo) {
-        const kickClock = clamp(Math.round(6 + rand() * 5), 1, clock);
         if (yl <= 40) {
           const distance = yl + 17;
           const good = rand() < fieldGoalMake(distance);
+          // Misses are capped at 5 s too: the miss type (in or out of the field of play) is not modeled.
+          const runoff = Math.min(clock, FG_RUNOFF_CAP, good ? FG_RUNOFF_CAP : 4 + Math.floor(rand() * 2));
           event({type:'field_goal',kind:'field_goal',action:good?'FIELD GOAL GOOD':'FIELD GOAL MISSED',
-            good,distance,points:good?3:0,runoff:kickClock,
+            good,distance,points:good?3:0,runoff,
             note:'Make rate from 2025 league field goals by distance (nflverse). Kick flight is not simulated.'});
-          clock -= kickClock;
+          clock -= runoff;
           if (good) {
             scores[offense] += 3;
             scheduleKickoff(offense, 'field_goal_good');
           } else {
-            // 2026 Rule 9-4-2: an untouched missed field goal is the receiving
-            // team's ball at the 20-yard line if the spot of the kick was
-            // inside their 20, otherwise at the spot of the kick. The ball
-            // touching the ground in the end zone is what makes it dead
-            // untouched; a kick the receivers touch takes the general scrimmage
-            // kick rules instead, which this generator does not model, so the
-            // untouched case is labelled as such.
-            const kickSpotOwn = 100 - yl;          // kicker's own number at the try
-            const receiverOwnSpot = yl;             // distance from the receivers' goal to the kick
-            const untouched = receiverOwnSpot < 20; // try was inside the receivers' 20
-            const restartOwn = untouched ? 20 : receiverOwnSpot;
+            // Kick spot is estimated as the LOS plus the holder offset, measured
+            // from the receivers' goal. Touch-beyond-LOS and kick-behind-LOS
+            // exceptions are not modeled.
+            const kickSpotOwn = yl + FG_HOLDER_OFFSET_ESTIMATE;
+            const untouched = kickSpotOwn < 20;
+            const restartOwn = untouched ? 20 : kickSpotOwn;
             finishDrive('field_goal_miss');
             offense = other(match.home, match.away, offense);
             newSeries(100 - restartOwn);
-            plays[plays.length - 1].restart_spot = 100 - restartOwn;
-            plays[plays.length - 1].restart_rule = untouched
-              ? '2026 Rule 9-4-2(a): untouched miss from inside the 20, the receiving team takes the ball at its 20.'
-              : '2026 Rule 9-4-2(b): untouched miss from the 20 or beyond, the receiving team takes the ball at the spot of the kick.';
-            plays[plays.length - 1].restart_untouched = true;
+            const missed = plays[plays.length - 1];
+            missed.restart_spot = 100 - restartOwn;
+            missed.kick_spot_own_estimate = kickSpotOwn;
+            missed.restart_rule = untouched
+              ? '2026 Rule 11-4-2(a): untouched miss with the estimated kick spot inside the receivers\' 20; the receiving team takes the ball at its 20.'
+              : '2026 Rule 11-4-2(b): untouched miss with the estimated kick spot at or beyond the receivers\' 20; the receiving team takes the ball at the kick spot (estimate: 7 yards behind the LOS).';
+            missed.restart_untouched = true;
           }
         } else {
           const pt = puntSampler(yl, rand);
-          event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff:kickClock,distance:pt.distance,
-            outcome:pt.outcome,return_yards:pt.return_yards,
-            note:pt.outcome==='blocked'
-              ? 'Blocked punt: zero is the recorded distance; recovery location is an illustrative spot assumption.'
-              : 'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
-          clock -= kickClock;
-          turnover('punt',pt.spot);
+          const runoff = clamp(Math.round(6 + rand() * 5), 1, clock);
+          if (pt.outcome === 'blocked') {
+            const recovery = blockedPuntRecovery(rand);
+            const recovering = recovery === 'receiving' ? other(match.home, match.away, offense) : offense;
+            event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff,distance:pt.distance,
+              outcome:'blocked',return_yards:0,
+              recovery_team:recovering,
+              possession_after:recovering,
+              possession_resolution:'generated_recovery_estimate',
+              note:'Blocked punt: the recovering team is a generated estimate (2025 nflverse: receiving team recovered 7 of 9), not an observed recovery.'});
+            clock -= runoff;
+            if (recovery === 'receiving') turnover('blocked_punt', pt.spot);
+            else { finishDrive('blocked_punt'); newSeries(yl); }
+          } else {
+            event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff,distance:pt.distance,
+              outcome:pt.outcome,return_yards:pt.return_yards,
+              note:'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
+            clock -= runoff;
+            turnover('punt',pt.spot);
+          }
         }
         continue;
       }
