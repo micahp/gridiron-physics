@@ -8,7 +8,11 @@
     "data": "python3 pipeline/fetch.py && python3 pipeline/ratings.py && python3 pipeline/build_game.py",
     "build": "python3 pipeline/ratings.py && python3 pipeline/build_game.py",
     "test": "node test/validate.mjs --strict && node test/prototype.mjs && python3 test/test_prototype_data.py",
+    "test:ui": "bash test/serve-ui.sh",
     "serve": "python3 -m http.server 8080 --directory ."
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
 }
