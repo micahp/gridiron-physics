@@ -37,7 +37,7 @@ const EXPECTED = {
 };
 
 test('the ten fixtures match the pinned manifest hashes and LP commit', () => {
-  assert.equal(manifest.lp_commit, '945754080086a1f9ae6dac06740041826395b017');
+  assert.equal(manifest.lp_commit, '641e1b2ea7882389778a14e6c52b58583f7e9917');
   assert.equal(manifest.fixtures.length, 10);
   for (const entry of manifest.fixtures) {
     const hash = createHash('sha256').update(loadBytes(entry.file)).digest('hex');
@@ -65,6 +65,11 @@ test('the eight E1 terminal variants are each reached by a pinned fixture', () =
   for (const terminal of ['touchdown', 'turnover', 'turnover_on_downs', 'punt', 'field_goal_attempt', 'safety', 'halftime', 'end_of_regulation']) {
     assert.ok(seen.has(terminal), `no pinned fixture reaches ${terminal}`);
   }
+});
+
+test('clock_clamped_plays is recomputed when the record supplies it', () => {
+  const record = mutated('own25_q4_150-seed1-end_of_regulation.json', (r) => { r.drive.clock_clamped_plays = r.drive.clock_clamped_plays + 1; });
+  assert.throws(() => adaptLpDriveRecord(record), /clock_clamped_plays does not match/);
 });
 
 test('the adapter does not change the LP input and returns a frozen copy', () => {

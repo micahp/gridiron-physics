@@ -67,6 +67,7 @@ function renderSummary(drive, parent) {
     ['Field-goal attempts (outcome unknown)', drive.recomputed.field_goal_attempts],
     ['Quarter changes (same drive)', drive.recomputed.quarter_changes],
     ['Clock runoff (seconds, sampled)', drive.recomputed.clock_runoff_total_seconds],
+    ['Clock-clamped plays (quarter end)', drive.recomputed.clock_clamped_plays],
     ['Plays with negative yards', drive.recomputed.plays_with_negative_yards],
     ['Drive ending', drive.terminal],
   ];

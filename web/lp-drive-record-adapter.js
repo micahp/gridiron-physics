@@ -202,6 +202,7 @@ function recomputeSummary(plays, terminal) {
     punts: plays.filter((play) => play.outcome.punt).length,
     field_goal_attempts: plays.filter((play) => play.outcome.field_goal_attempt).length,
     quarter_changes: plays.filter((play) => play.outcome.quarter_change).length,
+    clock_clamped_plays: plays.filter((play) => play.outcome.clock_clamped_to_zero).length,
     clock_runoff_total_seconds: plays.reduce((sum, play) => sum + play.outcome.clock_runoff_seconds, 0),
     plays_with_negative_yards: plays.filter((play) => (play.outcome.yards_gained ?? 0) < 0).length,
   };
@@ -323,6 +324,9 @@ export function adaptLpDriveRecord(record) {
   requireObject(record.drive, 'drive');
   for (const key of SUMMARY_KEYS) {
     if (record.drive[key] !== recomputed[key]) fail(`drive.${key} does not match the recomputed value ${recomputed[key]}`);
+  }
+  if ('clock_clamped_plays' in record.drive && record.drive.clock_clamped_plays !== recomputed.clock_clamped_plays) {
+    fail(`drive.clock_clamped_plays does not match the recomputed value ${recomputed.clock_clamped_plays}`);
   }
 
   // Work on a detached, frozen copy so display code cannot mutate LP's payload.

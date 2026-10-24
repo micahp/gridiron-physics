@@ -7,12 +7,11 @@ physical replay. Nothing was merged, deployed or changed in the shared contract.
 ## Pinned sources
 
 - LP repository `micahp/legendarypicks`, branch `feat/nfl-sequence-e1-2026-10-24`, commit
-  **`945754080086a1f9ae6dac06740041826395b017`** (the commit the handoff names). The ten fixtures and their SHA-256 values are
-  in `docs/fixtures/e1/MANIFEST.json`. Each fixture was copied from that commit with `git show`. The superseded
-  end-of-period fixtures were not copied.
-- **Divergence to decide:** LP head `641e1b2e` regenerated all ten fixtures with different hashes, and adds the boundary text
-  (field-goal result missing; runoff clamping). It also still contains the handoff's defects A and B below. This viewer pins
-  `945754`. Switching to `641e1b2e` is an LP-owner decision and needs a manifest update.
+  **`641e1b2ea7882389778a14e6c52b58583f7e9917`** (the newer LP head). The ten fixtures and their SHA-256 values are in
+  `docs/fixtures/e1/MANIFEST.json`. Each fixture was copied from that commit with `git show`.
+- This supersedes the earlier pin at `945754080086a1f9ae6dac06740041826395b017`, which the handoff named. The newer records add
+  two gap lines per fixture (the field-goal result boundary and the clock-runoff boundary) and a `clock_clamped_plays` count in
+  each drive summary. The adapter recomputes that count when it is present.
 
 ## What was built
 
@@ -20,14 +19,14 @@ physical replay. Nothing was merged, deployed or changed in the shared contract.
 | --- | --- |
 | `web/lp-drive-record-adapter.js` | Validator and frozen display model for `mode = drive_statistical_demo`. Separate from the E0a adapter. |
 | `web/e1-drive-viewer.js`, `web/e1-drive-viewer.css`, `e1-drive-record.html` | Read-only table and timeline page. Loads the pinned fixtures, verifies each hash in the browser, and accepts a local JSON file. `?fixture=<name>` selects a pinned fixture. |
-| `test/lp-drive-record-adapter.mjs` | 24 tests (below). |
-| `docs/fixtures/e1/*.json`, `MANIFEST.json` | Pinned copies of the ten fixtures at the commit above. |
+| `test/lp-drive-record-adapter.mjs` | 25 tests (below). |
+| `docs/fixtures/e1/*.json`, `MANIFEST.json` | Pinned copies of the ten fixtures at the newer LP head. |
 
 The E0a page (`e0-record.html`), its adapter and its test are unchanged. The E0a test still passes.
 
 ## Verification run
 
-- `node --test test/lp-drive-record-adapter.mjs`: **24 of 24 pass**. They cover:
+- `node --test test/lp-drive-record-adapter.mjs`: **25 of 25 pass**. They cover:
   - fixture hashes against the manifest;
   - all ten fixtures accepted, with the recorded drive summary equal to the recomputed one;
   - the eight terminal variants each reached by a fixture;
@@ -36,6 +35,7 @@ The E0a page (`e0-record.html`), its adapter and its test are unchanged. The E0a
   - field-goal attempts showing no result, no points and no next possession;
   - halftime and regulation ends with no restart and no winner;
   - nulls preserved, with no defaults;
+  - the recomputed clock-clamp count checked against the recorded count;
   - the E0 record and the E1 record each rejected by the other viewer;
   - rejection of single-play and full-game modes, `valid_full_game: true`, `end_of_period`, unknown events, broken state chains,
     duplicate or out-of-order IDs, wrong LOS, direction contradicting the authored start, drive-summary tampering, unverified
@@ -80,9 +80,12 @@ These are reported, and the shared contract is not changed.
 
 ## LP-side defects (for the LP owner)
 
-- **A. Incorrect gap text.** Fixtures at `945754` still say "penalties, quarter changes, timeouts, two-minute rules: not
+Status at `641e1b2e`: A, B and C are all still present. The newer records do not fix them.
+
+
+- **A. Incorrect gap text.** The pinned fixtures still say "penalties, quarter changes, timeouts, two-minute rules: not
   modelled", while quarter ends are modelled. The line appears at `641e1b2e` too.
-- **B. Outdated reducer constant.** `scripts/nfl_sequence/reducer.py` at `945754` and at `641e1b2e` still lists `end_of_period`
+- **B. Outdated reducer constant.** `scripts/nfl_sequence/reducer.py` at `641e1b2e` still lists `end_of_period`
   in `TERMINALS`, and the E1 generator emits `halftime` and `end_of_regulation`.
 - **C. Half-end endpoint.** At halftime and end of regulation, `state_after.yardline_100` is null, but `field.after` holds a
   direction and LOS. Those values equal the play's `outcome.final_play_yardline_100`. The rules file says a half terminal
@@ -115,7 +118,7 @@ headless_shell --no-sandbox --disable-gpu --virtual-time-budget=20000 --dump-dom
 
 ## Requests to the LP owner
 
-1. Decide the pinned commit: `945754` (as handed off) or `641e1b2e`. If `641e1b2e`, regenerate the manifest.
+1. Done: the viewer is pinned to `641e1b2e`. Confirm that this is the commit LP wants Gridiron to consume.
 2. Fix defects A and B in the LP branch and regenerate fixtures if their output changes.
 3. Decide defect C: null `field.after` at halftime and regulation, or document the final-play endpoint.
 4. Decide whether `GRIDIRON-CONTRACT-v1` should add a drive profile (play-ID rule, `game_id`, `teams`, `summary`) or keep E1 as a
