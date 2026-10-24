@@ -20,8 +20,8 @@ const record = payload.record;
 const currentAudit = auditFootballState(record);
 assert.deepEqual(record, transport.record, 'the final LP envelope must carry the pinned producer record unchanged');
 assert.equal(transport.source.base_commit, manifest.lp_source.base_commit);
-assert.equal(transport.source.base_commit, '1ca7560924fe7da3eb452b142176bf09d7aeb1f0');
-assert.equal(manifest.lp_source.envelope_commit, '45381829488e43813a31793ee546df0b95dee856');
+assert.equal(transport.source.base_commit, 'a442dcd72559cfaf2d04737fc2454cea486faf09');
+assert.equal(manifest.lp_source.envelope_commit, 'f5db433cb0257177413f4a184369aa47a286dce1');
 assert.equal(record.drives.length, 24);
 assert.equal(record.drives.reduce((sum, drive) => sum + drive.plays.length, 0), 143);
 assert.deepEqual(record.points, { A: 14, B: 10 });
@@ -48,8 +48,13 @@ assert.deepEqual(currentAudit.findings, baselineReport.current_lp_payload.footba
 assert.equal(currentAudit.counts.drive_index_mismatch ?? 0, 0, 'final drive indexes pass at both state boundaries');
 assert.equal(baselineReport.current_lp_payload.producer_commit, manifest.lp_source.base_commit);
 assert.equal(baselineReport.current_lp_payload.envelope_commit, manifest.lp_source.envelope_commit);
+assert.deepEqual(baselineReport.current_lp_payload.producer_file_sha256, manifest.lp_source.producer_file_sha256);
 assert.equal(baselineReport.current_lp_payload.raw_payload_sha256, entry.upstream_source_sha256);
 assert.equal(baselineReport.current_lp_payload.envelope_sha256, entry.sha256);
+assert.equal(baselineReport.current_lp_payload.conversion_source_script_commit,
+  manifest.lp_source.conversion_source_script_commit);
+assert.equal(baselineReport.current_lp_payload.conversion_source_script_sha256,
+  manifest.lp_source.conversion_source_script_sha256);
 assert.equal(f12Audit.finding_count, 0, 'the earlier f12 record remains byte-equivalent state evidence');
 assert.deepEqual(f12Audit.findings, currentAudit.findings);
 assert.deepEqual(f12Record, record, 'the final LP record content matches the previously audited f12 record');
@@ -202,7 +207,7 @@ const e3Manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e3/obs
 assert.match(e3Manifest.definitions.epa_success, /EPA-positive/,
   'the source definition must remain explicit that E3 success is not a scoring flag');
 
-console.log(`Final LP 1ca audit: ${currentAudit.finding_count} football-state findings; raw-record v1 gaps=${currentAdapted.sharedV1Audit.violations.length}`);
+console.log(`Final LP a442 audit: ${currentAudit.finding_count} football-state findings; raw-record v1 gaps=${currentAdapted.sharedV1Audit.violations.length}`);
 console.log(`Prior LP a785: ${priorAudit.finding_count} missing-state findings; archived 5fc regression: ${pinnedAudit.finding_count} findings including ${pinnedAudit.counts.drive_index_mismatch} drive-index mismatches`);
 console.log(`Negative fixtures: ${negatives.length}/${negatives.length} rejected with the expected finding`);
 console.log('Conversion-source semantics: final publisher fields accepted; EPA-success and unknown sources rejected');

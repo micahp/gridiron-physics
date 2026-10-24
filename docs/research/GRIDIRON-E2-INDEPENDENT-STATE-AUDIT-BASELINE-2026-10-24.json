@@ -6,15 +6,15 @@
   "current_lp_payload": {
     "repository": "micahp/legendarypicks",
     "branch": "feat/nfl-sequence-e2-kickoffs-2026-10-24",
-    "producer_commit": "1ca7560924fe7da3eb452b142176bf09d7aeb1f0",
-    "generation": "Final LP record commit 1ca75609, pinned in envelope commit 45381829; source bytes verified from the LP repository tree.",
+    "producer_commit": "a442dcd72559cfaf2d04737fc2454cea486faf09",
+    "generation": "Final LP record commit a442dcd7, pinned in envelope commit f5db433c; source bytes verified from the LP repository tree. The raw payload Git blob is byte-identical to the earlier 1ca75609 audit input.",
     "raw_payload_sha256": "0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821",
-    "audit_input_record_file": "docs/fixtures/e2/lp-e2-game-seed1-1ca75609.json#record",
+    "audit_input_record_file": "docs/fixtures/e2/lp-e2-game-seed1-a442dcd7.json#record",
     "audit_input_record_sha256": "c3856dac6f56f99f2058f90c80e1285e4dc08cc52802ffdd8fbf788553a148fa",
     "record_canonical_sha256": "c3856dac6f56f99f2058f90c80e1285e4dc08cc52802ffdd8fbf788553a148fa",
     "producer_file_sha256": {
-      "scripts/nfl_sequence/game_state.py": "a8fe3229e8c4a980390acb95575e10dc59c3594d4d8dec02fdb45de60f652d2c",
-      "scripts/nfl_sequence/rules_matrix.py": "ff9084be89384c2cfbc0f14add0849a7f33b5ca11dbd61c507352c91a1ba8ee0",
+      "scripts/nfl_sequence/game_state.py": "c615ad1ecc1bb6b7bbf7ffbf0270ba92f71c92d3101016b908d88d325b83ba2f",
+      "scripts/nfl_sequence/rules_matrix.py": "ea66acfe926be63ff17e7b597677351474b7825c9f52d149614514f153f08e26",
       "scripts/nfl_sequence/e1_drive.py": "b2a36750c6ed66d31297eaa317b9ab95367ae0a574d50f9ed06434a7f5ead95f",
       "scripts/nfl_sequence/shared_v1.py": "54d79f68081b129d70db36917ecfcbb8015a47a63bdc1874705dfe451ef5d333"
     },
@@ -57,9 +57,9 @@
       },
       "findings": []
     },
-    "envelope_commit": "45381829488e43813a31793ee546df0b95dee856",
-    "envelope_file": "docs/fixtures/e2/game-seed1.json",
-    "envelope_sha256": "b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1",
+    "envelope_commit": "f5db433cb0257177413f4a184369aa47a286dce1",
+    "envelope_file": "docs/fixtures/e2/game-seed1-a442dcd7.json",
+    "envelope_sha256": "bbccd70a224035cb09d328194de66368e517524fe1d07df8aabbb7e037134788",
     "shared_v1_document_source_gaps": {
       "document_file": "docs/fixtures/e2/e2-game-seed1.v1.json",
       "document_sha256": "c4a7c66418172b9101fbae2a6f1ac40d28c6461761db9c6a23116e7cd77a8b5c",
@@ -103,7 +103,7 @@
         }
       ]
     },
-    "conversion_source_script_commit": "1ca7560924fe7da3eb452b142176bf09d7aeb1f0",
+    "conversion_source_script_commit": "a442dcd72559cfaf2d04737fc2454cea486faf09",
     "conversion_source_script_file": "scripts/nfl_sequence/measure_kick_outcomes.py",
     "conversion_source_script_sha256": "04a06c9e80ab99676b8ec76144386ad127c928eb534aa8776895a33418600988"
   },
@@ -15050,5 +15050,5 @@
     "envelope_file": "docs/fixtures/e2/game-seed1-5fcaa6bc.json",
     "upstream_source_file": "lp-e2-game-seed1-5fcaa6bc.json"
   },
-  "interpretation": "Final LP 1ca record and 453 envelope reproduce zero independent football-state findings. The raw-record Gridiron v1 audit reports eight structural gaps; the LP shared-v1 projection has seven unsourced source-field findings, aligned by the document-specific audit. The old 5fc 144-play envelope remains an archived regression with 1175 state findings."
+  "interpretation": "Final LP a442 record and f5db envelope reproduce zero independent football-state findings. The raw payload bytes match the prior 1ca audit input. The raw-record Gridiron v1 audit reports eight structural gaps; the LP shared-v1 projection has seven unsourced source-field findings, aligned by the document-specific audit. The old 5fc 144-play envelope remains an archived regression with 1175 state findings."
 }

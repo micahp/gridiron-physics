@@ -2,10 +2,10 @@
 
 ## Current pinned evidence
 
-The viewer now consumes the final LP record from producer commit `1ca7560924fe7da3eb452b142176bf09d7aeb1f0`, inside the exact LP envelope committed at `45381829488e43813a31793ee546df0b95dee856`.
+The viewer consumes the final LP record from producer commit `a442dcd72559cfaf2d04737fc2454cea486faf09`, inside the exact LP envelope committed at `f5db433cb0257177413f4a184369aa47a286dce1`.
 
 - Raw LP payload SHA-256: `0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`.
-- LP envelope SHA-256: `b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1`.
+- LP envelope SHA-256: `bbccd70a224035cb09d328194de66368e517524fe1d07df8aabbb7e037134788`.
 - Shared-v1 projection SHA-256: `c4a7c66418172b9101fbae2a6f1ac40d28c6461761db9c6a23116e7cd77a8b5c`.
 - Game: 24 drives, **143 source plays**, score A 14–B 10, `valid_full_game: false`.
 
@@ -26,7 +26,7 @@ The three earlier counts were produced by different checks over different shapes
 
 The LP seven-item count is a source-availability tally. A/B labels and `valid_full_game: false` are additional Gridiron annotations, not two more LP unsourced fields; `false` is the correct guard while rules remain unsupported. `model_version` and `rules_version` are present in the projection, though absent from the raw E2 record, which explains why the record-level audit has two more metadata gaps. The seven v1 findings are enumerated in the machine-readable [audit baseline](GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-BASELINE-2026-10-24.json).
 
-The LP integration proof at envelope commit 453 still cites Gridiron adapter HEAD `854cea5`, so that adapter pin predates this recheck; the proof itself reports 143 plays. The 144-play figure belongs to the old Gridiron 5fc fixture, now retained only as a named regression. No LP code or shared contract was changed.
+An earlier LP integration proof at envelope commit `45381829` cites Gridiron adapter HEAD `854cea5`; that historical proof predates the final `a442dcd7` / `f5db433c` repin. The raw payload blob is byte-identical across those producer commits, and the current viewer rechecks its source and envelope hashes. The 144-play figure belongs to the old Gridiron 5fc fixture, now retained only as a named regression. No LP code or shared contract was changed.
 
 ## Independent football-state checks
 
@@ -47,7 +47,7 @@ No missing values are substituted. A poison getter confirms the independent audi
 
 ## Conversion source semantics
 
-The final envelope's producer-file hash list does not include `measure_kick_outcomes.py`, so the Grid manifest separately pins that script at LP commit `1ca7560924fe7da3eb452b142176bf09d7aeb1f0`, SHA-256 `04a06c9e80ab99676b8ec76144386ad127c928eb534aa8776895a33418600988`. The matching raw LP source description names publisher `field_goal_result`, `extra_point_result`, and `two_point_conv_result`; the audit passes both try families. The archived 5fc source uses EPA-positive `success` and fails the extra-point and two-point checks. E3's generic `success` field remains explicitly labelled EPA-positive, not a scoring result.
+The final envelope's producer-file hash list does not include `measure_kick_outcomes.py`, so the Grid manifest separately pins that script at LP commit `a442dcd72559cfaf2d04737fc2454cea486faf09`, SHA-256 `04a06c9e80ab99676b8ec76144386ad127c928eb534aa8776895a33418600988`. The matching raw LP source description names publisher `field_goal_result`, `extra_point_result`, and `two_point_conv_result`; the audit passes both try families. The archived 5fc source uses EPA-positive `success` and fails the extra-point and two-point checks. E3's generic `success` field remains explicitly labelled EPA-positive, not a scoring result.
 
 ## E3 observed comparison
 
