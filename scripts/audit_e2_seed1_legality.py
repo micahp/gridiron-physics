@@ -3,6 +3,7 @@
 
 Run: python3 scripts/audit_e2_seed1_legality.py /path/to/e2-game-seed1.json
 The built-in negative fixtures run on every invocation before the supplied payload is audited.
+Missing source results on a scoped, non-legal record are reported as unresolvable; they reject a legal-complete claim.
 """
 
 from __future__ import annotations
@@ -116,22 +117,32 @@ CONVERSION_RESULTS = {
 }
 
 
-def audit_conversion_sources(record: dict) -> str:
+def audit_conversion_sources(record: dict, *, allow_unresolvable: bool = False) -> str:
     checked = 0
     issues = []
+    unresolvable = []
     for drive in record.get('drives', []):
         scoring = drive.get('points_scored_on_drive') or {}
         attempt = scoring.get('try')
         if drive.get('terminal') == 'touchdown':
             if not isinstance(attempt, dict):
-                issues.append(f'drive {drive.get("index")}: touchdown has no sourced conversion result')
+                detail = f'drive {drive.get("index")}: touchdown conversion result is not supplied'
+                if allow_unresolvable:
+                    checked += 1
+                    unresolvable.append(detail)
+                else:
+                    issues.append(detail)
         if attempt is not None:
             checked += 1
+            path = f'drive {drive.get("index")}.points_scored_on_drive.try'
+            missing = _check_conversion(attempt, path, allow_unresolvable=allow_unresolvable)
+            if missing:
+                unresolvable.append(f'{path}.{missing}')
+                continue
             try:
-                _check_conversion(attempt, f'drive {drive.get("index")}.points_scored_on_drive.try')
+                result_field, result_points = CONVERSION_RESULTS[attempt['kind']]
+                expected_drive_points = 6 + result_points[attempt[result_field]]
                 if drive.get('terminal') == 'touchdown':
-                    result_field, result_points = CONVERSION_RESULTS[attempt['kind']]
-                    expected_drive_points = 6 + result_points[attempt[result_field]]
                     need(scoring.get('points') == expected_drive_points,
                          f'drive {drive.get("index")}: points {scoring.get("points")} do not reconcile to '
                          f'touchdown plus {result_field}={attempt[result_field]} ({expected_drive_points})')
@@ -142,27 +153,35 @@ def audit_conversion_sources(record: dict) -> str:
             kind = play.get('event_type')
             if kind in ('extra_point', 'extra_point_attempt', 'two_point_try', 'two_point_conversion', 'two_point_conv'):
                 checked += 1
-                try:
-                    _check_conversion(play.get('outcome') or {}, f'play {play.get("id", play.get("sequence", "?"))}.outcome', kind)
-                except AuditFailure as error:
-                    issues.append(str(error))
+                path = f'play {play.get("id", play.get("sequence", "?"))}.outcome'
+                missing = _check_conversion(play.get('outcome') or {}, path, kind,
+                                             allow_unresolvable=allow_unresolvable)
+                if missing:
+                    unresolvable.append(f'{path}.{missing}')
     need(not issues, '; '.join(issues))
-    return f'{checked} conversion attempts checked against publisher result fields'
+    detail = f'{checked} conversion attempts; {checked - len(unresolvable)} sourced, {len(unresolvable)} unresolvable'
+    if unresolvable:
+        return f'UNRESOLVABLE {detail}: ' + '; '.join(unresolvable)
+    return f'{detail} checked against publisher result fields'
 
 
-def _check_conversion(attempt: dict, path: str, event_kind: str | None = None) -> None:
+def _check_conversion(attempt: dict, path: str, event_kind: str | None = None,
+                      *, allow_unresolvable: bool = False) -> str | None:
+    need(isinstance(attempt, dict), f'{path}: conversion attempt must be an object')
     kind = event_kind or attempt.get('kind')
-    if kind == 'two_point_try':
-        kind = 'two_point_try'
     result_field, point_map = CONVERSION_RESULTS.get(kind, (None, None))
     need(result_field is not None, f'{path}: unsupported conversion kind {kind!r}')
     result = attempt.get(result_field)
+    absent = result is None or (isinstance(result, str) and not result.strip())
+    if absent and allow_unresolvable:
+        return result_field
     need(result in point_map, f'{path}: missing/invalid producer {result_field}; EPA success is not a source')
     made = point_map[result] > 0
     if 'made' in attempt:
         need(attempt['made'] is made, f'{path}: made conflicts with {result_field}={result}')
     if 'points_scored' in attempt:
         need(attempt['points_scored'] == point_map[result], f'{path}: points_scored conflicts with {result_field}={result}')
+    return None
 
 
 def audit_missed_field_goals(record: dict) -> str:
@@ -317,7 +336,8 @@ def audit_payload(payload: dict):
     checks = (
         ('seed', lambda: f'seed {seed_and_ledger(payload, record)[0]}'),
         ('drive_index', lambda: audit_drive_indices(record)),
-        ('conversion_sources', lambda: audit_conversion_sources(record)),
+        ('conversion_sources', lambda: audit_conversion_sources(
+            record, allow_unresolvable=not claims_valid_game(payload, record))),
         ('missed_field_goal_spot', lambda: audit_missed_field_goals(record)),
         ('coin_toss', lambda: audit_toss(payload, record)),
         ('clock_timeout_warning_penalty', lambda: audit_complete_claim_transitions(payload, record)),
@@ -325,7 +345,9 @@ def audit_payload(payload: dict):
     )
     for name, check in checks:
         try:
-            results.append((name, 'PASS', check()))
+            detail = check()
+            status = 'UNRESOLVABLE' if name == 'conversion_sources' and detail.startswith('UNRESOLVABLE ') else 'PASS'
+            results.append((name, status, detail))
         except (AuditFailure, TypeError, KeyError, ValueError) as error:
             findings.append((name, str(error)))
             results.append((name, 'FAIL', str(error)))
@@ -520,7 +542,10 @@ def main(argv) -> int:
     if findings:
         print(f'RESULT: FAIL ({len(findings)} guard(s) rejected the payload)')
         return 1
-    print('RESULT: PASS')
+    if any(status == 'UNRESOLVABLE' for _, status, _ in results):
+        print('RESULT: PASS WITH UNRESOLVABLE SOURCE FIELDS')
+    else:
+        print('RESULT: PASS')
     return 0
 
 
