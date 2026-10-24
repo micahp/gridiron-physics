@@ -8,6 +8,7 @@ on:
       - 'pipeline/build_matchup_snapshot.py'
       - 'pipeline/build_playbooks.py'
       - 'test/week7-core.mjs'
+      - 'test/week7.browser.mjs'
       - 'web/week7*.js'
       - 'week7.html'
       - '.github/workflows/week7-six-assets.yml'
@@ -58,6 +59,12 @@ jobs:
           node --check web/week7-core.js
           node --check web/week7.js
           node test/week7-core.mjs
+      - name: Browser end-to-end six-matchup 3D smoke test
+        run: |
+          npm install --no-save --package-lock=false playwright
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8080 --directory . >/tmp/gridiron-week7-http.log 2>&1 &
+          node test/week7.browser.mjs
       - name: Commit generated source-pinned assets to feature branch
         run: |
           git config user.name "github-actions[bot]"
