@@ -42,8 +42,10 @@ const PRIOR_BARKLEY_BAUN = JSON.parse(PRIOR_PROFILE_BYTES.toString('utf8'));
 const PRIOR_PROFILE_HASH = createHash('sha256').update(PRIOR_PROFILE_BYTES).digest('hex');
 const BARKLEY = PRIOR_BARKLEY_BAUN.profiles.find((player) => player.id === 'saquon-barkley');
 const BAUN = PRIOR_BARKLEY_BAUN.profiles.find((player) => player.id === 'zack-baun');
-const MAIN_PROTOCOL_COMMIT = '053093a1ef0da912b19fc3a7566fdac68385e8b5';
-const MAIN_PROTOCOL_HASH = '204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde';
+const FROZEN_PROTOCOL_COMMIT = '053093a1ef0da912b19fc3a7566fdac68385e8b5';
+const FROZEN_PROTOCOL_HASH = '204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde';
+const MAIN_PROTOCOL_COMMIT = 'b3ccd729707f2ccc697f750cdad774c71fe5f674';
+const MAIN_PROTOCOL_HASH = '9e1dc4f55a29f69daebbe4203f3fd547dd880dce7919f57402b5e07ba731659d';
 const LEGACY = {
   branch: 'research/gridiron-tackle-physics-2026-10-23',
   commit: 'ec18dee259572f4beabda68a70d0d7f58601900f',
@@ -52,6 +54,14 @@ const LEGACY = {
   worldJsSha256: '85d1e24a6b2d4af43030da07bbc74e3b7a9c3f2e7b968c91bd141be48211412b',
   playJsSha256: '628e96d8af068b41adba4d40c3d151e2f6d487f4bed04148e3c16f679634f640',
 };
+const LEGACY_DIAGNOSIS = {
+  branch: 'research/madden27-tackle-physics-probe',
+  commit: '51b9d0f85a147dfc3fcc866fb1c18b5186d3a106',
+  reportPath: 'research/madden27-tackle-hold-probe/diagnosis-play18/DIAGNOSIS.md',
+  reportSha256: '1f7e28d656ade0cfff76ae40ca02f825e447a8de3f8fbb441b66afeabda8f1d2',
+};
+const LEGACY_DIAGNOSIS_URL = 'https://github.com/micahp/gridiron-physics/blob/'
+  + LEGACY_DIAGNOSIS.commit + '/' + LEGACY_DIAGNOSIS.reportPath;
 const LEGACY_REPORT_URL = `https://github.com/micahp/gridiron-physics/blob/${LEGACY.commit}/${LEGACY.reportPath}`;
 const REPLAY_CONFIGS = {
   'possession-retained': new Set(['m4c-neutral', 'madden-pair-combined', 'wrap-capacity-1.00x', 'tkl-capacity-hypothesis',
@@ -489,6 +499,207 @@ for (const comparison of solverComparisons) {
   if (classification) contactSplitClassifications[classification] = (contactSplitClassifications[classification] ?? 0) + 1;
 }
 
+function pairedAnchorConfig(treatment) {
+  if (treatment.conditions.phase === 'uncalibrated-btk-breakaway-force-hypothesis') return 'btk-drive-rating-50';
+  if (['physical-wrap-capacity', 'uncalibrated-tkl-capacity-hypothesis', 'physical-balance-authority',
+    'str-continuity-after-profile'].includes(treatment.conditions.phase)) return 'madden-pair-combined';
+  return 'm4c-neutral';
+}
+
+function expectedRoleInputChanges(row) {
+  const configId = row.conditions.config_id;
+  const direct = {
+    'mass-henderson-only': ['carrier.massKg'],
+    'mass-bush-only': ['tackler.massKg'],
+    'mass-both-after-individual': ['carrier.massKg', 'tackler.massKg'],
+    'str-henderson-only': ['carrier.strength'],
+    'str-bush-only': ['tackler.strength'],
+    'str-both-after-individual': ['carrier.strength', 'tackler.strength'],
+    'madden-pair-combined': ['carrier.massKg', 'carrier.strength', 'tackler.massKg', 'tackler.strength'],
+  };
+  if (direct[configId]) return direct[configId];
+  if (configId.startsWith('str-continuity-')) {
+    const playerId = row.conditions.strength_override?.player_id;
+    const role = playerId === row.conditions.base_role_inputs.carrier.id ? 'carrier' : 'tackler';
+    return [role + '.strength'];
+  }
+  if (configId.startsWith('wrap-capacity-') || configId.startsWith('tkl-capacity-')) return ['tackler.wrapCapacityN'];
+  if (configId.startsWith('balance-scale-')) return ['carrier.balanceScale'];
+  return [];
+}
+
+const traceCache = new Map();
+async function traceFor(row) {
+  const traceFile = path.join(RESULTS, row.trace_path);
+  if (!traceCache.has(traceFile)) {
+    traceCache.set(traceFile, JSON.parse(gunzipSync(await readFile(traceFile)).toString('utf8')));
+  }
+  return traceCache.get(traceFile);
+}
+
+const inputAuditRowsByKey = new Map(reportRows.map((row) => [
+  row.scenario_id + '::' + row.conditions.config_id + '::' + row.solver_or_engine + '::' + row.seed_or_fixture_label.seed, row]));
+const inputAudit = { baseline_rules: {
+  'mass/STR source substitutions': 'm4c-neutral, same scenario/solver/seed',
+  'capacity/balance/TKL/STR continuity': 'madden-pair-combined, same scenario/solver/seed',
+  'BTK drive-force sweep': 'btk-drive-rating-50, same scenario/solver/seed',
+}, paired_seed_comparisons: 0, trace_invariants_equal: 0, initial_states_equal: 0,
+  unexpected_role_input_differences: [], no_op_expected_changes: [], other_force_input_differences: [],
+  btk_force_delta_failures: [], missing_anchors: [] };
+const noOpChanges = new Map();
+for (const treatment of reportRows) {
+  const configId = treatment.conditions.config_id;
+  if (configId === 'm4c-neutral' || configId === 'old-barkley-baun-lost-contact') continue;
+  const anchorConfigId = pairedAnchorConfig(treatment);
+  if (configId === anchorConfigId) continue;
+  const seed = treatment.seed_or_fixture_label.seed;
+  const baselineKey = treatment.scenario_id + '::' + anchorConfigId + '::'
+    + treatment.solver_or_engine + '::' + seed;
+  const baseline = inputAuditRowsByKey.get(baselineKey);
+  if (!baseline) {
+    inputAudit.missing_anchors.push({ treatment_run_id: treatment.run_id, anchor_config_id: anchorConfigId });
+    continue;
+  }
+  inputAudit.paired_seed_comparisons++;
+  const treatmentTrace = await traceFor(treatment);
+  const baselineTrace = await traceFor(baseline);
+  const invariant = (trace) => ({
+    scenarioId: trace.scenarioId, seed: trace.seed, engine: trace.engine, playerGeometry: trace.playerGeometry,
+    physicsParameters: trace.physicsParameters, timestepSeconds: trace.timestepSeconds,
+    durationSeconds: trace.durationSeconds, gravityMps2: trace.gravityMps2,
+    initialPlayers: trace.frames[0]?.players ?? null, initialFootball: trace.frames[0]?.football ?? null,
+  });
+  if (JSON.stringify(invariant(treatmentTrace)) === JSON.stringify(invariant(baselineTrace))) {
+    inputAudit.trace_invariants_equal++;
+    inputAudit.initial_states_equal++;
+  } else {
+    inputAudit.unexpected_role_input_differences.push({ treatment_run_id: treatment.run_id,
+      anchor_run_id: baseline.run_id, reason: 'trace metadata, solver settings, gravity, or initial physical state differs' });
+  }
+
+  const changed = [];
+  for (const role of ['carrier', 'tackler']) {
+    const keys = new Set([...Object.keys(treatment.conditions.base_role_inputs[role] ?? {}),
+      ...Object.keys(baseline.conditions.base_role_inputs[role] ?? {})]);
+    for (const key of keys) {
+      if (treatment.conditions.base_role_inputs[role]?.[key] !== baseline.conditions.base_role_inputs[role]?.[key]) {
+        changed.push(role + '.' + key);
+      }
+    }
+  }
+  const expected = expectedRoleInputChanges(treatment);
+  const unexpected = changed.filter((field) => !expected.includes(field));
+  if (unexpected.length) inputAudit.unexpected_role_input_differences.push({ treatment_run_id: treatment.run_id,
+    anchor_run_id: baseline.run_id, unexpected_fields: unexpected });
+  for (const field of expected.filter((candidate) => !changed.includes(candidate))) {
+    const parts = field.split('.');
+    const key = treatment.scenario_id + '::' + configId + '::' + field;
+    const record = noOpChanges.get(key) ?? { scenario_id: treatment.scenario_id, config_id: configId,
+      unchanged_expected_field: field, pair_count: 0,
+      source_value: baseline.conditions.base_role_inputs[parts[0]][parts[1]] };
+    record.pair_count++;
+    noOpChanges.set(key, record);
+  }
+
+  const carrierId = treatment.conditions.base_role_inputs.carrier.id;
+  if (treatment.conditions.phase === 'uncalibrated-btk-breakaway-force-hypothesis') {
+    const actualDelta = (treatment.controller_forces_N[carrierId] ?? 0) - (baseline.controller_forces_N[carrierId] ?? 0);
+    const expectedDelta = treatment.conditions.btk_extra_drive_n;
+    const otherIds = new Set([...Object.keys(treatment.controller_forces_N), ...Object.keys(baseline.controller_forces_N)]);
+    otherIds.delete(carrierId);
+    const otherForcesEqual = [...otherIds].every((id) => treatment.controller_forces_N[id] === baseline.controller_forces_N[id]);
+    if (Math.abs(actualDelta - expectedDelta) > 1e-6 || !otherForcesEqual) {
+      inputAudit.btk_force_delta_failures.push({ treatment_run_id: treatment.run_id, baseline_run_id: baseline.run_id,
+        expected_extra_force_n: expectedDelta, observed_carrier_force_delta_n: actualDelta, other_forces_equal: otherForcesEqual });
+    }
+  } else if (JSON.stringify(treatment.controller_forces_N) !== JSON.stringify(baseline.controller_forces_N)) {
+    inputAudit.other_force_input_differences.push({ treatment_run_id: treatment.run_id,
+      baseline_run_id: baseline.run_id, treatment_forces_n: treatment.controller_forces_N,
+      baseline_forces_n: baseline.controller_forces_N });
+  }
+}
+inputAudit.no_op_expected_changes = [...noOpChanges.values()];
+inputAudit.valid = inputAudit.missing_anchors.length === 0
+  && inputAudit.trace_invariants_equal === inputAudit.paired_seed_comparisons
+  && inputAudit.initial_states_equal === inputAudit.paired_seed_comparisons
+  && inputAudit.unexpected_role_input_differences.length === 0
+  && inputAudit.other_force_input_differences.length === 0
+  && inputAudit.btk_force_delta_failures.length === 0;
+
+const strContinuitySamples = [];
+for (const row of reportRows.filter((candidate) => candidate.conditions.config_id.startsWith('str-continuity-'))) {
+  const match = row.conditions.config_id.match(/^str-continuity-(henderson|bush)-([\d.]+)$/);
+  if (!match) continue;
+  const actor = match[1];
+  const role = actor === 'henderson' ? 'carrier' : 'tackler';
+  const playerId = row.conditions.base_role_inputs[role].id;
+  const pairId = [row.player_roles.carrier, row.player_roles.tackler].sort().join('::');
+  const trace = await traceFor(row);
+  const frame = trace.frames.find((candidate) => candidate.tick === 5);
+  const pair = frame?.pairSurfaceGaps?.find((candidate) => candidate.pairId === pairId);
+  const torqueVector = frame?.controllerTorqueRequestsNmByPlayer?.[playerId] ?? [0, 0, 0];
+  strContinuitySamples.push({ actor, strength: Number(match[2]), solver_or_engine: row.solver_or_engine,
+    seed: row.seed_or_fixture_label.seed, run_id: row.run_id, tick: frame?.tick ?? null,
+    time_seconds: frame?.timeSeconds ?? null, requested_torque_nm: Math.hypot(...torqueVector),
+    gap_at_tick_m: pair?.minimumSurfaceGapM ?? null, contact_opportunity_at_tick: pair?.contactOpportunity ?? null,
+    actual_contact_at_tick: pair?.physicalContact ?? null, first_contact_seconds: row.first_contact_seconds,
+    full_trace_minimum_signed_gap_m: row.focus_pair_minimum_surface_gap_m });
+}
+const continuityGroups = new Map();
+for (const sample of strContinuitySamples) {
+  const key = sample.actor + '::' + sample.solver_or_engine + '::' + sample.seed;
+  const group = continuityGroups.get(key) ?? { actor: sample.actor, solver_or_engine: sample.solver_or_engine,
+    seed: sample.seed, samples: [] };
+  group.samples.push(sample);
+  continuityGroups.set(key, group);
+}
+const continuityMonotonicity = [...continuityGroups.values()].map((group) => {
+  const ordered = group.samples.sort((a, b) => a.strength - b.strength);
+  const violations = [];
+  for (let index = 1; index < ordered.length; index++) {
+    if (ordered[index].requested_torque_nm + 1e-9 < ordered[index - 1].requested_torque_nm) {
+      violations.push({ from_strength: ordered[index - 1].strength, to_strength: ordered[index].strength,
+        from_torque_nm: ordered[index - 1].requested_torque_nm, to_torque_nm: ordered[index].requested_torque_nm });
+    }
+  }
+  return { actor: group.actor, solver_or_engine: group.solver_or_engine, seed: group.seed,
+    sample_count: ordered.length, nondecreasing_torque: violations.length === 0, violations };
+});
+async function closestBoundarySample(row) {
+  const trace = await traceFor(row);
+  const pairId = [row.player_roles.carrier, row.player_roles.tackler].sort().join('::');
+  let closest = null;
+  for (const frame of trace.frames) {
+    const pair = frame.pairSurfaceGaps?.find((candidate) => candidate.pairId === pairId);
+    if (!pair || !Number.isFinite(pair.minimumSurfaceGapM)) continue;
+    if (!closest || Math.abs(pair.minimumSurfaceGapM) < Math.abs(closest.signed_gap_m)) {
+      closest = { tick: frame.tick, time_seconds: frame.timeSeconds, signed_gap_m: pair.minimumSurfaceGapM,
+        contact_opportunity: pair.contactOpportunity, actual_contact: pair.physicalContact };
+    }
+  }
+  return closest;
+}
+const continuityTransitions = [];
+for (const group of continuityGroups.values()) {
+  const ordered = [...group.samples].sort((a, b) => a.strength - b.strength);
+  for (let index = 1; index < ordered.length; index++) {
+    const lower = ordered[index - 1], upper = ordered[index];
+    if ((lower.first_contact_seconds !== null) === (upper.first_contact_seconds !== null)) continue;
+    const lowerRow = reportRows.find((row) => row.run_id === lower.run_id);
+    const upperRow = reportRows.find((row) => row.run_id === upper.run_id);
+    continuityTransitions.push({ actor: group.actor, solver_or_engine: group.solver_or_engine, seed: group.seed,
+      lower_strength: lower.strength, upper_strength: upper.strength,
+      lower_has_contact: lower.first_contact_seconds !== null, upper_has_contact: upper.first_contact_seconds !== null,
+      lower_first_contact_seconds: lower.first_contact_seconds, upper_first_contact_seconds: upper.first_contact_seconds,
+      lower_closest_approach: await closestBoundarySample(lowerRow),
+      upper_closest_approach: await closestBoundarySample(upperRow) });
+  }
+}
+const strContinuityDiagnostics = { sampled_step: { tick: 5, time_seconds: 5 * DT_SECONDS },
+  samples: strContinuitySamples, monotonicity_by_actor_solver_seed: continuityMonotonicity,
+  all_precontact_torque_series_nondecreasing: continuityMonotonicity.every((group) => group.nondecreasing_torque),
+  contact_transitions: continuityTransitions };
+
 function median(values) {
   const sorted = [...values].sort((a, b) => a - b);
   if (!sorted.length) return null;
@@ -520,14 +731,11 @@ const pairedMetricNames = ['minimum_surface_gap_m', 'contact_opportunity_samples
 const rowsByPairingKey = new Map(reportRows.map((row) => [
   `${row.scenario_id}::${row.conditions.config_id}::${row.solver_or_engine}::${row.seed_or_fixture_label.seed}`, row]));
 const pairedGroups = new Map();
-const profileAnchoredPhases = new Set(['physical-wrap-capacity', 'uncalibrated-tkl-capacity-hypothesis',
-  'physical-balance-authority', 'uncalibrated-btk-breakaway-force-hypothesis', 'str-continuity-after-profile']);
 for (const treatment of reportRows) {
   const configId = treatment.conditions.config_id;
   if (configId === 'm4c-neutral' || configId === 'old-barkley-baun-lost-contact') continue;
-  const anchorConfigId = treatment.conditions.phase === 'uncalibrated-btk-breakaway-force-hypothesis'
-    ? 'btk-drive-rating-50'
-    : profileAnchoredPhases.has(treatment.conditions.phase) ? 'madden-pair-combined' : 'm4c-neutral';
+  const anchorConfigId = pairedAnchorConfig(treatment);
+  if (configId === anchorConfigId) continue;
   const seed = treatment.seed_or_fixture_label.seed;
   const baseline = rowsByPairingKey.get(`${treatment.scenario_id}::${anchorConfigId}::${treatment.solver_or_engine}::${seed}`);
   if (!baseline) continue;
@@ -576,13 +784,16 @@ const report = {
   mapping_version: 'hb-week6-physical-ablations-v1',
   source_data: { snapshot_path: path.relative(M4B, PROFILE_PATH), sha256: profileHash,
     source_of_truth_commit: MAIN_PROTOCOL_COMMIT, source_of_truth_path: 'docs/research/RATINGS-TO-PHYSICS-COORDINATION-2026-10-23.md',
-    source_of_truth_sha256: MAIN_PROTOCOL_HASH, previous_barkley_baun_snapshot_sha256: PRIOR_PROFILE_HASH,
+    source_of_truth_sha256: MAIN_PROTOCOL_HASH,
+    frozen_snapshot_protocol: { commit: FROZEN_PROTOCOL_COMMIT, sha256: FROZEN_PROTOCOL_HASH },
+    previous_barkley_baun_snapshot_sha256: PRIOR_PROFILE_HASH,
     preceding_contact_diagnosis: { commit: 'c4d35b975df80e0f5ddaea34451bf35724e960f6', report_path: 'results/m4d-str-contact-diagnosis/sensitivity-report.md',
       report_sha256: codeHashes['results/m4d-str-contact-diagnosis/sensitivity-report.md'],
       source_path: 'm4d-str-contact-diagnosis/run.mjs', source_sha256: codeHashes['m4d-str-contact-diagnosis/run.mjs'] },
     ea_pages: PROFILE.players.map(({ name, source_url }) => ({ name, source_url })) },
   implementation_hashes: codeHashes,
-  cross_track_reference: { ...LEGACY, report_url: LEGACY_REPORT_URL,
+  cross_track_reference: { latest_hold_report: { ...LEGACY, report_url: LEGACY_REPORT_URL },
+    play18_diagnosis: { ...LEGACY_DIAGNOSIS, report_url: LEGACY_DIAGNOSIS_URL },
     comparability: 'Legacy post-wrap travel/odds statistics are a different model family and are not numerically pooled with M4c results.' },
   m4c_reference: { report_commit: '8ead484e08de6acdc934f33fe279347713dc289e', behavior: 'm4c',
     fixture_version: 'm4c-scenario-library-v5', timestep_seconds: DT_SECONDS,
@@ -616,7 +827,9 @@ const report = {
       'gang-staggered-three': 'carrier meets M4c sustained-fall condition' } },
   solver_comparisons: solverComparisons,
   contact_split_classifications: contactSplitClassifications,
+  paired_input_audit: inputAudit,
   within_engine_paired_differences: withinEnginePairedDifferences,
+  str_continuity_diagnostics: strContinuityDiagnostics,
   sweep_order: ['neutral baseline', 'independent mass-only effects', 'independent STR-only effects',
     'mass and STR repeat runs after isolated effects', 'combined H-B profile substitution',
     'STR continuity around 80–81 at fixed H-B masses', 'grip, balance, TKL, and BTK physical hypotheses'],
@@ -636,11 +849,19 @@ function markdownReport(data) {
     'str-continuity-bush-80.00', 'str-continuity-bush-80.50', 'str-continuity-bush-81.00',
     'old-barkley-baun-lost-contact']);
   const tableRows = data.runs.filter((row) => keyIds.has(row.conditions.config_id) && row.seed_or_fixture_label.seed === SEEDS[0]);
+  const torqueAt = (actor, solver, rating, seed = SEEDS[0]) => data.str_continuity_diagnostics.samples.find((sample) =>
+    sample.actor === actor && sample.solver_or_engine === solver && sample.strength === rating && sample.seed === seed);
+  const torqueEndpointText = (actor, solver, low, high) => {
+    const lower = torqueAt(actor, solver, low), upper = torqueAt(actor, solver, high);
+    return actor + ' ' + solver + ' ' + low + '→' + high + ': '
+      + lower?.requested_torque_nm.toFixed(3) + '→' + upper?.requested_torque_nm.toFixed(3) + ' N·m';
+  };
   const lines = [
     '# M4d Henderson–Bush physical-ability ablations', '',
     'Code commit: ' + data.code_commit + '; source snapshot SHA-256: ' + data.source_snapshot_hash + '.',
-    'Protocol: [coordination contract at main commit ' + MAIN_PROTOCOL_COMMIT + '](https://github.com/micahp/gridiron-physics/blob/' + MAIN_PROTOCOL_COMMIT + '/docs/research/RATINGS-TO-PHYSICS-COORDINATION-2026-10-23.md) (SHA-256 ' + MAIN_PROTOCOL_HASH + ').',
-    'Legacy comparison: [latest hold report](' + LEGACY_REPORT_URL + '), branch ' + LEGACY.branch + ', commit ' + LEGACY.commit + ', report SHA-256 ' + LEGACY.reportSha256 + '.', '',
+    'Updated coordination protocol: [main commit ' + MAIN_PROTOCOL_COMMIT + '](https://github.com/micahp/gridiron-physics/blob/' + MAIN_PROTOCOL_COMMIT + '/docs/research/RATINGS-TO-PHYSICS-COORDINATION-2026-10-23.md), SHA-256 ' + MAIN_PROTOCOL_HASH + '. Frozen profile provenance retains protocol commit ' + FROZEN_PROTOCOL_COMMIT + ', SHA-256 ' + FROZEN_PROTOCOL_HASH + '.',
+    'Legacy comparison: [latest hold report](' + LEGACY_REPORT_URL + '), branch ' + LEGACY.branch + ', commit ' + LEGACY.commit + ', report SHA-256 ' + LEGACY.reportSha256 + '.',
+    'Latest legacy diagnosis: [play 18 defect report](' + LEGACY_DIAGNOSIS_URL + '), branch ' + LEGACY_DIAGNOSIS.branch + ', commit ' + LEGACY_DIAGNOSIS.commit + ', report SHA-256 ' + LEGACY_DIAGNOSIS.reportSha256 + '.', '',
     '## Scope and source', '',
     'This is a research-only M4c-based physical sensitivity experiment. It uses the frozen EA Madden NFL 27 Week 6 Henderson–Bush pair: Henderson (Patriots HB, 92 kg, STR 71, BTK 81, TKL 33, HTP 31) and Bush (Bears MIKE, 106 kg, STR 74, BTK 19, TKL 89, HTP 88). These body weights are publisher-provided estimates, not independent measurements. Madden ratings are game ratings, not measured force, torque, grip, or breakaway capacities.',
     'The compact frozen source is ' + path.relative(M4B, PROFILE_PATH) + '; SHA-256 ' + profileHash + '. EA pages: ' + PROFILE.players.map((p) => '[' + p.name + '](' + p.source_url + ')').join(', ') + '. The earlier Barkley–Baun loss-of-contact case is replayed as an additional diagnostic using its separate archived source snapshot (SHA-256 ' + PRIOR_PROFILE_HASH + '); it does not tune the NE–CHI pair. The preceding [STR/contact diagnosis](https://github.com/micahp/gridiron-physics/blob/c4d35b975df80e0f5ddaea34451bf35724e960f6/research/physics-3d-evaluation/m4b/results/m4d-str-contact-diagnosis/sensitivity-report.md) and its per-tick artifacts are also hashed in the manifest.', '',
@@ -649,21 +870,26 @@ function markdownReport(data) {
     'The original M4c limits remain: max penetration ≤' + LIMITS.maximumM + ' m, per-run p95 ≤' + LIMITS.p95M + ' m, duration-weighted mean ≤' + LIMITS.durationWeightedMeanM + ' m. No failed gate is relaxed. Opportunity (analytic gap ≤0.10 m) and physical contact (engine state) remain distinct.',
     'Contact counts in the shared schema are fixed-step samples, not independent tackle events. tackle_selected is null because M4c does not implement legacy pre-contact tackle selection. Rapier solver impulse is reported from its manifold telemetry; Jolt impulse is labeled with its adapter estimate or null when unavailable.', '',
     '## Ablations', '',
-    'Mass-only and STR-only changes are run separately for Henderson and Bush before any combined profile input. Capacity and controller sweeps then vary one research parameter while keeping the selected player-source inputs fixed.',
+    'Mass-only and STR-only changes are run separately for Henderson and Bush before any combined profile input. The EA-sourced Bush mass (106 kg) equals the tackler mass in all three M4c fixtures, so mass-bush-only is an audited no-op control; mass-both-after-individual and the combined profile also leave Bush mass unchanged while changing Henderson from the 98 kg fixture value to 92 kg. These cases provide no evidence for a Bush mass effect. Capacity and controller sweeps then vary one research parameter while keeping the selected player-source inputs fixed.',
     'The TKL hold-capacity hypothesis is explicitly uncalibrated: capacity_N = fixture_capacity_N × clamp(1 + 0.005 × (TKL − 50), 0.5, 1.5); rating 50 is neutral. The BTK breakaway-force hypothesis is explicitly uncalibrated: additional_forward_force_N = clamp(10 × (BTK − 50), 0, 500); rating 50 adds 0 N. BTK force starts at 0.20 s in its separate fixture clone; each run records whether physical contact preceded that time. The independent wrap-capacity sweep uses 0.5×–1.5× existing fixture capacity in Newtons. None of these slopes or bounds is empirically calibrated.',
     'The M4d STR pass-through still feeds the existing balance-controller input without calibration. The balance-scale sweep is dimensionless; torque requests are reported in N·m. HTP and legacy ELU are unused.', '',
     '## Key paired runs', '',
     '| Scenario | Input | Engine | Min gap (m) | Opportunity samples | Contact samples / events | First contact (s) | Grip load (N) | Takedown | Post-contact travel (m / 1 s) | p95 (m) | weighted mean (m) | Status |',
     '|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---|',
     '## Paired responses within each solver', '',
-    'Every treatment is paired to its same-engine, same-seed anchor: mass/STR substitutions use `m4c-neutral`; capacity, balance, TKL, and STR-continuity hypotheses use `madden-pair-combined`; BTK added-force values use the rating-50, 1200 N base-drive control so only the extra force changes. The JSON includes per-seed paired values and min/median/max distributions for separation, opportunities, contact samples/events, contact time, grip load, torque, drive force, penetration, and post-contact travel. Only two deterministic fixture seeds are used; these ranges are not confidence intervals.',
+    'Every treatment is paired within the same scenario, solver, seed, timestep, gravity, solver settings, geometry, and initial player/football state. Mass/STR substitutions use m4c-neutral; capacity, balance, TKL, and STR-continuity hypotheses use madden-pair-combined; BTK added-force values use the rating-50, 1200 N base-drive control. The trace audit checks these invariants and confirms that only the declared role input or configured BTK force changes. It checks ' + data.paired_input_audit.paired_seed_comparisons + ' treatment/anchor seed pairs; ' + data.paired_input_audit.no_op_expected_changes.length + ' source-equal/neutral no-op records are retained and labeled in the JSON. The neutral BTK 50 run is an anchor, not a self-paired treatment. The JSON includes per-seed paired values and min/median/max distributions for separation, opportunities, contact samples/events, contact time, grip load, torque, drive force, penetration, and post-contact travel. Only two deterministic fixture seeds are used; these ranges are not confidence intervals.',
     '| Scenario | Input | Engine | Anchor | Δ min gap (m) | Δ opportunities | Δ contact samples | Δ grip load (N) | Δ peak torque (N·m) | Δ p95 (m) | Δ weighted mean (m) | Outcome gate pass count |',
     '|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|',
     '## STR continuity around 80–81', '',
-    'At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace.',
-    'The pre-player-contact request is continuous: at tick 5 (0.04167 s), while all players are still on their approach trajectories, controller torque rose monotonically at every sampled STR for both actors in both engines. Across STR 79→82, Henderson’s request changed 224.356→228.936 N·m in Rapier and 153.267→156.414 N·m in Jolt; Bush’s changed 127.053→129.663 N·m and 86.612→88.390 N·m, respectively. Contact itself was discontinuous in Rapier near grazing separation: for Henderson STR 79.75, Rapier reached −0.00018 m and recorded contact; at 80.00 it stayed +0.01671 m with no contact; at 80.10 it returned to −0.00002 m with contact. Bush STR 80.10 contacted at −0.00003 m, STR 80.20–80.50 had no contact at positive gaps, and contact returned near 80.60. Jolt retained contact at 0.09167 s through these sweeps. These are trajectory/geometry threshold transitions after smooth torque changes; across the full matrix, the 30 cases with nonpositive Rapier proxy gap but no Rapier contact remain flagged as candidate proxy/contact-boundary discrepancies, so detection cannot be ruled out in every case.',
+    'At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace. The additional step-5 audit samples controller torque at 0.04167 s, before the players reach contact.',
+    'At step 5 the tested torque series is nondecreasing for every actor, solver, and seed: ' + data.str_continuity_diagnostics.all_precontact_torque_series_nondecreasing + '. Representative 79→82 requests at seed ' + SEEDS[0] + ': ' + [
+      torqueEndpointText('henderson', 'rapier3d-compat', 79, 82), torqueEndpointText('henderson', 'jolt-physics-js', 79, 82),
+      torqueEndpointText('bush', 'rapier3d-compat', 79, 82), torqueEndpointText('bush', 'jolt-physics-js', 79, 82)].join('; ') + '. Smooth controller-input changes can legitimately alter subsequent feedback-driven trajectories. Contact formation remains discrete: adjacent STR values can cross the geometric contact boundary. Each observed transition below includes the closest signed proxy gap and time for both adjacent runs. Across the full matrix, 30 cases with nonpositive Rapier proxy gap but no Rapier contact remain candidate proxy/contact-boundary discrepancies, so detection cannot be ruled out in every case.',
     '| Actor | STR | Engine | Min gap (m) | First contact (s) | Contact samples | Peak torque request (N·m) | Status |',
     '|---|---:|---|---:|---:|---:|---:|---|',
+    '### Adjacent STR contact transitions and closest approach',
+    '| Actor | Engine | Seed | STR pair | Contact pair | Lower closest gap (m, tick/time) | Upper closest gap (m, tick/time) |',
+    '|---|---|---:|---|---|---|---|',
     '## Matched Rapier/Jolt trajectory and contact diagnosis', '',
     'Each comparison is paired by fixture, input, seed, and tick at 120 Hz. Position divergence is measured for the scripted focus pair. A Jolt contact while both analytic gaps remain positive is classified as a geometry/contact-boundary mismatch; a positive Rapier gap with Jolt proxy overlap is trajectory-mediated. A nonpositive Rapier gap without Rapier contact is flagged as a candidate contact-boundary/detection discrepancy, not presumed to be a missed query.',
     `Across ${data.solver_comparisons.length} matched pairs, first contact-state splits by class: ${Object.entries(data.contact_split_classifications).map(([name, count]) => `${name} (${count})`).join('; ') || 'none'}. The table lists every comparison with a contact-state split; full matched trajectories and per-step inputs remain in traces.`,
@@ -731,6 +957,16 @@ function markdownReport(data) {
       torque.toFixed(2), row.result_status];
     lines.splice(lines.indexOf('## Matched Rapier/Jolt trajectory and contact diagnosis'), 0, '|' + values.join('|') + '|');
   }
+  for (const transition of [...data.str_continuity_diagnostics.contact_transitions].reverse()) {
+    const closestText = (sample) => sample
+      ? sample.signed_gap_m.toFixed(5) + ' (' + sample.tick + '/' + sample.time_seconds.toFixed(4) + ' s)'
+      : 'n/a';
+    const values = [transition.actor, transition.solver_or_engine, transition.seed,
+      transition.lower_strength + '→' + transition.upper_strength,
+      (transition.lower_has_contact ? 'yes' : 'no') + '→' + (transition.upper_has_contact ? 'yes' : 'no'),
+      closestText(transition.lower_closest_approach), closestText(transition.upper_closest_approach)];
+    lines.splice(lines.indexOf('## Matched Rapier/Jolt trajectory and contact diagnosis'), 0, '|' + values.join('|') + '|');
+  }
   const contactSplits = data.solver_comparisons.filter((row) => row.first_contact_state_split);
   for (const comparison of [...contactSplits].reverse()) {
     const split = comparison.first_contact_state_split;
@@ -748,9 +984,11 @@ function markdownReport(data) {
 const manifest = {
   schema_version: 1, source_snapshot_hash: profileHash,
   source_snapshot_path: path.relative(M4B, PROFILE_PATH), source_of_truth_commit: MAIN_PROTOCOL_COMMIT,
-  source_of_truth_sha256: MAIN_PROTOCOL_HASH, implementation_commit: CODE_COMMIT,
+  source_of_truth_sha256: MAIN_PROTOCOL_HASH,
+  frozen_snapshot_protocol: { commit: FROZEN_PROTOCOL_COMMIT, sha256: FROZEN_PROTOCOL_HASH },
+  implementation_commit: CODE_COMMIT,
   implementation_hashes: codeHashes, runtime: { node: process.version, platform: process.platform, architecture: process.arch },
-  legacy_report: LEGACY, created_at: new Date().toISOString(),
+  legacy_report: LEGACY, legacy_play18_diagnosis: LEGACY_DIAGNOSIS, created_at: new Date().toISOString(),
 };
 const csvFields = ['schema_version', 'track', 'branch', 'code_commit', 'source_snapshot_hash', 'mapping_version', 'player_ids',
   'scenario_id', 'solver_or_engine', 'dt_seconds', 'run_id', 'seed_or_fixture_label', 'conditions', 'contact_opportunity_count',
