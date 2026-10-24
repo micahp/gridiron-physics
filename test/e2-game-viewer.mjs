@@ -98,19 +98,24 @@ globalThis.fetch = async (url) => {
 
 await import('../web/e2-game-viewer.js');
 const get = (id) => nodes.get(`#${id}`);
-for (let attempt = 0; attempt < 300 && get('load-error')?.hidden !== false; attempt += 1) {
+for (let attempt = 0; attempt < 300 && get('viewer-content')?.hidden !== false; attempt += 1) {
   await new Promise((resolveWait) => setTimeout(resolveWait, 10));
 }
 
-assert.equal(get('load-error').hidden, false, `the pinned source must hard-reject its drive-index defect: ${get('load-error').textContent}`);
-assert.match(get('load-error').textContent, /23 drive-index mismatches/);
-assert.equal(get('viewer-content').hidden, true, 'the rejected record must not render as a navigable game');
+assert.equal(get('load-error').hidden, true, `the final LP source should load: ${get('load-error').textContent}`);
+assert.equal(get('viewer-content').hidden, false, 'the final pinned record must render as a navigable game');
+assert.equal(get('drive-select').children.length, 24);
+assert.equal(get('play-select').children.length, sourceRecord.drives[0].plays.length);
+assert.match(get('record-meta').textContent, /143/);
+assert.equal(get('score-a').textContent, '14');
+assert.equal(get('score-b').textContent, '10');
+assert.match(get('state-audit-summary').textContent, /0 findings/);
 assert.match(get('e3-clock-caveat').textContent, /594 \/ 7016/);
 assert.match(get('e3-unsupported-list').textContent, /timeouts/);
-assert.match(get('conversion-source-status').textContent, /EPA-positive success/);
-assert.match(get('state-audit-summary').textContent, /1175 findings/);
+assert.match(get('conversion-source-status').textContent, /PASS/);
+assert.match(get('e3-play-table').textContent, /Generated · n=143/);
 assert.equal(get('e3-play-table').querySelectorAll('tr').length, 5);
 assert.equal(get('e3-drive-table').querySelectorAll('tr').length, 6);
 assert.equal(get('e3-game-table').querySelectorAll('tr').length, 14);
 
-console.log('E2 viewer DOM audit: pinned record rejected with 23 drive-index findings; E3 diagnostics and caveats rendered');
+console.log('E2 viewer DOM audit: final LP record loads 24 drives / 143 plays; E3 diagnostics and caveats rendered');

@@ -75,32 +75,18 @@ as shared-v1 violations. Read-only inspection is only available after the indepe
 
 The earlier E2 commit `60b7708b` stored drive play counts without nested play records. LP commit
 `3daa0ed6dc99c3bdc666d5c0f226af02173e05cc` added the committed nested-play refactor and `emit_game.py`; LP commit
-`702f41db569de04a962b6f1336460d5273b66ce0` added the game-wide play ID namespace. The viewer source is pinned to the
-requested LP E2 commit `5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f`; its original payload is retained beside the Gridiron
-wrapper and hash-pinned in `docs/fixtures/e2/MANIFEST.json`. Gridiron never reconstructs missing plays from drive counts.
+`702f41db569de04a962b6f1336460d5273b66ce0` added the game-wide play ID namespace. The original viewer source pin was LP E2 commit `5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f`; that 144-play envelope is retained as an archived regression beside the current fixture. The viewer now pins LP record commit `1ca7560924fe7da3eb452b142176bf09d7aeb1f0` and envelope commit `45381829488e43813a31793ee546df0b95dee856` in `docs/fixtures/e2/MANIFEST.json`. Gridiron never reconstructs missing plays from drive counts.
 
-The re-pinned game (seed 1) has 24 drives and 144 plays, score A 11–B 17, and rules-matrix counts of 13 PASS, 5
-UNSUPPORTED, 1 PARTIAL, and 4 NOT_APPLICABLE. It is complete through regulation, while `valid_full_game` correctly remains
-false because rules are unsupported. Drives 2–24 have `drive.index` 2–24, while every embedded E1 play state still says
-`drive_index: 1`. The adapter hard-rejects these 23 grouped findings and leaves source values unchanged. The independent
-football-state audit also records each missing score and timeout field and checks downs, possession, field position, kick
-restarts, quarter/halftime transitions, score monotonicity where snapshots exist, and termination. See
-`docs/research/GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-2026-10-24.md` for all baseline findings. Kickoff `after_drive`
-links, receiver-to-next-drive linkage, drive order, and the separate drive-score ledger reconcile for this fixture.
+The archived 5fc game (seed 1) has 24 drives and 144 plays, score A 11–B 17, and rules-matrix counts of 13 PASS, 5
+UNSUPPORTED, 1 PARTIAL, and 4 NOT_APPLICABLE. Its 23 grouped drive-index mismatches and missing score/timeout snapshots are retained as a hard-failing regression. See `docs/research/GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-2026-10-24.md` for the path-level baseline.
 
 LP's later committed producer `a78558554ec9f0643b4857c7c4bb46104852c1df` writes the correct drive index to both embedded
 state boundaries. Its clean seed-1 output is preserved as an audit-only record at
-`docs/fixtures/e2/audit-current-seed1-a785-record.json`; this does not alter the 5fc viewer pin. The later record still
-lacks per-play score and timeout snapshots and remains `valid_full_game: false`, so it has not replaced the viewer fixture.
+`docs/fixtures/e2/audit-current-seed1-a785-record.json`; at that point it did not alter the 5fc viewer pin. The a785 record still
+lacked per-play score and timeout snapshots and remains `valid_full_game: false`.
 
-The latest checked-in producer is `f12c1c6bf9faaf3f070726ead017f2c5854353f2`. Its clean seed-1 output has 24 drives,
-143 plays, A 14–B 10, and raw payload SHA-256
-`0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`. The audit-only record is
-`docs/fixtures/e2/audit-current-seed1-f12-record.json`; its SHA-256 is
-`622ce2881e64dacb31135fe36a2972da620b7ccd70a41ae41a17c80108ecb1e1`. Its independent football-state audit has zero
-findings, including score reconciliation and timeout snapshot range/transition checks. The consumer's shared-v1 audit
-closes score and timeout state coverage, with eight other v1 violations open. Timeout rules remain unsupported and
-`valid_full_game` remains false. This record is not the viewer pin and does not change the 5fc regression fixture.
+The f12 record is preserved as prior audit-only evidence; the final raw record has identical content. The current viewer uses
+the final LP envelope and raw record pins listed below.
 
 ## Viewer behavior
 
@@ -109,3 +95,19 @@ It is an event/field-state viewer, not a 3D physical replay: the record does not
 or motion. It prominently labels the game as a retrospective statistical simulation and leaves the LP result untouched.
 
 Validation entry point: `web/lp-game-record-adapter.js`. Focused tests: `node test/lp-game-record-adapter.mjs`.
+
+
+## Final LP evidence pin — 2026-10-24
+
+The viewer loads the exact LP envelope from commit `45381829488e43813a31793ee546df0b95dee856` (SHA-256
+`b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1`) and verifies its embedded record equals the raw LP
+payload from commit `1ca7560924fe7da3eb452b142176bf09d7aeb1f0` (SHA-256
+`0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821`). The record has 24 drives, 143 plays, score A
+14–B 10, zero independent football-state findings, and `valid_full_game: false`. The 5fc envelope and raw source remain
+separate named regression fixtures.
+
+The raw-record v1 audit reports eight structural gaps, including missing model/rules metadata and the safe false validity
+flag. LP's projected shared-v1 document reports seven unsourced source fields: mode, game ID, kickoff, as-of time, snapshot
+hash, roster snapshot, and play duration. The document-specific Gridiron source-gap audit now reports those seven separately.
+Its projection has 156 event rows because it includes 13 kickoff/try/period/game boundary events around 143 source plays.
+See the independent audit report for the prior six-count reconciliation and its dated delta.

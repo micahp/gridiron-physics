@@ -52,7 +52,7 @@ function appendMeta(container, pairs) {
   }
 }
 
-function renderMetadata(verification) {
+function renderMetadata(verification, sourcePayloadSha256) {
   const record = adapted.record;
   $('#mode-label').textContent = adapted.displayLabel;
   status.textContent = `${record.status} · Q${record.final_quarter} ${formatClock(record.final_clock_seconds)} · seed ${record.seed}`;
@@ -67,7 +67,7 @@ function renderMetadata(verification) {
     ['Plays', adapted.sourcePlayCount],
     ['LP producer commit', adapted.source.base_commit],
     ['Fixture hash', verification],
-    ['LP source payload SHA-256', adapted.source.payload_sha256],
+    ['LP source payload SHA-256 (manifest pin)', sourcePayloadSha256],
     ['Producer tree', adapted.source.producer_worktree_dirty ? 'dirty; file hashes pinned' : 'committed'],
     ['Team identities', 'A/B labels only'],
   ]);
@@ -201,22 +201,39 @@ async function loadFixture() {
     if (!upstreamResponse.ok) throw new Error(`LP source payload HTTP ${upstreamResponse.status}`);
     const upstreamBytes = await upstreamResponse.arrayBuffer();
     const upstreamHash = await sha256Hex(upstreamBytes);
-    if (upstreamHash !== entry.upstream_source_sha256 || payload.source?.payload_sha256 !== upstreamHash) {
+    if (upstreamHash !== entry.upstream_source_sha256
+        || (payload.source?.payload_sha256 && payload.source.payload_sha256 !== upstreamHash)) {
       throw new Error('pinned LP source payload SHA-256 mismatch');
     }
     if (payload.source.base_commit !== manifest.lp_source?.base_commit
         || payload.source.branch !== manifest.lp_source?.branch
-        || payload.source.payload_path !== manifest.lp_source?.payload_file) {
+        || (payload.source.payload_path && payload.source.payload_path !== manifest.lp_source?.payload_file)) {
       throw new Error('LP producer revision or source path does not match its manifest');
     }
     const upstream = JSON.parse(new TextDecoder().decode(upstreamBytes));
     if (canonicalJson(upstream.record) !== canonicalJson(payload.record)) {
       throw new Error('Gridiron transport record differs from the pinned LP source record');
     }
-    await renderE3Comparison(payload);
+    const conversionSource = manifest.lp_source?.conversion_source_script_sha256;
+    if (manifest.lp_source?.conversion_source_script_commit !== manifest.lp_source?.base_commit
+        || !/^[a-f0-9]{64}$/i.test(conversionSource ?? '')) {
+      throw new Error('conversion source semantics are not pinned to the LP producer commit');
+    }
+    const auditPayload = {
+      ...payload,
+      sources: upstream.sources,
+      source: {
+        ...payload.source,
+        producer_file_sha256: {
+          ...payload.source.producer_file_sha256,
+          [manifest.lp_source.conversion_source_script_file]: conversionSource,
+        },
+      },
+    };
+    await renderE3Comparison(auditPayload);
     adapted = adaptLpGamePayload(payload);
     viewerContent.hidden = false;
-    renderMetadata(`matches manifest (${hash.slice(0, 12)})`);
+    renderMetadata(`matches manifest (${hash.slice(0, 12)})`, upstreamHash);
     renderValidation();
     renderLedgerAndKickoffs();
     renderTeamStats();

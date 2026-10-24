@@ -305,6 +305,46 @@ export function auditGridironContractV1Record(record) {
   return { conforms: violations.length === 0, violations };
 }
 
+// Audit only the source fields that LP's independent shared-v1 document checker
+// counts as unsourced. This accepts the projected v1 document shape, not the E2
+// game-record shape handled by auditGridironContractV1Record.
+export function auditGridironV1SourceGaps(document) {
+  const findings = [];
+  const add = (code, path, message) => findings.push({ code, path, message });
+  if (document?.mode !== 'pregame_full_game') {
+    add('V-mode', 'mode', 'Mode is not pregame_full_game.');
+  }
+  if (!nonEmptyString(document?.game_id)) {
+    add('V-game-id', 'game_id', 'No scheduled game identifier is available.');
+  }
+  if (!isUtcTimestamp(document?.scheduled_kickoff_utc)) {
+    add('V-scheduled-kickoff', 'scheduled_kickoff_utc', 'No scheduled kickoff timestamp is available.');
+  }
+  if (!isUtcTimestamp(document?.as_of_utc)) {
+    add('V-as-of', 'as_of_utc', 'No pregame as-of timestamp is available.');
+  }
+  if (!nonEmptyString(document?.snapshot_hash)) {
+    add('V-snapshot-hash', 'snapshot_hash', 'No pregame snapshot hash is available.');
+  }
+  if (!nonEmptyString(document?.roster_snapshot_id)) {
+    add('V-roster-snapshot', 'roster_snapshot_id', 'No eligible roster snapshot is available.');
+  }
+  const durationEvents = new Set(['run', 'pass_complete', 'pass_incomplete', 'interception', 'sack', 'punt',
+    'field_goal', 'fumble', 'safety']);
+  const missingDurations = (Array.isArray(document?.plays) ? document.plays : [])
+    .filter((play) => durationEvents.has(play?.event_type) && play?.outcome?.duration_seconds == null);
+  if (missingDurations.length) {
+    add('V-duration-seconds', 'plays[*].outcome.duration_seconds',
+      `${missingDurations.length} contract plays have no sourced duration.`);
+  }
+  return {
+    conforms: findings.length === 0,
+    sourceGapCount: findings.length,
+    violations: findings.map((finding) => finding.message),
+    findings,
+  };
+}
+
 export function adaptLpGamePayload(payload, { requireCompleteRegulation = true } = {}) {
   requireObject(payload, 'payload');
   if (payload.contract?.name !== GAME_PAYLOAD_NAME || payload.contract?.version !== GAME_PAYLOAD_VERSION) {

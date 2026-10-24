@@ -124,7 +124,7 @@ function renderPlayComparison(generated, observedRows) {
     return [kind, `${generatedCount}/${n} (${(100 * generatedCount / n).toFixed(1)}%)`,
       `${observed?.count ?? 0}/${observedDenominator} (${(100 * (observed?.count ?? 0) / observedDenominator).toFixed(1)}%)`];
   });
-  renderTable($('#e3-play-table'), ['Aligned category', 'Generated · n=144', `Observed · n=${observedDenominator}`], rows);
+  renderTable($('#e3-play-table'), ['Aligned category', `Generated · n=${n}`, `Observed · n=${observedDenominator}`], rows);
   $('#e3-play-note').textContent = `Both denominators include only pass, run, punt, and field-goal attempts. Observed PBP source rows: ${observedRows.find((row) => row.metric === 'play_type')?.denominator ?? 'unknown'}; excluded categories are not silently redistributed.`;
 }
 

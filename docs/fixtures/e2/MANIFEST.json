@@ -7,41 +7,67 @@
     {
       "drives": 24,
       "file": "game-seed1.json",
-      "plays": 144,
+      "plays": 143,
+      "points": {
+        "A": 14,
+        "B": 10
+      },
       "rules_matrix_summary": {
-        "NOT_APPLICABLE": 4,
-        "PARTIAL": 1,
-        "PASS": 13,
-        "UNSUPPORTED": 5
+        "NOT_APPLICABLE": 5,
+        "PASS": 14,
+        "UNSUPPORTED": 6,
+        "PARTIAL": 1
       },
       "seed": 1,
-      "sha256": "b18d1c864685c0f7f3ef7682165cda83eed16d198939a0760cfe4df8696cc66c",
+      "sha256": "b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1",
       "status": "complete_regulation",
-      "upstream_source_file": "lp-e2-game-seed1-5fcaa6bc.json",
-      "upstream_source_sha256": "ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e",
+      "upstream_source_file": "lp-e2-game-seed1-1ca75609.json",
+      "upstream_source_sha256": "0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821",
+      "v1_document_file": "e2-game-seed1.v1.json",
+      "v1_document_sha256": "c4a7c66418172b9101fbae2a6f1ac40d28c6461761db9c6a23116e7cd77a8b5c",
       "valid_full_game": false
     }
   ],
   "gridiron": {
-    "base_commit": "2b70ef37",
-    "branch": "research/gridiron-e2-game-viewer-2026-10-24",
-    "implementation_commit": "83e428b55436bfb2d4104264fd4a038d993cb95f"
+    "branch": "research/gridiron-e2-game-viewer-2026-10-24"
   },
   "lp_source": {
-    "base_commit": "5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f",
+    "base_commit": "1ca7560924fe7da3eb452b142176bf09d7aeb1f0",
     "branch": "feat/nfl-sequence-e2-kickoffs-2026-10-24",
+    "envelope_commit": "45381829488e43813a31793ee546df0b95dee856",
+    "envelope_file": "docs/fixtures/e2/e2-game-envelope-seed1.json",
+    "envelope_sha256": "b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1",
     "payload_file": "docs/fixtures/e2/e2-game-seed1.json",
-    "payload_sha256": "ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e",
+    "payload_sha256": "0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821",
     "producer_file_sha256": {
+      "scripts/nfl_sequence/game_state.py": "a8fe3229e8c4a980390acb95575e10dc59c3594d4d8dec02fdb45de60f652d2c",
+      "scripts/nfl_sequence/rules_matrix.py": "ff9084be89384c2cfbc0f14add0849a7f33b5ca11dbd61c507352c91a1ba8ee0",
       "scripts/nfl_sequence/e1_drive.py": "b2a36750c6ed66d31297eaa317b9ab95367ae0a574d50f9ed06434a7f5ead95f",
-      "scripts/nfl_sequence/e2_reference.py": "36e8d7879f244f5c62dc527c54d88aecf0996e391526060e28f4b7ec9a3c096c",
-      "scripts/nfl_sequence/emit_game.py": "fbfeac11f686664a114c4da4e6b40482dba8e90c7ac1ff9b132ad214f93ef9d6",
-      "scripts/nfl_sequence/game_state.py": "cdcf80fb02fd08f2d4c9171fea95992623bfece93bcc0edf48f0be1231914dc7",
-      "scripts/nfl_sequence/game_stats.py": "ce982153b9cb92fb8d395f1146a5e4385c971805033eaa44690f29b5a3d3abcf",
-      "scripts/nfl_sequence/measure_kick_outcomes.py": "f16616f80adfb4108dd189557d968cdacad680c77eea0bdec1fe46198cb622d0",
-      "scripts/nfl_sequence/rules_matrix.py": "a3af8d3e37923858fdea9b53cec3bb834d9c84b111656bceafaf4fb3dd752df0"
+      "scripts/nfl_sequence/shared_v1.py": "54d79f68081b129d70db36917ecfcbb8015a47a63bdc1874705dfe451ef5d333"
     },
     "producer_worktree_dirty": false,
-    "repository": "micahp/legendarypicks"
-  }
+    "repository": "micahp/legendarypicks",
+    "v1_document_file": "docs/fixtures/e2/e2-game-seed1.v1.json",
+    "v1_document_sha256": "c4a7c66418172b9101fbae2a6f1ac40d28c6461761db9c6a23116e7cd77a8b5c",
+    "conversion_source_script_commit": "1ca7560924fe7da3eb452b142176bf09d7aeb1f0",
+    "conversion_source_script_file": "scripts/nfl_sequence/measure_kick_outcomes.py",
+    "conversion_source_script_sha256": "04a06c9e80ab99676b8ec76144386ad127c928eb534aa8776895a33418600988"
+  },
+  "regression_fixtures": [
+    {
+      "file": "game-seed1-5fcaa6bc.json",
+      "sha256": "b18d1c864685c0f7f3ef7682165cda83eed16d198939a0760cfe4df8696cc66c",
+      "upstream_source_file": "lp-e2-game-seed1-5fcaa6bc.json",
+      "upstream_source_sha256": "ff061723ccbc09d61d6715a3d10aae27d32911f4ee5c95211415d78bd2543b4e",
+      "producer_commit": "5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f",
+      "known_findings": {
+        "drive_index_mismatches": 23,
+        "score_state_missing": 576,
+        "timeout_state_missing": 576
+      },
+      "conversion_source_script_commit": "5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f",
+      "conversion_source_script_file": "scripts/nfl_sequence/measure_kick_outcomes.py",
+      "conversion_source_script_sha256": "f16616f80adfb4108dd189557d968cdacad680c77eea0bdec1fe46198cb622d0"
+    }
+  ]
 }

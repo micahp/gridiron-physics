@@ -57,3 +57,11 @@ and field-state timeline; it does not fabricate a 3D roster or motion replay.
   failed v1 gate. It does not fill LP fields or change `GRIDIRON-CONTRACT-v1.md`.
 - Viewer verification: `node test/lp-game-record-adapter.mjs` passes; `node test/e2-game-viewer.mjs` renders and navigates all
   24 drives and 144 plays in a DOM smoke harness. LP's source outcomes and all play IDs match the pinned record.
+
+## Final LP evidence delta (2026-10-24)
+
+The old pins and counts above remain as historical evidence. The current viewer uses LP record commit
+`1ca7560924fe7da3eb452b142176bf09d7aeb1f0` inside envelope commit `45381829488e43813a31793ee546df0b95dee856`: 24 drives,
+143 plays, score A 14–B 10. The old 5fc 144-play fixture remains archived as the hard-failing regression. Current adapter,
+independent state-audit, browser-navigation, and shared-v1 count results are in
+[`GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-2026-10-24.md`](GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-2026-10-24.md).

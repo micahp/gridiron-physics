@@ -6,32 +6,29 @@
   "current_lp_payload": {
     "repository": "micahp/legendarypicks",
     "branch": "feat/nfl-sequence-e2-kickoffs-2026-10-24",
-    "producer_commit": "f12c1c6bf9faaf3f070726ead017f2c5854353f2",
-    "generation": "Reproduced deterministically from a clean git archive of the committed producer tree; no LP worktree files were changed.",
+    "producer_commit": "1ca7560924fe7da3eb452b142176bf09d7aeb1f0",
+    "generation": "Final LP record commit 1ca75609, pinned in envelope commit 45381829; source bytes verified from the LP repository tree.",
     "raw_payload_sha256": "0a3ed1cb216fa3f23784b427d2bf6e68ac877ab1995fb86cd5998d35d5b47821",
-    "audit_input_record_file": "docs/fixtures/e2/audit-current-seed1-f12-record.json",
-    "audit_input_record_sha256": "622ce2881e64dacb31135fe36a2972da620b7ccd70a41ae41a17c80108ecb1e1",
+    "audit_input_record_file": "docs/fixtures/e2/lp-e2-game-seed1-1ca75609.json#record",
+    "audit_input_record_sha256": "c3856dac6f56f99f2058f90c80e1285e4dc08cc52802ffdd8fbf788553a148fa",
     "record_canonical_sha256": "c3856dac6f56f99f2058f90c80e1285e4dc08cc52802ffdd8fbf788553a148fa",
     "producer_file_sha256": {
-      "scripts/nfl_sequence/e1_drive.py": "b2a36750c6ed66d31297eaa317b9ab95367ae0a574d50f9ed06434a7f5ead95f",
-      "scripts/nfl_sequence/e2_reference.py": "0bfc3e1bfc8c6f7cc25b95ce223900b30ac983437bb29d1e5772baf8168dd904",
-      "scripts/nfl_sequence/emit_game.py": "fbfeac11f686664a114c4da4e6b40482dba8e90c7ac1ff9b132ad214f93ef9d6",
       "scripts/nfl_sequence/game_state.py": "a8fe3229e8c4a980390acb95575e10dc59c3594d4d8dec02fdb45de60f652d2c",
-      "scripts/nfl_sequence/game_stats.py": "ce982153b9cb92fb8d395f1146a5e4385c971805033eaa44690f29b5a3d3abcf",
-      "scripts/nfl_sequence/measure_kick_outcomes.py": "04a06c9e80ab99676b8ec76144386ad127c928eb534aa8776895a33418600988",
       "scripts/nfl_sequence/rules_matrix.py": "ff9084be89384c2cfbc0f14add0849a7f33b5ca11dbd61c507352c91a1ba8ee0",
+      "scripts/nfl_sequence/e1_drive.py": "b2a36750c6ed66d31297eaa317b9ab95367ae0a574d50f9ed06434a7f5ead95f",
       "scripts/nfl_sequence/shared_v1.py": "54d79f68081b129d70db36917ecfcbb8015a47a63bdc1874705dfe451ef5d333"
     },
     "game": {
+      "seed": 1,
       "drives": 24,
       "plays": 143,
-      "points": {
-        "A": 14,
-        "B": 10
-      },
+      "points_A": 14,
+      "points_B": 10,
+      "complete_regulation": true,
       "valid_full_game": false
     },
     "football_state_audit": {
+      "passed": true,
       "finding_count": 0,
       "counts": {},
       "findings": []
@@ -59,7 +56,56 @@
         }
       },
       "findings": []
-    }
+    },
+    "envelope_commit": "45381829488e43813a31793ee546df0b95dee856",
+    "envelope_file": "docs/fixtures/e2/game-seed1.json",
+    "envelope_sha256": "b573713b10b2201c32a0827ab499a5b2b2a6d7de985ab05b7e4bfc51dce1f1a1",
+    "shared_v1_document_source_gaps": {
+      "document_file": "docs/fixtures/e2/e2-game-seed1.v1.json",
+      "document_sha256": "c4a7c66418172b9101fbae2a6f1ac40d28c6461761db9c6a23116e7cd77a8b5c",
+      "projected_event_count": 156,
+      "source_gap_count": 7,
+      "findings": [
+        {
+          "code": "V-mode",
+          "path": "mode",
+          "message": "Mode is not pregame_full_game."
+        },
+        {
+          "code": "V-game-id",
+          "path": "game_id",
+          "message": "No scheduled game identifier is available."
+        },
+        {
+          "code": "V-scheduled-kickoff",
+          "path": "scheduled_kickoff_utc",
+          "message": "No scheduled kickoff timestamp is available."
+        },
+        {
+          "code": "V-as-of",
+          "path": "as_of_utc",
+          "message": "No pregame as-of timestamp is available."
+        },
+        {
+          "code": "V-snapshot-hash",
+          "path": "snapshot_hash",
+          "message": "No pregame snapshot hash is available."
+        },
+        {
+          "code": "V-roster-snapshot",
+          "path": "roster_snapshot_id",
+          "message": "No eligible roster snapshot is available."
+        },
+        {
+          "code": "V-duration-seconds",
+          "path": "plays[*].outcome.duration_seconds",
+          "message": "143 contract plays have no sourced duration."
+        }
+      ]
+    },
+    "conversion_source_script_commit": "1ca7560924fe7da3eb452b142176bf09d7aeb1f0",
+    "conversion_source_script_file": "scripts/nfl_sequence/measure_kick_outcomes.py",
+    "conversion_source_script_sha256": "04a06c9e80ab99676b8ec76144386ad127c928eb534aa8776895a33418600988"
   },
   "prior_a785_payload": {
     "producer_commit": "a78558554ec9f0643b4857c7c4bb46104852c1df",
@@ -15000,7 +15046,9 @@
           "observed_semantics": "EPA-positive success flag"
         }
       ]
-    }
+    },
+    "envelope_file": "docs/fixtures/e2/game-seed1-5fcaa6bc.json",
+    "upstream_source_file": "lp-e2-game-seed1-5fcaa6bc.json"
   },
-  "interpretation": "Current f12 output passes independent football-state and score-ledger checks. Eight shared-v1 gaps remain and valid_full_game stays false. Previous a785 missing-state findings are retained. The old 5fc fixture continues to fail the drive-index hard gate and the pinned viewer fixture is unchanged."
+  "interpretation": "Final LP 1ca record and 453 envelope reproduce zero independent football-state findings. The raw-record Gridiron v1 audit reports eight structural gaps; the LP shared-v1 projection has seven unsourced source-field findings, aligned by the document-specific audit. The old 5fc 144-play envelope remains an archived regression with 1175 state findings."
 }

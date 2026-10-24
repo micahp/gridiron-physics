@@ -3,7 +3,8 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { adaptLpGamePayload, auditGridironContractV1Record } from '../web/lp-game-record-adapter.js';
+import { adaptLpGamePayload, auditGridironContractV1Record, auditGridironV1SourceGaps }
+  from '../web/lp-game-record-adapter.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
@@ -17,58 +18,65 @@ assert.equal(createHash('sha256').update(upstreamBytes).digest('hex'), fixtureEn
   'original LP payload must match its pinned SHA-256');
 const upstream = JSON.parse(upstreamBytes.toString('utf8'));
 const before = JSON.stringify(payload.record);
-
-assert.throws(() => adaptLpGamePayload(payload), /rejected 23 drive-index mismatches/,
-  'the pinned LP record must fail closed on all drive-index defects');
-assert.equal(JSON.stringify(payload.record), before, 'a rejected source record must remain untouched');
-assert.deepEqual(payload.record, upstream.record, 'the pinned transport record must match the pinned LP record');
-
-// Test-only navigation control: repair only drive_index in memory so the adapter's
-// remaining checks and the browser's drive/play selectors can be exercised. This
-// is not a rewritten or replacement LP fixture.
-const navigationControl = structuredClone(payload);
-for (const drive of navigationControl.record.drives) {
-  for (const play of drive.plays) {
-    play.state_before.drive_index = drive.index;
-    play.state_after.drive_index = drive.index;
-  }
-}
-const adapted = adaptLpGamePayload(navigationControl);
-assert.deepEqual(adapted.record, navigationControl.record,
-  'the adapter must preserve even the test-only source record exactly');
-assert.equal(payload.source.base_commit, manifest.lp_source.base_commit, 'producer commit must match the manifest');
+assert.deepEqual(payload.record, upstream.record, 'the pinned envelope record must equal the pinned LP source record');
+assert.equal(payload.source.base_commit, manifest.lp_source.base_commit, 'record producer commit must match the manifest');
 assert.equal(payload.source.branch, manifest.lp_source.branch, 'producer branch must match the manifest');
+assert.equal(manifest.lp_source.envelope_commit, '45381829488e43813a31793ee546df0b95dee856');
+assert.equal(manifest.lp_source.base_commit, '1ca7560924fe7da3eb452b142176bf09d7aeb1f0');
+
+const adapted = adaptLpGamePayload(payload);
+assert.deepEqual(adapted.record, upstream.record, 'the adapter must preserve the LP record exactly');
 assert.equal(adapted.drives.length, 24);
-assert.equal(adapted.sourcePlayCount, 144);
-assert.equal(adapted.record.points.A, 11);
-assert.equal(adapted.record.points.B, 17);
+assert.equal(adapted.sourcePlayCount, 143);
+assert.equal(adapted.record.points.A, 14);
+assert.equal(adapted.record.points.B, 10);
 assert.equal(adapted.record.complete_regulation, true);
 assert.equal(adapted.record.valid_full_game, false);
-assert.equal(adapted.validation.passed, true, 'the in-memory control has corrected drive indexes');
-assert.equal(adapted.footballStateAudit.counts.score_state_missing, 576,
-  'all missing score snapshots must be retained in the independent audit');
-assert.equal(adapted.footballStateAudit.counts.timeout_state_missing, 576,
-  'all missing timeout snapshots must be retained in the independent audit');
+assert.equal(adapted.validation.passed, true, 'the final LP record passes adapter validation');
+assert.equal(adapted.validation.findings.length, 0);
+assert.equal(adapted.footballStateAudit.finding_count, 0, 'the final record passes independent state audit');
 assert.equal(adapted.footballStateAudit.counts.drive_index_mismatch, undefined);
+assert.equal(adapted.sharedV1Audit.violations.length, 8,
+  'raw E2 record audit includes absent model/rules fields as well as pregame gaps');
+
+const regression = manifest.regression_fixtures[0];
+const oldEnvelopeBytes = await readFile(resolve(root, 'docs/fixtures/e2', regression.file));
+assert.equal(createHash('sha256').update(oldEnvelopeBytes).digest('hex'), regression.sha256);
+const oldEnvelope = JSON.parse(oldEnvelopeBytes.toString('utf8'));
+assert.throws(() => adaptLpGamePayload(oldEnvelope), /rejected 23 drive-index mismatches/,
+  'the archived 5fc fixture must continue to hard-fail as a regression');
+
+const v1DocumentBytes = await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.v1_document_file));
+assert.equal(createHash('sha256').update(v1DocumentBytes).digest('hex'), fixtureEntry.v1_document_sha256,
+  'the LP shared-v1 projection must match its pin');
+const v1Document = JSON.parse(v1DocumentBytes.toString('utf8'));
+const v1SourceGaps = auditGridironV1SourceGaps(v1Document);
+assert.equal(v1Document.plays.length, 156, 'shared-v1 includes explicit kickoff, try, and boundary events');
+assert.equal(v1SourceGaps.sourceGapCount, 7, 'the projected v1 document has seven unsourced source fields');
+assert.deepEqual(v1SourceGaps.findings.map((finding) => finding.code), [
+  'V-mode', 'V-game-id', 'V-scheduled-kickoff', 'V-as-of', 'V-snapshot-hash', 'V-roster-snapshot', 'V-duration-seconds',
+]);
+assert.match(v1SourceGaps.findings.at(-1).message, /143 contract plays/);
+
 const findingsDoc = await readFile(resolve(root, 'docs/research/GRIDIRON-E2-OPEN-FINDINGS-2026-10-24.md'), 'utf8');
 const driveSection = findingsDoc.split('## Drive-index findings (23)')[1].split('## Shared-contract audit violations (10)')[0];
 const driveRows = driveSection.split('\n').filter((line) => /^\| \d+ \|/.test(line));
 assert.equal(driveRows.length, 23, 'each drive-index finding must have a documented row');
 assert.ok(driveRows.every((line) => line.includes('LP E2 producer-side')),
   'every historical drive-index finding must name LP as its original owner');
-assert.ok(driveRows.every((line) => line.includes('CLOSED in f12; retained in 5fc regression')),
-  'all 23 historical index defects must be marked closed in current LP output and retained as regression');
+assert.ok(driveRows.every((line) => line.includes('CLOSED in 1ca; retained in 5fc regression')),
+  'all 23 historical index defects must be closed in the final LP output and retained as regression');
 const contractSection = findingsDoc.split('## Shared-contract audit violations (10)')[1];
 const contractRows = contractSection.split('\n').filter((line) => /^\| \d+ \|/.test(line));
 assert.equal(contractRows.length, 10, 'all ten v1 gaps must have a triage row');
 assert.ok(contractRows.every((line) => line.includes('LP E2 producer-side') && line.split('|').length === 8),
   'each v1 triage row must identify the LP owner and current disposition');
 assert.equal(contractRows.filter((line) => line.includes('| OPEN |')).length, 8,
-  'eight v1 gaps remain open in f12');
-assert.equal(contractRows.filter((line) => line.includes('CLOSED in f12')).length, 2,
-  'score and timeout state coverage close in f12');
+  'eight raw-record v1 gaps remain open in the final LP output');
+assert.equal(contractRows.filter((line) => line.includes('CLOSED in 1ca')).length, 2,
+  'score and timeout state coverage close in the final LP record');
 assert.equal(adapted.sharedV1Audit.conforms, false);
-assert.equal(adapted.sharedV1Audit.violations.length, 10);
+assert.equal(adapted.sharedV1Audit.violations.length, 8);
 assert.ok(!adapted.sharedV1Audit.violations.some((issue) => /play ID|simulation_id/.test(issue)));
 const allPlays = adapted.record.drives.flatMap((drive) => drive.plays);
 assert.deepEqual(allPlays.map((play) => play.sequence), allPlays.map((_, index) => index + 1));
@@ -77,28 +85,28 @@ assert.equal(JSON.stringify(payload.record), before, 'adapter must not mutate th
 assert.ok(Object.isFrozen(adapted.record.drives[0].plays[0].outcome), 'source copy must be immutable');
 assert.equal(adapted.drives[0].plays[0].source, adapted.record.drives[0].plays[0]);
 
-const duplicateId = structuredClone(navigationControl);
+const duplicateId = structuredClone(payload);
 duplicateId.record.drives[1].plays[0].id = duplicateId.record.drives[0].plays[0].id;
-assert.throws(() => adaptLpGamePayload(duplicateId), /id must be .*:5/);
+assert.throws(() => adaptLpGamePayload(duplicateId), /id must be .*:11/);
 
-const wrongSequence = structuredClone(navigationControl);
+const wrongSequence = structuredClone(payload);
 wrongSequence.record.drives[1].plays[0].sequence = 1;
 wrongSequence.record.drives[1].plays[0].id = `${payload.record.simulation_id}:1`;
-assert.throws(() => adaptLpGamePayload(wrongSequence), /sequence must be 5 across the game/);
+assert.throws(() => adaptLpGamePayload(wrongSequence), /sequence must be 11 across the game/);
 
-const missingSimulationId = structuredClone(navigationControl);
+const missingSimulationId = structuredClone(payload);
 delete missingSimulationId.record.simulation_id;
 assert.throws(() => adaptLpGamePayload(missingSimulationId), /record.simulation_id must be a non-empty string/);
 
-const countOnly = structuredClone(navigationControl);
+const countOnly = structuredClone(payload);
 delete countOnly.record.drives[0].plays;
 assert.throws(() => adaptLpGamePayload(countOnly), /must contain the source plays/);
 
-const shortGame = structuredClone(navigationControl);
+const shortGame = structuredClone(payload);
 shortGame.record.complete_regulation = false;
 assert.throws(() => adaptLpGamePayload(shortGame), /requires a complete regulation record/);
 
-const scoreMismatch = structuredClone(navigationControl);
+const scoreMismatch = structuredClone(payload);
 scoreMismatch.record.points.A += 1;
 assert.ok(adaptLpGamePayload(scoreMismatch).validation.findings.some((finding) => finding.includes('points disagree')));
 
@@ -148,4 +156,4 @@ console.log('LP E2 game adapter: assertions passed');
 console.log(`fixture=${fixtureEntry.file} sha256=${fixtureHash}`);
 console.log(`upstream=${fixtureEntry.upstream_source_file} sha256=${fixtureEntry.upstream_source_sha256}`);
 console.log(`drives=${adapted.drives.length} plays=${adapted.sourcePlayCount} score=A ${adapted.record.points.A}, B ${adapted.record.points.B}`);
-console.log(`source validation findings=${adapted.validation.findings.length}; shared-v1 violations=${adapted.sharedV1Audit.violations.length}`);
+console.log(`football-state findings=${adapted.footballStateAudit.finding_count}; raw-record v1 gaps=${adapted.sharedV1Audit.violations.length}; projected-v1 source gaps=${v1SourceGaps.sourceGapCount}`);

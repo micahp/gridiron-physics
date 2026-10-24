@@ -5,46 +5,74 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { auditDriveIndex, auditFootballState } from '../web/lp-game-state-audit.js';
 import { auditConversionSource } from '../web/conversion-source-semantics.js';
-import { adaptLpGamePayload } from '../web/lp-game-record-adapter.js';
+import { adaptLpGamePayload, auditGridironV1SourceGaps } from '../web/lp-game-record-adapter.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
 const entry = manifest.fixtures[0];
-const payload = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', entry.upstream_source_file), 'utf8'));
-const transport = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', entry.file), 'utf8'));
+const payloadBytes = await readFile(resolve(root, 'docs/fixtures/e2', entry.upstream_source_file));
+assert.equal(createHash('sha256').update(payloadBytes).digest('hex'), entry.upstream_source_sha256);
+const payload = JSON.parse(payloadBytes.toString('utf8'));
+const transportBytes = await readFile(resolve(root, 'docs/fixtures/e2', entry.file));
+assert.equal(createHash('sha256').update(transportBytes).digest('hex'), entry.sha256);
+const transport = JSON.parse(transportBytes.toString('utf8'));
 const record = payload.record;
-const pinnedAudit = auditFootballState(record);
+const currentAudit = auditFootballState(record);
+assert.deepEqual(record, transport.record, 'the final LP envelope must carry the pinned producer record unchanged');
+assert.equal(transport.source.base_commit, manifest.lp_source.base_commit);
+assert.equal(transport.source.base_commit, '1ca7560924fe7da3eb452b142176bf09d7aeb1f0');
+assert.equal(manifest.lp_source.envelope_commit, '45381829488e43813a31793ee546df0b95dee856');
+assert.equal(record.drives.length, 24);
+assert.equal(record.drives.reduce((sum, drive) => sum + drive.plays.length, 0), 143);
+assert.deepEqual(record.points, { A: 14, B: 10 });
 const priorRecordBytes = await readFile(resolve(root, 'docs/fixtures/e2/audit-current-seed1-a785-record.json'));
 const priorRecord = JSON.parse(priorRecordBytes.toString('utf8'));
 const priorAudit = auditFootballState(priorRecord);
-const currentRecordBytes = await readFile(resolve(root, 'docs/fixtures/e2/audit-current-seed1-f12-record.json'));
-const currentRecord = JSON.parse(currentRecordBytes.toString('utf8'));
-const currentAudit = auditFootballState(currentRecord);
+const f12RecordBytes = await readFile(resolve(root, 'docs/fixtures/e2/audit-current-seed1-f12-record.json'));
+const f12Record = JSON.parse(f12RecordBytes.toString('utf8'));
+const f12Audit = auditFootballState(f12Record);
+const regressionEntry = manifest.regression_fixtures[0];
+const regressionRawBytes = await readFile(resolve(root, 'docs/fixtures/e2', regressionEntry.upstream_source_file));
+assert.equal(createHash('sha256').update(regressionRawBytes).digest('hex'), regressionEntry.upstream_source_sha256);
+const regressionRaw = JSON.parse(regressionRawBytes.toString('utf8'));
+const pinnedAudit = auditFootballState(regressionRaw.record);
+const v1DocumentBytes = await readFile(resolve(root, 'docs/fixtures/e2', entry.v1_document_file));
+assert.equal(createHash('sha256').update(v1DocumentBytes).digest('hex'), entry.v1_document_sha256);
+const v1Document = JSON.parse(v1DocumentBytes.toString('utf8'));
 const baselineReport = JSON.parse(await readFile(resolve(root,
   'docs/research/GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-BASELINE-2026-10-24.json'), 'utf8'));
 
-assert.equal(pinnedAudit.counts.drive_index_mismatch, 23, 'each affected drive remains one grouped failing fixture');
-assert.equal(pinnedAudit.counts.score_state_missing, 576, 'every home/away score field at each play boundary is reported');
-assert.equal(pinnedAudit.counts.timeout_state_missing, 576, 'every home/away timeout field at each play boundary is reported');
-assert.equal(createHash('sha256').update(currentRecordBytes).digest('hex'),
-  baselineReport.current_lp_payload.audit_input_record_sha256, 'current LP audit input must match its pinned hash');
-assert.equal(manifest.lp_source.base_commit, '5fcaa6bc3ab92ab54cb584511f5205a2e1b4be0f');
-assert.ok(manifest.fixtures.every((fixture) => !fixture.file.startsWith('audit-current-')),
-  'the audit-only record must not alter the viewer pin');
-assert.equal(currentAudit.finding_count, 0, 'the latest committed LP payload passes independent football-state checks');
+assert.equal(currentAudit.finding_count, 0, 'the final LP record passes independent football-state checks');
 assert.deepEqual(currentAudit.findings, baselineReport.current_lp_payload.football_state_audit.findings,
   'the current payload audit must exactly reproduce every path-level baseline finding');
-assert.equal(currentAudit.counts.drive_index_mismatch ?? 0, 0, 'current drive indexes pass at both state boundaries');
+assert.equal(currentAudit.counts.drive_index_mismatch ?? 0, 0, 'final drive indexes pass at both state boundaries');
+assert.equal(baselineReport.current_lp_payload.producer_commit, manifest.lp_source.base_commit);
+assert.equal(baselineReport.current_lp_payload.envelope_commit, manifest.lp_source.envelope_commit);
+assert.equal(baselineReport.current_lp_payload.raw_payload_sha256, entry.upstream_source_sha256);
+assert.equal(baselineReport.current_lp_payload.envelope_sha256, entry.sha256);
+assert.equal(f12Audit.finding_count, 0, 'the earlier f12 record remains byte-equivalent state evidence');
+assert.deepEqual(f12Audit.findings, currentAudit.findings);
+assert.deepEqual(f12Record, record, 'the final LP record content matches the previously audited f12 record');
 assert.equal(priorAudit.finding_count, 1144, 'the earlier a785 missing-state baseline is preserved');
 assert.equal(priorAudit.counts.score_state_missing, 572);
 assert.equal(priorAudit.counts.timeout_state_missing, 572);
 assert.deepEqual(priorAudit.findings, baselineReport.prior_a785_payload.football_state_audit.findings);
 assert.equal(baselineReport.current_lp_payload.shared_v1_violations.length, 8,
   'the latest consumer audit closes score and timeout gaps; eight shared-v1 gaps remain open');
+const v1SourceGapAudit = auditGridironV1SourceGaps(v1Document);
+assert.equal(v1SourceGapAudit.sourceGapCount, 7,
+  'the shared-v1 projection has seven individually reported unsourced fields');
+assert.equal(baselineReport.current_lp_payload.shared_v1_document_source_gaps.source_gap_count, 7);
+assert.deepEqual(v1SourceGapAudit.findings,
+  baselineReport.current_lp_payload.shared_v1_document_source_gaps.findings);
 assert.equal(baselineReport.prior_a785_payload.shared_v1_violations.length, 10);
+assert.equal(pinnedAudit.finding_count, 1175, 'the archived 5fc payload remains the failing baseline');
+assert.equal(pinnedAudit.counts.drive_index_mismatch, 23);
+assert.equal(pinnedAudit.counts.score_state_missing, 576);
+assert.equal(pinnedAudit.counts.timeout_state_missing, 576);
 assert.equal(baselineReport.retained_pinned_regression_fixture.football_state_audit.finding_count, 1175,
-  'the original 5fc fixture remains the failing 23-drive regression input');
-const bothStateIndexFailures = auditDriveIndex(record);
+  'the original 5fc findings remain fully listed');
+const bothStateIndexFailures = auditDriveIndex(regressionRaw.record);
 assert.equal(bothStateIndexFailures.length, 23);
 assert.ok(bothStateIndexFailures.every((finding) => finding.plays.every((play) =>
   play.state_before === 1 && play.state_after === 1)), 'both state boundaries are part of the hard index gate');
@@ -56,25 +84,20 @@ for (const code of ['drive_index_mismatch', 'down_progression_invalid', 'possess
 }
 
 const currentEnvelope = structuredClone(transport);
-currentEnvelope.record = currentRecord;
-currentEnvelope.source.base_commit = baselineReport.current_lp_payload.producer_commit;
-currentEnvelope.source.payload_sha256 = baselineReport.current_lp_payload.raw_payload_sha256;
-currentEnvelope.source.producer_worktree_dirty = false;
-currentEnvelope.source.producer_file_sha256 = baselineReport.current_lp_payload.producer_file_sha256;
 const currentAdapted = adaptLpGamePayload(currentEnvelope);
 assert.equal(currentAdapted.drives.length, 24);
 assert.equal(currentAdapted.sourcePlayCount, 143);
 assert.equal(currentAdapted.footballStateAudit.finding_count, 0);
 assert.equal(currentAdapted.validation.passed, true, 'the current producer payload passes consumer-level structural checks');
 assert.equal(currentAdapted.sharedV1Audit.violations.length, 8,
-  'source-mode, identity, versioning, pregame and valid-full-game gaps remain explicit');
+  'raw record gaps include missing model/rules and pregame metadata, plus identity and the safe false validity flag');
 
-const poisonRulesMatrix = structuredClone(currentRecord);
+const poisonRulesMatrix = structuredClone(record);
 Object.defineProperty(poisonRulesMatrix, 'rules_matrix', { get() { throw new Error('rules_matrix must not be read'); } });
 assert.doesNotThrow(() => auditFootballState(poisonRulesMatrix), 'independent audit must ignore producer rules_matrix');
 
 function negativeFixture(name, mutate, expectedCode, expectedPathPart) {
-  const fixture = structuredClone(currentRecord);
+  const fixture = structuredClone(record);
   mutate(fixture);
   const audit = auditFootballState(fixture);
   assert.equal(audit.passed, false, `${name}: negative fixture must fail the audit`);
@@ -166,17 +189,20 @@ const publisherSource = auditConversionSource({
 });
 assert.equal(publisherSource.passed, true, 'the later producer hash uses publisher conversion result fields');
 const latestCommittedPublisherSource = auditConversionSource({
-  producerFileSha256: { 'scripts/nfl_sequence/measure_kick_outcomes.py': '04a06c9e80ab99676b8ec76144386ad127c928eb534aa8776895a33418600988' },
-  sourceDescription: 'publisher fields field_goal_result, extra_point_result, two_point_conv_result',
+  producerFileSha256: {
+    ...transport.source.producer_file_sha256,
+    [manifest.lp_source.conversion_source_script_file]: manifest.lp_source.conversion_source_script_sha256,
+  },
+  sourceDescription: payload.sources.kick_table,
 });
-assert.equal(latestCommittedPublisherSource.passed, true, 'LP a785 conversion source is independently allowlisted');
+assert.equal(latestCommittedPublisherSource.passed, true, 'final LP conversion source uses pinned publisher result fields');
 assert.equal(auditConversionSource({ producerFileSha256: {}, sourceDescription: 'success' }).passed, false,
   'unknown or unpinned conversion semantics must fail closed');
 const e3Manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e3/observed-2022-2025/lp-manifest.json'), 'utf8'));
 assert.match(e3Manifest.definitions.epa_success, /EPA-positive/,
   'the source definition must remain explicit that E3 success is not a scoring flag');
 
-console.log(`Latest LP f12 audit: ${currentAudit.finding_count} football-state findings; shared-v1 gaps=${currentAdapted.sharedV1Audit.violations.length}`);
-console.log(`Prior LP a785: ${priorAudit.finding_count} missing-state findings; retained 5fc regression: ${pinnedAudit.finding_count} findings including ${pinnedAudit.counts.drive_index_mismatch} drive-index mismatches`);
+console.log(`Final LP 1ca audit: ${currentAudit.finding_count} football-state findings; raw-record v1 gaps=${currentAdapted.sharedV1Audit.violations.length}`);
+console.log(`Prior LP a785: ${priorAudit.finding_count} missing-state findings; archived 5fc regression: ${pinnedAudit.finding_count} findings including ${pinnedAudit.counts.drive_index_mismatch} drive-index mismatches`);
 console.log(`Negative fixtures: ${negatives.length}/${negatives.length} rejected with the expected finding`);
-console.log('Conversion-source semantics: EPA-success negative rejected; publisher-field source accepted; unknown source rejected');
+console.log('Conversion-source semantics: final publisher fields accepted; EPA-success and unknown sources rejected');
