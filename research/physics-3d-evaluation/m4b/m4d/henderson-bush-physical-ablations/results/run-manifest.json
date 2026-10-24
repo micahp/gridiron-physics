@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source_snapshot_hash": "8b92f09be84ae95600d99881887ccf450f205da13e0b60b43b00776360c27d04",
+  "source_snapshot_path": "m4d/henderson-bush-week6-source.json",
+  "source_of_truth_commit": "053093a1ef0da912b19fc3a7566fdac68385e8b5",
+  "source_of_truth_sha256": "204ebd336c5c6d772831921692637f75e52f8b8949cf206cbd1eb04e0edffcde",
+  "implementation_commit": "04894ad8781edc06f1320a5e3a898a7eaa0cbfdf",
+  "implementation_hashes": {
+    "m4d/henderson-bush-physical-ablations/run.mjs": "3a84b795d0fa92f82ffcf97d34d2fd09be3e60cf790b0c008c98582a428e7e9f",
+    "m4d/henderson-bush-week6-source.json": "8b92f09be84ae95600d99881887ccf450f205da13e0b60b43b00776360c27d04",
+    "simulation.mjs": "2b77933885904098d7970fab547fec3e0841ab95a2262edd199f1e01fe927ba4",
+    "interface.mjs": "a5e7d178c21dfea88bc0b38908a88aad667a4655c3335341e60a6a82d35f2454",
+    "physics.mjs": "7cc283971157371cfeb277f17234e0ccb2e65a760c9639525b4cb765b1a28dd1",
+    "m4c-scenarios.mjs": "eaed53c97bcb93f38420b4241182779867fcd2f70f52a369c5c26a75744acd7c",
+    "M4C-PREREG.md": "a24e37c00d178d4898997e51aa4f17daca7ca4902cd1768c1f0129fd8ade023d",
+    "M4C-REPORT.md": "82646ab7563474cec1e5bd3f0fcb5194dc49fdac8b4ba851931d6a849ef7dd84",
+    "m4d/madden27-week6-profiles.json": "59fc2371333e431ce38eb461313807a92ac2031a07f7d2856599e384d6d186bd",
+    "results/m4d-str-contact-diagnosis/sensitivity-report.md": "20a4dfeb449525f03cc5c963922b64927d82cc3021ce57496500c76ead25048a",
+    "results/m4d-str-contact-diagnosis/sensitivity-report.json": "40f344bc66c02debbbc4b34d9095428b6ee14dab8bccd5cf743401ff4a013907",
+    "m4d-str-contact-diagnosis/run.mjs": "5c846d6c02b293e1b1094267e574ab806ad449c37ec1eb299f6c4cc80de81df8",
+    "../../../package.json": "f936315d63e84f7521c966299b269d6f20bd5ed339b598cd3e7c96272d87b7a1",
+    "../../../package-lock.json": "a621d34eeed26f34b866b7303270a8372b8d9e75d5385242e8b99d45c2f48aed"
+  },
+  "runtime": {
+    "node": "v26.7.0",
+    "platform": "linux",
+    "architecture": "x64"
+  },
+  "legacy_report": {
+    "branch": "research/gridiron-tackle-physics-2026-10-23",
+    "commit": "ec18dee259572f4beabda68a70d0d7f58601900f",
+    "reportPath": "docs/research/TACKLE-HOLD-COUNTERFACTUAL-2026-10-23.md",
+    "reportSha256": "83cb85a7a83029ee4daf282e8f61d0acb143f152c8403ff658d0a7271df6ace1",
+    "worldJsSha256": "85d1e24a6b2d4af43030da07bbc74e3b7a9c3f2e7b968c91bd141be48211412b",
+    "playJsSha256": "628e96d8af068b41adba4d40c3d151e2f6d487f4bed04148e3c16f679634f640"
+  },
+  "created_at": "2026-10-24T03:19:09.439Z"
+}
