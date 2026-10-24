@@ -2498,6 +2498,7 @@
     ],
     "conditional_reference_status": "Only pass/run and yards by pass/run are exported conditionally; no observed joint down-distance, field-zone, score-state or drive-ending cross-tabs are available.",
     "first_down_definition": "Generated-only proxy: yards_gained >= yards_to_go or touchdown; LP record has no explicit first_down result field. This is inferred, not observed.",
+    "internal_stat_coherence_limits": "Team totals and aggregate player-role totals are recomputed from play outcomes. possession_seconds is excluded because the E2 record lacks explicit live-play duration and stoppage semantics; no per-player identity attribution is inferred.",
     "observed_missing_coverage": {
       "drive_clock_span_null_rows": 3,
       "yards_gained_pass_run_null_rows": 0
@@ -2565,6 +2566,8 @@
       "score_total": 24,
       "seed": 1,
       "simulation_id": "e2-e1-empirical-v0-seed1",
+      "stat_coherence_failures": 0,
+      "stat_coherence_status": "pass",
       "turnover_counts": {
         "no_turnover": 124,
         "turnover": 4
@@ -2715,6 +2718,393 @@
     },
     "observed_manifest_sha256": "5d27cc3b0c39f327ad657d14bd5dcac3805b659d6c7d4387389991780cbf59ff"
   },
+  "stat_coherence": [
+    {
+      "check_count": 47,
+      "checks": [
+        {
+          "field": "drives",
+          "recomputed_value": 12,
+          "record_value": 12,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "plays",
+          "recomputed_value": 59,
+          "record_value": 59,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "pass_att",
+          "recomputed_value": 27,
+          "record_value": 27,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "pass_comp",
+          "recomputed_value": 16,
+          "record_value": 16,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "pass_yds",
+          "recomputed_value": 189,
+          "record_value": 189,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "rush_att",
+          "recomputed_value": 31,
+          "record_value": 31,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "rush_yds",
+          "recomputed_value": 127,
+          "record_value": 127,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "sack_yds",
+          "recomputed_value": -6,
+          "record_value": -6,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "sacks_taken",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "punts",
+          "recomputed_value": 7,
+          "record_value": 7,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "fg_att",
+          "recomputed_value": 0,
+          "record_value": 0,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "fg_made",
+          "recomputed_value": 0,
+          "record_value": 0,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "touchdowns",
+          "recomputed_value": 2,
+          "record_value": 2,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "turnovers",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "turnovers_on_downs",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "points",
+          "recomputed_value": 14,
+          "record_value": 14,
+          "scope": "team",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "drives",
+          "recomputed_value": 12,
+          "record_value": 12,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "plays",
+          "recomputed_value": 69,
+          "record_value": 69,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "pass_att",
+          "recomputed_value": 33,
+          "record_value": 33,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "pass_comp",
+          "recomputed_value": 20,
+          "record_value": 20,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "pass_yds",
+          "recomputed_value": 168,
+          "record_value": 168,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "rush_att",
+          "recomputed_value": 32,
+          "record_value": 32,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "rush_yds",
+          "recomputed_value": 115,
+          "record_value": 115,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "sack_yds",
+          "recomputed_value": -16,
+          "record_value": -16,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "sacks_taken",
+          "recomputed_value": 3,
+          "record_value": 3,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "punts",
+          "recomputed_value": 7,
+          "record_value": 7,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "fg_att",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "fg_made",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "touchdowns",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "turnovers",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "turnovers_on_downs",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "points",
+          "recomputed_value": 10,
+          "record_value": 10,
+          "scope": "team",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "points",
+          "recomputed_value": 14,
+          "record_value": 14,
+          "scope": "game_record",
+          "status": "pass",
+          "team": "A"
+        },
+        {
+          "field": "points",
+          "recomputed_value": 10,
+          "record_value": 10,
+          "scope": "game_record",
+          "status": "pass",
+          "team": "B"
+        },
+        {
+          "field": "passing.att",
+          "recomputed_value": 60,
+          "record_value": 60,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "passing.comp",
+          "recomputed_value": 36,
+          "record_value": 36,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "passing.yds",
+          "recomputed_value": 357,
+          "record_value": 357,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "passing.td",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "passing.sacked",
+          "recomputed_value": 4,
+          "record_value": 4,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "passing.sack_yds",
+          "recomputed_value": -22,
+          "record_value": -22,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "passing.int",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "receiving.rec",
+          "recomputed_value": 36,
+          "record_value": 36,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "receiving.yds",
+          "recomputed_value": 357,
+          "record_value": 357,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "receiving.td",
+          "recomputed_value": 1,
+          "record_value": 1,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "rushing.att",
+          "recomputed_value": 63,
+          "record_value": 63,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "rushing.yds",
+          "recomputed_value": 242,
+          "record_value": 242,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        },
+        {
+          "field": "rushing.td",
+          "recomputed_value": 2,
+          "record_value": 2,
+          "scope": "player_role_sum",
+          "status": "pass",
+          "team": null
+        }
+      ],
+      "failure_count": 0,
+      "failures": [],
+      "simulation_id": "e2-e1-empirical-v0-seed1",
+      "status": "pass"
+    }
+  ],
   "stop_rule": {
     "acceptance": "After support gates, each comparable primary categorical distribution must have 95% bootstrap TVD upper bound <= 0.10; generated score variance and P90/P99 total-points tails must each be within 0.10 observed standard deviations; all required conditional cells must meet their support floor.",
     "legal_gate": "Every generated payload must declare valid_full_game=true; otherwise stop as not scoreable for promotion.",

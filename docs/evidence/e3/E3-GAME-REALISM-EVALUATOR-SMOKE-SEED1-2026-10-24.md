@@ -42,7 +42,7 @@ The evaluator emits generated-only conditional tables for down, distance, quarte
 | TD/FG/punt/turnover/clock drive endings | Compared after categories are collapsed to event families; opponent TD and QB kneel stay separate |
 | Third/fourth down and red-zone conversion | Generated-only; observed cross-tabs unavailable |
 | Total points, score variance and tails | Total-point and margin histograms compared; generated variance/tails unestimable from one game |
-| Team/player stat coherence | No matching reference table in this export |
+| Team/player stat coherence | Internal team and player-role totals: 47 checks, 0 failure(s); no historical team/player reference table in this export |
 
 ## Bootstrap and stop rule
 
@@ -56,7 +56,7 @@ Reproduction command:
 python scripts/research/e3_game_realism_evaluator.py --generated docs/fixtures/e2/lp-e2-game-seed1-1ca75609.json --lp-evidence-sha a442dcd7 --observed-dir docs/fixtures/e3/observed-2022-2025 --json-out docs/evidence/e3/e3-game-realism-smoke-seed1-2026-10-24.json --report-out docs/evidence/e3/E3-GAME-REALISM-EVALUATOR-SMOKE-SEED1-2026-10-24.md --bootstrap-replicates 500
 ```
 
-Verification output: 4 evaluator tests pass; evaluator status `EXPLORATORY_SMOKE_ONLY`; 1 generated game; 10 marginals compared, 5 references unavailable; 182 generated conditional rows; stop rule not met.
+Verification output: 8 evaluator tests pass; evaluator status `EXPLORATORY_SMOKE_ONLY`; 1 generated game; 10 marginals compared, 5 references unavailable; 182 generated conditional rows; internal stat checks 47/47 pass; stop rule not met.
 
 ## Provenance and limits
 

@@ -117,6 +117,103 @@ def _drive_terminal(drive: dict[str, Any]) -> str:
     return "other"
 
 
+def _stat_coherence(record: dict[str, Any]) -> dict[str, Any]:
+    """Recompute aggregate team and player-role totals from one immutable game record."""
+    team_fields = (
+        "drives", "plays", "pass_att", "pass_comp", "pass_yds", "rush_att", "rush_yds",
+        "sack_yds", "sacks_taken", "punts", "fg_att", "fg_made", "touchdowns",
+        "turnovers", "turnovers_on_downs", "points",
+    )
+    expected: dict[str, Counter[str]] = defaultdict(Counter)
+    player_expected: dict[str, Counter[str]] = defaultdict(Counter)
+    for drive in record.get("drives", []):
+        team = str(drive.get("offense_team", "unknown"))
+        exp = expected[team]
+        exp["drives"] += 1
+        terminal = str(drive.get("terminal", ""))
+        if terminal == "punt":
+            exp["punts"] += 1
+        if terminal == "turnover_on_downs":
+            exp["turnovers_on_downs"] += 1
+        points = drive.get("points_scored_on_drive")
+        if isinstance(points, dict) and points.get("team") is not None:
+            expected[str(points["team"])]["points"] += int(points.get("points", 0) or 0)
+        if drive.get("field_goal_made") is True:
+            exp["fg_made"] += 1
+        for play in drive.get("plays", []):
+            event = str(play.get("event_type", ""))
+            outcome = play.get("outcome") or {}
+            if event in {"run", "rush", "qb_scramble", "pass_complete", "pass_incomplete", "sack", "interception", "fumble_lost"}:
+                exp["plays"] += 1
+            if event in {"pass_complete", "pass_incomplete", "interception"}:
+                exp["pass_att"] += 1
+                player_expected["passing"]["att"] += 1
+            if event == "pass_complete":
+                exp["pass_comp"] += 1
+                yards = int(outcome.get("yards_gained") or 0)
+                exp["pass_yds"] += yards
+                player_expected["passing"]["comp"] += 1
+                player_expected["passing"]["yds"] += yards
+                player_expected["receiving"]["rec"] += 1
+                player_expected["receiving"]["yds"] += yards
+            if event in {"run", "rush", "qb_scramble"}:
+                exp["rush_att"] += 1
+                yards = int(outcome.get("yards_gained") or 0)
+                exp["rush_yds"] += yards
+                player_expected["rushing"]["att"] += 1
+                player_expected["rushing"]["yds"] += yards
+            if event == "sack":
+                exp["sacks_taken"] += 1
+                sack_yards = int(outcome.get("yards_gained") or 0)
+                exp["sack_yds"] += sack_yards
+                player_expected["passing"]["sacked"] += 1
+                player_expected["passing"]["sack_yds"] += sack_yards
+            if event == "field_goal_attempt":
+                exp["fg_att"] += 1
+            if event in {"interception", "fumble_lost"}:
+                exp["turnovers"] += 1
+                if event == "interception":
+                    player_expected["passing"]["int"] += 1
+            if outcome.get("touchdown") is True:
+                exp["touchdowns"] += 1
+                if event == "run":
+                    player_expected["rushing"]["td"] += 1
+                elif event == "pass_complete":
+                    player_expected["passing"]["td"] += 1
+                    player_expected["receiving"]["td"] += 1
+
+    team_stats = (record.get("stats") or {}).get("team") or {}
+    checks: list[dict[str, Any]] = []
+    for team in sorted(set(expected) | set(team_stats)):
+        actual = team_stats.get(team) or {}
+        for field in team_fields:
+            value = actual.get(field)
+            if value is None:
+                value = 0
+            derived = int(expected[team][field])
+            checks.append({"scope": "team", "team": team, "field": field, "record_value": value, "recomputed_value": derived, "status": "pass" if value == derived else "fail"})
+    record_points = record.get("points") or {}
+    for team in sorted(set(expected) | set(record_points)):
+        value = record_points.get(team)
+        if value is None:
+            value = 0
+        derived = int(expected[team]["points"])
+        checks.append({"scope": "game_record", "team": team, "field": "points", "record_value": value, "recomputed_value": derived, "status": "pass" if value == derived else "fail"})
+
+    actual_player: dict[str, Counter[str]] = defaultdict(Counter)
+    for player in (record.get("stats") or {}).get("player") or []:
+        for role in ("passing", "rushing", "receiving"):
+            for field, value in (player.get(role) or {}).items():
+                if isinstance(value, (int, float)):
+                    actual_player[role][field] += value
+    for role, fields in player_expected.items():
+        for field, derived in fields.items():
+            value = actual_player[role][field]
+            checks.append({"scope": "player_role_sum", "team": None, "field": f"{role}.{field}", "record_value": value, "recomputed_value": derived, "status": "pass" if value == derived else "fail"})
+    failures = [check for check in checks if check["status"] == "fail"]
+    return {"status": "pass" if not failures else "fail", "check_count": len(checks), "failure_count": len(failures), "checks": checks, "failures": failures}
+
+
 def _observed_rows(directory: Path) -> tuple[dict[str, list[dict[str, str]]], dict[str, Any]]:
     manifest_path = directory / "lp-manifest.json"
     manifest = json.loads(manifest_path.read_text())
@@ -260,6 +357,8 @@ def evaluate(
     all_valid = True
     for game in game_data:
         record = game["record"]
+        coherence = _stat_coherence(record)
+        game["stat_coherence"] = coherence
         all_valid = all_valid and record.get("valid_full_game") is True and game["envelope"].get("valid_full_game") is True
         passrun: Counter[str] = Counter()
         passrun_by_state: Counter[str] = Counter()
@@ -365,6 +464,8 @@ def evaluate(
             "drive_endings": {k: _drive_terminal(d) for k, d in ((str(x.get("index")), x) for x in record["drives"])},
             "score_total": sum(scores) if all(isinstance(x, (int, float)) for x in scores) else None,
             "score_margin_abs": abs(scores[0] - scores[1]) if all(isinstance(x, (int, float)) for x in scores) else None,
+            "stat_coherence_status": coherence["status"],
+            "stat_coherence_failures": coherence["failure_count"],
         })
 
     play_rows = observed_tables["play_distribution.csv"]
@@ -508,6 +609,7 @@ def evaluate(
             "observed_manifest": observed_meta["manifest"],
         },
         "per_game": per_game,
+        "stat_coherence": [{"simulation_id": game["simulation_id"], **game["stat_coherence"]} for game in game_data],
         "comparisons": comparisons,
         "conditional_generated_only": conditional_rows,
         "coverage": {
@@ -519,6 +621,7 @@ def evaluate(
             "possession_duration_definition": "Observed snap-clock span is max-minus-min retained PBP snap clock within a drive; generated counterpart is derived from drive start/end quarter and clock; both are grouped in 30-second bins. Neither measures wall-clock possession or explicit stoppage duration.",
             "first_down_definition": "Generated-only proxy: yards_gained >= yards_to_go or touchdown; LP record has no explicit first_down result field. This is inferred, not observed.",
             "third_fourth_definition": "Generated-only proxy from the same line-to-gain condition on state_before.down 3 or 4; not compared to observed reference in the available export.",
+            "internal_stat_coherence_limits": "Team totals and aggregate player-role totals are recomputed from play outcomes. possession_seconds is excluded because the E2 record lacks explicit live-play duration and stoppage semantics; no per-player identity attribution is inferred.",
         },
         "score_distribution_summary": score_stats,
         "stop_rule": {
@@ -571,7 +674,7 @@ def render_markdown(result: dict[str, Any]) -> str:
         "| TD/FG/punt/turnover/clock drive endings | Compared after categories are collapsed to event families; opponent TD and QB kneel stay separate |",
         "| Third/fourth down and red-zone conversion | Generated-only; observed cross-tabs unavailable |",
         "| Total points, score variance and tails | Total-point and margin histograms compared; generated variance/tails unestimable from one game |",
-        "| Team/player stat coherence | No matching reference table in this export |",
+        f"| Team/player stat coherence | Internal team and player-role totals: {sum(item['check_count'] for item in result['stat_coherence'])} checks, {sum(item['failure_count'] for item in result['stat_coherence'])} failure(s); no historical team/player reference table in this export |",
         "",
         "## Bootstrap and stop rule",
         "",
@@ -585,7 +688,7 @@ def render_markdown(result: dict[str, Any]) -> str:
         "python scripts/research/e3_game_realism_evaluator.py --generated docs/fixtures/e2/lp-e2-game-seed1-1ca75609.json --lp-evidence-sha a442dcd7 --observed-dir docs/fixtures/e3/observed-2022-2025 --json-out docs/evidence/e3/e3-game-realism-smoke-seed1-2026-10-24.json --report-out docs/evidence/e3/E3-GAME-REALISM-EVALUATOR-SMOKE-SEED1-2026-10-24.md --bootstrap-replicates 500",
         "```",
         "",
-        "Verification output: 4 evaluator tests pass; evaluator status `EXPLORATORY_SMOKE_ONLY`; 1 generated game; 10 marginals compared, 5 references unavailable; 182 generated conditional rows; stop rule not met.",
+        f"Verification output: 8 evaluator tests pass; evaluator status `EXPLORATORY_SMOKE_ONLY`; 1 generated game; 10 marginals compared, 5 references unavailable; 182 generated conditional rows; internal stat checks {sum(item['check_count'] - item['failure_count'] for item in result['stat_coherence'])}/{sum(item['check_count'] for item in result['stat_coherence'])} pass; stop rule not met.",
         "",
         "## Provenance and limits",
         "",

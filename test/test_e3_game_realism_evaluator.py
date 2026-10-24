@@ -1,4 +1,5 @@
 import importlib.util
+import copy
 import json
 import tempfile
 import unittest
@@ -50,6 +51,35 @@ class E3GameRealismEvaluatorTests(unittest.TestCase):
             self.assertEqual(len(metric["bootstrap_95_ci"]), 2)
         self.assertEqual(self.result["score_distribution_summary"]["generated_total_points"] if "generated_total_points" in self.result["score_distribution_summary"] else self.result["score_distribution_summary"]["generated_mean_total_points"], 24.0)
         self.assertFalse(self.result["score_distribution_summary"]["generated_variance_and_tails_estimable"])
+
+    def test_record_team_and_player_role_totals_reconcile(self):
+        coherence = self.result["stat_coherence"][0]
+        self.assertEqual(coherence["status"], "pass")
+        self.assertEqual(coherence["check_count"], 47)
+        self.assertEqual(coherence["failure_count"], 0)
+
+    def test_tampered_team_stat_fails_coherence_audit(self):
+        record = copy.deepcopy(EVALUATOR._load_record(FIXTURE)[1])
+        record["stats"]["team"]["A"]["rush_yds"] += 1
+        coherence = EVALUATOR._stat_coherence(record)
+        self.assertEqual(coherence["status"], "fail")
+        self.assertEqual(coherence["failure_count"], 1)
+        self.assertEqual(coherence["failures"][0]["field"], "rush_yds")
+
+    def test_tampered_player_role_sum_fails_coherence_audit(self):
+        record = copy.deepcopy(EVALUATOR._load_record(FIXTURE)[1])
+        player = next(p for p in record["stats"]["player"] if p.get("passing"))
+        player["passing"]["yds"] += 1
+        coherence = EVALUATOR._stat_coherence(record)
+        self.assertEqual(coherence["status"], "fail")
+        self.assertTrue(any(f["field"] == "passing.yds" for f in coherence["failures"]))
+
+    def test_tampered_game_score_fails_coherence_audit(self):
+        record = copy.deepcopy(EVALUATOR._load_record(FIXTURE)[1])
+        record["points"]["A"] += 1
+        coherence = EVALUATOR._stat_coherence(record)
+        self.assertEqual(coherence["status"], "fail")
+        self.assertTrue(any(f["scope"] == "game_record" and f["team"] == "A" for f in coherence["failures"]))
 
     def test_rejects_non_record_json(self):
         with tempfile.TemporaryDirectory() as directory:
