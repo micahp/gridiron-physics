@@ -387,6 +387,8 @@ def load_development_features(path: Path, by_lp):
             raise ValueError("development feature window is not exactly snap-3 through snap-1")
         if set(item["players_at_each_input_frame"].values()) != {22}:
             raise ValueError("development feature is not all-22 at every pre-snap frame")
+        if not item.get("lp_game_id") or item.get("lp_play_id") is None:
+            continue
         lp_key = (str(item["lp_game_id"]), int(item["lp_play_id"]))
         if lp_key not in by_lp:
             continue
