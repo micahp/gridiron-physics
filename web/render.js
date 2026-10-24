@@ -3,6 +3,7 @@
 // (0..53.33), Y is up. Player bodies are built in metres and scaled.
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
+import { loadRiggedPlayer, buildRiggedPlayer, animateRigged } from './rigged-player.js';
 
 const YD = 0.9144;
 const W = 160 / 3;
@@ -309,6 +310,17 @@ export class Renderer {
     this.flag = flag;
 
     this.players = new Map();
+    this.riggedGltf = null;
+    loadRiggedPlayer().then((gltf) => {
+      this.riggedGltf = gltf;
+      const names = new Set();
+      gltf.scene.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.bones.forEach((b) => names.add(b.name)); });
+      console.log('rigged player loaded:', names.size, 'bones');
+      if (this.roster) this.setRoster(this.roster); // rebuild with the rigged model
+    }).catch((err) => {
+      console.warn('rigged player unavailable, using primitive fallback', err);
+      this.riggedGltf = null;
+    });
     this.kits = this.makeKits();
     this.cam = { mode: 'broadcast', focus: new THREE.Vector3(50, 0, W / 2), pos: new THREE.Vector3(50, 30, -40) };
     this.raycaster = new THREE.Raycaster();
@@ -381,7 +393,9 @@ export class Renderer {
     this.roster = roster;
     roster.forEach((r, i) => {
       const info = this.game.players[r.id];
-      const o = buildPlayer(info, this.kits[r.team]);
+      const o = this.riggedGltf
+        ? buildRiggedPlayer(this.riggedGltf, info, this.kits[r.team])
+        : buildPlayer(info, this.kits[r.team]);
       o.userData.index = i;
       this.players.set(r.id, o);
       this.scene.add(o);
@@ -441,7 +455,8 @@ export class Renderer {
       while (dh > Math.PI) dh -= 2 * Math.PI;
       while (dh < -Math.PI) dh += 2 * Math.PI;
       o.rotation.y = -(h0 + dh * a);
-      animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
+      if (o.userData.rigged) animateRigged(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
+      else animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
     }
     const B = n * 6;
     const bx = L(B), by = L(B + 1), bz = L(B + 2) / YD;
