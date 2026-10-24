@@ -2,6 +2,14 @@
 
 **Read this before editing or launching an experiment.**
 
+## CURRENT E1 INTEGRATION TASK — 2026-10-24
+
+**Read the pinned [E1 drive-record handoff](docs/research/E1-DRIVE-RECORD-HANDOFF-2026-10-24.md) before new viewer work.** LP's `feat/nfl-sequence-e1-2026-10-24` remote head is `945754080086a1f9ae6dac06740041826395b017` (not the malformed full SHA previously pasted in chat). It has 7,200 reported checker-passing, retrospective, authored-start drives; ten pinned fixtures and eight focused transition tests. **Status: scoped E1 research, not full NFL rules compliance, not complete games**.
+
+**hermes2 work now:** E0a only accepts `single_play_statistical_demo` (one play). Add a **separate** `drive_statistical_demo` read-only validator/viewer for E1 multi-play records; retain E0a. E1 events: `run`, `pass_complete`, `pass_incomplete`, `sack`, `interception`, `fumble_lost`, `punt`, `field_goal_attempt`. E1 terminal endings: `touchdown`, `turnover`, `turnover_on_downs`, `punt`, `field_goal_attempt`, `safety`, `halftime`, `end_of_regulation`. `quarter_change=true` is **nonterminal** in Q1/Q3: flip ends, keep the drive, no kickoff. **`end_of_period` is superseded** for active E1 fixtures. Do not infer made/missed field goals, +3/+6/+2 score, restart kickoffs, participants or physics replay. Keep `valid_full_game=false`, retrospective provenance, unknown/nullable fields and the authored direction disclosure.
+
+**Write fixture-based tests and coordinate the E1 schema with LP.** Distinguish the E1 `e1-field-end-v2` authored-direction metadata and top-level `drive`/`start_state` from the earlier E0 one-play envelope. Keep the normal NFL game future gate: **exactly two half-opening kickoffs by opposite teams**; this has **not** been tested or implemented in E1, so don't invent it. Preserve historical Film Room. No merge or production changes.
+
 ## NON-NEGOTIABLE NORMAL-GAME HALF KICKOFFS — 2026-10-24
 
 **In all ordinary simulated NFL games, LP MUST provide exactly two half-opening kickoff events: one in Q1, one in Q3, with DIFFERENT kicking teams.** The Q1 kickoff receiver is the Q3 kicking team and vice versa. This is **not an NFL legal impossibility claim**: a rare different coin-toss choice could legally cause one team to kick twice, but normal game simulation must give that choice **zero probability**, not merely a low weight. The rare scenario requires verified history or explicit user-requested `explicit_exception_scenario`, visibly flagged and never mixed into normal predictions.
