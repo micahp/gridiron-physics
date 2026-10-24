@@ -5,6 +5,9 @@ on:
     paths:
       - 'pipeline/build_week7_six.py'
       - 'pipeline/fetch_prototype_data.py'
+      - 'pipeline/build_matchup_snapshot.py'
+      - 'pipeline/build_playbooks.py'
+      - 'test/week7-core.mjs'
       - 'web/week7*.js'
       - 'week7.html'
       - '.github/workflows/week7-six-assets.yml'
@@ -50,6 +53,11 @@ jobs:
                   assert b['offense']['play_candidates']['pass']['candidates']
           print('PASS 6 games, 12 rosters, 12 playbooks')
           PY
+      - name: Verify six-game simulation logic and JavaScript syntax
+        run: |
+          node --check web/week7-core.js
+          node --check web/week7.js
+          node test/week7-core.mjs
       - name: Commit generated source-pinned assets to feature branch
         run: |
           git config user.name "github-actions[bot]"
