@@ -489,6 +489,70 @@ for (const comparison of solverComparisons) {
   if (classification) contactSplitClassifications[classification] = (contactSplitClassifications[classification] ?? 0) + 1;
 }
 
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function metricValue(row, metric) {
+  if (metric === 'minimum_surface_gap_m') return row.focus_pair_minimum_surface_gap_m;
+  if (metric === 'contact_opportunity_samples') return row.contact_opportunity_count;
+  if (metric === 'actual_contact_samples') return row.actual_contact_count;
+  if (metric === 'actual_contact_events') return row.actual_contact_event_count;
+  if (metric === 'first_contact_seconds') return row.first_contact_seconds;
+  if (metric === 'target_grip_load_n') return row.requested_grip_load_N.wrapByHolderN[ROLES[row.scenario_id].tacklerId] ?? null;
+  if (metric === 'focus_pair_peak_balance_torque_nm') return Math.max(0, ...ROLES[row.scenario_id].focusPair
+    .map((id) => row.balance_torque_requests_Nm[id] ?? 0));
+  if (metric === 'configured_drive_force_n') return Math.max(0, ...Object.values(row.controller_forces_N));
+  if (metric === 'penetration_max_m') return row.penetration_max_m;
+  if (metric === 'penetration_p95_m') return row.penetration_p95_m;
+  if (metric === 'penetration_duration_weighted_mean_m') return row.penetration_duration_weighted_mean_m;
+  if (metric === 'post_contact_carrier_travel_m') return row.post_contact_carrier_travel_m;
+  return null;
+}
+
+const pairedMetricNames = ['minimum_surface_gap_m', 'contact_opportunity_samples', 'actual_contact_samples',
+  'actual_contact_events', 'first_contact_seconds', 'target_grip_load_n', 'focus_pair_peak_balance_torque_nm',
+  'configured_drive_force_n', 'penetration_max_m', 'penetration_p95_m',
+  'penetration_duration_weighted_mean_m', 'post_contact_carrier_travel_m'];
+const rowsByPairingKey = new Map(reportRows.map((row) => [
+  `${row.scenario_id}::${row.conditions.config_id}::${row.solver_or_engine}::${row.seed_or_fixture_label.seed}`, row]));
+const pairedGroups = new Map();
+const profileAnchoredPhases = new Set(['physical-wrap-capacity', 'uncalibrated-tkl-capacity-hypothesis',
+  'physical-balance-authority', 'uncalibrated-btk-breakaway-force-hypothesis', 'str-continuity-after-profile']);
+for (const treatment of reportRows) {
+  const configId = treatment.conditions.config_id;
+  if (configId === 'm4c-neutral' || configId === 'old-barkley-baun-lost-contact') continue;
+  const anchorConfigId = profileAnchoredPhases.has(treatment.conditions.phase) ? 'madden-pair-combined' : 'm4c-neutral';
+  const seed = treatment.seed_or_fixture_label.seed;
+  const baseline = rowsByPairingKey.get(`${treatment.scenario_id}::${anchorConfigId}::${treatment.solver_or_engine}::${seed}`);
+  if (!baseline) continue;
+  const deltas = Object.fromEntries(pairedMetricNames.map((metric) => {
+    const baselineValue = metricValue(baseline, metric), treatmentValue = metricValue(treatment, metric);
+    return [metric, Number.isFinite(baselineValue) && Number.isFinite(treatmentValue) ? treatmentValue - baselineValue : null];
+  }));
+  const key = `${treatment.scenario_id}::${configId}::${treatment.solver_or_engine}`;
+  const group = pairedGroups.get(key) ?? { scenario_id: treatment.scenario_id, config_id: configId,
+    phase: treatment.conditions.phase, solver_or_engine: treatment.solver_or_engine, baseline_config_id: anchorConfigId,
+    paired_seed_count: 0, seed_deltas: [] };
+  group.paired_seed_count++;
+  group.seed_deltas.push({ seed, baseline_run_id: baseline.run_id, treatment_run_id: treatment.run_id, deltas,
+    outcome_gates: { baseline: baseline.m4c_outcome_gate.passed, treatment: treatment.m4c_outcome_gate.passed },
+    numerical_gates: { baseline_pass: Object.values(baseline.numeric_gates).filter((value) => typeof value === 'boolean').every(Boolean),
+      treatment_pass: Object.values(treatment.numeric_gates).filter((value) => typeof value === 'boolean').every(Boolean) } });
+  pairedGroups.set(key, group);
+}
+const withinEnginePairedDifferences = [...pairedGroups.values()].map((group) => {
+  const distributions = Object.fromEntries(pairedMetricNames.map((metric) => {
+    const values = group.seed_deltas.map((sample) => sample.deltas[metric]).filter(Number.isFinite);
+    return [metric, { sample_count: values.length, minimum: values.length ? Math.min(...values) : null,
+      median: median(values), maximum: values.length ? Math.max(...values) : null }];
+  }));
+  return { ...group, distributions };
+});
+
 const codeFiles = [
   path.join(HERE, 'run.mjs'), PROFILE_PATH, path.join(HERE, '../../simulation.mjs'), path.join(HERE, '../../interface.mjs'),
   path.join(HERE, '../../physics.mjs'), path.join(HERE, '../../m4c-scenarios.mjs'), path.join(HERE, '../../M4C-PREREG.md'),
@@ -550,6 +614,7 @@ const report = {
       'gang-staggered-three': 'carrier meets M4c sustained-fall condition' } },
   solver_comparisons: solverComparisons,
   contact_split_classifications: contactSplitClassifications,
+  within_engine_paired_differences: withinEnginePairedDifferences,
   sweep_order: ['neutral baseline', 'independent mass-only effects', 'independent STR-only effects',
     'mass and STR repeat runs after isolated effects', 'combined H-B profile substitution',
     'STR continuity around 80–81 at fixed H-B masses', 'grip, balance, TKL, and BTK physical hypotheses'],
@@ -588,6 +653,10 @@ function markdownReport(data) {
     '## Key paired runs', '',
     '| Scenario | Input | Engine | Min gap (m) | Opportunity samples | Contact samples / events | First contact (s) | Grip load (N) | Takedown | Post-contact travel (m / 1 s) | p95 (m) | weighted mean (m) | Status |',
     '|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---|',
+    '## Paired responses within each solver', '',
+    'Every treatment is paired to its same-engine, same-seed anchor: mass/STR substitutions use `m4c-neutral`; capacity, balance, TKL, BTK, and STR-continuity hypotheses use `madden-pair-combined`. The JSON includes per-seed paired values and min/median/max distributions for separation, opportunities, contact samples/events, contact time, grip load, torque, drive force, penetration, and post-contact travel. Only two deterministic fixture seeds are used; these ranges are not confidence intervals.',
+    '| Scenario | Input | Engine | Anchor | Δ min gap (m) | Δ opportunities | Δ contact samples | Δ grip load (N) | Δ peak torque (N·m) | Δ p95 (m) | Δ weighted mean (m) | Outcome gate pass count |',
+    '|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|',
     '## STR continuity around 80–81', '',
     'At the frozen H-B masses (92/106 kg), each actor is varied independently while the other retains its source STR. The full 79–82 sweep, including 0.1 increments from 80 through 81, is reported below for both solvers. Torque is the maximum requested balance-controller torque over the full trace; every step-level request remains in its gzip trace.',
     '| Actor | STR | Engine | Min gap (m) | First contact (s) | Contact samples | Peak torque request (N·m) | Status |',
@@ -623,6 +692,26 @@ function markdownReport(data) {
       row.physical_takedown == null ? 'n/a' : row.physical_takedown ? 'yes' : 'no',
       row.post_contact_carrier_travel_m == null ? '—' : row.post_contact_carrier_travel_m.toFixed(4),
       row.penetration_p95_m.toFixed(4), row.penetration_duration_weighted_mean_m.toFixed(4), row.result_status];
+    lines.splice(lines.indexOf('## Paired responses within each solver'), 0, '|' + values.join('|') + '|');
+  }
+  const pairedKeyIds = new Set(['mass-henderson-only', 'mass-bush-only', 'mass-both-after-individual',
+    'str-henderson-only', 'str-bush-only', 'str-both-after-individual', 'madden-pair-combined',
+    'wrap-capacity-0.50x', 'wrap-capacity-1.00x', 'wrap-capacity-1.50x', 'tkl-capacity-rating-50-control',
+    'tkl-capacity-hypothesis', 'balance-scale-0.00', 'balance-scale-0.80', 'balance-scale-1.20',
+    'btk-drive-rating-50', 'btk-drive-rating-81', 'str-continuity-henderson-80.00',
+    'str-continuity-henderson-80.50', 'str-continuity-henderson-81.00', 'str-continuity-bush-80.00',
+    'str-continuity-bush-80.50', 'str-continuity-bush-81.00']);
+  const pairedRows = data.within_engine_paired_differences.filter((row) => pairedKeyIds.has(row.config_id));
+  const deltaText = (distribution, precision = 4) => distribution.sample_count
+    ? `${distribution.median.toFixed(precision)} [${distribution.minimum.toFixed(precision)}, ${distribution.maximum.toFixed(precision)}]` : 'n/a';
+  for (const row of [...pairedRows].reverse()) {
+    const passBase = row.seed_deltas.filter((sample) => sample.outcome_gates.baseline === true).length;
+    const passTreatment = row.seed_deltas.filter((sample) => sample.outcome_gates.treatment === true).length;
+    const values = [row.scenario_id, row.config_id, row.solver_or_engine, row.baseline_config_id,
+      deltaText(row.distributions.minimum_surface_gap_m), deltaText(row.distributions.contact_opportunity_samples, 1),
+      deltaText(row.distributions.actual_contact_samples, 1), deltaText(row.distributions.target_grip_load_n, 1),
+      deltaText(row.distributions.focus_pair_peak_balance_torque_nm, 2), deltaText(row.distributions.penetration_p95_m),
+      deltaText(row.distributions.penetration_duration_weighted_mean_m), `${passBase}/${row.paired_seed_count} → ${passTreatment}/${row.paired_seed_count}`];
     lines.splice(lines.indexOf('## STR continuity around 80–81'), 0, '|' + values.join('|') + '|');
   }
   const continuityRows = data.runs.filter((row) => row.conditions.config_id.startsWith('str-continuity-')
@@ -661,7 +750,8 @@ const csvFields = ['schema_version', 'track', 'branch', 'code_commit', 'source_s
   'scenario_id', 'solver_or_engine', 'dt_seconds', 'run_id', 'seed_or_fixture_label', 'conditions', 'contact_opportunity_count',
   'actual_contact_count', 'actual_contact_event_count', 'first_contact_seconds', 'first_contact_opportunity_seconds',
   'focus_pair_minimum_surface_gap_m', 'tackle_selected', 'physical_takedown', 'grip_established', 'grip_released',
-  'ball_controlled', 'fumble', 'post_contact_carrier_travel_m', 'balance_state', 'controller_forces_N',
+  'ball_controlled', 'fumble', 'm4c_outcome_gate', 'post_contact_carrier_travel_m', 'post_contact_carrier_travel_window',
+  'balance_state', 'controller_forces_N', 'balance_torque_requests_Nm',
   'requested_grip_load_N', 'contact_impulse_Ns', 'impulse_measurement_source', 'penetration_first_step_max_m',
   'penetration_threshold_counts', 'penetration_max_m', 'penetration_p95_m',
   'penetration_duration_weighted_mean_m', 'numeric_gates', 'result_status', 'failure_reasons', 'trace_path'];
