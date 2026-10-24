@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { MATCHUPS } from '../web/week7-core.js';
 
@@ -7,6 +8,7 @@ import { MATCHUPS } from '../web/week7-core.js';
 // or `npm run test:ui`. Requires the generated 12-team assets (data/playbooks,
 // data/teams/week7-six-2026-10-24.json, data/special_teams/2025-league.json).
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:8080';
+const roster = JSON.parse(readFileSync(new URL('../data/teams/week7-six-2026-10-24.json', import.meta.url)));
 const browser=await chromium.launch({
   headless:true,
   args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist'],
@@ -34,6 +36,16 @@ try{
     await page.locator('#timeline button.pl:not(.admin)').first().click();
     const event=await page.locator('#replay-type').innerText();
     assert.match(event,/22-player 3D/,game.id+' physical animation unavailable: '+await page.locator('#play-detail').innerText());
+    const playText=await page.locator('#play-detail').innerText();
+    const timelineText=await page.locator('#timeline .pl.on').innerText();
+    const activeNames=[...roster.teams[game.home].roster,...roster.teams[game.away].roster]
+      .filter(p=>p.status==='ACT'&&p.availability==='available').map(p=>p.name);
+    assert.ok(activeNames.some(name=>playText.includes(name)),
+      game.id+' selected 3D play has no named 2026 participant');
+    assert.ok(activeNames.some(name=>timelineText.includes(name)),
+      game.id+' timeline row lacks matching player attribution');
+    assert.match(playText,/Illustrative 2026 roster assignment/,
+      game.id+' missing historical-credit disclaimer');
     rendered.push({game:game.id,events:n,first:event});
   }
   await page.locator('#again').click();
