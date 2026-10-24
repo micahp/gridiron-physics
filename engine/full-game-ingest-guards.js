@@ -38,8 +38,9 @@ export function validateDriveIndices(record) {
   return { drives_checked: record.drives.length, plays_checked: checkedPlays };
 }
 
-function conversionPoints(attempt, path) {
-  const kind = attempt?.kind;
+function conversionPoints(attempt, path, kindOverride) {
+  const rawKind = kindOverride ?? attempt?.kind;
+  const kind = rawKind === 'two_point' ? 'two_point_try' : rawKind;
   const definition = CONVERSION_RESULT[kind];
   if (!definition) throw new TypeError(`${path}.kind must be extra_point or two_point_try`);
 
@@ -66,13 +67,16 @@ export function validateConversionSources(record) {
 
   for (const drive of record.drives) {
     const tryRecord = drive?.points_scored_on_drive?.try;
+    if (drive?.terminal === 'touchdown' && tryRecord == null) {
+      throw new TypeError(`drive ${drive.index}.points_scored_on_drive.try must contain the producer conversion result`);
+    }
     if (tryRecord != null) {
       validated.push(conversionPoints(tryRecord, `drive ${drive.index}.points_scored_on_drive.try`));
     }
 
     for (const play of drive.plays ?? []) {
       if (play?.event_type === 'extra_point' || play?.event_type === 'two_point_try') {
-        validated.push(conversionPoints(play.outcome, `play ${play.id ?? play.sequence ?? '(unknown)'}.outcome`));
+        validated.push(conversionPoints(play.outcome, `play ${play.id ?? play.sequence ?? '(unknown)'}.outcome`, play.event_type));
       }
     }
   }

@@ -1,5 +1,3 @@
-const RECEIVING_20_YARDLINE_100 = 80;
-
 function requireYardline(value, fieldName) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 100) {
     throw new TypeError(`${fieldName} must be a finite number from 0 through 100`);
