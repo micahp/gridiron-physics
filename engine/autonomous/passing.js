@@ -187,6 +187,18 @@ export function simulatePassPlay(options = {}) {
     return { x: dx / d * speed, y: dy / d * speed };
   };
   const lead = (p, q, scale = 0.32) => ({ x: q.p.x + q.v.x * scale, y: q.p.y + q.v.y * scale });
+  // Spec 10.1: pursue an estimated interception region, not the carrier's current position.
+  // The pursuer leads the carrier by the time it needs to reach that point at its own speed.
+  const interceptPoint = (p, q) => {
+    const speed = clamp(7.0 + ((p.R.SPD ?? 70) - 70) * 0.06, 6.5, 9.5);
+    let t = 0.4;
+    let point = { x: q.p.x, y: q.p.y };
+    for (let k = 0; k < 4; k++) {
+      point = { x: q.p.x + q.v.x * t, y: q.p.y + q.v.y * t };
+      t = Math.hypot(point.x - p.p.x, point.y - p.p.y) / speed;
+    }
+    return point;
+  };
 
   // ------------------------------------------------------- block bookkeeping
   const blockRows = [];
@@ -729,7 +741,7 @@ export function simulatePassPlay(options = {}) {
       }
     }
     const leadScale = clamp(0.22 + (p.R.PUR ?? p.R.AWR ?? 60) * 0.0012, 0.24, 0.36);
-    p.dv = seek(p, lead(p, carrier, leadScale), 0.98, 20);
+    p.dv = seek(p, interceptPoint(p, carrier), 0.98, 20);
     p.face = Math.atan2(carrier.p.y - p.p.y, carrier.p.x - p.p.x);
     setIntent(p, 'pursue the returner', 'take the interception angle from the live carrier position');
   }
@@ -871,7 +883,7 @@ export function simulatePassPlay(options = {}) {
         return;
       }
       const leadScale = clamp(0.22 + (p.R.PUR ?? 60) * 0.0012, 0.24, 0.36);
-      p.dv = seek(p, lead(p, carrier, leadScale), 0.98, 20);
+      p.dv = seek(p, interceptPoint(p, carrier), 0.98, 20);
       p.face = Math.atan2(carrier.p.y - p.p.y, carrier.p.x - p.p.x);
       setIntent(p, 'pursue the carrier', 'take the interception angle from the live carrier position');
       return;
