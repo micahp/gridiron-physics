@@ -22,6 +22,15 @@ for (const cfg of configs) {
   assert.ok(contests <= 1, `seed ${cfg.seed}: ${contests} contests in one pass`);
   if (contests) contested++;
 
+  // Target priority: when the intended receiver is in reach at the contest, he is the one who contests it.
+  const intended = run.events.find((e) => e.type === 'throw')?.target_id;
+  for (const e of run.events) {
+    if (e.type === 'catch_contest' && e.target_in_reach) {
+      assert.equal(e.player_id, intended, `seed ${cfg.seed}: ${e.player_id} contested a ball thrown to ${intended}`);
+      assert.equal(e.on_target, true);
+    }
+  }
+
   // A defender can only take the ball from inside the catch reach (planar yards, including player radius).
   for (const e of run.events) {
     if ((e.type === 'catch' || e.type === 'interception') && String(e.player_id).startsWith('D.')) {

@@ -91,8 +91,8 @@ assert.equal(interception.possession_team, 'D');
 
 assert.ok(complete.events.some((e) => e.type === 'catch_contest'), 'the contested catch is resolved and logged');
 
-const low = simulatePassPlay(named({ seed: 'named-3', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 25, CIT: 25 }, 'O.WR2': { CTH: 25, CIT: 25 }, 'O.WR3': { CTH: 25, CIT: 25 } } }));
-const high = simulatePassPlay(named({ seed: 'named-3', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 99, CIT: 99 }, 'O.WR2': { CTH: 99, CIT: 99 }, 'O.WR3': { CTH: 99, CIT: 99 } } }));
+const low = simulatePassPlay(named({ seed: 'named-214', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 25, CIT: 25 }, 'O.WR2': { CTH: 25, CIT: 25 }, 'O.WR3': { CTH: 25, CIT: 25 } } }));
+const high = simulatePassPlay(named({ seed: 'named-214', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 99, CIT: 99 }, 'O.WR2': { CTH: 99, CIT: 99 }, 'O.WR3': { CTH: 99, CIT: 99 } } }));
 assert.equal(low.terminal.reason, 'incomplete', 'low catch ratings drop the pass');
 assert.notEqual(high.terminal.reason, 'incomplete', 'high catch ratings complete the same pass');
 
