@@ -2,6 +2,67 @@
 
 **Status: ACTIVE HIGHEST-PRIORITY WORK ORDER for both Gridiron Physics and Legendary Picks NFL simulation agents.** Supersedes older *next-task priorities* in the football-first tracking directive, 2026-10-24 tracking review, M1–M4d reports and roadmap. All earlier measurements, license cautions, branch boundaries and no-production/no-merge safety rules still apply. This document is a delivery instruction, **not evidence that this end-to-end integration has already shipped**.
 
+## 2026-10-25 roadmap amendment: fastest full game + causal single-play MVP + player DNA
+
+**Status:** This document remains the authority for the shortest path to an inspectable, *legally coherent* NFL game. The Stage One [autonomous physics spec](AUTONOMOUS-STAGE-ONE-SPEC-v1.md) now includes an explicit Phase 1 MVP and quarterback-perception amendment. The following phases are **product delivery and research gates**, not assertions that unmerged prototypes or future player-specific models already work.
+
+### Two parallel tracks, one eventual architecture
+
+| Track | Immediate outcome | Source of the resulting yards / score | Blocking dependencies |
+| --- | --- | --- | --- |
+| **A. Ship a playable complete game first (E0 → E1 → E2)** | LP generates one legal hypothetical play → drive → full game; GP renders game/drive/play | **LP statistical sequence engine and rules reducer**, with immutable playback | Contract v1 adapter, legal state, stats reconciliation, usable browser replay. **Do not wait for new physics or NFL player-level tendency fitting.** |
+| **B. Finish Stage One physical single-play MVP (1A → 1D)** | Real autonomous 22-player inside zone and slant-flat snap with honest outcomes | **GP player decisions, possession, ball flight and contact** | Correct perceptions, reads, catches, sacks/checkdowns/throwaways, blocks, pursuit, spots, deterministic tests; no predetermined gain. |
+| **Future v2/hybrid** | Replace selected LP-sampled outcomes with validated GP physical outcomes, one supported family at a time | Explicitly named **GP physical result** or **LP fallback** per play, then LP's authoritative reducer | New versioned authority contract, reliability and measured conditional-realism gains; cannot be silently routed through v1. |
+
+These modes are independently useful. Track A is the **user-visible full-game MVP** and the near-term critical path. Track B is the **football-causality MVP**. Neither a perfect-looking replay nor aggregate NFL-like percentages justify labeling one as the other. E3 compares the models and gates each future promotion.
+
+### Phase 1: prove the supported autonomous snap, not all NFL football
+
+- Complete Stage One acceptance on the existing 11v11 **inside-zone left/right** and **slant-flat against Cover 1 / Cover 3** families, in either field direction. Reuse physics/movement, ball flight and renderer. Implement no hidden outcome correction.
+- A called play establishes formation, routes and QB read order; it does **not** prescribe a completion or who receives the throw. QB-selected *throw target* and actual legal catcher/defender can differ. Catch, drop, breakup/tip, interception, ball-ground incompletion and catch out of bounds arise from real ball trajectory, perception, reach, timing and possession. No "make the target catch" bias.
+- **Lightweight QB vision must work before final 1C promotion:** independent head/gaze direction, field-of-view check, approximate obstruction by bodies/eye height, delayed observations, last-seen memory with uncertainty, and live/reasonably perceived pass-rush cues. The QB may anticipate a route from the call and memory, but cannot use exact positions of opponents outside its field of view. A shared physics world still knows truth for collision and officiating. Full rendered-camera computer vision, eye animation and sophisticated coverage recognition are deferred.
+- Release time must emerge from **read development + decision latency + protection/pressure + QB tendency**, not from a per-QB target clock. Prove physical sack, actual RB checkdown and legitimate throwaway using deterministic fixtures. Ensure legal ball-holder/whistle/forward-progress consistency, including non-scoring interception returns.
+- Keep **generic but differentiated** physical/rating archetypes for the MVP. Reserve a versioned behavior-profile input now, but do not require an ingestion pipeline or fully authenticated NFL rosters before the single-play MVP. Label generic-team demos honestly.
+- Instrument each transition: designed read → observation/belief → selected target → ball flight → catch opportunity/outcome → pursuit/contact → official spot. Publish failures and mechanics by scenario, not just completion or touchdown percentage; rerun the frozen Stage One batch and Section 21 report. Evaluate untouched seeds only after tuning and failure fixes are frozen.
+
+**As-of-2026-10-25 research snapshot, not accepted MVP:** Stage One's documented harness on \`feat/autonomous-stage-one\` at \`c601dac\` does not incorporate the unmerged QB experiment. The separate \`exp/qb-pocket-2026-10-25\` research branch reported 53.2% completions, approximately 0.1% interceptions, 0% sacks and checkdowns, and 13.8 yd median YAC after a pursuit change on a 1,200-dropback *tuning* cohort. Its targeted catch, return and pursuit fixes are promising but do not meet Stage One final acceptance. PR #25 is a separate correctness track. Do not infer predictive validity or current mainline behavior from these numbers.
+
+### Phase 2: player DNA grounded in observed NFL data
+
+**Design the profile contract during Phase 1; fit real identities and tendencies here.** Existing 0–99 ratings / physical parameters express *capacity* (speed, acceleration, blocking, catching, throwing), not a player's empirical choices. Add a separate, versioned, optional **behavior profile** with source, season window, sample size, confidence and missing-data fallback. Use stable player IDs and pregame-eligible snapshots shared with LP; no future-season information in a past matchup.
+
+| Role | Candidate measured behaviors / sources to audit | Mechanism to inform, **never force** |
+| --- | --- | --- |
+| QB | Time-to-throw distribution, depth of target, scramble/throwaway/sack/pressure response, aggressiveness, CPOE and read tendencies **where observable** | Scan and recognition latency, risk preference, throw trajectory and pocket action |
+| WR / TE | Targets/route where available, depth, separation, catch/drop rates, YAC and release speed | Route execution, ball adjustment, secure catch and after-catch action |
+| RB | Time to line, yards over expected, yards after contact, catch/protection usage | Lane patience, cutting, protection release and checkdown |
+| OL / DL / EDGE | Pressure or win rates, rush time, block engagements, individual physical traits **if legitimately sourced** | Pass sets, penetration and pocket-collapse timing |
+| LB / DB | Coverage alignment, reaction, route contests, pursuit/tackling and missed-tackle rates **if available** | Anticipation, assigned coverage, angle and tackle decisions |
+
+Start with QB data because public aggregate *time to throw*, air yards and other Next Gen Stats-style summaries are more accessible; audit free usage and licensing rather than presuming every OL/coverage/route metric is available. Sources may include public play-by-play, nflverse/nflfastR, official publicly published Next Gen Stats summaries and rights-cleared tracking. Ordinary play-by-play sometimes identifies the thrown-to receiver but **does not reliably label the designed first read, gaze, all open receivers or complete defender visibility**. Never manufacture those labels.
+
+**Fitting rule:** NFL behavior statistics are *targets for conditional distributions*, not per-play commands. A QB who averaged 2.6 s to throw must not be programmed to release at 2.6 s. Control for concept, protection, pressure, opponent, field position and sample size; shrink thin samples toward positional or team/role priors. Validate held-out conditional outcomes and demonstrate meaningful matched-seed player differences. No player is "authentic" merely because an NFL name or team label appears in the UI.
+
+### Phase 3: advanced football intelligence and broader playbook
+
+- Evolve coarse QB perception into coverage disguise, gaze transitions, occlusion through moving pockets, confidence-weighted observations, pocket movement and memory. Extend realistic information limits to defenders and receivers, including communication and assignment uncertainty.
+- Expand offensive/defensive concepts, personnel packages, substitution/fatigue, player-specific traits, pass protection and full contact mechanics in measured increments. Madden's historical QB Vision and newer QB-DNA/Field-Vision concepts are **design references**, not access to EA's source code and not evidence our system is calibrated.
+- Require individual improvements to pass targeted deterministic fixtures, held-out movement/outcome cohorts, runtime limits and unchanged baselines. Avoid a wholesale physics/AI rewrite to chase cosmetic gains.
+
+### Phase 4: selectively physically caused drives and games, with LP as rules authority
+
+- Start with one trusted physical-result family; translate GP's snap/whistle events into a **new versioned** result contract and apply it to LP's down/distance, possession, score, player/team-stat and game-clock reducer. No parallel undocumented referee.
+- Demonstrate a legal physical/hybrid **drive** first, then whole-game combinations with named LP statistical fallbacks for unsupported calls, special teams and officiating.
+- Evaluate joint and conditional statistics (including individual release times, targets, pressure, YAC, sacks and turnovers) against independently held-out NFL data and against the cheaper statistical-only game baseline. Promote only when the physical method adds demonstrable coherence, fidelity, player/gameplay value or predictive improvement at acceptable reliability/cost.
+- Keep prospective results, historical reconstructions and statistical generated games clearly labeled, and never tune on reserved weeks 6–9 or a previously untouched evaluation cohort after looking at it.
+
+### Milestone and data-interface decision gates
+
+1. **E0/E1/E2 = deliver complete, legal statistical game playback now.** No dependency on QB visibility, real player DNA or autonomous special teams.
+2. **Stage One = pass §16 and §21 on the limited causal playbook.** Perception, legal catch variants, pocket scenarios, ball consistency and post-catch pursuit are required; arbitrary NFL-wide outcome percentages alone are insufficient.
+3. **Phase 2 = prove player profiles generalize.** Record exact source and observation period, role coverage, sample size, fallback and held-out lift or qualitative player differentiation.
+4. **Phase 3/4 = show the additional complexity pays for itself** against the same seed-eligibility set and unchanged statistical baseline; preserve versioned action/result authority.
+
 ## Current gate update — 2026-10-24: viewer repin passed; OOB candidate rejected
 
 **Verified heads:** LP E1 = `641e1b2ea7882389778a14e6c52b58583f7e9917`; Gridiron E1 viewer = [`f2a00a0973e901c7590220cd569dde80cdf6245c`](https://github.com/micahp/gridiron-physics/commit/f2a00a0973e901c7590220cd569dde80cdf6245c); movement/OOB evaluation = [`1ea4ee63a98ecc379b36bc22e09acff3762ba320`](https://github.com/micahp/gridiron-physics/commit/1ea4ee63a98ecc379b36bc22e09acff3762ba320). **The Gridiron research viewer has already repinned all ten LP E1 fixtures to `641e1b2e`**, added `clock_clamped_plays` summary verification, and reports **25/25 Node tests, E0a regression pass and 10 headless DOM renders**. This is an accepted research transport/viewer checkpoint, NOT `valid_full_game`, football distribution realism or a player-specific 3D replay. Earlier parts of the plan saying Gridiron is still pinned only to `945754` are **superseded**.
