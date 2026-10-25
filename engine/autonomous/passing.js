@@ -884,8 +884,10 @@ export function simulatePassPlay(options = {}) {
       const f = (W.ball.x / YD - cfg.los) * dir;
       if (!maxForward || f > maxForward.f) maxForward = { f, x: W.ball.x, y: W.ball.y };
       const x = W.ball.x / YD;
-      if ((dir > 0 && x >= 100) || (dir < 0 && x <= 0)) {
-        const goalX = (dir > 0 ? 100 : 0) * YD;
+      // A returner scores at the goal the returner's team attacks, which is the opposite end after an interception.
+      const attack = carrier.team === 'O' ? dir : -dir;
+      if ((attack > 0 && x >= 100) || (attack < 0 && x <= 0)) {
+        const goalX = (attack > 0 ? 100 : 0) * YD;
         W.event('touchdown', { carrier_id: carrier.id, spot: { x: goalX / YD, y: W.ball.y / YD } });
         finish('touchdown', { x: goalX, y: W.ball.y });
         return;
@@ -898,7 +900,7 @@ export function simulatePassPlay(options = {}) {
         return;
       }
       lastInBounds = { x: W.ball.x, y: W.ball.y };
-      if ((dir > 0 && x < 0) || (dir < 0 && x > 100)) finish('safety', { x: W.ball.x, y: W.ball.y });
+      if ((attack > 0 && x < 0) || (attack < 0 && x > 100)) finish('safety', { x: W.ball.x, y: W.ball.y });
     }
   }
 
