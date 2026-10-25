@@ -152,11 +152,11 @@ export function auditModule(core, league, book) {
         if(p.score && p.score[t]!==running[t])
           tag('score_continuity',`${p.id} pre-play score ${t}=${p.score[t]} but carried ${running[t]}`);
       }
-      const pts=(p.touchdown?6:0)+(p.try?.startsWith('XP good')?1:0)+(p.type==='field_goal'&&p.good?3:0);
+      const xp=p.try?.startsWith('XP good')?1:0;
       const scorer=p.touchdown_return?p.recovery_team:p.offense;
-      if(p.touchdown_return) running[scorer]+=6;
+      const pts=p.touchdown_return?0:(p.touchdown?6:0)+(p.type==='field_goal'&&p.good?3:0)+xp;
+      if(p.touchdown_return) running[scorer]+=6+xp;
       if(pts) running[p.offense]+=pts;
-      if(p.touchdown_return&&p.try?.startsWith('XP good')) running[scorer]+=1;
       if(p.possession_resolution==='safety') running[p.offense===m.home?m.away:m.home]+=2;
       // The score after the play.
       if(p.scoreAfter){
@@ -289,4 +289,16 @@ export function auditKickoffSampler(core, league, book) {
     }
   }
   assert.ok(tds>0,'forced touchdown returns are generated');
+
+  // A return touchdown with a made PAT must credit six plus one to the recovering
+  // team only. The punting team keeps nothing, and the full audit must agree.
+  const patTable={...tdTable, extra_points:{good:1}};
+  let patReturns=0;
+  for(const m of core.MATCHUPS.slice(0,2)) for(const seed of ['1042','1','2']){
+    const g=core.generateGame(m,{[m.home]:book(m.home),[m.away]:book(m.away)},seed,patTable);
+    patReturns+=g.plays.filter(p=>p.touchdown_return&&p.try?.startsWith('XP good')).length;
+  }
+  assert.ok(patReturns>0,'forced touchdown returns with a made PAT are generated');
+  const patViolations=auditModule(core,patTable,book).violations.filter(v=>v.check==='score_continuity');
+  assert.deepEqual(patViolations,[],'return touchdown with PAT must satisfy score continuity');
 }

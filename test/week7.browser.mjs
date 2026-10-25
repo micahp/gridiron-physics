@@ -9,6 +9,11 @@ import { MATCHUPS } from '../web/week7-core.js';
 // data/teams/week7-six-2026-10-24.json, data/special_teams/2025-league.json).
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:8080';
 const roster = JSON.parse(readFileSync(new URL('../data/teams/week7-six-2026-10-24.json', import.meta.url)));
+// Seeds verified to complete with no refusal. Re-survey if the generator changes.
+const PLAYABLE_SEEDS = {
+  '2026_07_CIN_BAL':'1042', '2026_07_MIA_NYJ':'1', '2026_07_SF_ATL':'1042',
+  '2026_07_TB_CAR':'1042', '2026_07_GB_DET':'1042', '2026_07_DAL_PHI':'1042',
+};
 const browser=await chromium.launch({
   headless:true,
   args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist'],
@@ -17,20 +22,39 @@ const errors=[];
 const page=await browser.newPage({viewport:{width:1280,height:880}});
 page.on('pageerror',e=>errors.push(String(e)));
 page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text());});
+const waitForStatus=()=>page.waitForFunction(()=>{
+  const s=document.querySelector('#status')?.textContent||'';
+  return s.includes('Ready ·')||s.includes('Simulation stopped:')||s.includes('Assets not ready:')||s.includes('Simulation failed:');
+},null,{timeout:100000,polling:250});
+const safety=[];
 const rendered=[];
 try{
+  // Safety: each matchup on its default seed either initializes or stops with an explicit reason.
   for(const game of MATCHUPS){
     await page.goto(BASE+'/week7.html?game='+encodeURIComponent(game.id),{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>{
-      const s=document.querySelector('#status')?.textContent||'';
-      return s.includes('Ready ·')||s.includes('Simulation stopped:')||s.includes('Assets not ready:')||s.includes('Simulation failed:');
-    },null,{timeout:100000,polling:250});
+    await waitForStatus();
     const status=await page.locator('#status').innerText();
     const refused=/Simulation stopped: unsupported rule \(/.test(status);
     assert.ok(refused||/Ready ·/.test(status),'matchup '+game.id+' did not initialize: '+status);
+    if(refused){
+      assert.match(status,/Simulation stopped: unsupported rule \([a-z_]+\)\. .+/,game.id+' refusal must state a reason: '+status);
+      assert.match(status,/no final result/,game.id+' refusal must not present a final result');
+      assert.equal(await page.locator('#timeline button[data-index]', {hasText:'REFUSED'}).count(),1,game.id+' refusal event is listed once');
+    }
+    safety.push({game:game.id,default:refused?'refused':'ready'});
+  }
+
+  // Playable: each matchup on its pinned seed must complete and render a real 22-player play.
+  for(const game of MATCHUPS){
+    const seed=PLAYABLE_SEEDS[game.id];
+    await page.goto(BASE+'/week7.html?game='+encodeURIComponent(game.id),{waitUntil:'domcontentloaded'});
+    await waitForStatus();
+    await page.fill('#seed',seed);
+    await page.click('#simulate');
+    const status=await page.locator('#status').innerText();
+    assert.match(status,/Ready ·/,game.id+' pinned seed '+seed+' must complete without refusal: '+status);
     const n=await page.locator('#timeline button[data-index]').count();
-    assert.ok(refused?n>=1:n>40,'not enough generated events for '+game.id+': '+n);
-    if(refused){ rendered.push({game:game.id,refused:true}); continue; }
+    assert.ok(n>40,'not enough generated events for '+game.id+': '+n);
     // The game opens with a kickoff, which is text-only (no 3D), so select the
     // first scrimmage play to exercise the physical 22-player animation.
     await page.locator('#timeline button[data-index="0"]').click();
@@ -52,12 +76,14 @@ try{
       game.id+' timeline row lacks matching player attribution');
     assert.match(playText,/Illustrative 2026 roster assignment/,
       game.id+' missing historical-credit disclaimer');
-    rendered.push({game:game.id,events:n,first:event});
+    rendered.push({game:game.id,seed,events:n,first:event});
   }
   await page.locator('#again').click();
-  assert.equal(await page.locator('#seed').inputValue(),'1043');
+  const lastSeed=PLAYABLE_SEEDS[MATCHUPS.at(-1).id];
+  assert.equal(await page.locator('#seed').inputValue(),String(Number(lastSeed)+1));
   assert.equal(errors.length,0,'browser errors: '+errors.join('; '));
-  console.log('PASS six 2026 matchups load (3D where the game completes, explicit refusal otherwise): '+JSON.stringify(rendered));
+  console.log('PASS safety: default seeds initialize or refuse with a reason: '+JSON.stringify(safety));
+  console.log('PASS playable: pinned seeds render 22-player 3D plays: '+JSON.stringify(rendered));
 
 // Forced refusal: every punt is a blocked kicking-team recovery, which the
 // generator refuses rather than resolving. Verifies the viewer reports the stop.
