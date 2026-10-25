@@ -32,6 +32,14 @@ const POSE_ANIMATIONS = Object.freeze({
   [POSE.KNEEL]: Object.freeze({ clipName: 'Idle', loop: true }),
 });
 const CARRY_RUN_CLIP = Object.freeze({ clipName: 'Running While Holding Something', loop: true });
+// The asset has no true three-point stance; its snap crouch is the only pose
+// that puts a lineman low with his hands on the ground, so the line sets in it.
+const LINE_STANCE_CLIP = 'Football Hike';
+const LINE_UNITS = new Set(['OL', 'DL', 'OT', 'OG', 'C', 'G', 'T', 'DT', 'NT', 'DE']);
+function isLineman(root) {
+  const u = root.userData;
+  return LINE_UNITS.has(u.position) || LINE_UNITS.has(u.pos);
+}
 // Below this speed (m/s) a locomotion clip reads as jogging in place, so the
 // player waits in a stance instead.
 const STATIONARY_SPEED = 0.35;
@@ -213,7 +221,12 @@ export function isNeutralMode() { return neutralMode; }
 function updateRiggedAnimation(root, pose, speed, dt, carrying) {
   const animation = root.userData.animation;
   if (!animation?.mixer) return false;
-  const selection = getRiggedAnimationSelection(pose, carrying, speed);
+  let selection = getRiggedAnimationSelection(pose, carrying, speed);
+  // Linemen set in a stance before the snap; the skill-position idle stands
+  // straight up, which looks like everyone is waiting for a bus.
+  if (selection?.clipName === POSE_ANIMATIONS[POSE.STANCE].clipName && isLineman(root)) {
+    selection = { clipName: LINE_STANCE_CLIP, loop: true };
+  }
   animation.lastRequest = { pose, carrying: !!carrying, speed, clipName: selection?.clipName ?? null };
   const clip = selection && animation.clips.get(selection.clipName);
   if (!clip) {
@@ -396,6 +409,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
 
   root.userData = {
     rigged: true, id: info.id, jerseyNumber: String(info.jersey ?? ''), body, ring, bones,
+    position: info.position ?? null, pos: info.pos ?? null,
     animation: { mixer, clips, activeAction: null, activeClipName: null },
     groundOffsets: gltf.userData.groundOffsets || {},
     phase: stablePhase(info.id, info.animationSeed ?? info.seed ?? kit?.seed ?? ''), lie: 0,

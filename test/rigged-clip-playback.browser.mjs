@@ -83,7 +83,13 @@ try {
         if (pose === 4) { bump(out.throw, `${who}:${clip}`); if (clip !== 'Quarterback Pass') out.bad.push({ k, who, kind: 'throw', clip }); }
         if (pose === 5) { bump(out.catch, `${who}:${clip}`); if (/catch/i.test(clip)) out.bad.push({ k, who, kind: 'catch', clip }); }
         if (pose === 1 && carrying && speed >= 0.35) { bump(out.carry, clip); if (clip !== 'Running While Holding Something') out.bad.push({ k, who, kind: 'carry', clip }); }
-        if (pose === 1 && speed < stationary) { bump(out.standing, clip); if (clip !== 'Idle') out.bad.push({ k, who, kind: 'standing', clip }); }
+        if (pose === 1 && speed < stationary) {
+          // Linemen wait in the crouched set stance, everyone else stands.
+          const unit = renderer.players.get(ids[i])?.userData?.position;
+          const line = unit === 'OL' || unit === 'DL';
+          bump(out.standing, clip);
+          if (clip !== 'Idle' && !(line && clip === 'Football Hike')) out.bad.push({ k, who, kind: 'standing', clip });
+        }
         if (k < preSnapFrames) {
           bump(out.preSnap, clip);
           // Backpedaling defensive backs are correct; a forward jog or a carry
