@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FOOTBALL_SOUNDS, planFootballSound, FootballAudio } from '../web/audio-director.js';
+import { FOOTBALL_SOUNDS, SUSPENDED_FOLEY, planFootballSound, FootballAudio } from '../web/audio-director.js';
 
 const p = (overrides = {}) => ({
   type: 'scrimmage', kind: 'run', offense: 'BAL', defense: 'CIN',
@@ -14,13 +14,12 @@ const record = {
     { type: 'whistle', t: 2.0 },
   ],
 };
-test('cue times use actual 3D physical event timestamps', () => {
+test('unconvincing snap/contact/whistle clips stay suspended in live 3D playback', () => {
   const cues = planFootballSound(p(), record, 'BAL');
-  assert.deepEqual(cues.filter(c => c.name === 'hit1').map(c => c.at), [1.4]);
-  assert.deepEqual(cues.filter(c => c.name === 'hit2').map(c => c.at), [2.2]);
-  assert.deepEqual(cues.filter(c => c.name === 'whistle').map(c => c.at), [3]);
-  assert.ok(cues.some(c => c.name === 'snap' && c.at === 1));
-  assert.equal(cues.filter(c => c.name === 'whistle').length, 1);
+  assert.deepEqual([...SUSPENDED_FOLEY].sort(), ['hit1', 'hit2', 'snap', 'whistle']);
+  assert.ok(cues.some(c => c.name === 'foot1'), 'keep walking and atmosphere');
+  assert.ok(cues.every(c => !SUSPENDED_FOLEY.has(c.name)));
+  assert.ok(planFootballSound(p({touchdown:true}), record, 'BAL').some(c => c.name === 'bigCheer'));
 });
 test('home touchdown roars, away touchdown is a subdued reaction', () => {
   assert.ok(planFootballSound(p({touchdown:true}), record, 'BAL').some(c => c.name === 'bigCheer'));
@@ -35,12 +34,12 @@ test('big gains trigger mild home cheer, not automatic TD roar', () => {
   assert.ok(sounds.includes('cheer'));
   assert.ok(!sounds.includes('bigCheer'));
 });
-test('text-only kicks can make sounds without 3D physics', () => {
+test('text-only kicks keep licensed crowd but no fake impact or human-sounding whistle', () => {
   const sounds = planFootballSound({
     type: 'field_goal', good: true, offense: 'BAL', action:'FIELD GOAL GOOD',
   }, null, 'BAL').map(c => c.name);
   assert.ok(sounds.includes('bigCheer'));
-  assert.ok(sounds.includes('whistle'));
+  assert.ok(sounds.every(name => !SUSPENDED_FOLEY.has(name)));
 });
 test('unknown events do not generate unsourced audio', () => {
   assert.deepEqual(planFootballSound(null, null, 'BAL'), []);
