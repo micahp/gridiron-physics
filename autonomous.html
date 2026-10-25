@@ -40,7 +40,10 @@
         <span class="mode-tag">AUTONOMOUS</span>
       </div>
       <label>Play call
-        <select id="play-call"><option value="inside_zone">Inside zone</option></select>
+        <select id="play-call">
+          <option value="inside_zone" selected>Inside zone (run)</option>
+          <option value="slant_flat">Slant–flat (quick pass)</option>
+        </select>
       </label>
       <div class="row">
         <label>Defense front
@@ -48,12 +51,17 @@
             <option value="even">Even 4–3</option><option value="over">Over 4–3</option>
             <option value="under">Under 4–3</option><option value="nickel">Nickel 4–2–5</option>
             <option value="odd">Odd 3–4</option><option value="bear">Bear 5–2</option>
+            <option value="nickel_over" selected>Nickel over (pass)</option>
+            <option value="nickel_under">Nickel under (pass)</option>
           </select>
         </label>
-        <label>Run side
+        <label>Run side / concept side
           <select id="run-side"><option value="left">Left</option><option value="right" selected>Right</option></select>
         </label>
       </div>
+      <label id="coverage-row">Coverage
+        <select id="coverage"><option value="cover_1" selected>Cover 1 man</option><option value="cover_3">Cover 3 zone</option></select>
+      </label>
       <label>Fixed seed <input id="seed" value="inside-zone-demo-1" autocomplete="off"></label>
       <details class="ratings">
         <summary>Player ratings <span>authored 1–99 inputs</span></summary>
@@ -92,6 +100,11 @@
         <div class="section-title">
           <h2>Live decisions</h2>
           <label class="check"><input id="show-decisions" type="checkbox"> Show all 22</label>
+        </div>
+        <div class="row overlays">
+          <label class="check"><input id="overlay-assignments" type="checkbox"> Assignment targets</label>
+          <label class="check"><input id="overlay-pursuit" type="checkbox"> Pursuit lines</label>
+          <label class="check"><input id="overlay-lanes" type="checkbox"> Carrier lanes</label>
         </div>
         <label class="focus-label">Inspect player
           <select id="focus-player" disabled><option>Select after snap</option></select>
