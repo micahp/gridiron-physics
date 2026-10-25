@@ -19,4 +19,6 @@ trap 'kill "$SRV" 2>/dev/null || true' EXIT
 
 # Give the server a moment to bind, then run the browser test.
 sleep 1
-BASE_URL="${BASE_URL}" node --test test/week7.browser.mjs test/week7-audio.browser.mjs test/rigged-clip-playback.browser.mjs
+BASE_URL="${BASE_URL}" # Serially: three swiftshader browsers at once starve each other and look like
+# timeouts rather than test failures.
+node --test --test-concurrency=1 test/week7.browser.mjs test/week7-audio.browser.mjs test/rigged-clip-playback.browser.mjs
