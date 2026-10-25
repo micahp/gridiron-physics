@@ -31,6 +31,10 @@ const ALLOWED = new Set([
   'initialPositions',
 ]);
 
+// A receiver who is not the intended target can take a pass only when the target is out of reach, and then at this
+// reduced catch probability.
+const NON_TARGET_CATCH_PENALTY = 0.2;
+
 function validateConfig(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('scenario must be an object');
   for (const key of Object.keys(input)) {
@@ -586,7 +590,12 @@ export function simulatePassPlay(options = {}) {
   function resolveContest() {
     const candidates = catchCandidates();
     if (!candidates.length) return;
-    const receiver = candidates.find((c) => c.player.team === 'O');
+    // Target priority: the intended receiver contests the ball first. Another eligible receiver can win it only
+    // when the target is out of reach, and then at a penalty.
+    const target = W.ball.target;
+    const targetCandidate = candidates.find((c) => c.player === target);
+    const receiver = targetCandidate ?? candidates.find((c) => c.player.team === 'O') ?? null;
+    const onTarget = !!targetCandidate;
     const defender = candidates.find((c) => c.player.team !== 'O');
     const separation = receiver && defender
       ? d2(receiver.player, defender.player) / YD
@@ -598,10 +607,11 @@ export function simulatePassPlay(options = {}) {
         + (receiver.player.R.AWR ?? 60) * 0.3);
       const traffic = defender ? clamp(1.8 - separation, 0, 1.8) : 0;
       const chance = clamp(0.9 + (skill - 70) * 0.005 - traffic * 0.16
-        - clamp(Math.abs(ballZ - 1.6) * 0.12, 0, 0.2), 0.35, 0.97);
+        - clamp(Math.abs(ballZ - 1.6) * 0.12, 0, 0.2), 0.35, 0.97) - (onTarget ? 0 : NON_TARGET_CATCH_PENALTY);
       W.event('catch_contest', {
         player_id: receiver.player.id, team: receiver.player.team, chance: Number(chance.toFixed(3)),
         separation_yards: Number(separation.toFixed(2)), ball_z: Number(ballZ.toFixed(2)),
+        target_in_reach: !!targetCandidate, on_target: onTarget,
       });
       if (rand() < chance) { secure(receiver.player, receiver.planar); return; }
       // Contested and not caught: only a defender on top of the ball picks it.
