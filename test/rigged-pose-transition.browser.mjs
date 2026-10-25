@@ -50,7 +50,7 @@ try{
   // RUN calculated with carry policy dynamically instead of hardcoding.
   samples.RUN.expectedClipSamples=probe.flatMap(x=>x.players.filter(p=>p.pose===1))
     .filter(p=>p.clip===(p.carrying?'Running While Holding Something':'Running in place')).length;
-  console.log('PASS_PLAY_POSE_AUDIT',JSON.stringify({chosen,samples,probeCount:probe.length}));
+  console.log('PASS_PLAY_POSE_AUDIT',JSON.stringify({chosen,samples,probeCount:probe.length,first:probe[0]?.time,last:probe.at(-1)?.time,meta:await page.evaluate(()=>window.__gridironRecordMeta?.())}));
   assert.ok(probe.length>150,'live browser pose sampler must cover multiple seconds');
   assert.ok(samples.THROW.physicsSamples>0,'QB physics never emitted THROW in completed pass');
   assert.ok(samples.CATCH.physicsSamples>0,'receiver physics never emitted CATCH in completed pass');
