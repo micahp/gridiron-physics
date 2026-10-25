@@ -346,7 +346,10 @@ function animate(now){
   const dt=Math.min(.06,(now-lastTick)/1000);lastTick=now;
   if(current&&renderer){
     if(animating&&playing)playSeconds=Math.min(current.duration,playSeconds+dt*Number($('speed').value));
-    renderer.draw(current.rec,current.rec.t0+playSeconds,dt);
+    // Playback time owns the animation clock too. A paused game must not
+    // keep advancing the Mixamo skeleton, and ½×/2× must scale both equally.
+    const animationDt=playing&&animating ? dt*Number($('speed').value) : 0;
+    renderer.draw(current.rec,current.rec.t0+playSeconds,animationDt);
     $('scrub').value=String(Math.round(1000*playSeconds/Math.max(.01,current.duration)));
     if(playSeconds>=current.duration)animating=false;
   }
