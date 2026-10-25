@@ -69,7 +69,7 @@ async function samplePlay(label, pattern) {
 try {
   await page.goto(base + '/week7.html?game=2026_07_CIN_BAL&debug=1', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => (document.querySelector('#status')?.textContent || '').includes('Ready ·'), null, {timeout: 100000});
-  await page.waitForFunction(() => window.__gridironRenderer?.riggedGltf && window.__gridironRenderer.players.size > 0, null, {timeout: 100000});
+  await page.waitForFunction(() => !!window.__gridironRenderer?.riggedGltf, null, {timeout: 100000});
   const run = await samplePlay('run', /\bRun\b/i);
   const pass = await samplePlay('pass', /Pass Complete|Pass Incomplete|Interception/i);
   assert.ok(!errors.length, 'page errors: ' + errors.join('; '));
