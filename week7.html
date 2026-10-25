@@ -47,6 +47,10 @@
 .pc-t { font: 600 13px var(--f-display); letter-spacing: 0.03em; text-transform: uppercase; }
 .pc-n { font: 11px var(--f-data); color: var(--dim); }
 .bug-meta p { margin: 0; }
+#audio-toggle { width: auto; min-width: 78px; padding: 0 7px; font: 600 12px var(--f-display); letter-spacing: .04em; }
+#audio-toggle[aria-pressed="true"] { background: var(--firstdown); color: var(--night); }
+#audio-volume { width: 72px; accent-color: var(--firstdown); }
+
 </style>
 </head>
 <body>
@@ -91,6 +95,10 @@
       <select id="speed" aria-label="Playback speed">
         <option value=".5">½×</option><option value="1" selected>1×</option><option value="2">2×</option>
       </select>
+      <button type="button" id="audio-toggle" aria-pressed="false" title="Enable stadium sounds">Sound off</button>
+      <label class="auto" for="audio-volume">Vol
+        <input id="audio-volume" type="range" min="0" max="100" value="60" aria-label="Stadium audio volume">
+      </label>
     </div>
     <p class="playtext" id="play-detail">Loading...</p>
   </section>
