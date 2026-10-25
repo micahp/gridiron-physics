@@ -3,6 +3,7 @@ import { selectPlay } from './prototype-model.js';
 import { executeSelectedPlay } from './prototype-execution.js';
 import { MATCHUPS, generateGame } from './week7-core.js';
 import { describeWeek7Play } from './week7-play-description.js';
+import { FootballAudio } from './audio-director.js';
 
 const $ = id => document.getElementById(id);
 const esc = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -28,6 +29,7 @@ let snapshot, books, physicsGame, renderer, simulation, selected = 0, current = 
 let animating = false, lastTick = null, playSeconds = 0;
 // Reuse the same 2026 lineups for timeline credits and the actual 3D play.
 const selectedDemos = new Map();
+const stadiumAudio = new FootballAudio(match.home);
 
 function status(message, failure=false){$('status').textContent=message; $('status').style.color=failure?'#ffc3b8':'#c9eaff';}
 function clock(v){return Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0');}
@@ -343,6 +345,7 @@ function choose(idx){
   }
   for(const b of $('timeline').querySelectorAll('button[data-index]'))b.classList.toggle('on',Number(b.dataset.index)===selected);
   $('timeline').querySelector('.pl.on')?.scrollIntoView({block:'nearest'});
+  stadiumAudio.setPlay(p, current?.rec || null);
   renderPlaybook();
 }
 function simulate(){
@@ -350,6 +353,7 @@ function simulate(){
     const seed=$('seed').value.trim()||'1042';
     simulation=generateGame(match,books,seed,league);
     selectedDemos.clear();
+    stadiumAudio.setPlay(null, null);
     ({scoring:scoringAt,key:keyAt}=classify(simulation));
     playing=false;
     renderFilter();renderTimeline();renderBox();choose(playable(-1,1)??0);renderPlayButton();
@@ -367,6 +371,7 @@ function animate(now){
     $('scrub').value=String(Math.round(1000*playSeconds/Math.max(.01,current.duration)));
     if(playSeconds>=current.duration)animating=false;
   }
+  stadiumAudio.update(current ? playSeconds : dwell, playing);
   if(playing&&!animating){
     dwell+=dt;
     if(dwell>=(current?POST_CLIP_PAUSE:TEXT_EVENT_SECONDS))advance();
@@ -395,6 +400,17 @@ async function start(){
     $('previous').addEventListener('click',()=>{const j=playable(selected,-1);if(j!=null)choose(j);});
     $('next').addEventListener('click',()=>{const j=playable(selected,1);if(j!=null)choose(j);});
     $('play').addEventListener('click',()=>{playing=!playing;dwell=0;renderPlayButton();});
+    $('audio-toggle').addEventListener('click',async()=>{
+      const button=$('audio-toggle');
+      if(stadiumAudio.enabled){stadiumAudio.disable();button.textContent='Sound off';button.setAttribute('aria-pressed','false');return;}
+      button.disabled=true;
+      button.textContent='Loading audio…';
+      const loaded=await stadiumAudio.enable();
+      button.disabled=false;
+      button.textContent=loaded?'Sound on':'Audio files missing';
+      button.setAttribute('aria-pressed',String(stadiumAudio.enabled));
+    });
+    $('audio-volume').addEventListener('input',e=>stadiumAudio.setVolume(Number(e.target.value)/100));
     $('filterbar').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(b)setFilter(b.dataset.filter);});
     document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('play').click();}});
     $('scrub').addEventListener('input',()=>{if(current){playing=false;renderPlayButton();playSeconds=current.duration*Number($('scrub').value)/1000;animating=playSeconds<current.duration;}});
