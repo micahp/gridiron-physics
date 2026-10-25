@@ -359,9 +359,13 @@ function simulate(){
     renderFilter();renderTimeline();renderBox();choose(playable(-1,1)??0);renderPlayButton();
     if(simulation.refusal)status('Simulation stopped: unsupported rule ('+simulation.refusal.rule+'). '+
       simulation.refusal.detail+' Partial record through play '+simulation.plays.length+'; no final result.',true);
-    else status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
-      ' drives · '+match.away+' '+simulation.score[match.away]+' / '+match.home+' '+simulation.score[match.home]+
-      ' · experimental, not legally validated');
+    else if(!simulation.complete_regulation)status('Simulation incomplete · stopped before regulation time expired · '+
+      simulation.source_play_count+' hypothetical snaps · no final result.',true);
+    else if(simulation.score[match.home]===simulation.score[match.away])status('Regulation ended tied · '+
+      simulation.source_play_count+' hypothetical snaps · overtime is unsupported · no final game result.',true);
+    else status('Regulation ended at 0:00 · modeled score '+match.away+' '+simulation.score[match.away]+' / '+
+      match.home+' '+simulation.score[match.home]+' · '+simulation.source_play_count+' hypothetical snaps · '+
+      'result illustrative; legal status unvalidated');
   }catch(e){status('Simulation failed: '+e.message,true);}
 }
 function animate(now){

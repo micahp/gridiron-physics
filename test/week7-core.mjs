@@ -36,7 +36,12 @@ for(const m of MATCHUPS){
   assert.ok(a.plays.every(p=>[m.home,m.away].includes(p.offense)));
   assert.ok(a.plays.every(p=>p.clock>=0 && p.clock<=900 && p.quarter>=1 && p.quarter<=4));
   assert.ok(a.plays.filter(p=>p.type==='scrimmage').every(p=>p.candidate?.candidate_id && p.source_id?.game_id?.startsWith('2025_')));
-  assert.equal(a.complete_regulation,false);
+  const last=a.plays.at(-1);
+  const regulationElapsed=!a.refusal && last.quarter===4 && last.runoff>=last.clock && a.drives.at(-1)?.reason==='end_regulation';
+  assert.equal(a.complete_regulation,regulationElapsed);
+  assert.equal(a.status,a.refusal?'UNSUPPORTED_RULE_REFUSAL':regulationElapsed
+    ? (a.score[m.home]===a.score[m.away]?'REGULATION_COMPLETE_OVERTIME_UNMODELED':'REGULATION_COMPLETE_UNVALIDATED')
+    :'SIMULATION_LIMIT_REACHED_UNVALIDATED');
   assert.ok(a.warnings.some(x=>x.includes('overtime')));
   // Special teams: the game opens with a kickoff, and every score and the second half open with one.
   assert.equal(a.plays[0].type,'kickoff');
@@ -56,6 +61,56 @@ for(const m of MATCHUPS){
     if(p.type==='kickoff') assert.ok(['touchback','out_of_bounds','returned','fair_catch','downed'].includes(p.outcome));
     if(p.type==='scrimmage' || p.type==='punt' || p.type==='field_goal') assert.ok(p.yl>=1 && p.yl<=99, 'yardline in range at '+p.id);
   });
+}
+
+// Completion describes the simulated regulation clock; it does not certify
+// NFL legality. Pin a tied and a non-tied regulation ending from real playbooks.
+{
+  const m=MATCHUPS[0];
+  const realBooks=Object.fromEntries([m.home,m.away].map(team=>[
+    team,JSON.parse(readFileSync(new URL(`../data/playbooks/${team}-2025.json`,import.meta.url),'utf8'))]));
+  const tied=generateGame(m,realBooks,'1',league);
+  assert.equal(tied.score[m.home],tied.score[m.away],'seed 1 reaches Q4 expiration tied');
+  assert.equal(tied.complete_regulation,true,'a tie still completes regulation');
+  assert.equal(tied.status,'REGULATION_COMPLETE_OVERTIME_UNMODELED');
+  assert.equal(tied.provenance.model_validated,false);
+  assert.equal('valid_full_game' in tied,false,'regulation completion does not claim a valid full game');
+  const nonTied=generateGame(m,realBooks,'2',league);
+  assert.notEqual(nonTied.score[m.home],nonTied.score[m.away],'seed 2 reaches Q4 expiration with a winner');
+  assert.equal(nonTied.complete_regulation,true);
+  assert.equal(nonTied.status,'REGULATION_COMPLETE_UNVALIDATED');
+  assert.equal(nonTied.provenance.model_validated,false);
+  assert.equal('valid_full_game' in nonTied,false,'regulation completion does not claim a valid full game');
+}
+
+// A run/pass-heavy fixture hits the per-quarter snap guard before 0:00. It
+// stays incomplete and its final drive is not mislabeled as end_regulation.
+{
+  const stalledBook=id=>{
+    const observed=[];
+    for(let down=1;down<=4;down++)for(let i=0;i<100;i++){
+      observed.push(sample('pass',down,0,2000+i+down*100));
+      observed.push(sample('run',down,0,4000+i+down*100));
+    }
+    return {team_id:id,offense:{observed_plays:observed,
+      profile:{run_pass:{categories:{run:{rate:0},pass:{rate:1}}}},
+      play_candidates:{run:{candidates:[{candidate_id:'stalled-run-'+id,count:1,attributes:{formation:'SHOTGUN'}}]},
+        pass:{candidates:[{candidate_id:'stalled-pass-'+id,count:1,attributes:{formation:'SHOTGUN'}}]}}},
+      defense:{observed_plays:observed}};
+  };
+  const m=MATCHUPS[0], books={[m.home]:stalledBook(m.home),[m.away]:stalledBook(m.away)};
+  const noBlocked=structuredClone(league);
+  noBlocked.punts.outcomes.blocked=0;
+  noBlocked.punts.distance_yards['0']=0;
+  noBlocked.field_goals.non_make_split.blocked=0;
+  let stopped=null;
+  for(let seed=1;seed<=20&&!stopped;seed++){
+    const candidate=generateGame(m,books,String(seed),noBlocked);
+    if(candidate.status==='SIMULATION_LIMIT_REACHED_UNVALIDATED') stopped=candidate;
+  }
+  assert.ok(stopped,'fixture reaches the simulation guard before Q4 expires');
+  assert.equal(stopped.complete_regulation,false);
+  assert.equal(stopped.drives.at(-1).reason,'simulation_limit');
 }
 
 // Sample independently seeded punts to verify the empirical marginals and
@@ -161,6 +216,7 @@ const findGame = (predicate, league_, count=8) => {
   const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('kicking_recovery'));
   assert.ok(g, 'a forced kicking-recovery game has a punt');
   assert.equal(g.status, 'UNSUPPORTED_RULE_REFUSAL');
+  assert.equal(g.complete_regulation,false,'a rule refusal before 0:00 is not a regulation completion');
   assert.equal(g.refusal.rule, 'blocked_punt_kicking_recovery');
   const last = g.plays.at(-1);
   assert.equal(last.type, 'unsupported_rule', 'game ends at the refusal, with no sampled next series');
@@ -171,7 +227,9 @@ const findGame = (predicate, league_, count=8) => {
 // (2) Negative: a receiving-team recovery is a turnover, not a refusal or a kicking-team first down.
 {
   const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('receiving_recovery'));
-  assert.equal(g.status, 'ILLUSTRATIVE_REGULATION_REPLAY_NOT_LEGAL_GAME');
+  assert.ok(['REGULATION_COMPLETE_UNVALIDATED','REGULATION_COMPLETE_OVERTIME_UNMODELED',
+    'SIMULATION_LIMIT_REACHED_UNVALIDATED'].includes(g.status));
+  assert.equal(g.refusal,null,'a receiving-team recovery is modeled, not refused');
   const punt = g.plays.find(p=>p.type==='punt');
   const nxt = g.plays[punt.index];
   assert.notEqual(nxt.offense, punt.offense, 'receiving team takes over after a receiving recovery');
@@ -196,6 +254,7 @@ const findGame = (predicate, league_, count=8) => {
 {
   const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('safety'));
   assert.equal(g.refusal.rule, 'safety_kick');
+  assert.equal(g.complete_regulation,false,'unsupported safety-kick outcome stops before regulation completion');
   const sk = g.plays.find(p=>p.type==='safety_kick');
   assert.ok(sk, 'safety kick is an explicit event');
   assert.equal(sk.kick_spot_own, 20, 'safety kick is taken from the own 20');
@@ -277,6 +336,7 @@ assert.deepEqual(punts.blocked_resolution, {receiving_recovery:7, kicking_recove
   const g = findGame(g=>g.plays.some(p=>p.type==='field_goal'), noMake(1, 0));
   assert.ok(g, 'a forced blocked-FG game has a field goal attempt');
   assert.equal(g.refusal.rule, 'blocked_field_goal');
+  assert.equal(g.complete_regulation,false,'a blocked-FG refusal before 0:00 is not a regulation completion');
   const fg = g.plays.find(p=>p.type==='field_goal');
   assert.equal(fg.blocked, true);
   assert.equal(g.plays.at(-1).type, 'unsupported_rule', 'game ends at the refusal, with no restart');

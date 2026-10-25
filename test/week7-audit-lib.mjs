@@ -100,9 +100,11 @@ export function auditModule(core, league, book) {
       if(cur.quarter===prev.quarter && cur.clock>prev.clock)
         tag('quarter_transition',`${cur.id} clock rose from ${prev.clock} to ${cur.clock} within Q${cur.quarter}`);
     }
-    // Q1 and Q3 each open with a kickoff at 15:00. A refused game stops early
-    // and has no Q3 opening, so the check applies only to complete games.
-    for(const q of (g.refusal ? [1] : [1,3])){
+    // Check each half-opening kickoff only when its quarter appears in the
+    // record. A refusal or simulation guard may stop before Q3.
+    const reachedQuarters=new Set(plays.map(p=>p.quarter));
+    for(const q of [1,3]){
+      if(!reachedQuarters.has(q)) continue;
       const open=plays.find(p=>p.quarter===q && p.type==='kickoff');
       if(!open) tag('quarter_transition',`no kickoff opens Q${q}`);
       else if(open.clock!==900) tag('quarter_transition',`Q${q} opening kickoff at clock ${open.clock}, expected 900`);

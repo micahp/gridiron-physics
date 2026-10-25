@@ -527,16 +527,22 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
     // half's own half-opening kickoff.
     if (quarter === 2 && pendingKickoff) pendingKickoff = null;
   }
+  const completeRegulation = !refusal && quarter > 4 && clock <= 0;
   if (driveStart < plays.length && !drives.some(d=>d.end===plays.length-1))
-    finishDrive(refusal ? 'unsupported_rule' : 'end_regulation');
-  if (!refusal) validateHalfStartKickoffs(plays, ledger);
+    finishDrive(refusal ? 'unsupported_rule' : completeRegulation ? 'end_regulation' : 'simulation_limit');
+  const q3HalfStartRecorded = plays.some(p=>p.type==='kickoff'&&p.reason==='half_start'&&p.quarter===3);
+  if (!refusal && (completeRegulation || q3HalfStartRecorded)) validateHalfStartKickoffs(plays, ledger);
+  const tiedAtRegulationEnd = scores[match.home] === scores[match.away];
+  const status = refusal ? 'UNSUPPORTED_RULE_REFUSAL'
+    : !completeRegulation ? 'SIMULATION_LIMIT_REACHED_UNVALIDATED'
+      : tiedAtRegulationEnd ? 'REGULATION_COMPLETE_OVERTIME_UNMODELED'
+        : 'REGULATION_COMPLETE_UNVALIDATED';
   return {
     schema_version:'gridiron.week7-experimental.v1', game_id:match.id, seed:String(seed), match, coin_toss_ledger:ledger,
     provenance:{play_selection:'team 2025 observed rates + situational heuristic',
       outcome:'historical 2025 offense/defense resampling',rosters:'week-7 projected',
       physical_motion:'Gridiron outcome-constrained 3D',model_validated:false},
-    status: refusal ? 'UNSUPPORTED_RULE_REFUSAL' : 'ILLUSTRATIVE_REGULATION_REPLAY_NOT_LEGAL_GAME',
-    refusal, complete_regulation:false,
+    status, refusal, complete_regulation:completeRegulation,
     score:{...scores}, plays, drives, source_play_count:snaps,
     warnings:['Not a validated NFL full-game simulator or betting forecast.',
       'Timeouts, penalties, play clock, onside kicks and overtime are unsupported.',
