@@ -14,14 +14,21 @@ assert.equal(hash, entry.sha256, 'the frozen fixture must match its manifest che
 const payload = JSON.parse(bytes.toString('utf8'));
 
 assert.equal(validatePregameSourcePin(payload, manifest, entry), true);
-const adapted = adaptLpGamePayload(payload, { requireCompleteRegulation: false });
+const adapted = adaptLpGamePayload(payload);
 assert.equal(adapted.validation.findings.length, 0);
+assert.equal(adapted.record.mode, 'pregame_full_game');
+assert.equal(adapted.record.complete_regulation, true);
+assert.equal(adapted.record.complete_game, true);
 assert.equal(adapted.record.game_id, '2026_07_KC_SEA');
 assert.equal(adapted.record.teams.away, 'KC');
 assert.equal(adapted.record.teams.home, 'SEA');
 assert.ok(Date.parse(adapted.record.as_of_utc) < Date.parse(adapted.record.scheduled_kickoff_utc));
 assert.equal(adapted.record.roster_snapshot_id, payload.pregame_snapshot.roster_snapshot_id);
-assert.equal(adapted.record.valid_full_game, false, 'unresolved rules remain an explicit gate');
+assert.equal(adapted.record.valid_full_game, true, 'this seed passes the applicable full-game gate');
+assert.deepEqual(adapted.record.unsupported_rules, [], 'no unsupported rule path was taken in this seed');
+assert.ok(adapted.record.rule_capability_limitations.length > 0,
+  'unexercised model limitations remain explicit');
+assert.equal(adapted.sharedV1Audit.conforms, true, adapted.sharedV1Audit.violations.join('; '));
 
 const rosterByPlayer = new Map(Object.values(payload.pregame_snapshot.rosters).flatMap((team) =>
   team.players.map((player) => [`${player.gsis_id}:${player.pos_abb}`, player])));
@@ -55,6 +62,10 @@ const incompatibleContract = structuredClone(payload);
 incompatibleContract.contract.version = '2.0.0';
 assert.throws(() => validatePregameSourcePin(incompatibleContract, manifest, entry), /must use/);
 assert.throws(() => adaptLpGamePayload(incompatibleContract), /unsupported payload contract/);
+
+const mismatchedMode = structuredClone(payload);
+mismatchedMode.mode = 'pregame_statistical_game';
+assert.throws(() => adaptLpGamePayload(mismatchedMode), /payload.mode must match record.mode/);
 
 const corruptedRecord = structuredClone(payload);
 corruptedRecord.record.drives[0].plays[0].outcome.yards_gained = 'corrupted';

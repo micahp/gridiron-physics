@@ -163,7 +163,9 @@ function renderMetadata(verification, sourcePayloadSha256) {
     ['Team identities', identities],
   ]);
   $('#producer-note').textContent = requestedPregameGame
-    ? `This game is generated from snapshot ${record.snapshot_hash}. LP's unresolved rule guards keep valid_full_game=false; the viewer preserves and displays those limitations.`
+    ? record.valid_full_game
+      ? `This seed passed the applicable full-game checks from frozen snapshot ${record.snapshot_hash}. The model still uses statistical outcomes and does not reconstruct player motion.`
+      : `This game is generated from frozen snapshot ${record.snapshot_hash}, but an active unsupported rule path keeps it from passing the full-game gate.`
     : adapted.source.producer_worktree_dirty
     ? 'Producer code was uncommitted when sampled; its file hashes are pinned, but this handoff is not stable.'
     : `Producer code is pinned at LP commit ${adapted.source.base_commit}. PBP outcomes are retrospective samples, not a forecast.`;
@@ -194,7 +196,12 @@ function renderLedgerAndKickoffs() {
   }
   const unsupported = $('#unsupported-list');
   unsupported.replaceChildren();
-  for (const rule of adapted.record.unsupported_rules) unsupported.append(el('li', rule));
+  const activeRules = adapted.record.unsupported_rules ?? [];
+  if (activeRules.length === 0) unsupported.append(el('li', 'No unsupported rule paths were taken in this game.'));
+  for (const rule of activeRules) unsupported.append(el('li', rule));
+  const limitations = $('#capability-limitations');
+  limitations.replaceChildren();
+  for (const gap of adapted.record.gaps ?? []) limitations.append(el('li', gap));
 }
 
 function renderTeamStats() {

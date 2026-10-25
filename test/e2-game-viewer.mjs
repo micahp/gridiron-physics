@@ -9,6 +9,10 @@ const fixtureEntry = manifest.fixtures[0];
 const currentEnvelope = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.file), 'utf8'));
 const sourceRecord = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.upstream_source_file), 'utf8')).record;
 const playCount = sourceRecord.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
+const pregameManifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/pregame/MANIFEST.json'), 'utf8'));
+const pregameEntry = pregameManifest.fixtures[0];
+const pregamePayload = JSON.parse(await readFile(resolve(root, 'docs/fixtures/pregame', pregameEntry.file), 'utf8'));
+const pregamePlayCount = pregamePayload.record.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
 
 class FakeNode {
   constructor(tag = 'div') {
@@ -127,3 +131,22 @@ assert.equal(get('e3-drive-table').querySelectorAll('tr').length, 6);
 assert.equal(get('e3-game-table').querySelectorAll('tr').length, 14);
 
 console.log(`E2 viewer DOM audit: LP ${manifest.lp_source.base_commit} loads ${fixtureEntry.drives} drives / ${playCount} plays; E3 clock decomposition and null policy rendered`);
+
+nodes.clear();
+globalThis.window = { location: { search: '?pregame=1' } };
+await import('../web/e2-game-viewer.js?pregame-acceptance');
+for (let attempt = 0; attempt < 300 && get('viewer-content')?.hidden !== false; attempt += 1) {
+  await new Promise((resolveWait) => setTimeout(resolveWait, 10));
+}
+assert.equal(get('load-error').hidden, true, `the pinned pregame game should load: ${get('load-error').textContent}`);
+assert.equal(get('viewer-content').hidden, false, 'the complete statistical game should render');
+assert.equal(get('drive-select').children.length, pregameEntry.drives ?? pregamePayload.record.drives.length);
+assert.equal(get('score-phase').textContent, 'FINAL');
+assert.match(get('game-state').textContent, /complete_game=true · valid_full_game=true/);
+assert.match(get('producer-note').textContent, /passed the applicable full-game checks/);
+assert.match(get('unsupported-list').textContent, /No unsupported rule paths were taken/);
+assert.ok(get('capability-limitations').children.length > 0, 'remaining model limitations must stay visible');
+assert.equal(get('validation').hidden, true, 'this complete pinned record should pass the viewer audits');
+assert.equal(get('player-stats').children.length, pregamePayload.record.stats.player.length);
+assert.match(get('record-meta').textContent, new RegExp(String(pregamePlayCount)));
+console.log(`Pregame viewer DOM audit: ${pregameManifest.lp_source.base_commit} renders Chiefs at Seahawks as a complete ${pregamePlayCount}-play statistical game with remaining model scope shown`);
