@@ -263,6 +263,13 @@ const findGame = (predicate, league_, count=8) => {
   assert.ok(!g.plays.some(p=>p.type==='kickoff' && p.reason==='safety'), 'no ordinary kickoff for a safety');
   const punt = g.plays.find(p=>p.type==='punt');
   assert.equal(punt.scoreAfter[sk.receiving_team], punt.score[sk.receiving_team]+2, 'safety scores 2 for the receiving team');
+  assert.notEqual(sk.drive, punt.drive, 'safety kick opens a new drive');
+  assert.equal(sk.offense, sk.receiving_team, 'safety kick is owned by the receiving team');
+  const refusalEvent = g.plays.find(p=>p.type==='unsupported_rule');
+  assert.equal(refusalEvent.drive, sk.drive, 'refusal stays in the safety kick drive');
+  assert.equal(refusalEvent.offense, sk.receiving_team, 'refusal keeps the receiving team in possession');
+  assert.ok(g.plays.filter(p=>p.drive===sk.drive).every(p=>p.offense===sk.receiving_team),
+    'every event in the safety kick drive is owned by the receiving team');
 }
 // (1) Negative: the real 2025 table has no safety counts, so no safety kick is ever generated.
 {

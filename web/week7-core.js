@@ -460,6 +460,8 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
             } else if (resolution === 'safety') {
               scores[receiving] += 2;
               punt.scoreAfter = {...scores};
+              finishDrive('safety');
+              offense = receiving;
               event({type:'safety_kick',kind:'free_kick',action:'SAFETY KICK',points:0,
                 offense:receiving, defense:offense, kicking_team:offense, receiving_team:receiving,
                 kick_spot_own:20, receiving_spot:null, outcome:null, possession_after:receiving,
