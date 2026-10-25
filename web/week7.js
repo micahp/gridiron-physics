@@ -260,13 +260,23 @@ function renderTimeline(){
       esc(describeWeek7Play(p, selectionFor(p)?.demo, physicsGame?.players).line)+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
+// Broadcast spot notation: the number is the yard line the ball sits on, named
+// for the team whose goal line it is nearest. A ball 31 yards from the goal
+// line the offense attacks reads "DEN 31"; own-side yardage reads "CIN 25".
+function spotLabel(p) {
+  const yl = Math.round(safe(p.yl));
+  if (yl === 50) return 'MIDFIELD';
+  const ownSide = yl > 50;
+  const team = ownSide ? p.offense : (p.offense === match.home ? match.away : match.home);
+  return team + ' ' + (ownSide ? 100 - yl : yl);
+}
 function scoreAtPlay(p) {
   const score=p.scoreAfter || p.score || simulation.score;
   $('away-score').textContent=score[match.away]??0;
   $('home-score').textContent=score[match.home]??0;
   $('bug-q').textContent='Q'+p.quarter;
   $('game-clock').textContent=clock(p.clock);
-  $('down-distance').textContent=p.down+' & '+p.togo+' · '+(p.yl===50?'MIDFIELD':p.yl+' YDS TO GOAL');
+  $('down-distance').textContent=p.down+' & '+p.togo+' · '+spotLabel(p);
   $('bug-away').classList.toggle('poss',p.offense===match.away);
   $('bug-home').classList.toggle('poss',p.offense===match.home);
 }
@@ -331,8 +341,8 @@ function choose(idx){
   currentPlay=p;
   const credit=describeWeek7Play(p, selectionFor(p)?.demo, physicsGame?.players);
   scoreAtPlay(p);
-  $('snap-title').textContent='Play '+p.index+' · '+p.action+' · '+(credit.actors||p.offense);
-  $('play-detail').innerHTML='<b>'+esc(p.action)+'</b>'+
+  $('snap-title').textContent='Play '+p.index+' · '+credit.action+' · '+(credit.actors||p.offense);
+  $('play-detail').innerHTML='<b>'+esc(credit.action)+'</b>'+
     (credit.actors?' · '+esc(credit.actors):'')+(credit.result?' · '+esc(credit.result):'')+
     ' · Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
     '<br>'+esc(p.note||'')+

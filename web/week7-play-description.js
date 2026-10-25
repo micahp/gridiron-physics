@@ -19,10 +19,13 @@ export function describeWeek7Play(play, selection = null, players = {}) {
       }
     }
   }
+  // A scoring play says so once, at the front: "TOUCHDOWN · QB to WR · 22 yd".
+  // The sampled action code (RUN / PASS COMPLETE) and the trailing
+  // "Touchdown · " tag never both appear on the same line.
+  const action = play.touchdown && play.type === 'scrimmage' ? 'TOUCHDOWN' : play.action;
   let result = '';
   if (play.type === 'scrimmage') {
-    if (play.touchdown) result = 'Touchdown · ' + play.gain + ' yd';
-    else if (play.kind === 'run' || (play.kind === 'pass' && play.completed && !play.interception))
+    if (play.touchdown || play.kind === 'run' || (play.kind === 'pass' && play.completed && !play.interception))
       result = play.gain + ' yd';
   } else if (play.type === 'punt' || play.type === 'field_goal') {
     if (Number.isFinite(Number(play.distance))) result = play.distance + ' yd';
@@ -30,8 +33,8 @@ export function describeWeek7Play(play, selection = null, players = {}) {
     if (play.outcome === 'returned') result = play.return_yards + ' yd return';
     else result = String(play.outcome || '').replace(/_/g, ' ');
   }
-  const line = [play.action, actors, result].filter(Boolean).join(' · ');
-  return { actors, result, line };
+  const line = [action, actors, result].filter(Boolean).join(' · ');
+  return { action, actors, result, line };
 }
 
 /** Summarize the tracked movement and contact sequence for an illustrative run. */
