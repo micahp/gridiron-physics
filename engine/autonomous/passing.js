@@ -395,11 +395,21 @@ export function simulatePassPlay(options = {}) {
       }
       const pressure = nearestRusherToQb().distance / YD;
       const open = clamp((separation - 0.7) / 2.2, 0, 1);
-      const utility = open * 1.6 + (1 - clamp(lane / 2.4, 0, 1)) * 0.75
+      // Expected forward value (spec 12.2): downfield yards are worth more than dump-offs.
+      const forward = clamp(((rec.p.x - qb.p.x) * dir) / YD / 15, -0.4, 1);
+      const utility = open * 1.6 + forward * 1.0 + (1 - clamp(lane / 2.4, 0, 1)) * 0.75
         - clamp(lane * 0.55, 0, 1.35) - clamp((1.6 - pressure) * 0.45, 0, 0.9)
         - clamp(d2(qb, rec) / (28 * YD), 0, 0.5);
-      const readiness = rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
-      return { receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness };
+      const readiness = 0;
+      // Window at arrival: where the receiver and the nearest defender will be when the ball gets there.
+      const arrivalRec = { x: rec.p.x + rec.v.x * flight, y: rec.p.y + rec.v.y * flight };
+      let arrivalSep = Infinity;
+      for (const q of defense) {
+        if (q.down) continue;
+        const arrivalQ = { x: q.p.x + q.v.x * flight, y: q.p.y + q.v.y * flight };
+        arrivalSep = Math.min(arrivalSep, Math.hypot(arrivalRec.x - arrivalQ.x, arrivalRec.y - arrivalQ.y) / YD);
+      }
+      return { receiver: rec, aim, flight, separation, arrivalSep, lane, pressure, utility, readyAt: readiness };
     }).sort((a, b) => b.utility - a.utility || a.receiver.id.localeCompare(b.receiver.id));
   }
 
@@ -434,34 +444,71 @@ export function simulatePassPlay(options = {}) {
     setIntent(qb, 'throw to the open read', `release to ${best.receiver.slot} with ${best.separation.toFixed(1)} yd separation`);
   }
 
+  // Observable route development: a receiver is readable once its route has
+  // developed, and the back once he has released from protection.
+  function routeReady(p) {
+    if (p === z) return fOf(p) >= 2.4;
+    if (p === slotRec) return Math.abs(lOf(p)) >= 5.5;
+    if (p === rb) return !p.engaged && W.t >= 0.9;
+    return true;
+  }
+
+  function escapeLane(rusher) {
+    const away = unit(qb.p.x - rusher.p.x, qb.p.y - rusher.p.y);
+    const spot = { x: qb.p.x + away.x * 2.5 * YD, y: qb.p.y + away.y * 2.5 * YD };
+    const open = !W.players.some((d) => d.team !== 'O' && !d.down && Math.hypot(d.p.x - spot.x, d.p.y - spot.y) < 2.0 * YD);
+    return { away, open };
+  }
+
+  // Decision thresholds are causal reading rules, not outcome targets.
+  const T_THROW = 0.62;   // a read is viable for a throw
+  const T_CHECK = 0.34;   // the back is viable as a checkdown under pressure
+  const P_PRESS = 1.8;    // yards: pressure that sends the QB to the checkdown
+  const P_SCRAMBLE = 1.1; // yards: pressure that forces a move
+
   function qbDecision() {
     if (!received || W.ball.holder !== qb) return;
     const elapsed = W.t - (W.ball.receivedAt ?? 0);
     // A three-step drop from the gun takes about 0.8 s before the first read is live.
     if (elapsed < 0.75) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
-    const options = readOptions().filter((o) => elapsed >= o.readyAt);
-    const pressure = nearestRusherToQb().distance / YD;
-    if (options.length) {
-      const best = options[0];
-      if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
-        launchPass(best);
-        return;
-      }
-      W.event('qb_read', {
-        quarterback_id: qb.id,
-        target_id: best.receiver.id,
-        utility: Number(best.utility.toFixed(3)),
-        separation_yards: Number(best.separation.toFixed(2)),
-        pressure_yards: Number(pressure.toFixed(2)),
-      });
+    const options = readOptions().filter((o) => routeReady(o.receiver));
+    // Observation: the quarterback sees rushers in front of him; a rusher from behind is felt only when he is on top of him.
+    const facing = { x: Math.cos(qb.h), y: Math.sin(qb.h) };
+    let perceived = null, rusher = nearestRusherToQb().player;
+    for (const d of W.players) {
+      if (d.team === 'O' || d.down) continue;
+      const dx = d.p.x - qb.p.x, dy = d.p.y - qb.p.y;
+      const dist = Math.hypot(dx, dy);
+      const seen = (dx * facing.x + dy * facing.y) / (dist || 1) >= -0.2 || dist < 1.3 * YD;
+      if (seen && (!perceived || dist < perceived.dist)) perceived = { dist, player: d };
     }
-    if (pressure < 1.1 && elapsed < 3.0) {
-      // Escape the nearest rusher rather than standing in a collapsing pocket.
-      const rusher = nearestRusherToQb().player;
-      const away = unit(qb.p.x - rusher.p.x, qb.p.y - rusher.p.y);
-      qb.ai.escape = { x: away.x, y: away.y };
-      setIntent(qb, 'scramble away from pressure', `move off ${rusher.slot} and keep the ball alive`);
-    } else if (elapsed > 3.0) {
+    const pressure = perceived ? perceived.dist / YD : 99;
+    if (perceived) rusher = perceived.player;
+    const prev = qb.ai.pressureSample;
+    const dt = prev ? W.t - prev.t : 0;
+    const closing = prev && dt > 1e-3 ? (prev.p - pressure) / dt : 0;
+    qb.ai.pressureSample = { t: W.t, p: pressure };
+    const contactIn = pressure / Math.max(closing, 0.5);
+
+    const primary = options.find((o) => o.receiver === z);
+    const secondary = options.find((o) => o.receiver === slotRec);
+    const back = options.find((o) => o.receiver === rb);
+    // Read order (spec 12.2): first option, second option, then the checkdown under pressure.
+    // A read is viable only when the receiver has a window: enough separation and a clear lane.
+    const viable = (o) => o && o.arrivalSep >= 1.8 && o.lane < 0.6 && o.utility >= T_THROW;
+    if (viable(primary)) { launchPass(primary); return; }
+    if (viable(secondary)) { launchPass(secondary); return; }
+    if (pressure < P_PRESS && back && back.utility >= T_CHECK) { launchPass(back); return; }
+
+    const lane = escapeLane(rusher);
+    if (pressure < P_SCRAMBLE && lane.open) {
+      qb.ai.escape = { x: lane.away.x, y: lane.away.y };
+      setIntent(qb, 'scramble away from pressure', `move off ${rusher.slot} into open space`);
+      return;
+    }
+    // Pocket awareness decides how late the quarterback can still throw the ball away.
+    const awarenessWindow = clamp(0.35 + (75 - (qb.R.AWR ?? 70)) * 0.02, 0.15, 0.8);
+    if (contactIn < awarenessWindow || elapsed > 4.5) {
       const target = at(-1.0, side * 22);
       const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
       Object.assign(W.ball, { state: 'air', holder: null, vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k });
@@ -469,7 +516,15 @@ export function simulatePassPlay(options = {}) {
       W.ball.thrower = qb;
       W.ball.intentionalGround = true;
       W.event('throw_away', { quarterback_id: qb.id });
+      return;
     }
+    if (options.length) {
+      W.event('qb_read', {
+        quarterback_id: qb.id, target_id: options[0].receiver.id, utility: Number(options[0].utility.toFixed(3)),
+        separation_yards: Number(options[0].separation.toFixed(2)), pressure_yards: Number(pressure.toFixed(2)),
+      });
+    }
+    setIntent(qb, 'hold and keep reading', 'no viable throw yet; the protection and the reads continue');
   }
 
   // ------------------------------------------------------------ ball contest
