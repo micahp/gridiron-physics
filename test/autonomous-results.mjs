@@ -72,5 +72,20 @@ if (pass.status === 'complete') {
   assert.equal(pass.diagnostics.reconciliation.ok, true, pass.diagnostics.reconciliation.problems.join('; '));
 }
 
+// Reconciliation must reject a record that no longer matches its own frames and events.
+const noWhistle = structuredClone(a);
+noWhistle.events = noWhistle.events.filter((e) => e.type !== 'whistle');
+assert.equal(reconcileResult(noWhistle).ok, false, 'a missing whistle is caught');
+
+const shortFrame = structuredClone(a);
+shortFrame.trajectory.frames[0] = shortFrame.trajectory.frames[0].slice(0, -1);
+assert.equal(reconcileResult(shortFrame).ok, false, 'a frame with the wrong stride is caught');
+
+const twoHolders = structuredClone(a);
+const midFrame = twoHolders.trajectory.frames[Math.floor(twoHolders.trajectory.frames.length / 2)];
+midFrame[5] = 1;
+midFrame[11] = 1;
+assert.equal(reconcileResult(twoHolders).ok, false, 'two ball holders in one frame are caught');
+
 console.log(`autonomous results ok: ${a.result.event} ${a.result.yards_gained} yd, `
   + `${a.participants.tacklers.length} tackler(s), ${variants.size} distinct results over 6 seeds, pass=${pass.result?.event}`);
