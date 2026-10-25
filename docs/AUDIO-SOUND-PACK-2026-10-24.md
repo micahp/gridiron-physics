@@ -56,3 +56,28 @@ Check neutral playback, play/pause, forward/back scrubbing, seed changes,
 3D playback for all six matchups, mute/volume, correct audio file loading and
 license notices. Listen critically: Kenney's impact library is a prototype
 source and not a substitute for professionally recorded pads and helmets.
+
+## 2026-10-25 sound-quality hold
+
+Following a listening review, four prototype channels have been **suspended from
+automatic playback**: `snap` (wood impact), `hit1` and `hit2` (generic
+Kenney impacts), and `whistle` (generic non-referee-sounding whistle).
+Original licensed files remain in `web/audio` for audit and controlled listening.
+In-game ambience, cheers, murmurs and foreground footsteps continue. Do not
+reactivate any of the four simply because a replacement has a suggestive filename.
+
+**Acceptance gate:** audition real football-specific source audio from a
+real outdoor pad/helmet recording, select at least 4–6 variants for line
+blocking and heavy tackles, verify referee whistle in game context, and
+compare A/B against live field audio (reference only, no NFL Films reuse).
+Collision sounds must match contact magnitude and be rate-limited, and
+whistle must remain a separate dead-ball cue, not the tackle sound.
+
+Most relevant **unlicensed candidate, NOT downloaded/approved/purchased**:
+echo | collective `outdoor football pads`, 51 files and 22 minutes of
+football pad/helmet foley captured outside; 57-second producer preview and
+$20 list price: https://echocollectivefx.com/product/outdoor_football_pads .
+Because this is a paid sound library, don't commit raw sound files into this
+public repository without verifying license terms for source redistribution.
+EA's Madden approach records actors in real pads and helmets; refer to
+https://www.ea.com/ea-studios/ea-orlando/news/engineering-game-day-sounds-behind-ea-sports .

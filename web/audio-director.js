@@ -15,6 +15,10 @@ export const FOOTBALL_SOUNDS = Object.freeze({
   click: 'web/audio/ui-select.ogg',
 });
 
+// These are synthetic/gamey stand-ins, not recorded football gear. Keep the
+// files for controlled A/B audition only; never play them during games until
+// we have listened to and approved proper football-specific replacements.
+export const SUSPENDED_FOLEY = new Set(['snap', 'hit1', 'hit2', 'whistle']);
 function cue(at, name, gain = 1) { return { at: Math.max(0, at), name, gain }; }
 export function planFootballSound(play, record, homeTeam) {
   if (!play) return [];
@@ -64,7 +68,7 @@ export function planFootballSound(play, record, homeTeam) {
     react = play.offense === homeTeam ? 'boo' : 'cheer';
   }
   if (react) cues.push(cue(Math.max(0.3, duration - 0.3), react, 0.55));
-  return cues.sort((a, b) => a.at - b.at);
+  return cues.filter(c => !SUSPENDED_FOLEY.has(c.name)).sort((a, b) => a.at - b.at);
 }
 
 // Browser-only audio mixer. No audio is loaded or played until the user clicks
@@ -90,7 +94,7 @@ export class FootballAudio {
     this.context ||= new Ctx();
     await this.context.resume();
     this.enabled = true;
-    const names = Object.keys(this.manifest);
+    const names = Object.keys(this.manifest).filter(name => !SUSPENDED_FOLEY.has(name));
     await Promise.all(names.map(async name => {
       if (this.buffers.has(name)) return;
       try {
@@ -129,7 +133,7 @@ export class FootballAudio {
     if (this.ambientGain) this.ambientGain.gain.value = this.volume * 0.18;
   }
   playCue(name, volume = 1) {
-    if (!this.enabled || !this.context) return;
+    if (SUSPENDED_FOLEY.has(name) || !this.enabled || !this.context) return;
     const buffer = this.buffers.get(name);
     if (!buffer) return;
     const source = this.context.createBufferSource();
