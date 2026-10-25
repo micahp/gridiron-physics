@@ -4,7 +4,7 @@
  "season_type": "REG",
  "source": {
   "name": "nflverse play_by_play_2025.csv.gz",
-  "path": "pbp_2025-nflverse-audit.csv.gz",
+  "path": "pbp_2025.csv.gz",
   "sha256": "2f135887790a013fd004e609e37096bb4816d5cc80b9f19122e1bad478961978"
  },
  "scope": "League-wide 2025 regular-season rates. Not team or kicker rates.",
@@ -41,6 +41,15 @@
    "blocked": 23,
    "missed": 134,
    "source": "nflverse play_by_play_2025 REG field_goal_result"
+  },
+  "blocked_resolution": {
+   "receiving_recovery": 9,
+   "kicking_recovery": 4,
+   "no_recovery": 10
+  },
+  "blocked_receiving_touchdown": {
+   "touchdown": 3,
+   "no_touchdown": 6
   }
  },
  "extra_points": {
