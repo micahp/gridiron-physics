@@ -27,6 +27,8 @@ const FRONT_TO_ROSTER = { nickel_over: 'nickel', nickel_under: 'nickel', nickel:
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
+  // Test-only: lets a regression test start a named player at a point (yards).
+  'initialPositions',
 ]);
 
 function validateConfig(input) {
@@ -48,7 +50,11 @@ function validateConfig(input) {
     massOverrides: input.massOverrides ?? {},
     offenseTeam: input.offenseTeam ?? 'OFF',
     defenseTeam: input.defenseTeam ?? 'DEF',
+    initialPositions: input.initialPositions ?? {},
   };
+  for (const [key, pos] of Object.entries(cfg.initialPositions)) {
+    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) throw new TypeError(`initialPositions.${key} needs finite x and y in yards`);
+  }
   if (cfg.concept !== 'slant_flat') throw new RangeError(`unsupported passing concept: ${cfg.concept}`);
   if (cfg.direction !== 'left' && cfg.direction !== 'right') throw new RangeError('direction must be left or right');
   if (!FRONT_TO_ROSTER[cfg.front]) throw new RangeError(`unsupported passing front: ${cfg.front}`);
@@ -145,7 +151,8 @@ export function simulatePassPlay(options = {}) {
     const p = W.add(new Player(info, info.team, info.slot));
     p.roleKey = info.roleKey;
     const spot = formation(info);
-    p.p = { x: at(spot.f, spot.l).x, y: at(spot.f, spot.l).y };
+    const override = cfg.initialPositions[info.roleKey];
+    p.p = override ? { x: override.x * YD, y: override.y * YD } : { x: at(spot.f, spot.l).x, y: at(spot.f, spot.l).y };
     p.h = info.team === 'O' ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? Math.PI : 0);
     const blockRating = info.team === 'O' ? (p.R.PBK ?? p.R.RBK ?? 60) : (p.R.BSH ?? Math.max(p.R.PMV ?? 50, p.R.FMV ?? 50));
     p.engageMul = (0.75 + (0.5 * ((blockRating ?? 60) - 50)) / 50) * (0.8 + 0.2 * (p.R.STR ?? 60) / 80);
@@ -471,8 +478,11 @@ export function simulatePassPlay(options = {}) {
     const out = [];
     for (const p of W.players) {
       if (p.down) continue;
-      // Offensive linemen are ineligible to catch a forward pass.
-      if (p.team === 'O' && p.info.group === 'OL') continue;
+      // Only eligible receivers take a forward pass; only linebackers and defensive backs contest it.
+      const eligible = p.team === 'O'
+        ? ['WR', 'TE', 'RB'].includes(p.info.group) && p !== qb
+        : ['DB', 'LB'].includes(p.info.group);
+      if (!eligible) continue;
       const planar = Math.hypot(p.p.x - b.x, p.p.y - b.y) / YD;
       const reach = 1.15 + p.r / YD;
       if (planar > reach) continue;
