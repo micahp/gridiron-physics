@@ -6,6 +6,14 @@ on:
       - 'web/week7-play-description.js'
       - 'test/week7-play-description.mjs'
       - 'test/week7.browser.mjs'
+      - 'web/rigged-player.js'
+      - 'web/assets/football-player-rigged-animated.glb'
+      - 'web/assets/football-player-rigged-animated.manifest.json'
+      - 'scripts/retarget_fbx_animations.py'
+      - 'test/rigged-player-unit.mjs'
+      - 'test/rigged-animation-*.mjs'
+      - 'test/rigged-animation-studio.html'
+      - 'package.json'
       - '.github/workflows/week7-player-labels.yml'
   workflow_dispatch:
 permissions:
@@ -24,6 +32,8 @@ jobs:
         run: npm ci
       - name: Check player descriptions and core game generation
         run: node --test test/week7-play-description.mjs test/week7-core.mjs
+      - name: Verify retargeted rig and animation library
+        run: node --test test/rigged-player-unit.mjs test/rigged-animation-unit.mjs test/rigged-animation-assets.mjs
       - name: Install Chromium for six-matchup 3D smoke
         run: npx playwright install --with-deps chromium
       - name: Run original six-matchup browser replay test

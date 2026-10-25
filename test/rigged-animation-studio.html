@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="../">
+<title>Retargeted Animation Studio</title>
+<style>
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0d131b;color:#eef4fa;font:13px system-ui,sans-serif}
+  #view{display:block;width:100%;height:100%}
+  #status{position:fixed;left:14px;top:12px;padding:9px 12px;background:#08111de8;border:1px solid #3c4c5f;border-radius:6px;z-index:2;max-width:760px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div id="status">Loading animated player…</div>
+<canvas id="view"></canvas>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { GLTFLoader } from './web/vendor/GLTFLoader.js';
+import { buildRiggedPlayer, animateRigged, getRiggedAnimationSelection, POSE } from './web/rigged-player.js';
+import { WEEK7_TEAM_KITS } from './web/football-kits.js';
+
+const canvas=document.getElementById('view'),status=document.getElementById('status');
+const params=new URLSearchParams(location.search);
+const asset=params.get('asset')||'football-player-rigged-animated.glb';
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(1.5,devicePixelRatio||1));renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;renderer.shadowMap.enabled=true;
+renderer.setSize(innerWidth,innerHeight,false);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#0d131b');scene.fog=new THREE.Fog('#0d131b',20,60);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);camera.position.set(3.6,2.1,5.3);camera.lookAt(0,.95,0);
+scene.add(new THREE.HemisphereLight('#eaf2ff','#263746',2.0));
+const key=new THREE.DirectionalLight('#fff0d9',2.8);key.position.set(-4,8,6);key.castShadow=true;scene.add(key);
+const fill=new THREE.DirectionalLight('#a6c6ff',1.0);fill.position.set(6,5,-7);scene.add(fill);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:'#223445',roughness:.95}));floor.rotation.x=-Math.PI/2;floor.position.y=-.01;floor.receiveShadow=true;scene.add(floor);
+const grid=new THREE.GridHelper(20,20,'#566778','#344654');grid.position.y=.005;scene.add(grid);
+let player,gltf,pose,rootBaseline;
+try{
+ gltf=await new GLTFLoader().loadAsync(`./web/assets/${asset}`);
+ if(!gltf.animations.length)throw new Error('Animated GLB contains no clips');
+ player=buildRiggedPlayer(gltf,{id:'preview-qb',jersey:'8',physics:{height:1.88,mass:95},animationSeed:'week7-preview'},WEEK7_TEAM_KITS.BAL.home);
+ scene.add(player);
+ const poseName=params.get('pose')||'RUN';pose=POSE[poseName]??POSE.RUN;
+ const selection=getRiggedAnimationSelection(pose,params.get('carrying')==='1');
+ rootBaseline=player.position.clone();
+ const boneNames=new Set();player.traverse(o=>{if(o.isBone)boneNames.add(o.name)});
+ status.textContent=`${selection?.clipName||'procedural'} · state ${poseName} · ${boneNames.size} bones · ${gltf.animations.length} clip(s) · Ravens #8 · physics root fixed`;
+ window.__animStudio={gltf,player,pose,renderer,scene,rootBaseline,boneNames,step:(dt=1/30)=>animateRigged(player,pose,5.2,dt,params.get('carrying')==='1')};
+ if(selection&&!player.userData.animation.clips.has(selection.clipName))throw new Error('State clip missing: '+selection.clipName);
+}catch(e){status.textContent='FAILED: '+(e.stack||e);window.__animStudioError=String(e.stack||e)}
+let prev=performance.now(),samples=[];
+function frame(now){
+ const dt=Math.min(.05,(now-prev)/1000);prev=now;
+ if(player){animateRigged(player,pose,5.2,dt,params.get('carrying')==='1');player.updateMatrixWorld(true);const a=player.userData.animation;samples.push({clip:a.activeClipName,time:a.activeAction?.time??0,x:player.position.x,y:player.position.y,z:player.position.z});if(samples.length>180)samples.shift();}
+ renderer.render(scene,camera);requestAnimationFrame(frame);
+ }
+ requestAnimationFrame(frame);
+ window.__animMetrics=()=>({clip:player?.userData.animation?.activeClipName,rootPosition:player?player.position.toArray():null,rootUnchanged:!!player&&player.position.distanceTo(rootBaseline)<1e-8,bones:window.__animStudio?.boneNames.size,samples});
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+</script>
+</body>
+</html>

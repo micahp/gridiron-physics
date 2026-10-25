@@ -1,0 +1,700 @@
+{
+  "target_glb": "football-player-rigged.glb",
+  "output_glb": "football-player-rigged-animated.glb",
+  "target_bones": 56,
+  "mesh_objects": [
+    "HELMET",
+    "PERSONAGEM"
+  ],
+  "export_result": "{'FINISHED'}",
+  "clip_count": 49,
+  "clips": [
+    {
+      "source": "incoming/Backpedal Right Turn.fbx",
+      "name": "Backpedal Right Turn",
+      "frames": [
+        1,
+        21
+      ],
+      "frame_count": 21,
+      "source_root_horizontal_span_removed": 1.66931,
+      "source_root_vertical_span": 0.09293,
+      "max_retarget_position_error": 2.3e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 7644
+    },
+    {
+      "source": "incoming/Breathing Idle.fbx",
+      "name": "Breathing Idle",
+      "frames": [
+        1,
+        299
+      ],
+      "frame_count": 299,
+      "source_root_horizontal_span_removed": 0.18756,
+      "source_root_vertical_span": 0.02859,
+      "max_retarget_position_error": 1.5e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 108836
+    },
+    {
+      "source": "incoming/Change Direction.fbx",
+      "name": "Change Direction",
+      "frames": [
+        1,
+        66
+      ],
+      "frame_count": 66,
+      "source_root_horizontal_span_removed": 3.41918,
+      "source_root_vertical_span": 0.37258,
+      "max_retarget_position_error": 2.7e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 24024
+    },
+    {
+      "source": "incoming/Defender 1.fbx",
+      "name": "Defender 1",
+      "frames": [
+        1,
+        151
+      ],
+      "frame_count": 151,
+      "source_root_horizontal_span_removed": 2.69776,
+      "source_root_vertical_span": 0.51275,
+      "max_retarget_position_error": 2.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 54964
+    },
+    {
+      "source": "incoming/Defender 2.fbx",
+      "name": "Defender 2",
+      "frames": [
+        1,
+        109
+      ],
+      "frame_count": 109,
+      "source_root_horizontal_span_removed": 8.40727,
+      "source_root_vertical_span": 0.98269,
+      "max_retarget_position_error": 3.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 39676
+    },
+    {
+      "source": "incoming/Fist Pump.fbx",
+      "name": "Fist Pump",
+      "frames": [
+        1,
+        115
+      ],
+      "frame_count": 115,
+      "source_root_horizontal_span_removed": 0.04645,
+      "source_root_vertical_span": 0.03169,
+      "max_retarget_position_error": 1.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 41860
+    },
+    {
+      "source": "incoming/Football Catch 1.fbx",
+      "name": "Football Catch 1",
+      "frames": [
+        1,
+        126
+      ],
+      "frame_count": 126,
+      "source_root_horizontal_span_removed": 1.79427,
+      "source_root_vertical_span": 1.38114,
+      "max_retarget_position_error": 2.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 45864
+    },
+    {
+      "source": "incoming/Football Catch 2.fbx",
+      "name": "Football Catch 2",
+      "frames": [
+        1,
+        126
+      ],
+      "frame_count": 126,
+      "source_root_horizontal_span_removed": 1.50602,
+      "source_root_vertical_span": 1.25613,
+      "max_retarget_position_error": 2.8e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 45864
+    },
+    {
+      "source": "incoming/Football Hike.fbx",
+      "name": "Football Hike",
+      "frames": [
+        1,
+        99
+      ],
+      "frame_count": 99,
+      "source_root_horizontal_span_removed": 0.25234,
+      "source_root_vertical_span": 0.14845,
+      "max_retarget_position_error": 1.2e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 36036
+    },
+    {
+      "source": "incoming/Football Stance.fbx",
+      "name": "Football Stance",
+      "frames": [
+        1,
+        77
+      ],
+      "frame_count": 77,
+      "source_root_horizontal_span_removed": 0.28673,
+      "source_root_vertical_span": 0.32118,
+      "max_retarget_position_error": 2.2e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 28028
+    },
+    {
+      "source": "incoming/Getting Up.fbx",
+      "name": "Getting Up",
+      "frames": [
+        1,
+        82
+      ],
+      "frame_count": 82,
+      "source_root_horizontal_span_removed": 0.16207,
+      "source_root_vertical_span": 0.8565,
+      "max_retarget_position_error": 2.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 29848
+    },
+    {
+      "source": "incoming/Goalie Throw.fbx",
+      "name": "Goalie Throw",
+      "frames": [
+        1,
+        116
+      ],
+      "frame_count": 116,
+      "source_root_horizontal_span_removed": 1.68535,
+      "source_root_vertical_span": 0.21189,
+      "max_retarget_position_error": 2.7e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 42224
+    },
+    {
+      "source": "incoming/Goalkeeper Catch 2.fbx",
+      "name": "Goalkeeper Catch 2",
+      "frames": [
+        1,
+        83
+      ],
+      "frame_count": 83,
+      "source_root_horizontal_span_removed": 0.6422,
+      "source_root_vertical_span": 0.78479,
+      "max_retarget_position_error": 2.5e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 30212
+    },
+    {
+      "source": "incoming/Goalkeeper Catch.fbx",
+      "name": "Goalkeeper Catch",
+      "frames": [
+        1,
+        39
+      ],
+      "frame_count": 39,
+      "source_root_horizontal_span_removed": 0.53797,
+      "source_root_vertical_span": 0.11276,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 14196
+    },
+    {
+      "source": "incoming/Goalkeeper Drop Kick.fbx",
+      "name": "Goalkeeper Drop Kick",
+      "frames": [
+        1,
+        118
+      ],
+      "frame_count": 118,
+      "source_root_horizontal_span_removed": 3.46313,
+      "source_root_vertical_span": 0.35835,
+      "max_retarget_position_error": 2.8e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 42952
+    },
+    {
+      "source": "incoming/Goalkeeper Overhand Throw.fbx",
+      "name": "Goalkeeper Overhand Throw",
+      "frames": [
+        1,
+        86
+      ],
+      "frame_count": 86,
+      "source_root_horizontal_span_removed": 3.94953,
+      "source_root_vertical_span": 0.12357,
+      "max_retarget_position_error": 2.5e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 31304
+    },
+    {
+      "source": "incoming/Idle (1).fbx",
+      "name": "Idle (1)",
+      "frames": [
+        1,
+        251
+      ],
+      "frame_count": 251,
+      "source_root_horizontal_span_removed": 0.01217,
+      "source_root_vertical_span": 0.00171,
+      "max_retarget_position_error": 1.5e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 91364
+    },
+    {
+      "source": "incoming/Idle (2).fbx",
+      "name": "Idle (2)",
+      "frames": [
+        1,
+        301
+      ],
+      "frame_count": 301,
+      "source_root_horizontal_span_removed": 0.01457,
+      "source_root_vertical_span": 0.00534,
+      "max_retarget_position_error": 1.8e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 109564
+    },
+    {
+      "source": "incoming/Idle To Sprint.fbx",
+      "name": "Idle To Sprint",
+      "frames": [
+        1,
+        25
+      ],
+      "frame_count": 25,
+      "source_root_horizontal_span_removed": 1.67795,
+      "source_root_vertical_span": 0.16072,
+      "max_retarget_position_error": 2.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 9100
+    },
+    {
+      "source": "incoming/Idle.fbx",
+      "name": "Idle",
+      "frames": [
+        1,
+        121
+      ],
+      "frame_count": 121,
+      "source_root_horizontal_span_removed": 0.03392,
+      "source_root_vertical_span": 0.0325,
+      "max_retarget_position_error": 1.9e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 44044
+    },
+    {
+      "source": "incoming/Jogging In Place.fbx",
+      "name": "Jogging In Place",
+      "frames": [
+        1,
+        78
+      ],
+      "frame_count": 78,
+      "source_root_horizontal_span_removed": 0.11105,
+      "source_root_vertical_span": 0.13061,
+      "max_retarget_position_error": 1.7e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 28392
+    },
+    {
+      "source": "incoming/Jump.fbx",
+      "name": "Jump",
+      "frames": [
+        1,
+        66
+      ],
+      "frame_count": 66,
+      "source_root_horizontal_span_removed": 0.13696,
+      "source_root_vertical_span": 0.54292,
+      "max_retarget_position_error": 2.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 24024
+    },
+    {
+      "source": "incoming/Kneel.fbx",
+      "name": "Kneel",
+      "frames": [
+        1,
+        60
+      ],
+      "frame_count": 60,
+      "source_root_horizontal_span_removed": 0.33112,
+      "source_root_vertical_span": 0.43546,
+      "max_retarget_position_error": 2.3e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 21840
+    },
+    {
+      "source": "incoming/Push Start.fbx",
+      "name": "Push Start",
+      "frames": [
+        1,
+        143
+      ],
+      "frame_count": 143,
+      "source_root_horizontal_span_removed": 1.38169,
+      "source_root_vertical_span": 0.31528,
+      "max_retarget_position_error": 2.5e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 52052
+    },
+    {
+      "source": "incoming/Push Stop.fbx",
+      "name": "Push Stop",
+      "frames": [
+        1,
+        79
+      ],
+      "frame_count": 79,
+      "source_root_horizontal_span_removed": 0.86513,
+      "source_root_vertical_span": 0.28192,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 28756
+    },
+    {
+      "source": "incoming/Pushing Action Pose.fbx",
+      "name": "Pushing Action Pose",
+      "frames": [
+        1,
+        2
+      ],
+      "frame_count": 2,
+      "source_root_horizontal_span_removed": 0.0,
+      "source_root_vertical_span": 0.0,
+      "max_retarget_position_error": 2.3e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 728
+    },
+    {
+      "source": "incoming/Pushing In Place.fbx",
+      "name": "Pushing In Place",
+      "frames": [
+        1,
+        81
+      ],
+      "frame_count": 81,
+      "source_root_horizontal_span_removed": 0.12484,
+      "source_root_vertical_span": 0.10075,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 29484
+    },
+    {
+      "source": "incoming/Quarterback Pass.fbx",
+      "name": "Quarterback Pass",
+      "frames": [
+        1,
+        231
+      ],
+      "frame_count": 231,
+      "source_root_horizontal_span_removed": 1.95073,
+      "source_root_vertical_span": 0.26994,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 84084
+    },
+    {
+      "source": "incoming/Receiver Catch.fbx",
+      "name": "Receiver Catch",
+      "frames": [
+        1,
+        105
+      ],
+      "frame_count": 105,
+      "source_root_horizontal_span_removed": 2.8505,
+      "source_root_vertical_span": 0.98507,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 38220
+    },
+    {
+      "source": "incoming/Restrain.fbx",
+      "name": "Restrain",
+      "frames": [
+        1,
+        228
+      ],
+      "frame_count": 228,
+      "source_root_horizontal_span_removed": 0.39661,
+      "source_root_vertical_span": 0.0904,
+      "max_retarget_position_error": 1.8e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 82992
+    },
+    {
+      "source": "incoming/Run Look Back.fbx",
+      "name": "Run Look Back",
+      "frames": [
+        1,
+        68
+      ],
+      "frame_count": 68,
+      "source_root_horizontal_span_removed": 0.51591,
+      "source_root_vertical_span": 0.13175,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 24752
+    },
+    {
+      "source": "run-in-place.fbx",
+      "name": "run-in-place",
+      "frames": [
+        1,
+        23
+      ],
+      "frame_count": 23,
+      "source_root_horizontal_span_removed": 0.04507,
+      "source_root_vertical_span": 0.0994,
+      "max_retarget_position_error": 2.5e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 8372
+    },
+    {
+      "source": "incoming/Running Backward in place.fbx",
+      "name": "Running Backward in place",
+      "frames": [
+        1,
+        20
+      ],
+      "frame_count": 20,
+      "source_root_horizontal_span_removed": 0.04258,
+      "source_root_vertical_span": 0.07053,
+      "max_retarget_position_error": 2e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 7280
+    },
+    {
+      "source": "incoming/Running in place.fbx",
+      "name": "Running in place",
+      "frames": [
+        1,
+        20
+      ],
+      "frame_count": 20,
+      "source_root_horizontal_span_removed": 0.08276,
+      "source_root_vertical_span": 0.07897,
+      "max_retarget_position_error": 2.2e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 7280
+    },
+    {
+      "source": "incoming/Running Jump.fbx",
+      "name": "Running Jump",
+      "frames": [
+        1,
+        28
+      ],
+      "frame_count": 28,
+      "source_root_horizontal_span_removed": 4.45269,
+      "source_root_vertical_span": 0.47114,
+      "max_retarget_position_error": 2.9e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 10192
+    },
+    {
+      "source": "incoming/Running To Tackle.fbx",
+      "name": "Running To Tackle",
+      "frames": [
+        1,
+        109
+      ],
+      "frame_count": 109,
+      "source_root_horizontal_span_removed": 8.40727,
+      "source_root_vertical_span": 0.98269,
+      "max_retarget_position_error": 3.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 39676
+    },
+    {
+      "source": "incoming/Running To Turn.fbx",
+      "name": "Running To Turn",
+      "frames": [
+        1,
+        69
+      ],
+      "frame_count": 69,
+      "source_root_horizontal_span_removed": 4.01779,
+      "source_root_vertical_span": 0.25464,
+      "max_retarget_position_error": 2.7e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 25116
+    },
+    {
+      "source": "incoming/Running While Holding Something.fbx",
+      "name": "Running While Holding Something",
+      "frames": [
+        1,
+        39
+      ],
+      "frame_count": 39,
+      "source_root_horizontal_span_removed": 0.03421,
+      "source_root_vertical_span": 0.07621,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 14196
+    },
+    {
+      "source": "running-backward-in-place.fbx",
+      "name": "running-backward-in-place",
+      "frames": [
+        1,
+        18
+      ],
+      "frame_count": 18,
+      "source_root_horizontal_span_removed": 0.04172,
+      "source_root_vertical_span": 0.04832,
+      "max_retarget_position_error": 2.1e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 6552
+    },
+    {
+      "source": "incoming/Sprint In Place.fbx",
+      "name": "Sprint In Place",
+      "frames": [
+        1,
+        17
+      ],
+      "frame_count": 17,
+      "source_root_horizontal_span_removed": 3.29014,
+      "source_root_vertical_span": 0.09882,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 6188
+    },
+    {
+      "source": "incoming/Sprint Turn.fbx",
+      "name": "Sprint Turn",
+      "frames": [
+        1,
+        31
+      ],
+      "frame_count": 31,
+      "source_root_horizontal_span_removed": 5.14396,
+      "source_root_vertical_span": 0.05034,
+      "max_retarget_position_error": 2.3e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 11284
+    },
+    {
+      "source": "incoming/Standing Block Idle Leaning Back.fbx",
+      "name": "Standing Block Idle Leaning Back",
+      "frames": [
+        1,
+        84
+      ],
+      "frame_count": 84,
+      "source_root_horizontal_span_removed": 0.04435,
+      "source_root_vertical_span": 0.04742,
+      "max_retarget_position_error": 2.1e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 30576
+    },
+    {
+      "source": "incoming/Standing Idle.fbx",
+      "name": "Standing Idle",
+      "frames": [
+        1,
+        181
+      ],
+      "frame_count": 181,
+      "source_root_horizontal_span_removed": 0.01105,
+      "source_root_vertical_span": 0.00053,
+      "max_retarget_position_error": 1.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 65884
+    },
+    {
+      "source": "incoming/Standing Up.fbx",
+      "name": "Standing Up",
+      "frames": [
+        1,
+        183
+      ],
+      "frame_count": 183,
+      "source_root_horizontal_span_removed": 0.32387,
+      "source_root_vertical_span": 0.89594,
+      "max_retarget_position_error": 2.9e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 66612
+    },
+    {
+      "source": "incoming/Start Walking.fbx",
+      "name": "Start Walking",
+      "frames": [
+        1,
+        89
+      ],
+      "frame_count": 89,
+      "source_root_horizontal_span_removed": 1.98575,
+      "source_root_vertical_span": 0.06675,
+      "max_retarget_position_error": 1.8e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 32396
+    },
+    {
+      "source": "incoming/Strike Foward Jog.fbx",
+      "name": "Strike Foward Jog",
+      "frames": [
+        1,
+        40
+      ],
+      "frame_count": 40,
+      "source_root_horizontal_span_removed": 3.11776,
+      "source_root_vertical_span": 0.31347,
+      "max_retarget_position_error": 2.6e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 14560
+    },
+    {
+      "source": "incoming/Stunned (Knocked Down).fbx",
+      "name": "Stunned (Knocked Down)",
+      "frames": [
+        1,
+        65
+      ],
+      "frame_count": 65,
+      "source_root_horizontal_span_removed": 1.0675,
+      "source_root_vertical_span": 0.81986,
+      "max_retarget_position_error": 2.7e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 23660
+    },
+    {
+      "source": "incoming/Turn Around And Run.fbx",
+      "name": "Turn Around And Run",
+      "frames": [
+        1,
+        50
+      ],
+      "frame_count": 50,
+      "source_root_horizontal_span_removed": 2.78704,
+      "source_root_vertical_span": 0.14447,
+      "max_retarget_position_error": 2.4e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 18200
+    },
+    {
+      "source": "incoming/Victory.fbx",
+      "name": "Victory",
+      "frames": [
+        1,
+        257
+      ],
+      "frame_count": 257,
+      "source_root_horizontal_span_removed": 0.05818,
+      "source_root_vertical_span": 0.01587,
+      "max_retarget_position_error": 1.5e-06,
+      "max_retarget_rotation_error": 0.0,
+      "keyframes": 93548
+    }
+  ],
+  "source_dir": "fbx-clips"
+}
