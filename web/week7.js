@@ -45,6 +45,31 @@ function makeViewer(){
   if(new URLSearchParams(location.search).has('debug')){
     window.__gridironRenderer=renderer;
     window.__gridironState=()=>({selected,hasRecord:Boolean(current),duration:current?.duration,animating,playing,playerCount:renderer.players.size});
+    window.__gridironRecordMeta=()=>!current?.rec?null:({
+      selectedKind:currentPlay?.kind,
+      selectedOutcome:currentPlay?.outcome,
+      requestedKind:currentSelection?.play?.kind,
+      throwSpeed:current.rec.throwSpeed,
+      t0:current.rec.t0,
+      duration:current.duration,
+      end:current.rec.end,
+      events:current.rec.events.map(e=>({type:e.type,t:e.t,by:e.by})),
+    });
+    // Test-only visibility: examine the *simulation's* per-frame pose codes
+    // alongside the actual glTF action currently active on each player's rig.
+    window.__gridironFrameSnapshot=()=>{
+      if(!current?.rec)return null;
+      const rec=current.rec;
+      const k=Math.max(0,Math.min(rec.frames.length-1,Math.floor(playSeconds*rec.hz)));
+      const frame=rec.frames[k];
+      return {time:playSeconds,index:k,playing,
+        players:rec.roster.map((p,i)=>({
+          id:p.id,slot:p.slot,pose:frame[i*6+4],
+          carrying:frame[i*6+5]>0.5,
+          clip:renderer.players.get(p.id)?.userData.animation?.activeClipName||null,
+          clipTime:renderer.players.get(p.id)?.userData.animation?.activeAction?.time??null,
+        }))};
+    };
   }
   renderer.setCamera('broadcast');renderer.resize();
   window.addEventListener('resize',()=>renderer.resize());
@@ -346,7 +371,10 @@ function animate(now){
   const dt=Math.min(.06,(now-lastTick)/1000);lastTick=now;
   if(current&&renderer){
     if(animating&&playing)playSeconds=Math.min(current.duration,playSeconds+dt*Number($('speed').value));
-    renderer.draw(current.rec,current.rec.t0+playSeconds,dt);
+    // Playback time owns the animation clock too. A paused game must not
+    // keep advancing the Mixamo skeleton, and ½×/2× must scale both equally.
+    const animationDt=playing&&animating ? dt*Number($('speed').value) : 0;
+    renderer.draw(current.rec,current.rec.t0+playSeconds,animationDt);
     $('scrub').value=String(Math.round(1000*playSeconds/Math.max(.01,current.duration)));
     if(playSeconds>=current.duration)animating=false;
   }
