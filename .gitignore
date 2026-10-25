@@ -4,3 +4,8 @@ __pycache__/
 data/raw/*.csv
 data/raw/*.csv.gz
 .DS_Store
+
+# FBX-derived animation bake: licensed for use inside the game, not for
+# redistribution as a standalone animation asset. Built locally by
+# scripts/retarget_fbx_animations.py and loaded at runtime when present.
+web/assets/*-animated.glb
