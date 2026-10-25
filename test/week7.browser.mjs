@@ -62,7 +62,7 @@ try{
 {
   const forced = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
   forced.punts = {...forced.punts, outcomes:{blocked:1}, distance_yards:{'0':1,'40':1},
-    blocked_resolution:{receiving_recovery:0, kicking_recovery:1, out_of_bounds:0, safety:0}};
+    blocked_resolution_pooled:{receiving_recovery:0, kicking_recovery:1, out_of_bounds:0, safety:0}};
   const refusalErrors = [];
   const rpage = await browser.newPage({viewport:{width:1280,height:880}});
   rpage.on('pageerror',e=>refusalErrors.push(String(e)));

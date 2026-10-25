@@ -225,13 +225,13 @@ export function auditKickoffSampler(core, league, book) {
   // Blocked punts sample all four observed outcomes, and the sampler fails
   // closed when the resolution table is missing or empty.
   const rng=core.seeded('blocked-outcome');
-  const mixed={blocked_resolution:{receiving_recovery:7,kicking_recovery:2,out_of_bounds:1,safety:1}};
+  const mixed={blocked_resolution_pooled:{receiving_recovery:7,kicking_recovery:2,out_of_bounds:1,safety:1}};
   const sampled=new Set();
   for(let i=0;i<4000;i++) sampled.add(core.sampleBlockedPuntOutcome(mixed,rng));
   assert.deepEqual([...sampled].sort(),[...core.BLOCKED_PUNT_OUTCOMES].sort(),
     'all four blocked-punt outcomes must be sampled');
   assert.throws(()=>core.sampleBlockedPuntOutcome({},rng),/missing blocked-punt/,'missing table must fail closed');
-  assert.throws(()=>core.sampleBlockedPuntOutcome({blocked_resolution:{receiving_recovery:0,kicking_recovery:0,out_of_bounds:0,safety:0}},rng),
+  assert.throws(()=>core.sampleBlockedPuntOutcome({blocked_resolution_pooled:{receiving_recovery:0,kicking_recovery:0,out_of_bounds:0,safety:0}},rng),
     /no observations/,'an empty table must fail closed');
   assert.ok(core.BLOCKED_PUNT_OUTCOMES.includes(core.sampleBlockedPuntOutcome(league.punts,rng)),
     'observed 2025 table yields a known outcome');
@@ -241,7 +241,7 @@ export function auditKickoffSampler(core, league, book) {
   // in real generated games.
   for(const outcome of core.BLOCKED_PUNT_OUTCOMES){
     const only={...league,punts:{outcomes:{blocked:1},distance_yards:{'0':1,'40':1},
-      blocked_resolution:Object.fromEntries(core.BLOCKED_PUNT_OUTCOMES.map(k=>[k,k===outcome?1:0]))}};
+      blocked_resolution_pooled:Object.fromEntries(core.BLOCKED_PUNT_OUTCOMES.map(k=>[k,k===outcome?1:0]))}};
     const seen=new Set();
     for(const m of core.MATCHUPS.slice(0,2)) for(const seed of ['1042','1','2','3']){
       const books={[m.home]:book(m.home),[m.away]:book(m.away)};

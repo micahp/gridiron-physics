@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createPuntSampler, MATCHUPS, generateGame, seeded, missedFieldGoalRestart,
+import { createPuntSampler, MATCHUPS, generateGame, seeded, missedFieldGoalRestart, BLOCKED_PUNT_OUTCOMES,
   sampleBlockedPuntOutcome, sampleCoinTossLedger, validateHalfStartKickoffs, validateCoinTossLedger } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
@@ -108,7 +108,7 @@ assert.equal('untouched' in missedFieldGoalRestart(11), false, 'old untouched na
 // Blocked punts: fail closed without a resolution table.
 const rngBlocked = seeded('blocked-core');
 assert.throws(()=>sampleBlockedPuntOutcome({}, rngBlocked), /missing blocked-punt/);
-assert.equal(sampleBlockedPuntOutcome({blocked_resolution:{safety:3}}, rngBlocked), 'safety');
+assert.equal(sampleBlockedPuntOutcome({blocked_resolution_pooled:{safety:3}}, rngBlocked), 'safety');
 
 // Coin-toss ledger: both winners, both normal choices, Q3 kicker is the Q1 receiver.
 const other = (m, t) => t === m.home ? m.away : m.home;
@@ -144,7 +144,7 @@ for (const m of MATCHUPS.slice(0, 2)) {
 // ---- Review corrections: targeted positive and negative fixtures -----------
 const punts = league.punts;
 const forcedBlocked = (outcome) => ({...league, punts:{outcomes:{blocked:1}, distance_yards:{'0':1,'40':1},
-  blocked_resolution:Object.fromEntries(['receiving_recovery','kicking_recovery','out_of_bounds','safety']
+  blocked_resolution_pooled:Object.fromEntries(['receiving_recovery','kicking_recovery','out_of_bounds','safety']
     .map(k=>[k,k===outcome?1:0]))}});
 const findGame = (predicate, league_, count=8) => {
   for (const m of MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2','3','4','5','6','7'].slice(0,count)) {
@@ -203,11 +203,18 @@ const findGame = (predicate, league_, count=8) => {
 assert.deepEqual(punts.blocked_resolution, {receiving_recovery:7, kicking_recovery:2, out_of_bounds:0, safety:0},
   'observed 2025 blocked-punt counts');
 {
-  const rngReal = seeded('blocked-zero-count');
+  assert.deepEqual(punts.blocked_resolution_pooled, {receiving_recovery:21, kicking_recovery:11, out_of_bounds:4, safety:3},
+    'pooled 2022-2025 blocked-punt counts');
+  const rngReal = seeded('blocked-pooled');
   const seen = new Set();
-  for (let i = 0; i < 20000; i++) seen.add(sampleBlockedPuntOutcome(punts, rngReal));
-  assert.deepEqual([...seen].sort(), ['kicking_recovery', 'receiving_recovery'],
-    'only nonzero observed outcomes are sampled');
+  const hits = {receiving_recovery:0, kicking_recovery:0, out_of_bounds:0, safety:0};
+  for (let i = 0; i < 20000; i++) { const k = sampleBlockedPuntOutcome(punts, rngReal); seen.add(k); hits[k]++; }
+  assert.deepEqual([...seen].sort(), [...BLOCKED_PUNT_OUTCOMES].sort(), 'all pooled outcomes are sampled');
+  for (const [k, n] of Object.entries({receiving_recovery:21, kicking_recovery:11, out_of_bounds:4, safety:3})) {
+    assert.ok(Math.abs(hits[k]/20000 - n/39) < 0.01, `${k} sampled share ${hits[k]/20000} vs ${n/39}`);
+  }
+  assert.throws(()=>sampleBlockedPuntOutcome({blocked_resolution:punts.blocked_resolution}, rngReal), /missing blocked-punt/,
+    'the 2025 counts are not the sampling table');
 }
 
 // (4) Ledger: recomputed from the toss alone; tampered stored fields fail closed.
