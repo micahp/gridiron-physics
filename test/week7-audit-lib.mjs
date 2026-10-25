@@ -258,12 +258,20 @@ export function auditKickoffSampler(core, league, book) {
         assert.equal(p.distance,0,`${p.id} blocked punt must be a zero-yard punt`);
         if(p.possession_resolution==='safety')
           assert.equal(p.scoreAfter[p.possession_after],p.score[p.possession_after]+2,'safety scores 2 for the receiving team');
-        if(p.possession_resolution==='kicking_recovery'||p.possession_resolution==='safety'){
-          assert.ok(g.refusal, `${p.id} ${p.possession_resolution} must refuse the game, not continue`);
+        if(p.possession_resolution==='kicking_recovery'){
+          assert.ok(g.refusal, `${p.id} kicking_recovery must refuse the game, not continue`);
           continue;
         }
-        if(p.possession_resolution==='safety')
-          assert.equal(p.scoreAfter[p.possession_after],p.score[p.possession_after]+2,'safety scores 2 for the receiving team');
+        if(p.possession_resolution==='safety'){
+          // A safety is followed by a sampled free kick owned by the receiving team.
+          const kick=g.plays[p.index];
+          if(kick && (kick.type==='safety_kick'||kick.type==='onside_kick')){
+            // A kicking-team onside recovery keeps the ball with the kicking team (Rule 7-3-1(e)).
+            const owner=kick.kick_type==='onside_kicking_recovery'?kick.kicking_team:p.possession_after;
+            assert.equal(kick.offense,owner,`${p.id} safety free kick must be owned by ${owner}`);
+          }
+          continue;
+        }
         const next=g.plays[p.index];
         if(next && next.quarter===p.quarter && next.type!=='kickoff' && next.offense!==p.possession_after)
           throw new Error(`${p.id} blocked punt possession ${p.possession_after} but next play offense is ${next.offense}`);
@@ -303,4 +311,53 @@ export function auditKickoffSampler(core, league, book) {
   assert.ok(patReturns>0,'forced touchdown returns with a made PAT are generated');
   const patViolations=auditModule(core,patTable,book).violations.filter(v=>v.check==='score_continuity');
   assert.deepEqual(patViolations,[],'return touchdown with PAT must satisfy score continuity');
+}
+
+// Safety free-kick path. Forces every blocked punt to a safety, then checks the
+// post-safety kick in real generated games: ownership, the sampled spot, and that
+// the next scrimmage play belongs to the receiving team in the same drive.
+export function auditSafetyKickPath(core, league, book) {
+  const CLASSES = ['normal_free_kick','onside_receiving_possession'];
+  const observed = (cls) => league.safety_kicks.categories[cls].rows.map(r => r.receiving_spot_yardline_100);
+  const punts = {outcomes:{blocked:1}, distance_yards:{'0':1,'40':1}, blocked_receiving_touchdown_pooled:{touchdown:0,no_touchdown:1},
+    blocked_resolution_pooled:{receiving_recovery:0,kicking_recovery:0,out_of_bounds:0,safety:1}};
+  for (const cls of CLASSES) {
+    const only = {categories: Object.fromEntries(core.SAFETY_KICK_CLASSES.map(k =>
+      [k, k === cls ? league.safety_kicks.categories[k] : {n:0, rows:[]}]))};
+    const table = {...league, punts, safety_kicks: {...league.safety_kicks, ...only}};
+    let kicks = 0;
+    for (const m of core.MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2','3']) {
+      const g = core.generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed, table);
+      for (const p of g.plays) {
+        if (p.type !== 'safety_kick' && p.type !== 'onside_kick') continue;
+        if (p.receiving_spot === null) continue;
+        kicks++;
+        assert.equal(p.kick_type, cls, `${p.id} kick class must be ${cls}`);
+        assert.equal(p.kick_spot_own, 20, `${p.id} safety kick is taken from the own 20`);
+        assert.equal(p.offense, p.receiving_team, `${p.id} safety kick is owned by the receiving team`);
+        assert.ok(observed(cls).includes(p.receiving_spot), `${p.id} spot ${p.receiving_spot} is an observed 2025 spot`);
+        assert.equal(p.possession_after, p.receiving_team, `${p.id} receiving team keeps the ball`);
+        const next = g.plays.find(q => q.index === p.index + 1);
+        if (next && next.quarter === p.quarter && next.type !== 'kickoff')
+          assert.equal(next.offense, p.receiving_team, `${p.id} next play must be the receiving team`);
+      }
+    }
+    assert.ok(kicks > 0, `forced ${cls} safety kicks are generated`);
+  }
+  // A kicking-team onside recovery keeps the ball with the kicking team at first and 10 (Rule 7-3-1(e)).
+  const recovery = {...league, punts:{...punts}, safety_kicks:{...league.safety_kicks, categories:Object.fromEntries(
+    core.SAFETY_KICK_CLASSES.map(k => [k, k === 'onside_kicking_recovery' ? league.safety_kicks.categories[k] : {n:0, rows:[]}]))}};
+  let recoveries = 0;
+  for (const m of core.MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2','3']) {
+    const g = core.generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed, recovery);
+    for (const p of g.plays.filter(q => q.kick_type === 'onside_kicking_recovery')) {
+      recoveries++;
+      assert.equal(p.offense, p.kicking_team, `${p.id} recovery is owned by the kicking team`);
+      assert.equal(p.recovery_spot, 67, `${p.id} recovery spot is the observed offense yardline 67`);
+      const next = g.plays.find(q => q.index === p.index + 1);
+      assert.equal(next.offense, p.kicking_team, `${p.id} next play is the kicking team`);
+      assert.deepEqual([next.down, next.togo], [1, 10], `${p.id} next play is first and 10`);
+    }
+  }
+  assert.ok(recoveries > 0, 'forced kicking-team recoveries are generated');
 }

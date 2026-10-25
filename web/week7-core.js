@@ -192,6 +192,63 @@ export function sampleBlockedPuntOutcome(puntTable, rand) {
   }
   return last;
 }
+// Safety free kick from the kicking team's own 20, sampled from the 2025
+// regular-season kickoffs that followed a safety (data/special_teams
+// safety_kicks, classified by pipeline/build_special_teams_2025.py).
+//
+// Classes are drawn in proportion to their observed 2025 counts, which stands in
+// for the kicking team's onside decision; the simulator does not model that
+// decision. Fails closed in three ways: a missing or empty table throws, a class
+// below SAFETY_KICK_MIN_SAMPLE is refused, and an observed kicking-team onside
+// recovery is refused as safety_onside_recovery, because its down and distance
+// are not in the table. Nothing falls back to another table.
+//
+// The minimum of 2 is a floor, not a sufficiency claim: one observed kick is a
+// single draw, and two is the smallest count that is not a single row. A
+// higher floor would refuse every onside draw, since only 2 receiving-team onside
+// kicks exist in 2025.
+export const SAFETY_KICK_MIN_SAMPLE = 2;
+export const SAFETY_KICK_CLASSES = ['normal_free_kick', 'onside_receiving_possession', 'onside_kicking_recovery'];
+export function sampleSafetyKickOutcome(safetyTable, rand) {
+  const cats = safetyTable?.categories;
+  if (!cats) throw new Error('missing safety-kick outcome table');
+  const total = SAFETY_KICK_CLASSES.reduce((n, k) => n + (cats[k]?.n || 0), 0);
+  if (!(total > 0)) throw new Error('safety-kick outcome table has no observations');
+  let pick = rand() * total;
+  let cls = null;
+  for (const k of SAFETY_KICK_CLASSES) {
+    const n = cats[k]?.n || 0;
+    if (!n) continue;
+    cls = k;
+    pick -= n;
+    if (pick < 0) break;
+  }
+  const cat = cats[cls];
+  if (!Array.isArray(cat.rows) || cat.rows.length !== cat.n)
+    throw new Error(`safety-kick table ${cls}: row list does not match n`);
+  if (cls === 'onside_kicking_recovery') {
+    // Rule 7-3-1(e): the kicking team keeps the ball as a new series, first and 10,
+    // at the recovery spot. Only the spot is observed; it is validated against the
+    // next scrimmage play recorded in the table, and the floor below does not apply.
+    const row = cat.rows[Math.floor(rand() * cat.rows.length)];
+    const offenseSpot = Number(row.offense_spot_yardline_100);
+    if (!Number.isFinite(offenseSpot) || offenseSpot < 1 || offenseSpot > 99)
+      throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no valid recovery spot`);
+    if (row.next_play_down !== 1 || row.next_play_ydstogo !== 10)
+      throw new Error(`safety-kick row ${row.game_id} ${row.play_id} does not record first and 10`);
+    return { category: cls, refusal: null, outcome: row.outcome, return_yards: 0,
+      spot: null, offense_spot: offenseSpot, source: { game_id: row.game_id, play_id: row.play_id } };
+  }
+  if (cat.n < SAFETY_KICK_MIN_SAMPLE)
+    return { category: cls, refusal: 'safety_kick_below_minimum_sample',
+      detail: `Safety-kick class ${cls} has ${cat.n} observed 2025 kick(s), below the minimum of ${SAFETY_KICK_MIN_SAMPLE}; it is refused rather than sampled.` };
+  const row = cat.rows[Math.floor(rand() * cat.rows.length)];
+  const spot = Number(row.receiving_spot_yardline_100);
+  if (!Number.isFinite(spot) || spot < 1 || spot > 99) throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no valid receiving spot`);
+  return { category: cls, refusal: null, outcome: row.outcome, return_yards: Number(row.return_yards || 0),
+    spot, source: { game_id: row.game_id, play_id: row.play_id } };
+}
+
 // Normal-mode coin toss ledger, from docs/rules/NFL-2026-GAME-STATE-RULES.md.
 // The winner's receive/defer choice is an authored simulation assumption, not
 // an observed or verified rate.
@@ -389,6 +446,42 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
       reason:options.reason || null,
       note:sampled.note });
   }
+  // Safety free kick: the kicking team (the team scored on) kicks from its own
+  // 20. The caller has already closed the drive that ended in the safety. The
+  // sampled outcome gives the receiving team's spot; a normal kick is a
+  // safety_kick event, and an onside kick is an onside_kick event. Refusals are
+  // recorded with a null spot and possession, and the game stops.
+  function safetyKick(kicking, receiving) {
+    const s = sampleSafetyKickOutcome(league.safety_kicks, rand);
+    const onside = s.category !== 'normal_free_kick';
+    const base = { type: onside ? 'onside_kick' : 'safety_kick', kind:'free_kick',
+      action: onside ? 'ONSIDE KICK' : 'SAFETY KICK', points:0,
+      offense:receiving, defense:kicking, kicking_team:kicking, receiving_team:receiving,
+      kick_type:s.category, kick_spot_own:20 };
+    offense = receiving;
+    if (s.refusal) {
+      event({ ...base, receiving_spot:null, outcome:null, possession_after:null,
+        note:'Safety-kick outcome refused: ' + s.refusal + '.' });
+      refuse(s.refusal, s.detail);
+      return;
+    }
+    if (s.category === 'onside_kicking_recovery') {
+      // Rule 7-3-1(e): the kicking team legally recovered; it keeps the ball, first and 10.
+      offense = kicking;
+      newSeries(s.offense_spot);
+      event({ ...base, offense:kicking, defense:receiving, outcome:s.outcome, return_yards:0,
+        receiving_spot:null, recovery_spot:s.offense_spot, possession_after:kicking, source:s.source,
+        note:'Onside kick recovered by the kicking team (2025 post-safety sample). Rule 7-3-1(e): new series, first and 10 at the recovery spot.' });
+      return;
+    }
+    newSeries(s.spot);
+    event({ ...base, outcome:s.outcome, return_yards:s.return_yards,
+      receiving_spot:s.spot, possession_after:receiving,
+      source:s.source,
+      note: onside
+        ? 'Onside kick from the kicking team\'s own 20, recovered or fair caught by the receiving team (2025 post-safety sample).'
+        : 'Free kick from the kicking team\'s own 20 after a safety (2025 post-safety sample).' });
+  }
   // Estimate the punt spot from kickYl and the sampled distance/return. The
   // generator does not model the full kick trajectory or the outcome-distance
   // relationship beyond the blocked/zero-distance pairing.
@@ -507,13 +600,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
               scores[receiving] += 2;
               punt.scoreAfter = {...scores};
               finishDrive('safety');
-              offense = receiving;
-              event({type:'safety_kick',kind:'free_kick',action:'SAFETY KICK',points:0,
-                offense:receiving, defense:offense, kicking_team:offense, receiving_team:receiving,
-                kick_spot_own:20, receiving_spot:null, outcome:null, possession_after:receiving,
-                note:'Safety kick from the kicking team\'s own 20. The 2025 data has no safety-kick outcome table, so the receiving spot is not sampled.'});
-              refuse('safety_kick',
-                'Safety kick receiving spot has no observed outcome table. The 2025 data has no safety-kick counts, so none are sampled.');
+              safetyKick(offense, receiving);
             }
             else if (resolution === 'receiving_recovery' && sampleBlockedTouchdown(league.punts, rand)) {
               scores[receiving] += 6;
@@ -593,7 +680,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
     status, refusal, complete_regulation:completeRegulation,
     score:{...scores}, plays, drives, source_play_count:snaps,
     warnings:['Not a validated NFL full-game simulator or betting forecast.',
-      'Timeouts, penalties, play clock, onside kicks and overtime are unsupported.',
+      'Timeouts, penalties, play clock, onside kicks outside the post-safety free kick, and overtime are unsupported.',
       'Kickoffs, punts and field goals use 2025 league rates, not kicker or team rates. Kick flight and returns are not simulated.',
       '2022 player tracking informs ongoing movement research; the trained team movement prior is not connected.'],
   };

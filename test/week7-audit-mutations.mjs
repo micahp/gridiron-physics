@@ -12,7 +12,7 @@ import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { auditModule, auditKickoffSampler } from './week7-audit-lib.mjs';
+import { auditModule, auditKickoffSampler, auditSafetyKickPath } from './week7-audit-lib.mjs';
 
 const CORE_URL = new URL('../web/week7-core.js', import.meta.url);
 const source = readFileSync(CORE_URL, 'utf8');
@@ -93,6 +93,18 @@ const MUTATIONS = [
   {name:'Q3 half-start kickoff uses the Q1 kicker',
     from:"kickoff(ledger.second_half.kicking_team, null, { reason: 'half_start' });",
     to:"kickoff(ledger.first_half.kicking_team, null, { reason: 'half_start' });"},
+  {name:'safety free kick is owned by the kicking team',
+    from:"      offense:receiving, defense:kicking, kicking_team:kicking, receiving_team:receiving,\n      kick_type:s.category",
+    to:"      offense:kicking, defense:receiving, kicking_team:kicking, receiving_team:receiving,\n      kick_type:s.category"},
+  {name:'safety free kick spot ignores the sampled 2025 spot',
+    from:'      receiving_spot:s.spot, possession_after:receiving,',
+    to:'      receiving_spot:35, possession_after:receiving,'},
+  {name:'safety free kick does not hand the ball to the receiving team',
+    from:'    offense = receiving;\n    if (s.refusal) {',
+    to:'    offense = kicking;\n    if (s.refusal) {'},
+  {name:'kicking-team onside recovery hands the ball to the receiving team',
+    from:'      offense = kicking;\n      newSeries(s.offense_spot);',
+    to:'      offense = receiving;\n      newSeries(s.offense_spot);'},
   {name:'blocked-punt touchdown return scores no points',
     from:'              scores[receiving] += 6;\n              punt.touchdown_return = true;',
     to:'              scores[receiving] += 0;\n              punt.touchdown_return = true;'},
@@ -122,7 +134,7 @@ try {
         caught = true;
         why = `${violations.length} violations, first [${violations[0].check}] ${violations[0].detail}`;
       } else {
-        try { auditKickoffSampler(mutated, league, book); }
+        try { auditKickoffSampler(mutated, league, book); auditSafetyKickPath(mutated, league, book); }
         catch (err) { caught = true; why = `sampler assertion: ${err.message}`; }
       }
     } catch (err) {

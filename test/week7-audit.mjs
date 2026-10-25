@@ -13,7 +13,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import * as core from '../web/week7-core.js';
 import { MATCHUPS, generateGame, seeded } from '../web/week7-core.js';
-import { auditModule, auditKickoffSampler } from './week7-audit-lib.mjs';
+import { auditModule, auditKickoffSampler, auditSafetyKickPath } from './week7-audit-lib.mjs';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
 
@@ -43,6 +43,7 @@ function book(id){
 
 const {violations, unverified} = auditModule(core, league, book);
 auditKickoffSampler(core, league, book);
+auditSafetyKickPath(core, league, book);
 
 // ---- Determinism: the same seed must reproduce the same payload hash ----
 for(const m of MATCHUPS){

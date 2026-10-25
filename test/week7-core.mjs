@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createPuntSampler, MATCHUPS, generateGame, seeded, missedFieldGoalRestart, BLOCKED_PUNT_OUTCOMES,
-  sampleBlockedPuntOutcome, sampleBlockedFieldGoalOutcome, sampleCoinTossLedger, validateHalfStartKickoffs, validateCoinTossLedger } from '../web/week7-core.js';
+  sampleBlockedPuntOutcome, sampleBlockedFieldGoalOutcome, sampleCoinTossLedger, validateHalfStartKickoffs, validateCoinTossLedger,
+  sampleSafetyKickOutcome, SAFETY_KICK_CLASSES } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
 
@@ -250,32 +251,137 @@ const findGame = (predicate, league_, count=8) => {
   assert.equal(ko.kicking_team, punt.recovery_team, 'the scoring team kicks off');
 }
 
-// (1) Safety: a distinct free kick from the kicking team's own 20, not an ordinary kickoff.
+// (1) Safety free kick, sampled from the 2025 post-safety rows. Each test forces
+// a single class so the outcome is known. The kicking team is the one scored on,
+// kicks from its own 20, and possession and drive continue with the receiving team.
+const onlyClass = (name) => ({...league.safety_kicks, categories: Object.fromEntries(
+  SAFETY_KICK_CLASSES.map(k => [k, k === name ? league.safety_kicks.categories[k] : {n:0, rows:[]}]))});
+const withSafety = (name) => ({...forcedBlocked('safety'), safety_kicks: onlyClass(name)});
+const nextPlay = (g, p) => g.plays.find(q => q.index === p.index + 1);
+// (1a) Normal free kick: the spot is an observed 2025 post-safety spot, and play continues with the receiving team.
 {
-  const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('safety'));
-  assert.equal(g.refusal.rule, 'safety_kick');
-  assert.equal(g.complete_regulation,false,'unsupported safety-kick outcome stops before regulation completion');
-  const sk = g.plays.find(p=>p.type==='safety_kick');
-  assert.ok(sk, 'safety kick is an explicit event');
-  assert.equal(sk.kick_spot_own, 20, 'safety kick is taken from the own 20');
-  assert.equal(sk.receiving_spot, null, 'receiving spot is not sampled');
-  assert.equal(sk.possession_after, sk.receiving_team, 'receiving team takes possession');
-  assert.ok(!g.plays.some(p=>p.type==='kickoff' && p.reason==='safety'), 'no ordinary kickoff for a safety');
+  const g = findGame(g=>g.plays.some(p=>p.type==='safety_kick'), withSafety('normal_free_kick'));
+  assert.ok(g, 'a forced normal-kick game has a safety kick');
   const punt = g.plays.find(p=>p.type==='punt');
+  const sk = g.plays.find(p=>p.type==='safety_kick');
+  assert.equal(sk.kick_type, 'normal_free_kick');
+  assert.equal(sk.kick_spot_own, 20, 'safety kick is taken from the own 20');
+  const observed = league.safety_kicks.categories.normal_free_kick.rows.map(r=>r.receiving_spot_yardline_100);
+  assert.ok(observed.includes(sk.receiving_spot), 'receiving spot is one of the observed 2025 post-safety spots');
+  assert.equal(sk.yl, sk.receiving_spot, 'ball is placed at the sampled spot');
+  assert.equal(sk.possession_after, sk.receiving_team, 'receiving team takes possession');
   assert.equal(punt.scoreAfter[sk.receiving_team], punt.score[sk.receiving_team]+2, 'safety scores 2 for the receiving team');
   assert.notEqual(sk.drive, punt.drive, 'safety kick opens a new drive');
   assert.equal(sk.offense, sk.receiving_team, 'safety kick is owned by the receiving team');
-  const refusalEvent = g.plays.find(p=>p.type==='unsupported_rule');
-  assert.equal(refusalEvent.drive, sk.drive, 'refusal stays in the safety kick drive');
-  assert.equal(refusalEvent.offense, sk.receiving_team, 'refusal keeps the receiving team in possession');
+  // Possession continuity: the next scrimmage play is the receiving team's first down in the same drive.
+  const nxt = nextPlay(g, sk);
+  assert.ok(nxt, 'a play follows the safety kick');
+  assert.equal(nxt.offense, sk.receiving_team, 'next play is the receiving team');
+  assert.equal(nxt.drive, sk.drive, 'next play stays in the safety-kick drive');
+  assert.equal(nxt.down, 1);
+  assert.equal(nxt.togo, Math.min(10, nxt.yl));
   assert.ok(g.plays.filter(p=>p.drive===sk.drive).every(p=>p.offense===sk.receiving_team),
-    'every event in the safety kick drive is owned by the receiving team');
+    'every event in the safety-kick drive is owned by the receiving team');
+  assert.equal(sk.source.game_id.startsWith('2025_'), true, 'sampled kick names its 2025 source row');
 }
-// (1) Negative: the real 2025 table has no safety counts, so no safety kick is ever generated.
+// (1b) Onside kick recovered or fair caught by the receiving team: its own event type, from the kicking team's 20.
+{
+  const g = findGame(g=>g.plays.some(p=>p.type==='onside_kick'), withSafety('onside_receiving_possession'));
+  assert.ok(g, 'a forced onside game has an onside kick');
+  const on = g.plays.find(p=>p.type==='onside_kick');
+  assert.equal(on.kick_type, 'onside_receiving_possession');
+  assert.equal(on.kick_spot_own, 20, 'onside kick is taken from the kicking team\'s own 20');
+  assert.ok([38, 31].includes(on.receiving_spot), 'onside spot is one of the two observed receiving-team onside spots');
+  assert.equal(on.possession_after, on.receiving_team, 'receiving team keeps the ball after a receiving-team onside outcome');
+  assert.equal(g.refusal?.rule, undefined, 'a receiving-team onside outcome is not refused');
+  const nxt = nextPlay(g, on);
+  assert.equal(nxt.offense, on.receiving_team, 'next play is the receiving team');
+  assert.equal(nxt.drive, on.drive, 'next play stays in the onside drive');
+}
+// (1c) Onside kick recovered by the kicking team (2025_08_CLE_NE, kick play 3742, next play 3771).
+// Rule 7-3-1(e): the kicking team keeps the ball as a new series, first and 10 at the recovery spot.
+{
+  const g = findGame(g=>g.plays.some(p=>p.type==='onside_kick'), withSafety('onside_kicking_recovery'));
+  assert.ok(g, 'a forced kicking-recovery game has an onside kick');
+  assert.ok(!g.refusal, 'a kicking-team recovery is not refused');
+  const on = g.plays.find(p=>p.type==='onside_kick');
+  assert.equal(on.kick_type, 'onside_kicking_recovery');
+  assert.equal(on.kick_spot_own, 20, 'onside kick is taken from the own 20');
+  assert.equal(on.offense, on.kicking_team, 'the kicking team owns the recovery');
+  assert.equal(on.possession_after, on.kicking_team, 'the kicking team keeps the ball');
+  assert.equal(on.recovery_spot, 67, 'recovery spot is the kicking team own 33 (offense yardline 67), from the kick row');
+  assert.equal(on.source.game_id, '2025_08_CLE_NE');
+  assert.equal(on.source.play_id, '3742');
+  const nxt = nextPlay(g, on);
+  assert.ok(nxt, 'a play follows the recovery');
+  assert.equal(nxt.offense, on.kicking_team, 'next play is the kicking team');
+  assert.equal(nxt.drive, on.drive, 'next play stays in the same drive');
+  assert.equal(nxt.down, 1, 'down is 1');
+  assert.equal(nxt.togo, 10, 'distance is 10');
+  assert.equal(nxt.yl, 67, 'next play starts at the recovery spot');
+}
+// (1c-2) Fail closed: an unparseable recovery spot or a row without first-and-10 is an error, not a guess.
+{
+  const rng = seeded('recovery-fail-closed');
+  const base = league.safety_kicks.categories.onside_kicking_recovery.rows[0];
+  const mk = (row) => ({categories:{normal_free_kick:{n:0, rows:[]}, onside_receiving_possession:{n:0, rows:[]},
+    onside_kicking_recovery:{n:1, rows:[row]}}});
+  assert.throws(()=>sampleSafetyKickOutcome(mk({...base, offense_spot_yardline_100:undefined}), rng), /no valid recovery spot/);
+  assert.throws(()=>sampleSafetyKickOutcome(mk({...base, offense_spot_yardline_100:'x'}), rng), /no valid recovery spot/);
+  assert.throws(()=>sampleSafetyKickOutcome(mk({...base, next_play_down:2}), rng), /does not record first and 10/);
+}
+// (1d) Suspect labels and excluded kick plays are never sampled; the 2025 counts are pinned.
+{
+  const sk = league.safety_kicks;
+  assert.equal(sk.safeties, 12, '12 regular-season safety rows');
+  assert.equal(sk.no_kick_after_safety.n, 1, 'one safety ends the game with no kick');
+  assert.deepEqual(Object.fromEntries(SAFETY_KICK_CLASSES.map(k=>[k, sk.categories[k].n])),
+    {normal_free_kick:5, onside_receiving_possession:2, onside_kicking_recovery:1}, '2025 class counts');
+  assert.equal(sk.suspect_onside_labels.n, 1);
+  assert.equal(sk.excluded.penalty_on_kick.n, 1);
+  assert.equal(sk.excluded.return_fumble.n, 1);
+  const suspect = new Set(sk.suspect_onside_labels.rows.map(r=>r.game_id+':'+r.play_id));
+  assert.ok(suspect.has('2025_05_DET_CIN:4114'), 'the contradictory onside label is flagged');
+  const excluded = new Set([...sk.excluded.penalty_on_kick.rows, ...sk.excluded.return_fumble.rows].map(r=>r.game_id+':'+r.play_id));
+  const sampled = new Set(SAFETY_KICK_CLASSES.flatMap(k=>sk.categories[k].rows.map(r=>r.game_id+':'+r.play_id)));
+  for (const id of [...suspect, ...excluded]) assert.ok(!sampled.has(id), `${id} is excluded from the sampled table`);
+  const rng = seeded('suspect-exclusion');
+  for (let i = 0; i < 300; i++) {
+    const r = sampleSafetyKickOutcome(sk, rng);
+    if (r.source) assert.ok(sampled.has(r.source.game_id+':'+r.source.play_id), 'sampler draws only from sampled rows');
+  }
+}
+// (1e) Fail closed: missing, empty or below-minimum tables never invent an outcome.
+{
+  const rng = seeded('safety-fail-closed');
+  assert.throws(()=>sampleSafetyKickOutcome(undefined, rng), /missing safety-kick outcome table/);
+  assert.throws(()=>sampleSafetyKickOutcome({}, rng), /missing safety-kick outcome table/);
+  assert.throws(()=>sampleSafetyKickOutcome({categories:{}}, rng), /no observations/);
+  assert.throws(()=>sampleSafetyKickOutcome({categories:{normal_free_kick:{n:0, rows:[]}}}, rng), /no observations/);
+  const row = {game_id:'x', play_id:'1', outcome:'touchback', return_yards:0, receiving_spot_yardline_100:65};
+  const one = {categories:{normal_free_kick:{n:1, rows:[row]}, onside_receiving_possession:{n:0, rows:[]}, onside_kicking_recovery:{n:0, rows:[]}}};
+  const r1 = sampleSafetyKickOutcome(one, rng);
+  assert.equal(r1.refusal, 'safety_kick_below_minimum_sample', 'a class below the minimum is refused');
+  assert.equal(r1.spot, undefined, 'a refused draw has no spot');
+  const g = generateGame(MATCHUPS[0], {[MATCHUPS[0].home]:book(MATCHUPS[0].home), [MATCHUPS[0].away]:book(MATCHUPS[0].away)}, '1042',
+    {...withSafety('normal_free_kick'), safety_kicks:{categories:{...onlyClass('normal_free_kick').categories,
+      normal_free_kick:{n:1, rows:[row]}}}});
+  const gg = findGame(g=>g.refusal?.rule==='safety_kick_below_minimum_sample', {...withSafety('normal_free_kick'),
+    safety_kicks:{categories:{...onlyClass('normal_free_kick').categories, normal_free_kick:{n:1, rows:[row]}}}});
+  assert.ok(gg, 'a game that draws a below-minimum class refuses rather than sampling it');
+  assert.equal(gg.plays.find(p=>p.type==='safety_kick').receiving_spot, null);
+  assert.ok(g, 'game construction with a one-row class still runs');
+  assert.throws(()=>generateGame(MATCHUPS[0], {[MATCHUPS[0].home]:book(MATCHUPS[0].home), [MATCHUPS[0].away]:book(MATCHUPS[0].away)}, '1042',
+    {...forcedBlocked('safety'), safety_kicks:undefined}), /missing safety-kick outcome table/,
+    'a missing safety table throws; no fallback table is used');
+}
+// (1f) Under the real 2025 table, no game produces a safety-kick outcome that is not a sampled row.
 {
   for (const m of MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2']) {
     const g = generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed, league);
-    assert.ok(!g.plays.some(p=>p.type==='safety_kick'), 'no sampled safety kick under the observed table');
+    for (const p of g.plays.filter(q=>q.type==='safety_kick'||q.type==='onside_kick')) {
+      if (p.receiving_spot !== null) assert.ok(p.source, 'a sampled safety-kick event names its 2025 source row');
+    }
   }
 }
 
