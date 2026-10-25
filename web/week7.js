@@ -65,9 +65,15 @@ function inspectPlayer(id){
   detail.innerHTML='<div class="card-h" style="grid-template-columns:1fr auto"><div><h2>'+esc(p.name)+'</h2><p>'+esc(p.team)+' · '+esc(p.pos)+' · OVR estimate</p></div><div class="big">'+esc(p.overall_estimate ?? 'n/r')+'</div></div>'+
     '<div class="attrs" style="margin-top:12px">'+Object.entries(p.ratings||{}).map(([k,v])=>'<div class="attr est"><div class="top"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div></div>').join('')+'</div>'+
     '<p class="note" style="margin-top:10px">Estimated public-research ratings, not EA-licensed player grades.</p>';
-  const row=[...$('players').querySelectorAll('[data-player]')].find(b=>b.dataset.player===id);
-  if(row){row.after(detail);row.scrollIntoView({block:'start'});}
-  else{$('players').prepend(detail);detail.scrollIntoView({block:'start'});}
+  const list=$('players');
+  const reveal=(node)=>{ // scroll the roster list only; scrollIntoView moved the whole page on phones
+    const lr=list.getBoundingClientRect(), nr=node.getBoundingClientRect();
+    if(nr.top<lr.top)list.scrollTop+=nr.top-lr.top-2;
+    else if(nr.bottom>lr.bottom)list.scrollTop+=nr.bottom-lr.bottom+2;
+  };
+  const row=[...list.querySelectorAll('[data-player]')].find(b=>b.dataset.player===id);
+  if(row){row.after(detail);reveal(detail);}
+  else{list.prepend(detail);reveal(detail);}
 }
 function drawPlayerList(demo) {
   rosterSlots = [...Object.entries(demo.lineups.offense).map(([slot,id])=>({side:demo.play.off,slot,id})),
@@ -374,7 +380,12 @@ function choose(idx){
     }
   }
   for(const b of $('timeline').querySelectorAll('button[data-index]'))b.classList.toggle('on',Number(b.dataset.index)===selected);
-  $('timeline').querySelector('.pl.on')?.scrollIntoView({block:'nearest'});
+  { // same reason: keep the window where it is, scroll the timeline list instead
+    const t=$('timeline'), on=t.querySelector('.pl.on');
+    if(on){const tr=t.getBoundingClientRect(), or=on.getBoundingClientRect();
+      if(or.top<tr.top)t.scrollTop+=or.top-tr.top-2;
+      else if(or.bottom>tr.bottom)t.scrollTop+=or.bottom-tr.bottom+2;}
+  }
   stadiumAudio.setPlay(p, current?.rec || null);
   renderPlaybook();
 }
