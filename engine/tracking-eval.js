@@ -72,7 +72,7 @@ export function scoreAutonomousTracking(simulation, observedRows) {
   }
   const horizons = {};
   for (const t of [0.5, 1.0]) {
-    const rows = [];
+    const rows = [], baselineRows = [];
     for (const player of simulation.roster) {
       const observed = observedRows
         .filter((row) => row.player_id === player.id && Math.abs(row.t - t) <= 0.051)
@@ -81,8 +81,19 @@ export function scoreAutonomousTracking(simulation, observedRows) {
       const predicted = simulatedAt(simulation.trajectories[player.id], t);
       if (!predicted) continue;
       rows.push({ player_id: player.id, errorYards: Math.hypot(predicted.x - observed.x, predicted.y - observed.y) });
+      const origin = simulation.trajectories[player.id][0];
+      const baselineX = origin.x + origin.vx * t;
+      const baselineY = origin.y + origin.vy * t;
+      baselineRows.push({ player_id: player.id, errorYards: Math.hypot(baselineX - observed.x, baselineY - observed.y) });
     }
-    horizons[`${t.toFixed(1)}s`] = summarize(rows, rosterById);
+    const model = summarize(rows, rosterById);
+    const baseline = summarize(baselineRows, rosterById);
+    horizons[`${t.toFixed(1)}s`] = {
+      ...model,
+      constant_velocity_baseline: baseline,
+      model_minus_baseline_meters: model.mean_xy_error_meters == null || baseline.mean_xy_error_meters == null
+        ? null : model.mean_xy_error_meters - baseline.mean_xy_error_meters,
+    };
   }
   return {
     mode: 'evaluation_only',

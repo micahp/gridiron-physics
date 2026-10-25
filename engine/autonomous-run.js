@@ -274,6 +274,7 @@ export function simulateInsideZone(options = {}) {
   const center = get('O.C'), qb = get('O.QB'), rb = get('O.RB');
   const ballAtSnap = at(0, 0);
   Object.assign(W.ball, { x: ballAtSnap.x, y: ballAtSnap.y, z: 0.15, state: 'held', holder: center, hand: 'chest' });
+  center.hasBall = true;
 
   const setIntent = (p, assignment, decision) => {
     if (p.ai.assignment === assignment && p.ai.decision === decision) return;
@@ -333,10 +334,10 @@ export function simulateInsideZone(options = {}) {
   for (const p of defense) {
     if (p.info.group === 'DL') {
       p.ai.gapL = lOf(p);
-      setIntent(p, `attack ${gapName(p.ai.gapL)} gap`, 'read the backfield and control assigned gap');
+      setIntent(p, `attack ${gapName(p.ai.gapL, side)} gap`, 'read the backfield and control assigned gap');
     } else if (p.info.group === 'LB') {
       p.ai.gapL = ({ WILL: -2.1, MIKE: 0, SAM: 2.1, LOLB: -3.5, ROLB: 3.5 })[p.slot] ?? 0;
-      setIntent(p, `fit ${gapName(p.ai.gapL)} gap`, 'key the guard and stay square');
+      setIntent(p, `fit ${gapName(p.ai.gapL, side)} gap`, 'key the guard and stay square');
     } else {
       setIntent(p, p.slot === 'FS' ? 'deep run support' : p.slot === 'SS' ? 'alley run support' : 'outside contain', 'read receiver, then fit the run');
     }
@@ -362,6 +363,10 @@ export function simulateInsideZone(options = {}) {
         t: W.t, x: p.p.x / YD, y: p.p.y / YD, vx: p.v.x / YD, vy: p.v.y / YD,
         heading: p.h, speed: p.speed / YD, hasBall: p.hasBall,
         assignment: p.ai.assignment, decision: p.ai.decision,
+        assignment_target: p.ai.blockOn?.roleKey ?? null,
+        engaged_with: p.engaged?.roleKey ?? null,
+        lane_local_yards: p === rb ? p.ai.lane ?? null : null,
+        lane_locked: p === rb ? !!p.ai.laneLocked : false,
       });
     }
     f[o++] = W.ball.x / YD; f[o++] = W.ball.y / YD; f[o++] = W.ball.z;
@@ -416,7 +421,7 @@ export function simulateInsideZone(options = {}) {
     if (rand() < rate * DT) W.disengage(e, d);
   }
 
-  function pickLane() {
+  function laneScores() {
     const currentL = lOf(rb);
     // Read the spaces between linemen (A/B/C tracks), not the blocker centers.
     const lanes = [-2.65, -1.68, -0.58, 0.58, 1.68, 2.65];
@@ -441,7 +446,19 @@ export function simulateInsideZone(options = {}) {
       const playsideBias = -side * lane * 0.16;
       return { lane, score: threat * 1.9 * readSkill - support * 0.58 + cutCost + playsideBias };
     }).sort((a, b) => a.score - b.score || Math.abs(a.lane - side * 1.15) - Math.abs(b.lane - side * 1.15));
-    return scored[0]?.lane ?? side * 1.15;
+    return scored;
+  }
+
+  function pickLane() {
+    return laneScores()[0]?.lane ?? side * 1.15;
+  }
+
+  function laneSwitchHasAdvantage(nextLane, threshold = 0.55) {
+    if (rb.ai.lane == null || nextLane === rb.ai.lane) return true;
+    const scores = laneScores();
+    const current = scores.find((row) => row.lane === rb.ai.lane);
+    const next = scores.find((row) => row.lane === nextLane);
+    return !!current && !!next && current.score - next.score >= threshold;
   }
 
   function startTackle(d) {
@@ -461,9 +478,9 @@ export function simulateInsideZone(options = {}) {
       setIntent(carrier, 'protect football', 'fight through contact and keep forward progress');
     } else {
       d.stumble = 0.24;
-      d.ai.missUntil = W.t + 0.48;
+      d.ai.missUntil = W.t + 1.0;
       carrier.stumble = 0.10;
-      W.event('missed_tackle', { defender_id: d.id, carrier_id: carrier.id, closing_speed: closing });
+      W.event('broken_tackle', { defender_id: d.id, carrier_id: carrier.id, closing_speed: closing });
       setIntent(d, 'recover pursuit angle', 'regain balance after the carrier escaped contact');
     }
   }
@@ -488,8 +505,10 @@ export function simulateInsideZone(options = {}) {
     const forward = fOf(p);
     if (p.ai.nextRead == null || W.t >= p.ai.nextRead) {
       const next = pickLane();
-      if (p.ai.lane == null || (!p.ai.laneLocked && Math.abs(next - p.ai.lane) > 0.8)) {
+      if (p.ai.lane == null || (!p.ai.laneLocked && W.t >= (p.ai.laneHoldUntil ?? 0)
+          && Math.abs(next - p.ai.lane) > 0.8 && laneSwitchHasAdvantage(next))) {
         p.ai.lane = next;
+        p.ai.laneHoldUntil = W.t + 0.18;
         W.event('lane_read', { carrier_id: p.id, lane_local_yards: next, time: W.t });
       }
       if (forward >= 0.8) p.ai.laneLocked = true;
@@ -503,16 +522,16 @@ export function simulateInsideZone(options = {}) {
     // React to defenders already in the near collision envelope. The lane read
     // is re-scored from live positions rather than following a pre-written path.
     const threat = closest(defense, p, (q) => !q.down && fOf(q) >= forward - 0.6 && fOf(q) <= forward + 1.8 && Math.abs(lOf(q) - lOf(p)) < 2.0);
-    if (threat && d2(threat, p) < 1.1 && forward > 0.2 && !p.ai.laneLocked && W.t >= (p.ai.nextRead ?? 0)) {
+    if (threat && d2(threat, p) < 1.1 && forward > 0.2 && !p.ai.laneLocked && W.t >= (p.ai.laneHoldUntil ?? 0)) {
       const alternate = pickLane();
-      if (alternate !== p.ai.lane && Math.abs(alternate - lOf(p)) < 2.8) {
+      if (alternate !== p.ai.lane && Math.abs(alternate - lOf(p)) < 2.8 && laneSwitchHasAdvantage(alternate, 0.3)) {
         p.ai.lane = alternate;
+        p.ai.laneHoldUntil = W.t + 0.18;
         W.event('lane_read', { carrier_id: p.id, lane_local_yards: alternate, time: W.t, trigger: 'near defender' });
       }
-      p.ai.nextRead = W.t + 0.07;
     }
     p.dv = dv;
-    setIntent(p, 'run through selected inside-zone lane', `press ${laneLabel(p.ai.lane ?? lane)} and react to the nearest fit`);
+    setIntent(p, 'run through selected inside-zone lane', `press ${laneLabel(p.ai.lane ?? lane, side)} and react to the nearest fit`);
   }
 
   function offenseBrain(p) {
@@ -582,22 +601,22 @@ export function simulateInsideZone(options = {}) {
     if (p.info.group === 'DL') {
       if (carrier) {
         p.dv = seek(p, lead(p, carrier, 0.34), 0.98, 20);
-        setIntent(p, `close ${gapName(p.ai.gapL)} gap`, `redirect from the mesh to carrier ${carrier.slot}`);
+        setIntent(p, `close ${gapName(p.ai.gapL, side)} gap`, `redirect from the mesh to carrier ${carrier.slot}`);
       } else {
         const gap = p.ai.gapL;
         const target = at(0.45, gap);
         p.dv = seek(p, target, 0.82, 12);
-        setIntent(p, `attack ${gapName(gap)} gap`, 'read the backfield and keep shoulders square');
+        setIntent(p, `attack ${gapName(gap, side)} gap`, 'read the backfield and keep shoulders square');
       }
     } else if (p.info.group === 'LB') {
       const readTime = clamp(0.40 - (p.R.PRC ?? p.R.AWR ?? 60) * 0.003, 0.16, 0.35);
       if (!carrier && W.t < readTime) {
         p.dv = seek(p, at(0.85, p.ai.gapL), 0.42, 6);
-        setIntent(p, `fit ${gapName(p.ai.gapL)} gap`, 'read the mesh before committing downhill');
+        setIntent(p, `fit ${gapName(p.ai.gapL, side)} gap`, 'read the mesh before committing downhill');
       } else {
         const target = carrier ? lead(p, carrier, 0.32) : at(0.55, p.ai.gapL);
         p.dv = seek(p, target, 0.98, 19);
-        setIntent(p, `fit ${gapName(p.ai.gapL)} gap`, carrier ? 'flow downhill to the observed carrier path' : 'close the line of scrimmage and read the mesh');
+        setIntent(p, `fit ${gapName(p.ai.gapL, side)} gap`, carrier ? 'flow downhill to the observed carrier path' : 'close the line of scrimmage and read the mesh');
       }
     } else {
       const isDeep = p.slot === 'FS';
@@ -628,6 +647,7 @@ export function simulateInsideZone(options = {}) {
       carrier.down = true; carrier.pose = POSE.DOWN; carrier.downT = W.t;
       tackle.tackler.down = true; tackle.tackler.pose = POSE.DOWN; tackle.tackler.downT = W.t;
     }
+    for (const engagement of [...W.engagements]) W.disengage(engagement);
     if (W.ball.holder) W.ball.holder = null;
     W.ball.state = 'held'; W.ball.x = spot.x; W.ball.y = spot.y; W.ball.z = 0.15;
     W.event('whistle', { reason, ball_spot: terminal.spot });
@@ -640,12 +660,19 @@ export function simulateInsideZone(options = {}) {
     const x = W.ball.x / YD;
     if ((dir > 0 && x >= 100) || (dir < 0 && x <= 0)) {
       const goalX = (dir > 0 ? 100 : 0) * YD;
-      finish('touchdown', { x: goalX, y: W.ball.y });
-      W.event('touchdown', { carrier_id: carrier.id, spot: terminal.spot });
+      const spot = { x: goalX, y: W.ball.y };
+      W.event('touchdown', { carrier_id: carrier.id, spot: { x: spot.x / YD, y: spot.y / YD } });
+      finish('touchdown', spot);
       return;
     }
     if (W.ball.y < 0 || W.ball.y > FIELD_W_YD * YD) {
-      finish('out_of_bounds', lastInBounds);
+      const boundaryY = W.ball.y < 0 ? 0 : FIELD_W_YD * YD;
+      const dy = W.ball.y - lastInBounds.y;
+      const fraction = Math.abs(dy) > 1e-9 ? clamp((boundaryY - lastInBounds.y) / dy, 0, 1) : 0;
+      finish('out_of_bounds', {
+        x: lastInBounds.x + (W.ball.x - lastInBounds.x) * fraction,
+        y: boundaryY,
+      });
       return;
     }
     lastInBounds = { x: W.ball.x, y: W.ball.y };
@@ -674,6 +701,7 @@ export function simulateInsideZone(options = {}) {
       W.ball.state = 'held';
       W.ball.holder = qb;
       W.ball.hand = 'chest';
+      center.hasBall = false;
       qb.hasBall = true;
       W.event('snap_receive', { quarterback_id: qb.id });
     }
@@ -700,6 +728,10 @@ export function simulateInsideZone(options = {}) {
     }
   }
 
+  if (!terminal) {
+    for (const engagement of [...W.engagements]) W.disengage(engagement);
+    W.event('simulation_failure', { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS });
+  }
   if (frames.length === 0 || W.t - ((frames.length - 1) / REC_HZ) > 1e-6) record();
   for (const row of activeBlock.values()) row.end = W.t;
   const spot = terminal?.spot ?? null;
@@ -724,6 +756,7 @@ export function simulateInsideZone(options = {}) {
     events: W.events,
     terminal: terminal ? { ...terminal, yards_gained: yardsGained, touchdown: terminal.reason === 'touchdown' } : null,
     resolved: !!terminal, carrier_id: carrier?.id ?? null,
+    failure: terminal ? null : { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS },
     tackle_id: terminal?.reason === 'tackle' ? tackle?.tackler.id ?? null : null,
     blockers, topSpeed,
     provenance: {
@@ -735,17 +768,19 @@ export function simulateInsideZone(options = {}) {
   };
 }
 
-function gapName(lateral) {
-  if (lateral < -1.45) return 'backside C';
-  if (lateral < -0.45) return 'backside A';
-  if (lateral <= 0.45) return 'play-side A';
-  if (lateral <= 1.45) return 'play-side B';
+function gapName(lateral, side = 1) {
+  const relative = lateral * side;
+  if (relative < -1.45) return 'backside C';
+  if (relative < -0.45) return 'backside A';
+  if (relative <= 0.45) return 'play-side A';
+  if (relative <= 1.45) return 'play-side B';
   return 'play-side C';
 }
-function laneLabel(lateral) {
-  if (lateral < -1.6) return 'backside C';
-  if (lateral < -0.5) return 'backside A';
-  if (lateral <= 0.5) return 'A';
-  if (lateral <= 1.6) return 'B';
+function laneLabel(lateral, side = 1) {
+  const relative = lateral * side;
+  if (relative < -1.6) return 'backside C';
+  if (relative < -0.5) return 'backside A';
+  if (relative <= 0.5) return 'play-side A';
+  if (relative <= 1.6) return 'play-side B';
   return 'play-side C';
 }

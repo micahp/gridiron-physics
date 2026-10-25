@@ -76,11 +76,13 @@ function offenseRoles(players, dir, ballY) {
   const byL = (a, b) => localL(b, dir, ballY) - localL(a, dir, ballY);
   const leftGuard = [...guards].sort(byL)[0], rightGuard = [...guards].sort(byL)[1];
   const leftTackle = [...tackles].sort(byL)[0], rightTackle = [...tackles].sort(byL)[1];
-  const wide = [...receivers].sort(byL);
+  const runSign = localL(tightEnds[0], dir, ballY) >= 0 ? 1 : -1;
+  const wr3 = [...receivers].sort((a, b) => runSign * (localL(b, dir, ballY) - localL(a, dir, ballY)))[0];
+  const interiorReceivers = receivers.filter((p) => p !== wr3).sort(byL);
   return new Map([
     ['O.QB', qbs[0]], ['O.RB', backs[0]], ['O.LT', leftTackle], ['O.LG', leftGuard],
     ['O.C', centers[0]], ['O.RG', rightGuard], ['O.RT', rightTackle], ['O.TE', tightEnds[0]],
-    ['O.WR1', wide[0]], ['O.WR2', wide[2]], ['O.WR3', wide[1]],
+    ['O.WR1', interiorReceivers[0]], ['O.WR2', interiorReceivers[1]], ['O.WR3', wr3],
   ]);
 }
 
@@ -186,23 +188,33 @@ function evaluationRows(record) {
 function addSummary(target, source) {
   if (!source?.players_scored || !Number.isFinite(source.mean_xy_error_meters)) return;
   target.samples += source.players_scored;
-  target.errorSum += source.mean_xy_error_meters * source.players_scored;
-  for (const [key, value] of Object.entries({ ...source.by_team, ...source.by_role })) {
-    if (!target.groups.has(key)) target.groups.set(key, { samples: 0, errorSum: 0 });
-    const g = target.groups.get(key);
-    g.samples += value.samples;
-    g.errorSum += value.mean_error_meters * value.samples;
+  target.modelErrorSum += source.mean_xy_error_meters * source.players_scored;
+  target.baselineErrorSum += source.constant_velocity_baseline.mean_xy_error_meters * source.players_scored;
+  const modelGroups = { ...source.by_team, ...source.by_role };
+  const baselineGroups = { ...source.constant_velocity_baseline.by_team, ...source.constant_velocity_baseline.by_role };
+  for (const [key, value] of Object.entries(modelGroups)) {
+    if (!target.groups.has(key)) target.groups.set(key, { samples: 0, modelErrorSum: 0, baselineErrorSum: 0 });
+    const group = target.groups.get(key);
+    group.samples += value.samples;
+    group.modelErrorSum += value.mean_error_meters * value.samples;
+    group.baselineErrorSum += baselineGroups[key].mean_error_meters * baselineGroups[key].samples;
   }
 }
 
 function summarize(target) {
+  const modelMean = target.samples ? target.modelErrorSum / target.samples : null;
+  const baselineMean = target.samples ? target.baselineErrorSum / target.samples : null;
   return {
     player_samples: target.samples,
-    mean_xy_error_meters: target.samples ? target.errorSum / target.samples : null,
+    mean_xy_error_meters: modelMean,
+    constant_velocity_baseline_mean_xy_error_meters: baselineMean,
+    model_minus_baseline_meters: modelMean == null || baselineMean == null ? null : modelMean - baselineMean,
     by_team_and_role: Object.fromEntries([...target.groups].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, {
       player_samples: value.samples,
-      mean_xy_error_meters: value.samples ? value.errorSum / value.samples : null,
-    }])),
+      mean_xy_error_meters: value.samples ? value.modelErrorSum / value.samples : null,
+      constant_velocity_baseline_mean_xy_error_meters: value.samples ? value.baselineErrorSum / value.samples : null,
+      model_minus_baseline_meters: value.samples ? (value.modelErrorSum - value.baselineErrorSum) / value.samples : null,
+    }]))
   };
 }
 
@@ -215,7 +227,9 @@ for await (const chunk of createReadStream(observationsPath)) observationHash.up
 const observationSha = observationHash.digest('hex');
 
 const counters = { cohort_records: 0, pff_inside_zone: 0, designed_inside_zone_run: 0, simple_inside_zone: 0, simulated: 0, skipped: {} };
-const horizonTotals = { '0.5s': { samples: 0, errorSum: 0, groups: new Map() }, '1.0s': { samples: 0, errorSum: 0, groups: new Map() } };
+const horizonTotals = Object.fromEntries(['0.5s', '1.0s'].map((horizon) => [horizon, {
+  samples: 0, modelErrorSum: 0, baselineErrorSum: 0, groups: new Map(),
+}]));
 const perPlay = [];
 const input = createInterface({ input: createReadStream(observationsPath).pipe(createGunzip()), crlfDelay: Infinity });
 for await (const line of input) {
@@ -251,8 +265,10 @@ for await (const line of input) {
     run_side_source: built.audit.runSide_source,
     scored_players_0_5s: scored.horizons['0.5s'].players_scored,
     mean_xy_error_meters_0_5s: scored.horizons['0.5s'].mean_xy_error_meters,
+    constant_velocity_baseline_meters_0_5s: scored.horizons['0.5s'].constant_velocity_baseline.mean_xy_error_meters,
     scored_players_1_0s: scored.horizons['1.0s'].players_scored,
     mean_xy_error_meters_1_0s: scored.horizons['1.0s'].mean_xy_error_meters,
+    constant_velocity_baseline_meters_1_0s: scored.horizons['1.0s'].constant_velocity_baseline.mean_xy_error_meters,
   });
 }
 
@@ -285,6 +301,10 @@ const output = {
     unscored_after_simulated_terminal: counters.simulated * 22 - total.samples,
   }])),
   metrics: Object.fromEntries(Object.entries(horizonTotals).map(([horizon, total]) => [horizon, summarize(total)])),
+  worst_1_0s_plays: [...perPlay]
+    .filter((play) => Number.isFinite(play.mean_xy_error_meters_1_0s))
+    .sort((a, b) => b.mean_xy_error_meters_1_0s - a.mean_xy_error_meters_1_0s)
+    .slice(0, 5),
   per_play: perPlay,
 };
 const json = JSON.stringify(output, null, 2) + '\n';

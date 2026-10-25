@@ -6,6 +6,7 @@ const el = {
   canvas: $('#field'), snap: $('#snap'), front: $('#front'), side: $('#run-side'), seed: $('#seed'),
   ol: $('#ol-rating'), dl: $('#dl-rating'), rb: $('#rb-rating'), scrub: $('#scrub'), toggle: $('#toggle'),
   speed: $('#speed'), clock: $('#clock'), result: $('#result-main'), detail: $('#result-detail'),
+  carrier: $('#carrier-readout'), lane: $('#lane-readout'), events: $('#play-events'), compare: $('#compare-runs'),
   label: $('#stage-label'), show: $('#show-decisions'), list: $('#decision-list'), focus: $('#focus-player'),
   focusText: $('#focus-decision'),
 };
@@ -23,6 +24,7 @@ renderer.resize();
 new ResizeObserver(() => renderer.resize()).observe(el.canvas);
 
 let simulation = null;
+let comparison = null;
 let state = { t: 0, playing: false, camera: 'broadcast', lastDecisionFrame: -1, resultShown: false };
 let previousNow = 0;
 
@@ -45,7 +47,8 @@ function currentRatings() {
 
 function createPlay() {
   const seed = el.seed.value.trim() || 'inside-zone-demo-1';
-  simulation = simulateInsideZone({
+  const previous = simulation;
+  const next = simulateInsideZone({
     seed,
     front: el.front.value,
     runSide: el.side.value,
@@ -54,6 +57,8 @@ function createPlay() {
     ballY: 26.667,
     ratingOverrides: currentRatings(),
   });
+  simulation = next;
+  comparison = previous ? { previous, current: simulation } : null;
   game.players = Object.fromEntries(createInsideZoneRoster({
     seed, front: el.front.value, ratingOverrides: currentRatings(),
   }).map((p) => [p.id, p]));
@@ -62,6 +67,7 @@ function createPlay() {
   renderer.clearTrail();
   renderer.select(null);
   renderer.setCamera(state.camera);
+  renderComparison();
 
   const ids = simulation.roster.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.roleKey)}</option>`).join('');
   el.focus.innerHTML = ids;
@@ -90,9 +96,9 @@ function showResult() {
   const wins = simulation.blockers.filter((b) => b.won);
   const who = simulation.roster.find((p) => p.id === simulation.tackle_id);
   if (!outcome) {
-    el.result.textContent = 'Unresolved at the simulation time cap';
-    el.detail.textContent = 'No dead-ball spot is reported because no terminal event occurred.';
-    el.label.textContent = 'No whistle · increase the playback to inspect the developing play.';
+    el.result.textContent = `Simulation failure · ${simulation.failure?.reason ?? 'unresolved'}`;
+    el.detail.textContent = `No football result is reported. Simulation stopped at ${simulation.failure?.time_limit_seconds ?? 'unknown'} seconds without a terminal event.`;
+    el.label.textContent = 'Technical stop · no football result was invented.';
     return;
   }
   const yards = outcome.yards_gained;
@@ -103,6 +109,7 @@ function showResult() {
   el.result.textContent = reason;
   const tackler = who ? ` · ${who.roleKey} made contact` : '';
   el.detail.textContent = `Dead-ball spot ${outcome.spot.x.toFixed(1)} yd · ${wins.length}/${simulation.blockers.length} blockers won${tackler}`;
+  el.carrier.textContent = `Ball carrier at whistle: ${simulation.roster.find((p) => p.id === simulation.carrier_id)?.roleKey ?? 'none'}`;
   el.label.textContent = `${outcome.reason.replaceAll('_', ' ')} · ${signed} · ball spot came from simulated forward progress`;
 }
 
@@ -110,7 +117,29 @@ function showPendingResult() {
   state.resultShown = false;
   el.result.textContent = 'Play in progress';
   el.detail.textContent = 'Gain, dead-ball spot and contact resolve from this simulation.';
+  el.carrier.textContent = 'Ball carrier: —';
+  el.lane.textContent = 'RB lane: —';
   el.label.textContent = 'Snap · watch the players react to the developing play.';
+}
+
+function formatOutcome(run) {
+  if (!run.terminal) return `Failure · ${run.failure?.reason ?? 'unresolved'}`;
+  const gain = run.terminal.yards_gained;
+  const title = run.terminal.reason === 'touchdown' ? 'Touchdown'
+    : run.terminal.reason === 'tackle' ? `Tackle ${gain >= 0 ? '+' : ''}${gain.toFixed(1)} yd`
+      : `${run.terminal.reason.replaceAll('_', ' ')} ${gain >= 0 ? '+' : ''}${gain.toFixed(1)} yd`;
+  return `${title} · spot ${run.terminal.spot.x.toFixed(1)} yd`;
+}
+
+function renderComparison() {
+  if (!comparison) {
+    el.compare.textContent = 'Run a second seed or front to compare outcomes.';
+    return;
+  }
+  const renderRun = (label, run) => `<div class="compare-run"><b>${label} · ${escapeHtml(run.seed)}</b>`
+    + `<span>${escapeHtml(run.front)} · ${escapeHtml(run.run_side)}</span>`
+    + `<span>${escapeHtml(formatOutcome(run))}</span></div>`;
+  el.compare.innerHTML = `<div class="compare-grid">${renderRun('Previous', comparison.previous)}${renderRun('Current', comparison.current)}</div>`;
 }
 
 function escapeHtml(value) {
@@ -128,11 +157,16 @@ function renderDecisionPanel(force = false) {
   const frame = sampleIndexAt(state.t);
   if (!force && frame === state.lastDecisionFrame) return;
   state.lastDecisionFrame = frame;
+  renderLiveSituation(frame);
+  renderEventLog();
   const selectedId = el.focus.value || 'O.RB';
   const selected = simulation.trajectories[selectedId]?.[frame];
   if (selected) {
     const role = simulation.roster.find((p) => p.id === selectedId)?.roleKey ?? selectedId;
-    el.focusText.innerHTML = `<b>${escapeHtml(role)}</b> · ${escapeHtml(selected.assignment)}<br><span>${escapeHtml(selected.decision)}</span>`;
+    const target = selected.assignment_target ? ` · target ${selected.assignment_target}` : '';
+    const engagement = selected.engaged_with ? ` · engaged with ${selected.engaged_with}` : '';
+    const lane = selected.lane_local_yards == null ? '' : `<br>Lane: ${escapeHtml(laneLabel(selected.lane_local_yards))}${selected.lane_locked ? ' · locked' : ''}`;
+    el.focusText.innerHTML = `<b>${escapeHtml(role)}</b> · ${escapeHtml(selected.assignment)}${escapeHtml(target)}${escapeHtml(engagement)}<br><span>${escapeHtml(selected.decision)}</span>${lane}`;
   }
   if (!el.show.checked) {
     el.list.hidden = true;
@@ -143,6 +177,50 @@ function renderDecisionPanel(force = false) {
     const sample = simulation.trajectories[p.id]?.[frame];
     return `<div class="decision-row"><b>${escapeHtml(p.roleKey)}</b><span>${escapeHtml(sample?.assignment ?? '—')}</span><span class="intent">${escapeHtml(sample?.decision ?? '—')}</span></div>`;
   }).join('');
+}
+
+function laneLabel(lateral) {
+  const relative = lateral * (simulation.run_side === 'left' ? 1 : -1);
+  if (relative < -1.6) return 'backside C';
+  if (relative < -0.5) return 'backside A';
+  if (relative <= 0.5) return 'play-side A';
+  if (relative <= 1.6) return 'play-side B';
+  return 'play-side C';
+}
+
+function renderLiveSituation(frame) {
+  const carrier = simulation.roster.find((p) => simulation.trajectories[p.id]?.[frame]?.hasBall);
+  const carrierRole = carrier?.roleKey ?? 'none';
+  const terminal = state.t >= (simulation.trajectories['O.RB'].at(-1)?.t ?? Infinity) - 1e-6;
+  el.carrier.textContent = `${terminal ? 'Ball carrier at whistle' : 'Current ball carrier'}: ${carrierRole}`;
+  const lane = simulation.trajectories['O.RB']?.[frame]?.lane_local_yards;
+  el.lane.textContent = lane == null ? 'RB lane: reading the mesh' : `RB lane: ${laneLabel(lane)} (${lane.toFixed(2)} yd local)`;
+}
+
+function renderEventLog() {
+  const roles = new Map(simulation.roster.map((p) => [p.id, p.roleKey]));
+  const eventRows = simulation.events.filter((event) => event.t <= state.t + 1e-6 && [
+    'snap', 'snap_receive', 'handoff', 'lane_read', 'block_engage', 'block_release',
+    'shed', 'broken_tackle', 'tackle', 'touchdown', 'whistle', 'simulation_failure',
+  ].includes(event.type));
+  const lines = eventRows.map((event) => {
+    let detail = '';
+    if (event.type === 'snap') detail = `Center → ${roles.get(event.to) ?? 'QB'}`;
+    else if (event.type === 'snap_receive') detail = `${roles.get(event.quarterback_id) ?? 'QB'} secures the snap`;
+    else if (event.type === 'handoff') detail = `${roles.get(event.from) ?? 'QB'} hands to ${roles.get(event.to) ?? 'RB'}`;
+    else if (event.type === 'lane_read') detail = `${roles.get(event.carrier_id) ?? 'RB'} selects ${laneLabel(event.lane_local_yards)}`;
+    else if (event.type === 'block_engage') detail = `${roles.get(event.blocker_id)} engages ${roles.get(event.defender_id)}`;
+    else if (event.type === 'block_release') detail = `${roles.get(event.blocker_id)} releases ${roles.get(event.defender_id)}${event.by ? ` · shed by ${roles.get(event.by)}` : ''}`;
+    else if (event.type === 'shed') detail = `${roles.get(event.by)} sheds ${roles.get(event.from)}`;
+    else if (event.type === 'broken_tackle') detail = `${roles.get(event.carrier_id)} breaks ${roles.get(event.defender_id)} contact`;
+    else if (event.type === 'tackle') detail = `${roles.get(event.by)} wraps ${roles.get(event.on)}`;
+    else if (event.type === 'touchdown') detail = `${roles.get(event.carrier_id)} crosses the goal line`;
+    else if (event.type === 'whistle') detail = `Whistle · ${event.reason.replaceAll('_', ' ')} · spot ${event.ball_spot.x.toFixed(1)} yd`;
+    else if (event.type === 'simulation_failure') detail = `No football result · stopped at ${event.time_limit_seconds}s`;
+    return `<li><strong>${event.t.toFixed(2)}s</strong> · ${escapeHtml(detail)}</li>`;
+  });
+  el.events.innerHTML = lines.length ? lines.join('') : '<li class="muted">No play events yet.</li>';
+  el.events.scrollTop = el.events.scrollHeight;
 }
 
 function draw(dt) {

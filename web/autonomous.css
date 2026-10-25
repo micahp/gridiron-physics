@@ -55,6 +55,16 @@ output { color: var(--chalk); font: 12px var(--mono); }
 .snap:disabled { opacity: .55; cursor: wait; }
 .result { margin: 15px 0; padding: 10px 11px; background: #0b1016; border-left: 3px solid var(--gold); }
 .result h2, .assignments h2 { margin: 0 0 5px; font: 700 14px var(--display); letter-spacing: .05em; text-transform: uppercase; }
+.comparison, .event-log { margin: 12px 0; padding-top: 9px; border-top: 1px solid var(--rail); }
+.comparison h2, .event-log h2 { margin: 0 0 5px; font: 700 14px var(--display); letter-spacing: .05em; text-transform: uppercase; }
+.comparison p { margin: 0; }
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 7px; }
+.compare-run { min-width: 0; padding: 7px; background: #0b1016; font-size: 10px; }
+.compare-run b { display: block; color: var(--gold); font: 600 10px var(--mono); overflow-wrap: anywhere; }
+.compare-run span { display: block; color: var(--dim); }
+.event-log ol { max-height: 148px; overflow: auto; margin: 5px 0 0; padding: 0 0 0 20px; }
+.event-log li { padding: 3px 2px; border-bottom: 1px solid #ffffff0c; color: var(--dim); font-size: 10px; }
+.event-log li strong { color: var(--chalk); font-weight: 500; }
 #result-main { margin: 0; font: 700 18px var(--display); }
 #result-detail { margin: 2px 0 0; }
 .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
