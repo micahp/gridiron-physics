@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1016">
-  <title>Autonomous Inside Zone · Gridiron Physics</title>
+  <title>Autonomous Sandbox · Gridiron Physics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -15,8 +15,8 @@
     <header class="lab-head">
       <div>
         <p class="eyebrow">Gridiron Physics · prospective execution</p>
-        <h1>Inside Zone</h1>
-        <p class="dek">22 authored player profiles · decisions update from live positions · outcome resolved by simulated ball motion and contact</p>
+        <h1 id="page-title">Inside Zone</h1>
+        <p class="dek" id="page-dek">22 authored player profiles · decisions update from live positions · outcome resolved by simulated ball motion and contact</p>
       </div>
       <a class="back" href="index.html">Film Room ↗</a>
     </header>
@@ -40,9 +40,13 @@
         <span class="mode-tag">AUTONOMOUS</span>
       </div>
       <label>Play call
-        <select id="play-call"><option value="inside_zone">Inside zone</option></select>
+        <select id="play-call">
+          <option value="inside_zone">Inside zone</option>
+          <option value="slant_flat_left">Slant / flat left</option>
+          <option value="slant_flat_right">Slant / flat right</option>
+        </select>
       </label>
-      <div class="row">
+      <div class="row" id="run-setup">
         <label>Defense front
           <select id="front">
             <option value="even">Even 4–3</option><option value="over">Over 4–3</option>
@@ -54,6 +58,18 @@
           <select id="run-side"><option value="left">Left</option><option value="right" selected>Right</option></select>
         </label>
       </div>
+      <div class="row">
+        <label>Starting spot · offense yard line
+          <input id="los" type="number" min="1" max="99" value="35">
+        </label>
+        <label>Down
+          <select id="down"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+        </label>
+      </div>
+      <label>Yards to go <input id="to-go" type="number" min="1" max="99" value="10"></label>
+      <label id="coverage-control" hidden>Defensive coverage
+        <select id="coverage"><option value="cover3">Cover 3</option><option value="cover1">Cover 1</option></select>
+      </label>
       <label>Fixed seed <input id="seed" value="inside-zone-demo-1" autocomplete="off"></label>
       <details class="ratings">
         <summary>Player ratings <span>authored 1–99 inputs</span></summary>

@@ -19,7 +19,7 @@ const openFront = (front) => ({
 const scenarios = [
   {
     name: 'open inside gap',
-    config: { seed: 'open-gap-78', front: 'even', runSide: 'left', ratingOverrides: openFront('even') },
+    config: { seed: 'accept-search-open-4', front: 'even', runSide: 'left', ratingOverrides: openFront('even') },
     verify: (run) => assert.ok(run.terminal.yards_gained >= 4 && run.terminal.yards_gained < 10),
   },
   {
@@ -32,7 +32,7 @@ const scenarios = [
   },
   {
     name: 'backside cutback',
-    config: { seed: 'cutback-inside-80', front: 'even', runSide: 'left' },
+    config: { seed: 'accept-search-cutback-38', front: 'even', runSide: 'left' },
     verify: (run) => {
       const lanes = run.events.filter((e) => e.type === 'lane_read').map((e) => e.lane_local_yards);
       assert.ok(lanes[0] > 1.5 && lanes.some((lane, i) => i > 0 && lane < -0.5));
@@ -41,7 +41,7 @@ const scenarios = [
   {
     name: 'unblocked linebacker',
     config: {
-      seed: 'mike-1-42', runSide: 'left',
+      seed: 'unblocked-final-26', runSide: 'left',
       initialPositions: { 'O.C': { x: 10, y: 15 }, 'D.MIKE': { x: 40.1, y: 26.667 } },
     },
     verify: (run) => {
@@ -61,20 +61,20 @@ const scenarios = [
   },
   {
     name: 'broken tackle',
-    config: { seed: 'broken-3', runSide: 'left' },
+    config: { seed: 'accept-search-broken-0', runSide: 'left' },
     verify: (run) => assert.ok(run.events.some((e) => e.type === 'broken_tackle') && run.tackle_id),
   },
   {
     name: 'explosive run',
     config: {
-      seed: 'breakout-inside-1', front: 'even', runSide: 'left', ratingOverrides: openFront('even'),
+      seed: 'accept-search-explosive-8', front: 'even', runSide: 'left', ratingOverrides: openFront('even'),
     },
     verify: (run) => assert.ok(run.terminal.yards_gained >= 10),
   },
   {
     name: 'out-of-bounds run',
     config: {
-      seed: 'sideline-left-0', front: 'nickel', runSide: 'left', ballY: 1.3,
+      seed: 'accept-search-oob-32', front: 'nickel', runSide: 'left', ballY: 1.3,
       ratingOverrides: openFront('nickel'),
     },
     verify: (run) => {
@@ -85,7 +85,7 @@ const scenarios = [
   {
     name: 'touchdown',
     config: {
-      seed: 'goal-line-5', front: 'even', runSide: 'left', los: 98,
+      seed: 'accept-search-td-2', front: 'even', runSide: 'left', los: 98,
       ratingOverrides: openFront('even'),
     },
     verify: (run) => {
@@ -125,6 +125,7 @@ for (const scenario of scenarios) {
     'all engagements release at the whistle');
   assert.equal(run.events.filter((e) => e.type === 'whistle').length, 1);
   assert.equal(run.events.find((e) => e.type === 'whistle').reason, run.terminal.reason);
+  if (run.terminal.reason === 'tackle') assert.ok(run.events.some((e) => e.type === 'tackle_contact'), 'tackle starts from observed physical reach/contact');
   assert.ok(run.roster.every((p) => run.trajectories[p.id].at(-1).engaged_with == null));
   assert.ok(run.events.every((e) => e.t <= run.terminal.time + 1e-8));
   for (const player of run.roster) {
@@ -178,15 +179,30 @@ assert.notDeepEqual(
 const slowMike = simulateInsideZone({ ...baseConfig, ratingOverrides: { 'D.MIKE': { SPD: 40, ACC: 40, PUR: 40 } } });
 const fastMike = simulateInsideZone({ ...baseConfig, ratingOverrides: { 'D.MIKE': { SPD: 99, ACC: 99, PUR: 99 } } });
 assert.notDeepEqual(slowMike.trajectories['D.MIKE'], fastMike.trajectories['D.MIKE'], 'pursuit ratings change movement');
-const weakTackler = simulateInsideZone({ ...baseConfig, ratingOverrides: { 'D.LDT': { TAK: 1, STR: 40 } } });
-const strongTackler = simulateInsideZone({ ...baseConfig, ratingOverrides: { 'D.LDT': { TAK: 99, STR: 99 } } });
+const dbReadBase = simulateInsideZone({ seed: 'db-read-audit', front: 'nickel', runSide: 'left' });
+const dbReadTimes = new Map(dbReadBase.events.filter((e) => e.type === 'defensive_run_read').map((e) => [e.role, e.t]));
+for (const role of ['D.NB', 'D.SS', 'D.LCB', 'D.RCB', 'D.FS']) assert.ok(dbReadTimes.has(role), `${role} recognizes the observed run`);
+assert.ok(dbReadTimes.get('D.NB') < dbReadTimes.get('D.SS') && dbReadTimes.get('D.SS') < dbReadTimes.get('D.FS'),
+  'nickel, strong safety and free safety react on role-specific schedules');
+for (const event of dbReadBase.events.filter((e) => e.type === 'defensive_run_read')) {
+  assert.ok(event.t >= event.observed_at + event.reaction_delay_seconds - 1e-9);
+  assert.ok(event.t < event.observed_at + event.reaction_delay_seconds + DT + 1e-8,
+    `${event.role} reacts only after its observation delay`);
+}
+const fastNBRead = simulateInsideZone({ seed: 'db-read-audit', front: 'nickel', runSide: 'left', ratingOverrides: { 'D.NB': { PRC: 99 } } });
+const slowNBRead = simulateInsideZone({ seed: 'db-read-audit', front: 'nickel', runSide: 'left', ratingOverrides: { 'D.NB': { PRC: 1 } } });
+assert.ok(fastNBRead.events.find((e) => e.type === 'defensive_run_read' && e.role === 'D.NB').t
+  < slowNBRead.events.find((e) => e.type === 'defensive_run_read' && e.role === 'D.NB').t,
+'run-recognition rating changes the nickel trigger time');
+const weakTackler = simulateInsideZone({ seed: 'tackle-rating-0', front: 'even', runSide: 'left', ratingOverrides: { 'D.LDT': { TAK: 1, STR: 40 } } });
+const strongTackler = simulateInsideZone({ seed: 'tackle-rating-0', front: 'even', runSide: 'left', ratingOverrides: { 'D.LDT': { TAK: 99, STR: 99 } } });
 assert.notEqual(weakTackler.tackle_id, strongTackler.tackle_id, 'tackle ratings change contact resolution');
 
 // A deliberately unreachable mesh demonstrates that the cap reports failure and no yards.
-const capped = simulateInsideZone({ seed: 'timeout-100', initialPositions: { 'O.RB': { x: 100, y: 2 } } });
+const capped = simulateInsideZone({ seed: 'timeout-100', los: 1, initialPositions: { 'O.RB': { x: 110, y: 55 } } });
 assert.equal(capped.terminal, null);
 assert.equal(capped.resolved, false);
-assert.deepEqual(capped.failure, { reason: 'simulation_time_cap', time_limit_seconds: 9 });
+assert.deepEqual(capped.failure, { reason: 'simulation_time_cap', time_limit_seconds: 12 });
 assert.equal(capped.events.some((e) => e.type === 'whistle'), false);
 assert.equal(capped.events.some((e) => e.type === 'handoff'), false);
 assert.equal(capped.events.at(-1).type, 'simulation_failure');

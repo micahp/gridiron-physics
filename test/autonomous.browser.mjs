@@ -44,6 +44,24 @@ async function runToWhistle() {
   };
 }
 
+async function runPassToWhistle() {
+  await page.locator('#snap').click();
+  await page.waitForFunction(() => !document.querySelector('#snap')?.disabled
+    && !document.querySelector('#toggle')?.disabled, null, { timeout: 60000 });
+  await page.locator('#scrub').evaluate((slider) => {
+    slider.value = '1000';
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.waitForFunction(() => {
+    const text = document.querySelector('#result-main')?.textContent || '';
+    return text !== 'Play in progress' && text !== 'No play has been run.';
+  }, null, { timeout: 10000 });
+  return {
+    result: await page.locator('#result-main').innerText(),
+    detail: await page.locator('#result-detail').innerText(),
+  };
+}
+
 try {
   await page.goto(`${BASE}/autonomous.html`, { waitUntil: 'domcontentloaded' });
   await page.locator('#field').waitFor();
@@ -76,8 +94,26 @@ try {
 
   const replay = await runToWhistle();
   assert.deepEqual(replay, second, 'same seed, front and ratings reproduce the displayed result exactly');
+
+  await page.locator('#play-call').selectOption('slant_flat_right');
+  await page.locator('#coverage').selectOption('cover3');
+  assert.equal(await page.locator('#run-setup').isHidden(), true);
+  assert.equal(await page.locator('#coverage-control').isVisible(), true);
+  await page.locator('#seed').fill('pass-search-cover3-0');
+  const pass = await runPassToWhistle();
+  assert.match(pass.result, /Completed pass/);
+  assert.match(pass.detail, /tackler D\./);
+  assert.match(await page.locator('#carrier-readout').innerText(), /Ball carrier at whistle: O\.WR2/);
+  assert.match(await page.locator('#lane-readout').innerText(), /Carrier lane:/);
+  assert.match(await page.locator('#play-events').innerText(), /throws toward O\.WR1[\s\S]*secures the pass[\s\S]*Whistle/i);
+  await page.locator('#focus-player').selectOption('O.WR1');
+  assert.match(await page.locator('#focus-decision').innerText(), /O\.WR1/);
+  await page.screenshot({ path: new URL('autonomous-pass-outcome.png', SHOTS).pathname });
+  const passReplay = await runPassToWhistle();
+  assert.deepEqual(passReplay, pass, 'same seed and coverage reproduce the pass outcome');
+  assert.match(await page.locator('#compare-runs').innerText(), /Previous[\s\S]*slant_flat_right[\s\S]*Current[\s\S]*slant_flat_right/);
   assert.equal(errors.length, 0, `browser errors: ${errors.join('; ')}`);
-  console.log(`PASS autonomous browser: ${first.result}; same-seed replay ${replay.result}; comparison screenshot captured`);
+  console.log(`PASS autonomous browser: ${first.result}; ${pass.result}; deterministic run and pass replays; screenshots captured`);
 } finally {
   await browser.close();
 }
