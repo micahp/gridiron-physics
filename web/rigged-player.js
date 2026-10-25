@@ -34,7 +34,11 @@ const POSE_ANIMATIONS = Object.freeze({
 const CARRY_RUN_CLIP = Object.freeze({ clipName: 'Running While Holding Something', loop: true });
 // The asset has no true three-point stance; its snap crouch is the only pose
 // that puts a lineman low with his hands on the ground, so the line sets in it.
-const LINE_STANCE_CLIP = 'Football Hike';
+// The only real set in the asset: a three-point crouch, front hand on the
+// ground, reached about two seconds into this clip, which then walks the player
+// back upright. Linemen hold that frame instead of looping the walk-in.
+const LINE_STANCE_CLIP = 'Football Stance';
+const LINE_STANCE_TIME = 2.0;
 const LINE_UNITS = new Set(['OL', 'DL', 'OT', 'OG', 'C', 'G', 'T', 'DT', 'NT', 'DE']);
 function isLineman(root) {
   const u = root.userData;
@@ -225,7 +229,7 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
   // Linemen set in a stance before the snap; the skill-position idle stands
   // straight up, which looks like everyone is waiting for a bus.
   if (selection?.clipName === POSE_ANIMATIONS[POSE.STANCE].clipName && isLineman(root)) {
-    selection = { clipName: LINE_STANCE_CLIP, loop: true };
+    selection = { clipName: LINE_STANCE_CLIP, loop: false, hold: LINE_STANCE_TIME };
   }
   animation.lastRequest = { pose, carrying: !!carrying, speed, clipName: selection?.clipName ?? null };
   const clip = selection && animation.clips.get(selection.clipName);
@@ -267,6 +271,13 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
     root.userData.body.position.y = root.userData.groundOffsets?.[selection.clipName] ?? 0;
   } else {
     animation.activeAction.setEffectiveTimeScale(timeScale);
+  }
+  // Pin the stance clip to its crouch frame, with a slow breath so the set does
+  // not look frozen, before the mixer samples it.
+  if (selection.hold != null && animation.activeAction) {
+    const u = root.userData;
+    u.stancePhase = (u.stancePhase ?? 0) + dt * 1.2;
+    animation.activeAction.time = selection.hold + Math.sin(u.stancePhase) * 0.08;
   }
   animation.mixer.update(dt);
   // The idle clips hold the hands behind the back; keep their body motion but
