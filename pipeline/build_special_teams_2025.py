@@ -44,6 +44,11 @@ def pooled_blocked_resolution():
     return {k: counts[k] for k in ("receiving_recovery", "kicking_recovery", "out_of_bounds", "safety")}
 
 
+def pooled_blocked_touchdowns():
+    with open(os.path.join(ROOT, "data", "special_teams", "blocked-punts-2022-2025.json")) as f:
+        return json.load(f)["receiving_touchdown_counts"]
+
+
 def main():
     digest = sha256(RAW)
     if digest != EXPECTED_SHA256:
@@ -149,6 +154,7 @@ def main():
             "outcomes": dict(punt_cats),
             "blocked_resolution": {k: blocked_res[k] for k in ("receiving_recovery", "kicking_recovery", "out_of_bounds", "safety")},
             "blocked_resolution_pooled": pooled_blocked_resolution(),
+            "blocked_receiving_touchdown_pooled": pooled_blocked_touchdowns(),
             "return_yards": {str(k): v for k, v in sorted(punt_ret.items())},
         },
         "kickoffs": {

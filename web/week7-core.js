@@ -139,6 +139,15 @@ const BLOCKED_PUNT_NOTES = {
   out_of_bounds: 'Blocked punt went out of bounds; the receiving team takes over at the sampled punt spot (estimate).',
   safety: 'Blocked punt into the kicking team\'s end zone: a safety, then the kicking team free-kicks.',
 };
+// Whether a receiving-team blocked-punt recovery was returned for a touchdown,
+// from the pooled 2022-2025 split. Fails closed when the split is missing.
+export function sampleBlockedTouchdown(puntTable, rand) {
+  const counts = puntTable?.blocked_receiving_touchdown_pooled;
+  if (!counts) throw new Error('missing blocked-punt touchdown table');
+  const total = (counts.touchdown || 0) + (counts.no_touchdown || 0);
+  if (!(total > 0)) throw new Error('blocked-punt touchdown table has no observations');
+  return rand() * total < (counts.touchdown || 0);
+}
 // Samples a blocked-punt outcome from the observed 2025 counts. Fails closed
 // when the table is missing or has no observations rather than inventing one.
 export function sampleBlockedPuntOutcome(puntTable, rand) {
@@ -357,6 +366,10 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
   // Estimate the punt spot from kickYl and the sampled distance/return. The
   // generator does not model the full kick trajectory or the outcome-distance
   // relationship beyond the blocked/zero-distance pairing.
+  function fieldGoalBlockedShare() {
+    const s = league.field_goals.non_make_split;
+    return s.blocked / (s.blocked + s.missed);
+  }
   function fieldGoalMake(distance) {
     const b = league.field_goals.buckets[distance < 30 ? 0 : distance < 40 ? 1 : distance < 50 ? 2 : distance < 60 ? 3 : 4];
     return b.attempts ? b.made / b.attempts : 0;
@@ -395,16 +408,20 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
         if (yl <= 40) {
           const distance = yl + 10 + FG_HOLDER_OFFSET_ESTIMATE;
           const good = rand() < fieldGoalMake(distance);
+          const blocked = !good && rand() < fieldGoalBlockedShare();
           // Misses are capped at 5 s too: the miss type (in or out of the field of play) is not modeled.
           const runoff = good
             ? Math.min(clock, FG_RUNOFF_CAP)
             : Math.min(clock, 4 + Math.floor(rand() * 2));
-          event({type:'field_goal',kind:'field_goal',action:good?'FIELD GOAL GOOD':'FIELD GOAL MISSED',
-            good,distance,points:good?3:0,runoff,
+          event({type:'field_goal',kind:'field_goal',action:good?'FIELD GOAL GOOD':blocked?'FIELD GOAL BLOCKED':'FIELD GOAL MISSED',
+            good,blocked,distance,points:good?3:0,runoff,
             runoff_basis: good ? 'rule_11_4_2_note_5_cap' : 'unverified_miss_estimate',
             note:'Make rate from 2025 league field goals by distance (nflverse). Kick flight is not simulated.'});
           clock -= runoff;
-          if (good) {
+          if (blocked) {
+            refuse('blocked_field_goal',
+              'Blocked field goal is a live ball. Its restart (Rule 11-4-2) and possession depend on whether the ball was touched beyond the line and where it was recovered, which the inputs do not record.');
+          } else if (good) {
             scores[offense] += 3;
             scheduleKickoff(offense, 'field_goal_good');
           } else {
@@ -449,6 +466,16 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
                 note:'Safety kick from the kicking team\'s own 20. The 2025 data has no safety-kick outcome table, so the receiving spot is not sampled.'});
               refuse('safety_kick',
                 'Safety kick receiving spot has no observed outcome table. The 2025 data has no safety-kick counts, so none are sampled.');
+            }
+            else if (resolution === 'receiving_recovery' && sampleBlockedTouchdown(league.punts, rand)) {
+              scores[receiving] += 6;
+              punt.touchdown_return = true;
+              punt.note = 'Blocked punt recovered by the receiving team and returned for a touchdown (pooled 2022-2025 split).';
+              punt.scoreAfter = {...scores};
+              if (rand() < xpRate) { scores[receiving] += 1; punt.try = 'XP good (2025 league rate)'; }
+              else punt.try = 'XP missed (2025 league rate)';
+              punt.scoreAfter = {...scores};
+              scheduleKickoff(receiving, 'touchdown');
             }
             else turnover('blocked_punt', pt.spot);
           } else {

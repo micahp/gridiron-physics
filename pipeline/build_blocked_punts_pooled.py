@@ -92,6 +92,9 @@ def main():
             if "BLOCKED" not in str(row["desc"]).upper():
                 errors.append("punt_blocked flag without BLOCKED in description")
             outcome, spot = classify(row, errors)
+            flagged_td = int(row["touchdown"] or 0) == 1
+            if flagged_td != ("TOUCHDOWN" in str(row["desc"])):
+                errors.append("touchdown flag disagrees with description")
             rec = {
                 "season": year,
                 "game_id": row["game_id"],
@@ -102,6 +105,7 @@ def main():
                 "ball_spot_text": spot.group(0) if spot else None,
                 "ball_spot_team": spot.group(1) if spot else None,
                 "ball_spot_yard_line": int(spot.group(2)) if spot else None,
+                "receiving_touchdown": bool(outcome == "receiving_recovery" and flagged_td),
                 "desc": str(row["desc"]),
             }
             if errors or outcome is None:
@@ -112,6 +116,8 @@ def main():
         raise SystemExit(f"{len(failures)} blocked punt(s) failed validation; nothing written")
 
     counts = {k: sum(1 for r in records if r["outcome"] == k) for k in OUTCOMES}
+    td = sum(1 for r in records if r["receiving_touchdown"])
+    rec_total = counts["receiving_recovery"]
     per_season = {str(y): sum(1 for r in records if r["season"] == y) for y in SEASONS}
     out = {
         "schema_version": "gridiron.blocked-punts-pooled.v1",
@@ -121,6 +127,7 @@ def main():
         "season_type": "REG",
         "sources": sources,
         "per_season_counts": per_season,
+        "receiving_touchdown_counts": {"touchdown": td, "no_touchdown": rec_total - td},
         "outcome_counts": counts,
         "scope": "Pooled 2022-2025 regular-season blocked punts. Empirical sampling weights for the outcome given a blocked punt; not predictive probabilities.",
         "records": records,

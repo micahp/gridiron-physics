@@ -143,7 +143,8 @@ for (const m of MATCHUPS.slice(0, 2)) {
 
 // ---- Review corrections: targeted positive and negative fixtures -----------
 const punts = league.punts;
-const forcedBlocked = (outcome) => ({...league, punts:{outcomes:{blocked:1}, distance_yards:{'0':1,'40':1},
+const forcedBlocked = (outcome, td = {touchdown:0, no_touchdown:1}) => ({...league, punts:{outcomes:{blocked:1}, distance_yards:{'0':1,'40':1},
+  blocked_receiving_touchdown_pooled: td,
   blocked_resolution_pooled:Object.fromEntries(['receiving_recovery','kicking_recovery','out_of_bounds','safety']
     .map(k=>[k,k===outcome?1:0]))}});
 const findGame = (predicate, league_, count=8) => {
@@ -176,6 +177,19 @@ const findGame = (predicate, league_, count=8) => {
   assert.notEqual(nxt.offense, punt.offense, 'receiving team takes over after a receiving recovery');
   assert.equal(nxt.down, 1);
   assert.equal(nxt.togo, Math.min(10, nxt.yl));
+}
+
+// (2b) Receiving recovery returned for a touchdown: 6 points, then an XP and a kickoff by the scoring team.
+{
+  const g = findGame(g=>g.plays.some(p=>p.type==='punt'), forcedBlocked('receiving_recovery', {touchdown:1, no_touchdown:0}));
+  const punt = g.plays.find(p=>p.type==='punt');
+  assert.equal(punt.touchdown_return, true, 'touchdown return is marked');
+  assert.equal(punt.possession_after, punt.recovery_team, 'receiving team is the recovering team');
+  assert.equal(punt.scoreAfter[punt.recovery_team], punt.score[punt.recovery_team] + 6 + (punt.try?.startsWith('XP good') ? 1 : 0),
+    'touchdown return scores 6 plus the XP');
+  const ko = g.plays[punt.index];
+  assert.equal(ko.type, 'kickoff', 'touchdown return is followed by a kickoff');
+  assert.equal(ko.kicking_team, punt.recovery_team, 'the scoring team kicks off');
 }
 
 // (1) Safety: a distinct free kick from the kicking team's own 20, not an ordinary kickoff.
@@ -252,6 +266,24 @@ assert.deepEqual(punts.blocked_resolution, {receiving_recovery:7, kicking_recove
   for (const p of misses) {
     assert.equal(p.runoff_basis, 'unverified_miss_estimate', 'miss runoff is not labelled as the verified cap');
     assert.ok(p.runoff >= 1 && p.runoff <= 5);
+  }
+}
+
+// (7) Blocked field goals refuse explicitly; a table with no blocks never does.
+{
+  const noMake = (blocked, missed) => ({...league, field_goals:{...league.field_goals,
+    buckets:league.field_goals.buckets.map(b=>({...b, made:0})),
+    non_make_split:{blocked, missed}}});
+  const g = findGame(g=>g.plays.some(p=>p.type==='field_goal'), noMake(1, 0));
+  assert.ok(g, 'a forced blocked-FG game has a field goal attempt');
+  assert.equal(g.refusal.rule, 'blocked_field_goal');
+  const fg = g.plays.find(p=>p.type==='field_goal');
+  assert.equal(fg.blocked, true);
+  assert.equal(g.plays.at(-1).type, 'unsupported_rule', 'game ends at the refusal, with no restart');
+  for (const m of MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2']) {
+    const h = generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed, noMake(0, 1));
+    assert.ok(!h.refusal || h.refusal.rule !== 'blocked_field_goal', 'no blocked-FG refusal when the table has no blocks');
+    assert.ok(!h.plays.some(p=>p.blocked), 'no blocked field goal is sampled');
   }
 }
 
