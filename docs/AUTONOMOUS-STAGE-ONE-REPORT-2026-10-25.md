@@ -89,6 +89,40 @@ historical plays.
   a seed identically. Screenshots land in
   `docs/evidence/autonomous-acceptance/`.
 
+### Defensive-back run-support check
+
+The run-support change preserves corner leverage and safety depth until each
+defender observes the handoff/line-flow cue, applies a role- and PRC-dependent
+read delay, then fits force, alley or top-down pursuit angles. It was scored on
+the same frozen 53-play BDB cohort as the perimeter-blocking change. Future
+tracking is evaluation-only; each simulation receives only snap-time positions
+and pre-snap motion history. Full output:
+`docs/evidence/autonomous-acceptance/bdb53-db-run-support.json`.
+
+At 1.0 seconds, the mean error improved from 2.189 m to 2.092 m (4.4%); the
+constant-velocity baseline remains better at 0.992 m. DB error fell from 3.538
+to 3.183 m, while LB and DL errors were effectively unchanged. At 0.5 seconds,
+the new score was 0.822 m versus 0.815 m before this change, a small regression.
+
+| Position group | Samples | Mean XY error | Constant-velocity baseline |
+| --- | ---: | ---: | ---: |
+| Offensive line | 260 | 1.248 m | 1.136 m |
+| WR | 156 | 2.617 m | 1.246 m |
+| RB | 52 | 1.934 m | 1.278 m |
+| QB | 52 | 1.266 m | 0.466 m |
+| TE | 52 | 2.049 m | 1.146 m |
+| DL | 205 | 1.144 m | 1.095 m |
+| LB | 113 | 3.054 m | 0.921 m |
+| DB | 254 | 3.183 m | 0.654 m |
+
+The largest remaining DB role errors are nickel 3.563 m (46 samples), left
+corner 3.367 m, right corner 3.234 m, free safety 2.938 m and strong safety
+2.856 m (52 samples each). Nickel and both safeties improved; corner errors
+rose by about 0.25 m each. The five highest play-level errors at 1.0 seconds
+are weeks/game/play `5/2022100911/364` (2.688 m; baseline 0.913),
+`3/2022092509/3274` (2.676; 0.819), `1/2022091109/2941` (2.519; 1.386),
+`5/2022100909/3574` (2.453; 0.940) and `4/2022100204/3428` (2.432; 1.064).
+
 ## Frozen batch audit
 
 `scripts/batch-autonomous-runs.mjs`, 160 rushing plays and 80 passing plays
@@ -106,11 +140,11 @@ rush endings        tackle 160
 pass endings        tackle 44, incomplete 14, out_of_bounds 12, touchdown 10
 pass                80 throws, 64 catches, 2 interceptions, 0 sacks
 
-rush yards          min -2.14  p25 -1.28  median -1.02  p75 -0.91  max 3.62
+rush yards          min -2.14  p25 -1.17  median -0.83  p75 1.27  max 41.08
 pass yards          min  0.00  p25  2.97  median 12.63  p75 31.04  max 65.74
-rush duration       median 1.94 s      pass duration median 4.07 s
-blocks             1696 engagements, 518 sheds, 60.2% blocker win rate
-contact             270 broken tackles, 212 tackles
+rush duration       median 2.59 s, max 9.74 s      pass median 4.07 s
+blocks             2099 engagements, 601 sheds, 77.4% blocker win rate
+contact             182 broken tackles, 212 tackles
 ```
 
 Every play ends in a football result. No failure is hidden: the report names
@@ -143,15 +177,23 @@ exception, arithmetic mismatch, movement warning or completion rate below
 6. The viewer passed contract slot names straight to the rushing executor,
    which only knows the alignment slots of the chosen front. The rush path now
    translates and filters profiles before the snap.
+7. Defensive backs triggered direct carrier pursuit immediately and erased
+   initial leverage. Corners now preserve their WR-side force landmark,
+   safeties hold depth, and nickel/strong safety/free safety trigger on
+   distinct observed-run delays. `test/autonomous-acceptance.mjs` checks the
+   recognition timing and PRC sensitivity; the same-cohort comparison is
+   recorded above.
 
 ## Realism limitations
 
 These are measured, not fixed, and should be read before quoting any number.
 
-- Rush outcomes are compressed. Median gain is -1.02 yd and the maximum across
-  160 plays is 3.62 yd. The blocking model wins 60 percent of blocks, but the
-  defensive pursuit closes faster than a real front seven and the rushing
-  results look like a goal-line period, not a full-field sample.
+- Rush outcomes remain poorly calibrated. The median across 160 plays is
+  -0.83 yd and the 75th percentile is 1.27 yd, but one 41.08-yard outlier
+  creates an implausibly wide tail. The block win estimate rose to 77.4% after
+  the DB trigger change. The BDB 1-second score remains 2.092 m versus a 0.992
+  m constant-velocity baseline; DB improved overall, but corners regressed and
+  linebackers remain especially inaccurate.
 - Passing gains are wide. Median 12.6 yd, p75 31 yd, maximum 65.7 yd. Ten of
   80 plays scored, which is high for a quick game.
 - There are no sacks in the audit. The pocket holds: the closest rusher stays

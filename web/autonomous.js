@@ -246,7 +246,7 @@ function renderDecisionPanel(force = false) {
 }
 
 function laneLabel(lateral) {
-  const side = simulation.run_side ?? simulation.direction ?? 'right';
+  const side = simulation.run_side ?? simulation.call?.direction ?? simulation.direction ?? 'right';
   const relative = lateral * (side === 'left' ? 1 : -1);
   if (relative < -1.6) return 'backside C';
   if (relative < -0.5) return 'backside A';
@@ -257,11 +257,20 @@ function laneLabel(lateral) {
 
 function renderLiveSituation(frame) {
   const carrier = simulation.roster.find((p) => simulation.trajectories[p.id]?.[frame]?.hasBall);
-  const carrierRole = carrier?.roleKey ?? 'none';
+  const throwEvent = simulation.events.find((event) => event.type === 'throw' && event.t <= state.t + 1e-6);
+  const passResolved = simulation.events.some((event) => ['catch', 'interception', 'incomplete'].includes(event.type)
+    && event.t <= state.t + 1e-6);
+  const carrierRole = carrier?.roleKey ?? (throwEvent && !passResolved
+    ? `pass in flight to ${rolesOf().get(throwEvent.target_id) ?? 'receiver'}` : 'none');
   const terminal = state.t >= playEndTime(simulation) - 1e-6;
   el.carrier.textContent = `${terminal ? 'Ball carrier at whistle' : 'Current ball carrier'}: ${carrierRole}`;
-  const lane = simulation.trajectories['O.RB']?.[frame]?.lane_local_yards;
-  el.lane.textContent = lane == null ? 'RB lane: reading the mesh' : `RB lane: ${laneLabel(lane)} (${lane.toFixed(2)} yd local)`;
+  if (simulation.play_call === 'inside_zone' || simulation.call?.family === 'run') {
+    const lane = simulation.trajectories['O.RB']?.[frame]?.lane_local_yards;
+    el.lane.textContent = lane == null ? 'RB lane: reading the mesh' : `RB lane: ${laneLabel(lane)} (${lane.toFixed(2)} yd local)`;
+  } else {
+    el.lane.textContent = carrier ? `Carrier path: ${carrierRole} reacting to pursuit`
+      : throwEvent && !passResolved ? 'Carrier path: ball in flight' : 'Carrier path: receiver routes developing';
+  }
 }
 
 function rolesOf() {
@@ -274,7 +283,7 @@ function renderEventLog() {
     'snap', 'snap_receive', 'handoff', 'lane_read', 'block_engage', 'block_release',
     'shed', 'broken_tackle', 'tackle', 'touchdown', 'whistle', 'simulation_failure',
     'throw', 'catch', 'interception', 'incomplete', 'pass_deflected', 'catch_contest',
-    'sack', 'qb_read', 'throw_away', 'tackle_attempt',
+    'sack', 'qb_read', 'throw_away', 'tackle_attempt', 'tackle_contact', 'defensive_run_read',
   ].includes(event.type));
   const lines = eventRows.map((event) => {
     let detail = '';
@@ -300,6 +309,8 @@ function renderEventLog() {
     else if (event.type === 'throw_away') detail = `${roles.get(event.quarterback_id)} throws it away`;
     else if (event.type === 'qb_read') detail = `${roles.get(event.quarterback_id)} holds · best read ${roles.get(event.target_id)} (${event.utility})`;
     else if (event.type === 'tackle_attempt') detail = `${roles.get(event.defender_id)} attempts the tackle on ${roles.get(event.carrier_id)}`;
+    else if (event.type === 'tackle_contact') detail = `${roles.get(event.defender_id)} contacts ${roles.get(event.carrier_id)} · ${event.source.replaceAll('_', ' ')}`;
+    else if (event.type === 'defensive_run_read') detail = `${roles.get(event.player_id)} recognizes the run after ${event.reaction_delay_seconds.toFixed(2)} s`;
     else if (event.type === 'hit') detail = `${roles.get(event.a)} and ${roles.get(event.b)} collide`;
     return `<li><strong>${event.t.toFixed(2)}s</strong> · ${escapeHtml(detail)}</li>`;
   });

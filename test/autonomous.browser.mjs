@@ -29,7 +29,7 @@ async function runToWhistle() {
   });
   await page.waitForFunction(() => document.querySelector('#carrier-readout')?.textContent.startsWith('Current ball carrier:'));
   assert.match(await page.locator('#focus-decision').innerText(), /O\.RB/);
-  assert.match(await page.locator('#lane-readout').innerText(), /RB lane:/);
+  assert.match(await page.locator('#lane-readout').innerText(), /RB lane:|Carrier path:/);
   await page.locator('#scrub').evaluate((slider) => {
     slider.value = '1000';
     slider.dispatchEvent(new Event('input', { bubbles: true }));
@@ -54,6 +54,7 @@ try {
   assert.match(await page.locator('#carrier-readout').innerText(), /Ball carrier at whistle:/);
   assert.match(await page.locator('#lane-readout').innerText(), /RB lane:/);
   assert.match(await page.locator('#play-events').innerText(), /whistle/i);
+  assert.match(await page.locator('#play-events').innerText(), /recognizes the run/i);
   assert.match(await page.locator('#result-detail').innerText(), /made contact|blockers won/i);
 
   await page.locator('#show-decisions').check();
