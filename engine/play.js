@@ -76,7 +76,9 @@ export function simulatePlay(game, S, ctx = {}) {
     pos.RT = [-0.85, -2.9];
     const strong = rightRoom >= leftRoom ? -1 : 1; // TE to the field side
     pos.TE = [-0.9, 4.35 * strong];
-    pos.QB = shotgun ? [-5, 0] : [-1.1, 0];
+    // Keep the under-center QB clear of the center's collision radius so he
+    // can take the snap and move into the handoff lane without getting pinned.
+    pos.QB = shotgun ? [-5, 0] : [-1.6, 0];
     pos.RB = shotgun ? [-5.2, -1.5 * strong] : [-7, 0];
     pos.WR1 = [-0.8, leftRoom - clamp(leftRoom * 0.35, 5, 12)];
     pos.WR2 = [-0.8, -(rightRoom - clamp(rightRoom * 0.35, 5, 12))];
@@ -676,34 +678,22 @@ export function simulatePlay(game, S, ctx = {}) {
           p.dv = st.catchPt ? seek(p, st.catchPt, 0.95) : { x: 0, y: 0 };
           return;
         }
-        // pursuit angle: aim at where the carrier will be; DBs keep leverage
-        let tgt = lead(p, c, 0.85);
-        if (st.endX != null && !c.ai.td) {
-          const end = { x: st.endX * YD, y: (st.endY ?? c.p.y / YD) * YD };
-          // fold toward the spot the real play ended — that's where the pile forms
-          const w = clamp(1 - d2(c.p, end) / 25, 0, 0.6);
-          tgt = { x: tgt.x * (1 - w) + end.x * w, y: tgt.y * (1 - w) + end.y * w };
-        }
+        // Defenders track the carrier, not the preselected endpoint. The end
+        // spot still gates the whistle and final pile when contact occurs.
+        const tgt = c.p;
         p.dv = separate(p, seek(p, tgt, p.ai.missUntil > t ? 0.6 : 0.97, 25), 0.8);
         return;
       }
       case 'tackle_to': {
-        // designated tackler: arrive at the real end spot as the carrier does
         const c = st.carrier;
         if (p.engaged) {
           const e = W.engagements.find((x) => x.a === p || x.b === p);
           if (e) W.disengage(e, p);
         }
         if (!c) return;
-        const end = { x: st.endX * YD, y: (st.endY ?? c.p.y / YD) * YD };
-        const dc = d2(p.p, c.p);
-        let tgt;
-        if (dc < 4.5 || d2(c.p, end) < 3) tgt = lead(p, c, 1);
-        else {
-          // head for the spot, biased toward the carrier's current line
-          tgt = { x: end.x * 0.75 + lead(p, c, 0.9).x * 0.25, y: end.y * 0.75 + lead(p, c, 0.9).y * 0.25 };
-        }
-        p.dv = seek(p, tgt, 1, 30);
+        // Keep pressure on the live carrier; tryTackle still gates the
+        // whistle at the sampled spot to preserve the recorded gain.
+        p.dv = seek(p, c.p, 1, 30);
         return;
       }
       case 'cover_man': {
@@ -816,10 +806,12 @@ export function simulatePlay(game, S, ctx = {}) {
       // QB keeper / sneak
       st.carrierIsQB = true;
     } else if (carrier) {
-      carrier.ai.mesh = S.shotgun ? at(-4.6, sgn(st.gapL) * 0.5) : at(-4.2, st.gapL * 0.3);
+      carrier.ai.mesh = S.shotgun ? at(-4.6, sgn(st.gapL) * 0.5) : at(-3.5, st.gapL * 0.3);
       carrier.ai.runPath = path;
     }
-    if (qb) qb.ai.mesh = carrier && carrier !== qb ? carrier.ai.mesh : at(-1, 0);
+    if (qb) qb.ai.mesh = carrier && carrier !== qb
+      ? (S.shotgun ? carrier.ai.mesh : at(-4.2, st.gapL * 0.3))
+      : at(-1, 0);
 
     // blocking: OL + TE + extra; skip designated tacklers
     const front = defense().filter((q) => fOf(q.p) < 6.5 && !['LCB', 'RCB'].includes(q.slot));

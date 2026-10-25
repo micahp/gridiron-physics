@@ -2,7 +2,7 @@ import { Renderer } from './render.js';
 import { selectPlay } from './prototype-model.js';
 import { executeSelectedPlay } from './prototype-execution.js';
 import { MATCHUPS, generateGame } from './week7-core.js';
-import { describeWeek7Play } from './week7-play-description.js';
+import { describeWeek7Play, describeWeek7Movement } from './week7-play-description.js';
 import { FootballAudio } from './audio-director.js';
 
 const $ = id => document.getElementById(id);
@@ -335,6 +335,8 @@ function choose(idx){
       if(result.failure) throw new Error(result.failure.message);
       if(!result.record?.frames?.length)throw new Error('physics returned no frames');
       current={rec:result.record,duration:(result.record.frames.length-1)/result.record.hz};
+      const movement=describeWeek7Movement(p,demo,result.record,physicsGame?.players);
+      if(movement)$('play-detail').innerHTML+='<p class="note">'+esc(movement)+'</p>';
       $('replay-type').textContent='22-player 3D · constrained';
       drawPlayerList(demo);
       animating=true;
