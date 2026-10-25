@@ -211,6 +211,11 @@ function validateRecord(record, { requireCompleteRegulation }) {
     if (!Number.isInteger(kick.after_drive) || kick.after_drive < 0 || kick.after_drive > record.drives.length) {
       findings.add(`Kickoff ${i + 1} has an invalid after_drive link.`);
     } else if (kick.after_drive < record.drives.length
+        && !(kick.quarter === 2 && kick.clock_expired_during_kickoff === true
+          && (record.boundaries ?? []).some((boundary) => boundary.kind === 'halftime'
+            && boundary.drive_index === kick.after_drive)
+          && record.kickoffs.some((nextKick) => nextKick.kind === 'half_start' && nextKick.quarter === 3
+            && nextKick.after_drive === kick.after_drive))
         && record.drives[kick.after_drive].offense_team !== kick.receiving_team) {
       findings.add(`Kickoff ${i + 1} receiver disagrees with the next drive offense.`);
     }
@@ -231,9 +236,27 @@ function validateRecord(record, { requireCompleteRegulation }) {
       if (nextDrive.offense_team !== expectedReceiver) findings.add(`Drive ${drive.index}: Q3 offense disagrees with the coin-toss ledger.`);
     } else if (terminal === 'touchdown' || terminal === 'safety'
         || (terminal === 'field_goal_attempt' && drive.field_goal_made === true)) {
-      const restart = record.kickoffs.find((kick) => kick.after_drive === drive.index);
-      if (!restart) findings.add(`Drive ${drive.index}: scoring restart is missing from the kickoff ledger.`);
-      else if (nextDrive.offense_team !== restart.receiving_team) {
+      const expectedKind = terminal === 'field_goal_attempt' ? 'post_field_goal'
+        : terminal === 'safety' ? 'safety_free_kick' : 'post_score';
+      const scoringTeam = drive.points_scored_on_drive?.team;
+      const expectedKicker = terminal === 'safety' ? drive.offense_team : scoringTeam;
+      const expectedReceiver = terminal === 'safety'
+        ? (scoringTeam === 'A' ? 'A' : scoringTeam === 'B' ? 'B' : null)
+        : (scoringTeam === 'A' ? 'B' : scoringTeam === 'B' ? 'A' : null);
+      const restart = record.kickoffs.find((kick) => kick.after_drive === drive.index && kick.kind === expectedKind);
+      const skippedAtHalftime = (record.boundaries ?? []).some((boundary) =>
+        boundary.kind === 'skipped_post_score_kick' && boundary.drive_index === drive.index);
+      const halftimeHandoff = (record.boundaries ?? []).some((boundary) =>
+        boundary.kind === 'halftime' && boundary.drive_index === drive.index)
+        && record.kickoffs.some((kick) => kick.kind === 'half_start' && kick.quarter === 3
+          && kick.after_drive === drive.index);
+      if (!restart && !skippedAtHalftime) {
+        findings.add(`Drive ${drive.index}: scoring restart is missing from the kickoff ledger.`);
+      } else if (restart && (restart.kicking_team !== expectedKicker || restart.receiving_team !== expectedReceiver)) {
+        findings.add(`Drive ${drive.index}: scoring restart has incorrect teams or kind.`);
+      } else if (nextDrive && restart
+          && !(restart.quarter === 2 && restart.clock_expired_during_kickoff === true && halftimeHandoff)
+          && nextDrive.offense_team !== restart.receiving_team) {
         findings.add(`Drive ${drive.index}: next offense disagrees with its scoring restart receiver.`);
       }
     }

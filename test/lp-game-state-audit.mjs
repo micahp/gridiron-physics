@@ -41,6 +41,18 @@ assert.equal(createHash('sha256').update(v1DocumentBytes).digest('hex'), entry.v
 const v1Document = JSON.parse(v1DocumentBytes.toString('utf8'));
 const baselineReport = JSON.parse(await readFile(resolve(root,
   'docs/research/GRIDIRON-E2-INDEPENDENT-STATE-AUDIT-BASELINE-2026-10-24.json'), 'utf8'));
+const reconciliationManifest = JSON.parse(await readFile(resolve(root,
+  'docs/fixtures/e2/reconciliation/MANIFEST.json'), 'utf8'));
+const reconciliationFixtures = new Map();
+for (const entry of reconciliationManifest.fixtures) {
+  const bytes = await readFile(resolve(root, 'docs/fixtures/e2/reconciliation', entry.file));
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), entry.sha256,
+    `reconciliation fixture seed ${entry.seed} must remain pinned`);
+  const envelope = JSON.parse(bytes.toString('utf8'));
+  assert.equal(envelope.source.base_commit, reconciliationManifest.producer_base_commit);
+  assert.equal(envelope.record.seed, entry.seed);
+  reconciliationFixtures.set(entry.seed, envelope);
+}
 
 assert.equal(currentAudit.finding_count, 0, 'the final LP record passes independent football-state checks');
 assert.deepEqual(currentAudit.findings, baselineReport.current_lp_payload.football_state_audit.findings,
@@ -97,6 +109,70 @@ assert.equal(currentAdapted.validation.passed, true, 'the current producer paylo
 assert.equal(currentAdapted.sharedV1Audit.violations.length, 8,
   'raw record gaps include missing model/rules and pregame metadata, plus identity and the safe false validity flag');
 
+const seed9 = reconciliationFixtures.get(9);
+const seed11 = reconciliationFixtures.get(11);
+const seed101 = reconciliationFixtures.get(101);
+const seed176 = reconciliationFixtures.get(176);
+assert.equal(reconciliationManifest.producer_source_tree_sha256,
+  seed176.record.research_source.source_tree_sha256);
+assert.equal(adaptLpGamePayload(seed11, { requireCompleteRegulation: false }).footballStateAudit.finding_count, 0,
+  'an expired Q1 kickoff return correctly opens Q2 at 15:00 for its receiver');
+const seed101Adapted = adaptLpGamePayload(seed101, { requireCompleteRegulation: false });
+assert.equal(seed101Adapted.validation.findings.length, 0);
+assert.equal(seed101Adapted.footballStateAudit.finding_count, 0,
+  'a Q2 score at 0:00 uses the explicit skipped-score-kick and halftime boundary');
+assert.ok(seed101.record.boundaries.some((boundary) => boundary.kind === 'skipped_post_score_kick'
+  && boundary.drive_index === 7));
+const seed101MissingSkip = structuredClone(seed101.record);
+seed101MissingSkip.boundaries = seed101MissingSkip.boundaries.filter((boundary) =>
+  boundary.kind !== 'skipped_post_score_kick');
+assert.ok(auditFootballState(seed101MissingSkip).findings
+  .some((finding) => finding.code === 'scoring_kick_restart_invalid'),
+'a Q2 score without a post-score kick requires explicit halftime-skip evidence');
+const seed176Adapted = adaptLpGamePayload(seed176, { requireCompleteRegulation: false });
+assert.equal(seed176Adapted.validation.findings.length, 0,
+  'the later Q3 half-start, not the expired Q2 scoring kickoff, owns the next drive');
+assert.equal(seed176Adapted.footballStateAudit.finding_count, 0);
+assert.deepEqual(seed176.record, seed176Adapted.record,
+  'reconciliation validation must preserve the emitted LP record');
+const seed176Kick6 = seed176.record.kickoffs[5];
+assert.deepEqual([seed176Kick6.kind, seed176Kick6.quarter, seed176Kick6.clock_before,
+  seed176Kick6.runoff_seconds, seed176Kick6.clock_expired_during_kickoff], ['post_field_goal', 2, 4, 6, true]);
+const seed176HalfBoundary = seed176.record.boundaries.find((boundary) => boundary.kind === 'halftime');
+assert.deepEqual([seed176HalfBoundary.from_quarter, seed176HalfBoundary.to_quarter,
+  seed176HalfBoundary.drive_index], [2, 3, 10]);
+assert.deepEqual([seed176.record.kickoffs[6].kind, seed176.record.kickoffs[6].quarter,
+  seed176.record.kickoffs[6].receiving_team, seed176.record.drives[10].offense_team,
+  seed176.record.drives[10].quarter_start, seed176.record.drives[10].clock_start],
+['half_start', 3, 'B', 'B', 3, 894]);
+
+const seed176WrongQ3Receiver = structuredClone(seed176);
+seed176WrongQ3Receiver.record.kickoffs[6].receiving_team = 'A';
+assert.ok(adaptLpGamePayload(seed176WrongQ3Receiver, { requireCompleteRegulation: false }).validation.findings
+  .some((finding) => finding.includes('Kickoff 7 receiver disagrees')),
+'a wrong Q3 half-start receiver must still fail structural validation');
+assert.ok(auditFootballState(seed176WrongQ3Receiver.record).findings
+  .some((finding) => finding.code === 'halftime_restart_invalid'
+    || finding.code === 'halftime_restart_possession_invalid'),
+'the independent toss ledger must reject a wrong Q3 receiver');
+
+const seed176WrongScoringReceiver = structuredClone(seed176);
+seed176WrongScoringReceiver.record.kickoffs[5].receiving_team = 'B';
+assert.ok(adaptLpGamePayload(seed176WrongScoringReceiver, { requireCompleteRegulation: false }).validation.findings
+  .some((finding) => finding.includes('scoring restart has incorrect teams')),
+'halftime handoff must not hide an incorrectly linked Q2 scoring kickoff');
+
+const seed11WrongRolloverClock = structuredClone(seed11.record);
+seed11WrongRolloverClock.drives[6].clock_start = 899;
+seed11WrongRolloverClock.drives[6].plays[0].state_before.clock_seconds = 899;
+assert.ok(auditFootballState(seed11WrongRolloverClock).findings
+  .some((finding) => finding.code === 'kick_restart_clock_mismatch'),
+'a quarter reset with an incorrect next-drive clock must remain a hard finding');
+
+const seed9Audit = auditFootballState(seed9.record);
+assert.equal(seed9Audit.counts.safety_kick_outcome_unverified, 1,
+  'legacy safety free kicks without a separate observed outcome table remain rejected');
+
 const poisonRulesMatrix = structuredClone(record);
 Object.defineProperty(poisonRulesMatrix, 'rules_matrix', { get() { throw new Error('rules_matrix must not be read'); } });
 assert.doesNotThrow(() => auditFootballState(poisonRulesMatrix), 'independent audit must ignore producer rules_matrix');
@@ -152,10 +228,10 @@ const negatives = [
     assert.ok(play, 'baseline contains an in-play Q1/Q3 boundary');
     play.state_after.clock_seconds = 899;
   }, 'quarter_transition_invalid', 'state_after.quarter/clock_seconds'),
-  negativeFixture('halftime must end Q2', (r) => {
-    const drive = r.drives.find((item) => item.terminal === 'halftime');
-    drive.plays.at(-1).state_after.quarter = 3;
-  }, 'halftime_boundary_invalid', 'terminal'),
+  negativeFixture('halftime boundary must link Q2 to Q3', (r) => {
+    const boundary = r.boundaries.find((item) => item.kind === 'halftime');
+    boundary.from_quarter = 1;
+  }, 'halftime_restart_invalid', 'record.boundaries'),
   negativeFixture('new quarter starts after the correct kickoff runoff', (r) => {
     const index = r.drives.findIndex((drive, offset) => offset > 0
       && drive.quarter_start > r.drives[offset - 1].plays.at(-1).state_after.quarter);

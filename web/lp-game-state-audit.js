@@ -351,6 +351,8 @@ export function auditFootballState(input) {
 
   // Independently reconcile drive possession changes, restart ledger, and half boundaries.
   const kickoffs = Array.isArray(record.kickoffs) ? record.kickoffs : [];
+  const boundaries = Array.isArray(record.boundaries) ? record.boundaries : [];
+  const halftimeBoundaries = boundaries.filter((boundary) => boundary?.kind === 'halftime');
   const kickByDrive = new Map();
   for (const [kickOffset, kick] of kickoffs.entries()) {
     const path = `record.kickoffs[${kickOffset}]`;
@@ -372,25 +374,40 @@ export function auditFootballState(input) {
     if (!kickByDrive.has(kick.after_drive)) kickByDrive.set(kick.after_drive, []);
     kickByDrive.get(kick.after_drive).push(kick);
     const nextDrive = record.drives[kick.after_drive];
-    if (nextDrive && nextDrive.offense_team !== kick.receiving_team) {
+    const q3HalfStart = kickoffs.find((nextKick) => nextKick.kind === 'half_start' && nextKick.quarter === 3
+      && nextKick.after_drive === kick.after_drive);
+    const halftimeHandoff = kick.quarter === 2 && kick.clock_expired_during_kickoff === true
+      && halftimeBoundaries.some((boundary) => boundary.drive_index === kick.after_drive) && q3HalfStart;
+    if (kick.kind === 'safety_free_kick') {
+      add('safety_kick_outcome_unverified', `${path}.source`,
+        'A safety free kick requires a separately observed safety-kick outcome table; the E2 record has no such evidence.');
+    }
+    if (nextDrive && !halftimeHandoff && nextDrive.offense_team !== kick.receiving_team) {
       add('kick_restart_possession_mismatch', `${path}.receiving_team`,
         'The next drive offense must be the recorded kick receiver.',
         { observed: kick.receiving_team, expected: nextDrive.offense_team, after_drive: kick.after_drive });
-    }
-    if (nextDrive && nextDrive.quarter_start !== kick.quarter) {
-      add('kick_restart_quarter_mismatch', `${path}.quarter`,
-        'Kick quarter must match the next drive quarter.',
-        { observed: kick.quarter, expected: nextDrive.quarter_start });
     }
     if (!numberIn(kick.clock_before, 0, QUARTER_SECONDS) || !numberIn(kick.runoff_seconds, 0, QUARTER_SECONDS)) {
       add('kick_restart_clock_invalid', `${path}.clock_before/runoff_seconds`,
         'Kick restart clock and runoff must be non-negative regulation seconds.',
         { clock_before: kick.clock_before ?? null, runoff_seconds: kick.runoff_seconds ?? null });
     } else if (nextDrive) {
-      const expectedClock = Math.max(0, kick.clock_before - kick.runoff_seconds);
-      if (nextDrive.clock_start !== expectedClock) {
+      const expired = kick.runoff_seconds >= kick.clock_before;
+      const expectedQuarter = expired && [1, 3].includes(kick.quarter) ? kick.quarter + 1 : kick.quarter;
+      const expectedClock = expired ? QUARTER_SECONDS : kick.clock_before - kick.runoff_seconds;
+      if (expired !== (kick.clock_expired_during_kickoff === true)) {
+        add('kick_restart_expiry_invalid', `${path}.clock_expired_during_kickoff`,
+          'Kickoff expiry marker must agree with the observed runoff and clock.',
+          { observed: kick.clock_expired_during_kickoff ?? null, expected: expired });
+      }
+      if (!halftimeHandoff && nextDrive.quarter_start !== expectedQuarter) {
+        add('kick_restart_quarter_mismatch', `${path}.quarter`,
+          'The next drive quarter must reflect a quarter-ending kickoff return.',
+          { observed: nextDrive.quarter_start, expected: expectedQuarter });
+      }
+      if (!halftimeHandoff && nextDrive.clock_start !== expectedClock) {
         add('kick_restart_clock_mismatch', `${path}.clock_before/runoff_seconds`,
-          'The next drive clock must reflect the recorded kick runoff.',
+          'The next drive clock must reflect the recorded runoff and quarter reset.',
           { observed: nextDrive.clock_start, expected: expectedClock, after_drive: kick.after_drive });
       }
     }
@@ -409,14 +426,41 @@ export function auditFootballState(input) {
           { count: found.length, expected_receiver: receiver, expected_after_drive: afterDrive });
       }
     }
-    const halfEnd = record.drives.find((drive) => drive.terminal === 'halftime');
     const q3Kick = kickoffs.filter((kick) => kick.kind === 'half_start' && kick.quarter === 3);
-    if (!halfEnd || q3Kick.length !== 1 || q3Kick[0]?.receiving_team !== secondReceiver
-        || q3Kick[0]?.after_drive !== halfEnd.index) {
-      add('halftime_restart_invalid', 'record.kickoffs[quarter=3]',
-        'Halftime must end Q2 and the Q3 half-start kick must follow it per the toss ledger.',
-        { halftime_drive: halfEnd?.index ?? null, kick_count: q3Kick.length,
-          observed_receiver: q3Kick[0]?.receiving_team ?? null, expected_receiver: secondReceiver });
+    const reachedSecondHalf = q3Kick.length > 0 || halftimeBoundaries.length > 0
+      || record.drives.some((drive) => drive.quarter_start >= 3 || drive.end_quarter >= 3)
+      || record.final_quarter >= 3 || record.regulation_end_reached === true;
+    if (reachedSecondHalf) {
+      const halfEnd = halftimeBoundaries.length === 1 ? halftimeBoundaries[0] : null;
+      const driveIndex = halfEnd?.drive_index;
+      const precedingDrive = Number.isInteger(driveIndex) && driveIndex > 0 ? record.drives[driveIndex - 1] : null;
+      const q2ExpiredKick = kickoffs.some((kick) => kick.after_drive === driveIndex && kick.quarter === 2
+        && kick.clock_expired_during_kickoff === true);
+      const skippedScoreKick = boundaries.some((boundary) => boundary.kind === 'skipped_post_score_kick'
+        && boundary.drive_index === driveIndex);
+      const boundarySupported = precedingDrive?.end_quarter === 2
+        && (precedingDrive.end_clock === 0 || q2ExpiredKick || skippedScoreKick);
+      if (!halfEnd || halfEnd.from_quarter !== 2 || halfEnd.to_quarter !== 3 || halfEnd.clock_before !== 0
+          || !Number.isInteger(driveIndex) || driveIndex < 1 || driveIndex > record.drives.length
+          || !boundarySupported || q3Kick.length !== 1 || q3Kick[0]?.receiving_team !== secondReceiver
+          || q3Kick[0]?.kicking_team !== opposite(secondReceiver) || q3Kick[0]?.after_drive !== driveIndex) {
+        add('halftime_restart_invalid', 'record.boundaries/record.kickoffs[quarter=3]',
+          'Halftime boundary and Q3 half-start must link to the completed Q2 state and toss-ledger receiver.',
+          { halftime_boundary_count: halftimeBoundaries.length, halftime_drive: driveIndex ?? null,
+            q3_kick_count: q3Kick.length, observed_receiver: q3Kick[0]?.receiving_team ?? null,
+            expected_receiver: secondReceiver });
+      }
+    } else if (halftimeBoundaries.length || q3Kick.length) {
+      add('halftime_restart_invalid', 'record.boundaries/record.kickoffs[quarter=3]',
+        'A Q3 restart requires a corresponding Q2-to-Q3 halftime boundary.');
+    }
+    if (q3Kick.length === 1 && Number.isInteger(q3Kick[0].after_drive)) {
+      const nextDrive = record.drives[q3Kick[0].after_drive];
+      if (nextDrive && nextDrive.offense_team !== q3Kick[0].receiving_team) {
+        add('halftime_restart_possession_invalid', `record.drives[${q3Kick[0].after_drive}].offense_team`,
+          'The first drive after halftime must belong to the Q3 half-start receiver.',
+          { observed: nextDrive.offense_team, expected: q3Kick[0].receiving_team });
+      }
     }
   }
 
@@ -442,30 +486,29 @@ export function auditFootballState(input) {
       const safety = terminal === 'safety';
       const expectedKicker = safety ? drive.offense_team : scoringTeam;
       const expectedReceiver = safety ? scoringTeam : opposite(scoringTeam);
-      const expectedKind = terminal === 'field_goal_attempt' ? 'post_field_goal' : 'post_score';
+      const expectedKind = terminal === 'field_goal_attempt' ? 'post_field_goal'
+        : safety ? 'safety_free_kick' : 'post_score';
       const matching = restart.filter((kick) => kick.kind === expectedKind);
-      if (matching.length !== 1 || matching[0]?.kicking_team !== expectedKicker
-          || matching[0]?.receiving_team !== expectedReceiver) {
+      const skippedAtHalftime = boundaries.some((boundary) => boundary.kind === 'skipped_post_score_kick'
+        && boundary.drive_index === drive.index);
+      const invalidScoringRestart = matching.length > 1 || (!skippedAtHalftime && matching.length !== 1)
+        || (matching.length === 1 && (matching[0].kicking_team !== expectedKicker
+          || matching[0].receiving_team !== expectedReceiver));
+      if (invalidScoringRestart) {
         add('scoring_kick_restart_invalid', `record.kickoffs[after_drive=${drive.index}]`,
           `Drive ${drive.index} scoring event lacks its correctly linked restart.`,
           { terminal, matching_count: matching.length, expected_kind: expectedKind,
             expected_kicker: expectedKicker, expected_receiver: expectedReceiver });
       }
-      if (next.offense_team !== expectedReceiver) {
+      const restartSupersededAtHalftime = matching.length === 1 && matching[0].quarter === 2
+        && matching[0].clock_expired_during_kickoff === true
+        && halftimeBoundaries.some((boundary) => boundary.drive_index === drive.index)
+        && kickoffs.some((kick) => kick.kind === 'half_start' && kick.quarter === 3
+          && kick.after_drive === drive.index);
+      if (!skippedAtHalftime && !restartSupersededAtHalftime && next.offense_team !== expectedReceiver) {
         add('scoring_restart_possession_invalid', `record.drives[${driveOffset + 1}].offense_team`,
           `Drive ${drive.index} next possession disagrees with its scoring restart.`,
           { observed: next.offense_team, expected: expectedReceiver });
-      }
-    } else if (terminal === 'halftime') {
-      const q3 = kickoffs.find((kick) => kick.kind === 'half_start' && kick.quarter === 3);
-      const q3Clock = q3 && Number.isInteger(q3.clock_before) && Number.isInteger(q3.runoff_seconds)
-        ? Math.max(0, q3.clock_before - q3.runoff_seconds)
-        : null;
-      if (last?.state_after?.quarter !== 2 || last?.state_after?.clock_seconds !== 0
-          || next.quarter_start !== 3 || next.clock_start !== q3Clock || !q3
-          || q3.after_drive !== drive.index || q3.receiving_team !== next.offense_team) {
-        add('halftime_boundary_invalid', `record.drives[${driveOffset}].terminal`,
-          'Halftime must end Q2 at 0:00 and restart Q3 at 15:00 with the ledger receiver.');
       }
     }
   }
