@@ -1,70 +1,73 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
-// Measures physics pose transitions against *actual* mixer action activations.
-// Standalone on research branch; does not require building a new football mesh.
-const url = (process.env.BASE_URL || 'http://127.0.0.1:8137')
-  + '/week7.html?game=2026_07_CIN_BAL&debug=1';
-const browser = await chromium.launch({ headless:true,
-  args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']
-});
-const page = await browser.newPage({viewport:{width:1366,height:900}});
-try{
-  await page.goto(url,{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Ready ·')
-    && window.__gridironRenderer?.riggedGltf,{},{timeout:100000});
-  const buttons=await page.locator('#timeline button.pl:not(.admin)').all();
-  let chosen=null;
-  for(const btn of buttons){
-    if(/PASS COMPLETE/i.test(await btn.innerText())){
-      chosen=await btn.innerText();
-      await btn.click();
-      break;
-    }
-  }
-  assert.ok(chosen,'cannot find completed pass in seed 1042');
-  assert.match(await page.locator('#replay-type').innerText(),/22-player 3D/);
-  await page.evaluate(()=>{
-    window.__poseAudit=[];
-    window.__poseAuditInterval=setInterval(()=>{
-      const s=window.__gridironFrameSnapshot?.();
-      if(s?.players?.length)window.__poseAudit.push(s);
-    },22);
-  });
-  // Clicking the timeline starts the new play. Let the full clip finish.
-  await page.waitForTimeout(6800);
-  const probe=await page.evaluate(()=>{
-    clearInterval(window.__poseAuditInterval);
-    return window.__poseAudit;
-  });
-  const samples={};
-  for(const state of ['THROW','CATCH','RUN','STANCE','BACKPEDAL']){
-    const code={THROW:4,CATCH:5,RUN:1,STANCE:0,BACKPEDAL:9}[state];
-    const samplesWithPose=probe.flatMap(x=>x.players.filter(p=>p.pose===code));
-    const active=Object.fromEntries(samplesWithPose.reduce((m,p)=>m.set(p.clip,(m.get(p.clip)||0)+1),new Map()));
-    samples[state]={physicsSamples:samplesWithPose.length,activeClips:active,
-      expectedClipSamples:samplesWithPose.filter(p=>p.clip===({THROW:'Quarterback Pass',CATCH:'Football Catch 1',
-        RUN:'Running in place',
-        STANCE:'Football Stance',BACKPEDAL:'Running Backward in place'}[state])).length};
-  }
-  // RUN calculated with carry policy dynamically instead of hardcoding.
-  samples.RUN.expectedClipSamples=probe.flatMap(x=>x.players.filter(p=>p.pose===1))
-    .filter(p=>p.clip===(p.carrying?'Running While Holding Something':'Running in place')).length;
-  console.log('PASS_PLAY_POSE_AUDIT',JSON.stringify({chosen,samples,probeCount:probe.length,first:probe[0]?.time,last:probe.at(-1)?.time,meta:await page.evaluate(()=>window.__gridironRecordMeta?.())}));
-  assert.ok(probe.length>150,'live browser pose sampler must cover multiple seconds');
-  assert.ok(samples.THROW.physicsSamples>0,'QB physics never emitted THROW in completed pass');
-  assert.ok(samples.CATCH.physicsSamples>0,'receiver physics never emitted CATCH in completed pass');
-  assert.ok(samples.THROW.expectedClipSamples>0,'QB had THROW pose but never activated Quarterback Pass clip');
-  assert.ok(samples.CATCH.expectedClipSamples>0,'receiver had CATCH pose but never activated Football Catch 1 clip');
+// Seek to the actual engine's throw/catch event timestamps. Under software
+// rendering 6s of wall-clock time may advance less than 1s of game time;
+// wall-clock playback sampling is NOT a valid pose-activation gate.
+const base = process.env.BASE_URL || 'http://127.0.0.1:8137';
+const browser = await chromium.launch({headless:true,
+  args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+const page = await browser.newPage({viewport:{width:1280,height:880}});
+const failures=[];
+page.on('pageerror',e=>failures.push(String(e)));
 
-  // Ensure animated skeletons freeze while the replay is paused.
+async function seek(seconds, meta) {
+  const units=Math.max(0,Math.min(1000,Math.round(seconds/meta.duration*1000)));
+  await page.locator('#scrub').evaluate((element, value) => {
+    element.value=String(value);
+    element.dispatchEvent(new Event('input',{bubbles:true}));
+  },units);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(resolve)));
+  return await page.evaluate(()=>window.__gridironFrameSnapshot?.());
+}
+
+try {
+  await page.goto(base+'/week7.html?game=2026_07_CIN_BAL&debug=1',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Ready ·')
+    && window.__gridironRenderer?.riggedGltf,null,{timeout:100000});
+  const buttons=await page.locator('#timeline button.pl:not(.admin)').all();
+  let chosen;
+  for(const button of buttons) {
+    const label=await button.innerText();
+    if(/PASS COMPLETE/i.test(label)) {chosen=label;await button.click();break;}
+  }
+  assert.ok(chosen,'no completed pass found in seed-1042 BAL/CIN game');
+  assert.match(await page.locator('#replay-type').innerText(),/22-player 3D/);
+  // Clicking timeline starts the play. Pause before seeking.
   if(await page.locator('#play').getAttribute('aria-label')==='Pause')await page.locator('#play').click();
+  const meta=await page.evaluate(()=>window.__gridironRecordMeta?.());
+  const eThrow=meta.events.find(e=>e.type==='throw');
+  const eCatch=meta.events.find(e=>e.type==='catch');
+  assert.ok(eThrow,'physics must contain real quarterback throw event');
+  assert.ok(eCatch,'physics must contain real receiver catch event');
+  assert.ok(meta.throwSpeed>0,'physical throw must carry positive ball speed');
+  const inspect=[];
+  for(const [label,ev,poseCode,clipName] of [
+    ['THROW',eThrow,4,'Quarterback Pass'],['CATCH',eCatch,5,'Football Catch 1'],
+  ]) {
+    const snapshots=[];
+    for(const shift of [-0.20,-0.10,0,0.05,0.10,0.20,0.35]) {
+      const frame=await seek(ev.t-meta.t0+shift,meta);
+      const player=frame?.players.find(p=>p.id===ev.by);
+      snapshots.push({time:frame?.time,offset:shift,index:frame?.index,
+        physicsPose:player?.pose,activatedClip:player?.clip,clipTime:player?.clipTime});
+    }
+    const physics=snapshots.filter(z=>z.physicsPose===poseCode);
+    const activated=physics.filter(z=>z.activatedClip===clipName);
+    inspect.push({label,actor:ev.by,physicsFrames:physics.length,correctActivations:activated.length,snapshots});
+  }
+  console.log('PRECISE_EVENT_ANIMATION_AUDIT',JSON.stringify({chosen,meta,inspect}));
+  assert.ok(inspect[0].physicsFrames>0,'QB THROW event never produced recorded THROW pose');
+  assert.ok(inspect[1].physicsFrames>0,'receiver CATCH event never produced recorded CATCH pose');
+  assert.ok(inspect[0].correctActivations>0,'THROW pose did not select Quarterback Pass clip');
+  assert.ok(inspect[1].correctActivations>0,'CATCH pose did not select Football Catch 1 clip');
+
   const before=await page.evaluate(()=>window.__gridironFrameSnapshot?.());
-  await page.waitForTimeout(330);
+  await page.waitForTimeout(350);
   const after=await page.evaluate(()=>window.__gridironFrameSnapshot?.());
-  assert.equal(after.time,before.time,'game time moved while paused');
-  const clipTime = new Map(before.players.map(p=>[p.id,p.clipTime]));
-  const progressed = after.players.filter(p=>p.clipTime!=null && clipTime.get(p.id)!=null && Math.abs(p.clipTime-clipTime.get(p.id))>1e-5);
-  assert.equal(progressed.length,0,'rigged clip animation advanced while paused: '+JSON.stringify(progressed.slice(0,4)));
-  console.log('PASS rigged pose transitions and paused mixer freeze');
-}finally{await browser.close();}
+  assert.equal(after.time,before.time,'replay time advanced while paused');
+  assert.ok(before.players.every((p,i)=>p.clipTime===after.players[i].clipTime),
+    'rigged AnimationMixer continued to advance while replay was paused');
+  assert.ok(!failures.length,'browser errors: '+failures.join('; '));
+  console.log('PASS precise event-to-bone-action binding and paused mixer time');
+} finally {await browser.close();}
