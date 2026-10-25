@@ -1,9 +1,9 @@
 // Rigged free football player integration.
 //
-// Loads web/assets/football-player-rigged.glb (CC BY 3.0, "American Football
+// Loads web/assets/football-player-rigged-animated.glb (CC BY 3.0, "American Football
 // Player" by Hikky via BlendSwap, exported with Blender 4.2's official glTF 2.0
-// exporter) and drives its 56-bone skeleton with the same 12 procedural pose
-// states the primitive fallback uses.
+// and retargeted FBX clips to its existing 56-bone skeleton. The renderer
+// maps the same 12 gameplay states to clips, with procedural posing as fallback.
 //
 // The rig's bind pose is already upright, Y-up, feet on the ground and facing
 // +Z, so the module only spins it to the field's +X and scales it to the
@@ -18,8 +18,30 @@ import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 
 export const POSE = { STANCE: 0, RUN: 1, BLOCK: 2, DOWN: 3, THROW: 4, CATCH: 5, KICK: 6, HOLD: 7, CELEBRATE: 8, BACKPEDAL: 9, WRAP: 10, KNEEL: 11 };
 
+const POSE_ANIMATIONS = Object.freeze({
+  [POSE.STANCE]: Object.freeze({ clipName: 'Football Stance', loop: false }),
+  [POSE.RUN]: Object.freeze({ clipName: 'Running in place', loop: true }),
+  [POSE.BLOCK]: Object.freeze({ clipName: 'Pushing In Place', loop: true }),
+  [POSE.DOWN]: Object.freeze({ clipName: 'Stunned (Knocked Down)', loop: false }),
+  [POSE.THROW]: Object.freeze({ clipName: 'Quarterback Pass', loop: false }),
+  [POSE.CATCH]: Object.freeze({ clipName: 'Football Catch 1', loop: false }),
+  [POSE.KICK]: Object.freeze({ clipName: 'Goalkeeper Drop Kick', loop: false }),
+  [POSE.HOLD]: Object.freeze({ clipName: 'Football Hike', loop: false }),
+  [POSE.CELEBRATE]: Object.freeze({ clipName: 'Fist Pump', loop: false }),
+  [POSE.BACKPEDAL]: Object.freeze({ clipName: 'Running Backward in place', loop: true }),
+  [POSE.WRAP]: Object.freeze({ clipName: 'Running To Tackle', loop: false }),
+  [POSE.KNEEL]: Object.freeze({ clipName: 'Kneel', loop: false }),
+});
+const CARRY_RUN_CLIP = Object.freeze({ clipName: 'Running While Holding Something', loop: true });
+
+export function getRiggedAnimationSelection(pose, carrying = false) {
+  if (pose === POSE.RUN && carrying) return { ...CARRY_RUN_CLIP };
+  const selection = POSE_ANIMATIONS[pose];
+  return selection ? { ...selection } : null;
+}
+
 const YD = 0.9144;
-const ASSET_URL = 'web/assets/football-player-rigged.glb';
+const ASSET_URL = 'web/assets/football-player-rigged-animated.glb';
 
 // Field axes (world units are yards): +X downfield, +Y up, +Z across the field.
 const AX_FWD = new THREE.Vector3(1, 0, 0);
@@ -179,6 +201,48 @@ let neutralMode = false;
 export function setNeutralMode(on) { neutralMode = !!on; }
 export function isNeutralMode() { return neutralMode; }
 
+function updateRiggedAnimation(root, pose, speed, dt, carrying) {
+  const animation = root.userData.animation;
+  if (!animation?.mixer) return false;
+  const selection = getRiggedAnimationSelection(pose, carrying);
+  const clip = selection && animation.clips.get(selection.clipName);
+  if (!clip) {
+    if (animation.activeAction) {
+      animation.activeAction.fadeOut(0.12);
+      animation.activeAction = null;
+      animation.activeClipName = null;
+    }
+    animation.mixer.update(dt);
+    return false;
+  }
+
+  const locomotion = pose === POSE.RUN || pose === POSE.BACKPEDAL;
+  const timeScale = locomotion ? THREE.MathUtils.clamp(speed / 5, 0.55, 1.55) : 1;
+  if (animation.activeClipName !== selection.clipName) {
+    const next = animation.mixer.clipAction(clip);
+    next.reset();
+    next.enabled = true;
+    next.setLoop(selection.loop ? THREE.LoopRepeat : THREE.LoopOnce, selection.loop ? Infinity : 1);
+    next.clampWhenFinished = !selection.loop;
+    next.setEffectiveTimeScale(timeScale);
+    if (animation.activeAction) {
+      next.setEffectiveWeight(0);
+      next.play();
+      next.fadeIn(0.12);
+      animation.activeAction.fadeOut(0.12);
+    } else {
+      next.setEffectiveWeight(1);
+      next.play();
+    }
+    animation.activeAction = next;
+    animation.activeClipName = selection.clipName;
+  } else {
+    animation.activeAction.setEffectiveTimeScale(timeScale);
+  }
+  animation.mixer.update(dt);
+  return true;
+}
+
 export function buildRiggedPlayer(gltf, info, kit) {
   const root = new THREE.Group(); // positioned & yawed on the field (yards)
   const body = new THREE.Group(); // tipped over when down
@@ -186,6 +250,8 @@ export function buildRiggedPlayer(gltf, info, kit) {
 
   const clone = cloneSkeleton(gltf.scene);
   applyRiggedKit(clone, kit);
+  const clips = new Map((gltf.animations || []).map((clip) => [clip.name, clip]));
+  const mixer = clips.size ? new THREE.AnimationMixer(clone) : null;
   const bones = {};
   clone.traverse((o) => {
     if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; }
@@ -254,12 +320,17 @@ export function buildRiggedPlayer(gltf, info, kit) {
 
   root.userData = {
     rigged: true, id: info.id, jerseyNumber: String(info.jersey ?? ''), body, ring, bones,
+    animation: { mixer, clips, activeAction: null, activeClipName: null },
     phase: stablePhase(info.id, info.animationSeed ?? info.seed ?? kit?.seed ?? ''), lie: 0,
     hinge: {
       shinL: hinge('thighL', 'shinL'), shinR: hinge('thighR', 'shinR'),
       foreL: hinge('upper_armL', 'forearmL'), foreR: hinge('upper_armR', 'forearmR'),
     },
     dispose() {
+      if (mixer) {
+        mixer.stopAllAction();
+        mixer.uncacheRoot(clone);
+      }
       const geometries = new Set([ring.geometry]);
       const materials = new Set([ring.material]);
       const textures = new Set();
@@ -309,6 +380,7 @@ export function animateRigged(root, pose, speed, dt, carrying) {
   const u = root.userData;
   const b = u.bones;
   if (!b.hip && !b.thighL) return;
+  if (updateRiggedAnimation(root, pose, speed, dt, carrying)) return;
   u.phase += dt * (2.2 + speed * 0.9);
   const swing = Math.min(0.95, speed * 0.11);
   let lean = Math.min(0.38, speed * 0.04);
