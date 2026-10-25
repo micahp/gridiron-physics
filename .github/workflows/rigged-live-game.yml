@@ -24,3 +24,4 @@ jobs:
         run: |
           python3 -m http.server 8137 --directory . >/tmp/rigged-http.log 2>&1 &
           BASE_URL=http://127.0.0.1:8137 node test/rigged-live-game.browser.mjs
+          BASE_URL=http://127.0.0.1:8137 node test/rigged-pose-transition.browser.mjs
