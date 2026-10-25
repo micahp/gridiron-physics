@@ -1,0 +1,47 @@
+{
+  "manifest_version": "gridiron-nhl-statistical-pbp-viewer-v0.1",
+  "gridiron": {
+    "base_commit": "c57638471cd35d4f258572fcee538978a466a7e3",
+    "viewer_version": "nhl-statistical-event-viewer-v0.1",
+    "display_contract": "nhl-statistical-pbp-v0.1",
+    "read_only": true
+  },
+  "upstream": {
+    "repository": "micahp/legendarypicks",
+    "branch": "research/nhl-statistical-full-game-2026-10-25",
+    "producer_commit": "5ac101ff42a4fbdc737f011f5cec3b1b52ee6a83",
+    "model_version": "empirical-period-bootstrap-v0.1",
+    "mode": "hypothetical_statistical_simulation",
+    "team_labels_are_display_only": true,
+    "sportsbook_data_used": false
+  },
+  "fixtures": [
+    {
+      "id": "regulation-seed-31415",
+      "file": "nhl-statistical-game-v0.1-seed-31415.json",
+      "sha256": "e8daf15ad69a2276bf3cb06d682d841aa88dd49cda076791fdd5589621d00fbb",
+      "seed": 31415,
+      "home_label": "HOME",
+      "away_label": "AWAY",
+      "expected_periods": ["REG-1", "REG-2", "REG-3"],
+      "fixture_role": "reproducible regulation display example"
+    },
+    {
+      "id": "shootout-path-seed-8",
+      "file": "nhl-statistical-game-v0.1-shootout-path-seed-8.json",
+      "sha256": "57db4fbc26caa4493a26b82b56965a9f9fc2dc100598b6e4703181308f490e18",
+      "seed": 8,
+      "home_label": "HOME",
+      "away_label": "AWAY",
+      "expected_periods": ["REG-1", "REG-2", "REG-3", "OT-4", "SO-5"],
+      "fixture_role": "shootout branch demonstration only; not a representative sample"
+    }
+  ],
+  "data_boundaries": {
+    "historical_observations_are_not_presented_as_this_game": true,
+    "no_player_identity_or_coordinates_are_included": true,
+    "no_physical_motion_or_causal_outcome_is_claimed": true,
+    "raw_pbp_and_boxscore_data_are_not_copied": true,
+    "sbr_odds_are_not_an_engine_input": true
+  }
+}

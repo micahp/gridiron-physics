@@ -32,6 +32,10 @@ web/                     three.js renderer and UI
 test/validate.mjs        end-spot and plausibility checks
 ```
 
+## Isolated NHL research viewer
+
+[`nhl-statistical-game-viewer.html`](nhl-statistical-game-viewer.html) displays pinned LP NHL statistical event records. It is a read-only event timeline, not an NHL physics replay, and does not alter the NFL Film Room or shared NFL contract. See [the viewer handoff](docs/research/GRIDIRON-NHL-STATISTICAL-EVENT-VIEWER-2026-10-25.md) for fixture provenance and limits.
+
 ## Data sources
 
 - **ESPN** public JSON endpoints: game summary and drives, core-API plays with participants, rosters, depth charts.

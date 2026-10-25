@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>NHL Statistical Game · Gridiron Research Viewer</title>
+  <link rel="stylesheet" href="web/nhl-statistical-game-viewer.css">
+</head>
+<body>
+  <div class="hypothetical-banner">HYPOTHETICAL STATISTICAL SIMULATION · NOT A HISTORICAL GAME OR PHYSICS REPLAY</div>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">Gridiron Physics · NHL research viewer</p>
+      <h1>Statistical game record</h1>
+      <p class="intro">Browse the generated NHL event stream in sequence. Playback follows event order; it is not elapsed real time.</p>
+    </header>
+
+    <section id="load-status" class="notice" role="status" aria-live="polite">Loading pinned LP fixtures…</section>
+    <section id="load-error" class="notice error" role="alert" hidden></section>
+
+    <div id="viewer" hidden>
+      <section class="toolbar card" aria-label="Fixture and playback controls">
+        <label>Fixture
+          <select id="fixture-select" disabled></select>
+        </label>
+        <div class="playback-buttons" aria-label="Event playback">
+          <button id="previous" type="button" disabled>Previous event</button>
+          <button id="play-pause" type="button" disabled>Play</button>
+          <button id="next" type="button" disabled>Next event</button>
+        </div>
+        <label class="scrubber">Selected event
+          <input id="event-scrubber" type="range" min="0" max="0" value="0" disabled>
+        </label>
+        <output id="event-position" for="event-scrubber">—</output>
+      </section>
+
+      <section class="scoreboard" aria-label="Official hypothetical final score">
+        <div class="score-team home-team"><span id="home-label">HOME</span><strong id="home-score">—</strong><small id="home-sog">— SOG</small></div>
+        <div class="score-center"><span id="final-marker">FINAL</span><strong id="period-result">—</strong><small id="winner-label">—</small></div>
+        <div class="score-team away-team"><span id="away-label">AWAY</span><strong id="away-score">—</strong><small id="away-sog">— SOG</small></div>
+      </section>
+
+      <section class="summary-grid" aria-label="Simulation summary">
+        <article class="card"><span class="summary-label">Model</span><strong id="model-version">—</strong></article>
+        <article class="card"><span class="summary-label">Seed</span><strong id="seed-value">—</strong></article>
+        <article class="card"><span class="summary-label">Events</span><strong id="event-count">—</strong></article>
+        <article class="card"><span class="summary-label">Periods</span><strong id="period-list">—</strong></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="card timeline-card">
+          <div class="section-heading">
+            <div><p class="eyebrow">Ordered record</p><h2>Play-by-play events</h2></div>
+            <label class="period-filter">Period
+              <select id="period-filter"><option value="all">All</option></select>
+            </label>
+          </div>
+          <p id="timeline-note" class="muted"></p>
+          <ol id="event-list" class="event-list" aria-label="Game events"></ol>
+        </article>
+
+        <aside class="details-column">
+          <article class="card selected-card" aria-live="polite">
+            <p class="eyebrow">Record cursor</p>
+            <h2 id="selected-title">Select an event</h2>
+            <dl id="selected-meta" class="meta-grid"></dl>
+            <h3>Event details</h3>
+            <pre id="selected-details" class="json-view">—</pre>
+          </article>
+
+          <article class="card provenance-card">
+            <p class="eyebrow">Provenance</p>
+            <h2>Source and limits</h2>
+            <dl id="provenance" class="meta-grid"></dl>
+            <p class="limit-note">The statistical model resamples event periods. It does not make team-specific decisions and does not contain player positions, lineups, goalie behavior, possession physics, or movement. This viewer displays the LP record without changing it.</p>
+          </article>
+        </aside>
+      </section>
+    </div>
+
+    <footer>Read-only NHL event display · LP owns the simulated outcomes · no NHL physical replay is represented here.</footer>
+  </main>
+  <script type="module" src="web/nhl-statistical-game-viewer.js"></script>
+</body>
+</html>
