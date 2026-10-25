@@ -1,0 +1,26 @@
+name: Diagnose rigged animations in actual Week 7 playback
+on:
+  push:
+    branches: [research/rigged-live-state-audit-2026-10-25]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-live-rig:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Assert GLB metadata and state-to-clip names
+        run: node --test test/rigged-animation-assets.mjs test/rigged-animation-unit.mjs
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Confirm actual clips activate on run and pass game plays
+        run: |
+          python3 -m http.server 8137 --directory . >/tmp/rigged-http.log 2>&1 &
+          BASE_URL=http://127.0.0.1:8137 node test/rigged-live-game.browser.mjs
