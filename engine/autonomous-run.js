@@ -389,9 +389,34 @@ export function simulateInsideZone(options = {}) {
   function chooseBlockTarget(p) {
     const lane = p.slot === 'TE' ? side * 4.3 : p.slot.startsWith('WR') ? lOf(p) : p.ai.zoneL + side * 0.18;
     const current = p.ai.blockOn;
+    const perimeterBlocker = p.info.group === 'WR';
+    const targetScore = (q) => {
+      const lateral = Math.abs(lOf(q) - lane);
+      const forward = Math.abs(fOf(q) - 0.45);
+      if (perimeterBlocker) {
+        // Receivers stalk the leverage defender outside the box. Sending them
+        // after the nearest free lineman creates a long, unrealistic inward
+        // sprint and leaves the perimeter support defender untouched.
+        const groupPenalty = q.info.group === 'DB' ? 0 : 1.15;
+        const depthPenalty = ['FS', 'SS'].includes(q.slot) ? 0.45 : 0;
+        return Math.hypot(lateral, forward * 0.62) + groupPenalty + depthPenalty;
+      }
+      return lateral + forward * 0.24;
+    };
     if (current && !current.down && (!current.engaged || current.engaged === p)) {
-      const currentScore = Math.abs(lOf(current) - lane) + Math.abs(fOf(current) - 0.4) * 0.24;
+      const currentScore = targetScore(current);
       if (currentScore < 3.2) return current;
+    }
+    if (perimeterBlocker) {
+      const perimeter = defense.filter((q) => ['DB', 'LB'].includes(q.info.group)
+        && !q.down && (!q.engaged || q.engaged === p)
+        && fOf(q) > -2.5 && fOf(q) < 12
+        && Math.abs(lOf(q) - lane) < 10);
+      if (perimeter.length) {
+        return perimeter.map((q) => [targetScore(q), q])
+          .sort((a, b) => a[0] - b[0] || a[1].id.localeCompare(b[1].id))[0][1];
+      }
+      return null;
     }
     const freeDL = defense.filter((q) => q.info.group === 'DL' && !q.down && !q.engaged && fOf(q) > -2.5 && fOf(q) < 3.7);
     const freeLB = defense.filter((q) => q.info.group === 'LB' && !q.down && !q.engaged && fOf(q) > -1.5 && fOf(q) < 5.0);
