@@ -281,9 +281,39 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
   }
   animation.mixer.update(dt);
   // The idle clips hold the hands behind the back; keep their body motion but
-  // give the stance a natural arm hang.
-  applyStanceArms(root, dt, selection.clipName === POSE_ANIMATIONS[POSE.STANCE].clipName);
+  // give the stance a natural arm hang. Linemen set in a three-point stance:
+  // the clip walks them into the crouch (right hand already down), and we drive
+  // the arms the rest of the way so both hands rest near the turf instead of
+  // one arm hanging up in the air.
+  const linemanSet = selection.clipName === LINE_STANCE_CLIP;
+  if (linemanSet) applyLinemanArms(root, dt, true);
+  else {
+    if (isLineman(root)) applyLinemanArms(root, dt, false);
+    applyStanceArms(root, dt, selection.clipName === POSE_ANIMATIONS[POSE.STANCE].clipName);
+  }
   return true;
+}
+
+// A lineman's set: hands on the ground, elbows slightly bent. The same
+// bind-relative convention as applyStanceArms, so it sits on top of whatever
+// the stance clip does to the body. Two hands down reads as a four-point set,
+// which is fine for the line; it beats the clip's one-arm-up walk-in frame.
+const LINEMAN_ARM = Object.freeze({ flexL: 1.35, flexR: 1.35, out: 0.0, elbow: 0.18 });
+function applyLinemanArms(root, dt, active) {
+  const b = root.userData.bones;
+  const hinge = root.userData.hinge;
+  if (!b?.upL || !b?.upR || !b?.foreL || !b?.foreR) return;
+  const u = root.userData;
+  const target = active ? 1 : 0;
+  const step = dt / 0.15;
+  const blend = u.lineBlend ?? 0;
+  u.lineBlend = target > blend ? Math.min(target, blend + step) : Math.max(target, blend - step);
+  if (u.lineBlend <= 0.001) return;
+  const k = u.lineBlend;
+  rotWorldComposed(b.upL, [{ axis: AX_SIDE, angle: LINEMAN_ARM.flexL }, { axis: AX_FWD, angle: LINEMAN_ARM.out }], k);
+  rotWorldComposed(b.upR, [{ axis: AX_SIDE, angle: LINEMAN_ARM.flexR }, { axis: AX_FWD, angle: -LINEMAN_ARM.out }], k);
+  rotWorld(b.foreL, hinge?.foreL ?? AX_SIDE, LINEMAN_ARM.elbow, k);
+  rotWorld(b.foreR, hinge?.foreR ?? AX_SIDE, LINEMAN_ARM.elbow, k);
 }
 
 // Every relaxed standing clip in this asset clasps the hands behind the back,
