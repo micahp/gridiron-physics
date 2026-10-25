@@ -213,8 +213,9 @@ export function simulatePlay(game, S, ctx = {}) {
     st.qb = pl(OA.QB?.pid);
     for (const p of W.players) {
       p.ai.home = { ...p.p };
-      const isOL = ['LT', 'LG', 'C', 'RG', 'RT'].includes(p.slot);
-      p.pose = isOL || ['LEDGE', 'LDT', 'RDT', 'REDGE'].includes(p.slot) || (p.slot === 'NB' && heavy) ? POSE.STANCE : POSE.RUN;
+      // Pre-snap is a still frame. Everyone waits in a stance; the snap flips
+      // the skill players to RUN, so nobody jogs in place while waiting.
+      p.pose = POSE.STANCE;
     }
   }
 
