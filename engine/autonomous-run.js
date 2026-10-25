@@ -6,7 +6,8 @@ import { rng } from './rng.js';
 import { AERO, solveLaunch } from './ball.js';
 import { Player, POSE, World } from './world.js';
 
-const MAX_SECONDS = 9;
+const MAX_SECONDS = 12;
+const ARM_TACKLE_REACH = 0.12;
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const unit = (x, y) => {
@@ -19,7 +20,7 @@ const ALLOWED = new Set([
 ]);
 const RATING_NAMES = new Set([
   'SPD', 'ACC', 'AGI', 'STR', 'AWR', 'RBK', 'IBL', 'PBK', 'BSH', 'PMV',
-  'FMV', 'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC',
+  'FMV', 'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC', 'CTH', 'CIT',
 ]);
 
 const OFFENSE = [
@@ -146,6 +147,12 @@ function allRoleKeys(front) {
     ...OFFENSE.map(([role]) => roleKey('O', role)),
     ...DEFENSE[front].map(([role]) => roleKey('D', role)),
   ]);
+}
+
+/** Role keys a given front actually aligns, for callers mapping into it. */
+export function roleKeysForFront(front) {
+  if (!Object.hasOwn(DEFENSE, front)) throw new RangeError(`unsupported defensive front: ${front}`);
+  return allRoleKeys(front);
 }
 
 function makeSpecs(cfg) {
@@ -486,8 +493,24 @@ export function simulateInsideZone(options = {}) {
     return !!current && !!next && current.score - next.score >= threshold;
   }
 
-  function startTackle(d) {
-    if (terminal || tackle || !carrier || d.team === carrier.team) return;
+  for (const p of defense.filter((player) => player.info.group === 'DB')) {
+    p.ai.snapL = lOf(p);
+    p.ai.outsideSign = Math.sign(p.ai.snapL) || (p.slot === 'LCB' || p.slot === 'NB' ? 1 : -1);
+    if (p.slot === 'LCB' || p.slot === 'RCB') {
+      p.ai.coveredWR = closest(offense, p, (q) => q.info.group === 'WR');
+    }
+    const baseDelay = p.slot === 'NB' ? 0.18 : p.slot === 'SS' ? 0.28
+      : p.slot === 'FS' ? 0.48 : 0.34;
+    const recognition = p.R.PRC ?? p.R.AWR ?? 60;
+    p.ai.runReadDelay = clamp(baseDelay + (68 - recognition) * 0.003, baseDelay - 0.08, baseDelay + 0.14);
+  }
+
+  function startTackle(d, contactSource = 'body') {
+    if (terminal || tackle || !carrier || d.team === carrier.team || d.engaged) return;
+    W.event('tackle_contact', {
+      defender_id: d.id, carrier_id: carrier.id, source: contactSource,
+      distance_meters: d2(d, carrier),
+    });
     const closing = Math.hypot(d.v.x - carrier.v.x, d.v.y - carrier.v.y) / YD;
     const tak = d.R.TAK ?? 60;
     const btk = Math.max(carrier.R.BTK ?? 55, carrier.R.ELU ?? 55);
@@ -513,7 +536,7 @@ export function simulateInsideZone(options = {}) {
   W.onTouch = (a, b) => {
     if (!carrier || tackle || terminal || (a !== carrier && b !== carrier)) return;
     const d = a === carrier ? b : a;
-    if (d.team !== carrier.team && !d.down && (d.ai.missUntil ?? 0) <= W.t) startTackle(d);
+    if (d.team !== carrier.team && !d.down && !d.engaged && (d.ai.missUntil ?? 0) <= W.t) startTackle(d);
   };
 
   function rbBrain(p) {
@@ -646,22 +669,92 @@ export function simulateInsideZone(options = {}) {
     } else {
       const isDeep = p.slot === 'FS';
       const isOutside = p.slot === 'LCB' || p.slot === 'RCB';
-      const assignedWR = closest(offense, p, (q) => q.info.group === 'WR');
-      if (!carrier && W.t < 0.27 && assignedWR && isOutside) {
-        const shade = { x: assignedWR.p.x + dir * 0.6 * YD, y: assignedWR.p.y };
-        p.dv = seek(p, shade, 0.58, 8);
-        p.face = Math.atan2(assignedWR.p.y - p.p.y, assignedWR.p.x - p.p.x);
-        setIntent(p, 'outside contain', `read ${assignedWR.slot} before fitting the run`);
-      } else if (!carrier && isDeep) {
-        p.dv = seek(p, at(7.5, -side * 1.8), 0.34, 5);
-        setIntent(p, 'deep run support', 'hold depth until the handoff is visible');
-      } else {
-        const supportL = isOutside ? (p.slot === 'LCB' ? 6.5 : -6.5) : p.slot === 'NB' || p.slot === 'SS' ? side * 2.7 : -side * 1.0;
-        const anticipation = clamp(0.22 + (p.R.PUR ?? p.R.AWR ?? 60) * 0.0018, 0.28, 0.43);
-        const tgt = carrier ? lead(p, carrier, isDeep ? Math.min(0.62, anticipation + 0.12) : anticipation) : at(2.2, supportL);
-        p.dv = seek(p, tgt, isDeep ? 0.96 : 0.92, 18);
-        setIntent(p, isOutside ? 'outside contain' : p.slot === 'SS' || p.slot === 'NB' ? 'alley run support' : 'deep run support', carrier ? 'take a pursuit angle from current carrier position' : 'read the run and close the support lane');
+      const assignedWR = p.ai.coveredWR;
+      const visibleRunCue = W.ball.state === 'held' && W.ball.holder === rb && rb.hasBall
+        && (rb.speed / YD > 0.35 || offense.some((q) => q.info.group === 'OL' && fOf(q) > 0.05 && q.speed / YD > 0.45));
+      if (visibleRunCue) p.ai.runCueAt ??= W.t;
+      if (!p.ai.runRecognized && p.ai.runCueAt != null && W.t - p.ai.runCueAt >= p.ai.runReadDelay) {
+        p.ai.runRecognized = true;
+        W.event('defensive_run_read', {
+          player_id: p.id, role: p.roleKey, observed_at: p.ai.runCueAt,
+          reaction_delay_seconds: p.ai.runReadDelay,
+        });
       }
+
+      if (!p.ai.runRecognized) {
+        if (isOutside && assignedWR && !assignedWR.down) {
+          const f = fOf(assignedWR) - 0.45;
+          const l = lOf(assignedWR) + p.ai.outsideSign * 0.7;
+          p.dv = seek(p, at(f, l), 0.52, 7);
+          p.face = Math.atan2(assignedWR.p.y - p.p.y, assignedWR.p.x - p.p.x);
+          setIntent(p, 'preserve corner leverage', `key ${assignedWR.slot}; stay outside and read the backfield`);
+        } else if (isDeep) {
+          p.dv = seek(p, at(8.2, p.ai.snapL * 0.8), 0.30, 5);
+          setIntent(p, 'hold safety depth', 'stay high while reading the mesh and offensive line flow');
+        } else {
+          const supportL = p.slot === 'NB' ? p.ai.snapL * 0.72 : p.ai.snapL * 0.8;
+          p.dv = seek(p, at(2.0, supportL), p.slot === 'NB' ? 0.48 : 0.34, 6);
+          setIntent(p, 'read run from support alignment', 'key the backfield before triggering downhill');
+        }
+        return;
+      }
+
+      const carrierF = fOf(rb), carrierL = lOf(rb);
+      const separationYards = d2(p, rb) / YD;
+      const leverage = clamp((separationYards - 0.55) / 3.4, 0, 1);
+      const leadScale = (isDeep ? 0.42 : p.slot === 'NB' ? 0.25 : 0.34) * leverage;
+      const pursuit = lead(p, rb, leadScale);
+      const leadF = (pursuit.x / YD - cfg.los) * dir;
+      const leadL = (pursuit.y / YD - cfg.ballY) * dir;
+      let targetF, targetL, fraction, assignment, decision;
+      if (isOutside) {
+        const onRunSide = p.ai.outsideSign * carrierL > 0;
+        const ahead = onRunSide ? 0.9 : 2.4;
+        const leverageL = onRunSide ? p.ai.outsideSign * 3.4
+          : carrierL * 0.55 + p.ai.outsideSign * 0.8 - carrierL;
+        targetF = Math.max(carrierF + ahead * leverage, leadF);
+        targetL = carrierL + leverageL * leverage;
+        fraction = (onRunSide ? 0.78 : 0.62) + 0.25 * (1 - leverage);
+        assignment = onRunSide ? 'outside force and contain' : 'backside cutback contain';
+        decision = onRunSide
+          ? 'close from outside-in and keep the runner inside'
+          : 'stay high and preserve backside leverage on the observed path';
+      } else if (isDeep) {
+        targetF = Math.max(carrierF + 3.0 * leverage, leadF);
+        targetL = carrierL + (carrierL * 0.42 + p.ai.snapL * 0.18 - carrierL) * leverage;
+        fraction = 0.72 + 0.25 * (1 - leverage);
+        assignment = 'top-down safety pursuit';
+        decision = 'maintain depth and close the alley from above the runner';
+      } else if (p.slot === 'SS') {
+        const onRunSide = p.ai.outsideSign * carrierL > 0;
+        const ahead = onRunSide ? 0.65 : 1.8;
+        const leverageL = onRunSide ? p.ai.outsideSign * 1.9 : carrierL * 0.72 - carrierL;
+        targetF = Math.max(carrierF + ahead * leverage, leadF);
+        targetL = carrierL + leverageL * leverage;
+        fraction = 0.82 + 0.17 * (1 - leverage);
+        assignment = onRunSide ? 'strong safety alley fill' : 'strong safety cutback fit';
+        decision = onRunSide
+          ? 'fit inside the corner force and square to the runner'
+          : 'scrape across while preserving the cutback angle';
+      } else {
+        targetF = Math.max(carrierF + 0.45 * leverage, leadF);
+        targetL = carrierL + p.ai.outsideSign * leverage;
+        fraction = 0.90 + 0.09 * (1 - leverage);
+        assignment = 'nickel force and alley support';
+        decision = 'trigger from slot leverage and close the near-side run lane';
+      }
+      if (leverage < 0.18) {
+        assignment = 'close and attempt tackle';
+        decision = 'collapse the leverage angle and make contact with the live carrier';
+        const toward = unit(rb.p.x - p.p.x, rb.p.y - p.p.y);
+        p.dv = { x: toward.x * p.vmax * 0.99, y: toward.y * p.vmax * 0.99 };
+        p.face = Math.atan2(rb.p.y - p.p.y, rb.p.x - p.p.x);
+        setIntent(p, assignment, decision);
+        return;
+      }
+      p.dv = seek(p, at(targetF, targetL), fraction, isDeep ? 11 : 16);
+      p.face = Math.atan2(rb.p.y - p.p.y, rb.p.x - p.p.x);
+      setIntent(p, assignment, decision);
     }
   }
 
@@ -743,6 +836,15 @@ export function simulateInsideZone(options = {}) {
       row.maxDefF = Math.max(row.maxDefF, fOf(row.defender));
     }
     trackForwardProgress();
+    if (!terminal && !tackle && carrier) {
+      for (const defender of defense) {
+        if (defender.down || defender.engaged || (defender.ai.missUntil ?? 0) > W.t) continue;
+        if (d2(defender, carrier) <= defender.r + carrier.r + ARM_TACKLE_REACH) {
+          startTackle(defender, 'arm_reach');
+          if (tackle) break;
+        }
+      }
+    }
     if (!terminal && tackle && W.t - tackle.t0 >= 0.48) {
       const spot = maxForward || { x: W.ball.x, y: W.ball.y };
       finish('tackle', spot);

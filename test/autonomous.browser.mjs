@@ -29,7 +29,7 @@ async function runToWhistle() {
   });
   await page.waitForFunction(() => document.querySelector('#carrier-readout')?.textContent.startsWith('Current ball carrier:'));
   assert.match(await page.locator('#focus-decision').innerText(), /O\.RB/);
-  assert.match(await page.locator('#lane-readout').innerText(), /RB lane:/);
+  assert.match(await page.locator('#lane-readout').innerText(), /RB lane:|Carrier path:/);
   await page.locator('#scrub').evaluate((slider) => {
     slider.value = '1000';
     slider.dispatchEvent(new Event('input', { bubbles: true }));
@@ -54,6 +54,7 @@ try {
   assert.match(await page.locator('#carrier-readout').innerText(), /Ball carrier at whistle:/);
   assert.match(await page.locator('#lane-readout').innerText(), /RB lane:/);
   assert.match(await page.locator('#play-events').innerText(), /whistle/i);
+  assert.match(await page.locator('#play-events').innerText(), /recognizes the run/i);
   assert.match(await page.locator('#result-detail').innerText(), /made contact|blockers won/i);
 
   await page.locator('#show-decisions').check();
@@ -71,9 +72,28 @@ try {
   await page.locator('#front').selectOption('bear');
   const second = await runToWhistle();
   assert.ok(await page.locator('#compare-runs').innerText().then((text) => text.includes('Previous') && text.includes('Current')));
-  assert.match(await page.locator('#compare-runs').innerText(), /even[\s\S]*bear|bear[\s\S]*even/);
+  assert.match(await page.locator('#compare-runs').innerText(), /over[\s\S]*bear|bear[\s\S]*over/);
   await page.screenshot({ path: new URL('inside-zone-run-comparison.png', SHOTS).pathname });
 
+  // Passing family: the same viewer runs the slant–flat executor end to end.
+  await page.locator('#play-call').selectOption('slant_flat');
+  assert.equal(await page.locator('#coverage-row').isVisible(), true, 'coverage appears for a pass call');
+  assert.equal(await page.locator('#front option[value="bear"]').isVisible(), false, 'run fronts are hidden for a pass call');
+  await page.locator('#front').selectOption('nickel_over');
+  await page.locator('#coverage').selectOption('cover_1');
+  await page.locator('#seed').fill('slant-flat-browser-1');
+  const pass = await runToWhistle();
+  assert.match(pass.result, /tackle|touchdown|out of bounds|incomplete|sack|failure/i);
+  const passEvents = await page.locator('#play-events').innerText();
+  assert.match(passEvents, /throw|sack/i, 'the pass log shows a throw or a sack');
+  assert.match(await page.locator('#compare-runs').innerText(), /slant.fl&#x2013;?flat|slant–flat|slant-flat/);
+  await page.locator('#focus-player').selectOption('O.QB');
+  assert.match(await page.locator('#focus-decision').innerText(), /O\.QB/);
+  await page.screenshot({ path: new URL('slant-flat-outcome.png', SHOTS).pathname });
+
+  await page.locator('#play-call').selectOption('inside_zone');
+  await page.locator('#front').selectOption('bear');
+  await page.locator('#seed').fill('inside-zone-demo-1');
   const replay = await runToWhistle();
   assert.deepEqual(replay, second, 'same seed, front and ratings reproduce the displayed result exactly');
   assert.equal(errors.length, 0, `browser errors: ${errors.join('; ')}`);
