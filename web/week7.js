@@ -32,6 +32,25 @@ const selectedDemos = new Map();
 const stadiumAudio = new FootballAudio(match.home);
 
 function status(message, failure=false){$('status').textContent=message; $('status').style.color=failure?'#ffc3b8':'#c9eaff';}
+function wireAudioControls(){
+  const button=$('audio-toggle'), volume=$('audio-volume');
+  // Cached or older markup can legitimately lack the audio controls. Wiring
+  // must never throw before start(): that would leave the whole app on
+  // "Loading matchup data…" with no plays, drives, or box score.
+  if(!button||!volume)return;
+  button.addEventListener('click',async()=>{
+    if(stadiumAudio.enabled){stadiumAudio.disable();button.textContent='Sound off';button.setAttribute('aria-pressed','false');return;}
+    button.disabled=true;
+    button.textContent='Loading audio…';
+    const loaded=await stadiumAudio.enable();
+    button.disabled=false;
+    button.textContent=loaded?'Sound on':'Audio files missing';
+    button.setAttribute('aria-pressed',String(stadiumAudio.enabled));
+  });
+  volume.addEventListener('input',e=>stadiumAudio.setVolume(Number(e.target.value)/100));
+  button.title='Enable stadium sounds';
+  button.disabled=false;
+}
 function clock(v){return Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0');}
 function safe(v){return Number.isFinite(Number(v))?Number(v):0;}
 function playersMap(a,b) {
@@ -402,17 +421,6 @@ async function start(){
     $('previous').addEventListener('click',()=>{const j=playable(selected,-1);if(j!=null)choose(j);});
     $('next').addEventListener('click',()=>{const j=playable(selected,1);if(j!=null)choose(j);});
     $('play').addEventListener('click',()=>{playing=!playing;dwell=0;renderPlayButton();});
-    $('audio-toggle').addEventListener('click',async()=>{
-      const button=$('audio-toggle');
-      if(stadiumAudio.enabled){stadiumAudio.disable();button.textContent='Sound off';button.setAttribute('aria-pressed','false');return;}
-      button.disabled=true;
-      button.textContent='Loading audio…';
-      const loaded=await stadiumAudio.enable();
-      button.disabled=false;
-      button.textContent=loaded?'Sound on':'Audio files missing';
-      button.setAttribute('aria-pressed',String(stadiumAudio.enabled));
-    });
-    $('audio-volume').addEventListener('input',e=>stadiumAudio.setVolume(Number(e.target.value)/100));
     $('filterbar').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(b)setFilter(b.dataset.filter);});
     document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('play').click();}});
     $('scrub').addEventListener('input',()=>{if(current){playing=false;renderPlayButton();playSeconds=current.duration*Number($('scrub').value)/1000;animating=playSeconds<current.duration;}});
@@ -434,4 +442,7 @@ async function start(){
     $('play-detail').innerHTML='<p class="warn">'+esc(e.message)+'</p><p>Six-game picker is present, but no substitute players or fabricated lineups will be displayed.</p>';
   }
 }
+// Wire the audio controls before start() so a click landing while matchup data
+// is still loading is not dropped. A wiring failure must never abort start().
+try{wireAudioControls();}catch(error){console.warn('Audio controls unavailable:',error);}
 start();
