@@ -1,8 +1,8 @@
 import { Renderer } from './render.js';
-import { selectPlay } from './prototype-model.js';
+import { selectPlay, selectSpecialTeamsPlay } from './prototype-model.js';
 import { executeSelectedPlay } from './prototype-execution.js';
 import { MATCHUPS, generateGame } from './week7-core.js';
-import { describeWeek7Play } from './week7-play-description.js';
+import { describeWeek7Play, describeWeek7Movement } from './week7-play-description.js';
 import { FootballAudio } from './audio-director.js';
 
 const $ = id => document.getElementById(id);
@@ -30,6 +30,11 @@ let animating = false, lastTick = null, playSeconds = 0;
 // Reuse the same 2026 lineups for timeline credits and the actual 3D play.
 const selectedDemos = new Map();
 const stadiumAudio = new FootballAudio(match.home);
+// Kicks the director can replay. Blocked kicks have no physical model, so they
+// keep the text-only row instead of pretending to animate.
+const animatableSpecial = p => (p.type === 'kickoff' || p.type === 'field_goal' || p.type === 'punt') &&
+  !(p.type === 'punt' && p.outcome === 'blocked') && !(p.type === 'field_goal' && p.blocked);
+const replayable = p => p.type === 'scrimmage' || animatableSpecial(p);
 
 function status(message, failure=false){$('status').textContent=message; $('status').style.color=failure?'#ffc3b8':'#c9eaff';}
 function clock(v){return Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0');}
@@ -251,7 +256,7 @@ function renderTimeline(){
   $('timeline-head').textContent=shown+' of '+simulation.plays.length+' events · '+drives.size+' drives';
   $('timeline').innerHTML=[...drives].map(([n,d])=>
     '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+(d.rows.length===1?' event':' events')+'</span></div>'+
-    d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+
+    d.rows.map(({p,i})=>'<button class="pl'+(replayable(p)?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+
       esc(describeWeek7Play(p, selectionFor(p)?.demo, physicsGame?.players).line)+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
@@ -265,14 +270,30 @@ function scoreAtPlay(p) {
   $('bug-away').classList.toggle('poss',p.offense===match.away);
   $('bug-home').classList.toggle('poss',p.offense===match.home);
 }
-function makeSelected(p){
-  // Adapter uses current 2026 roster, real 2025 playbook catalog, and LP-like chosen outcome.
-  const input={schema_version:'gridiron.play_selection.v1',
+// Shared team/roster join for both adapters: the frozen weekly snapshot, never
+// a historical lineup.
+function selectionBase(){
+  return {schema_version:'gridiron.play_selection.v1',
     teams:{[match.home]:snapshot.teams[match.home],[match.away]:snapshot.teams[match.away]},
     playbooks:books,
     active_rosters:Object.fromEntries([match.home,match.away].map(id=>[
       id,snapshot.teams[id].roster.filter(x=>x.status==='ACT'&&x.availability==='available').map(x=>x.id)])),
     personnel_availability:{[match.home]:{inactive_ids:[]},[match.away]:{inactive_ids:[]}},
+    random_seed:simulation.seed};
+}
+function makeSelected(p){
+  if(p.type!=='scrimmage'){
+    // The generator sampled the kick from 2025 league tables; the director
+    // reconstructs that outcome with a real 22-player kicking formation.
+    const demo=selectSpecialTeamsPlay({...selectionBase(),
+      game_state:{game_id:match.id,quarter:p.quarter,clock_seconds:p.clock},
+      demo_controls:{kind:p.type,event:p},random_seed:simulation.seed+'|'+p.id});
+    demo.play.id=p.id;
+    demo.execution_contract.unsupported.push('2025 sampled special-teams outcome anchors the 2026 visualization');
+    return demo;
+  }
+  // Adapter uses current 2026 roster, real 2025 playbook catalog, and LP-like chosen outcome.
+  const input={...selectionBase(),
     game_state:{game_id:match.id,offense_team_id:p.offense,defense_team_id:p.defense,down:p.down,
       distance_yards:p.togo,yard_line:p.offense===match.home?100-p.yl:p.yl,
       score:p.score,clock_seconds:p.clock,
@@ -296,7 +317,7 @@ function makeSelected(p){
   return demo;
 }
 function selectionFor(p){
-  if(p.type!=='scrimmage')return null;
+  if(!replayable(p))return null;
   if(!selectedDemos.has(p.id)){
     try{selectedDemos.set(p.id,{demo:makeSelected(p)});}
     catch(error){selectedDemos.set(p.id,{error});}
@@ -320,7 +341,7 @@ function choose(idx){
     (p.type==='kickoff'?'<br>'+kickoffLabel(p):'')+
     (p.type==='field_goal'&&!p.good&&p.restart_rule?'<br>Restart: '+esc(p.restart_rule):'');
   current=null;playSeconds=0;lastTick=null;animating=false;dwell=0;$('scrub').value='0';
-  if(p.type!=='scrimmage'){
+  if(!replayable(p)){
     currentSelection=null;
     $('replay-type').textContent='Text-only event';
     $('roster-t').hidden=true;rosterSlots=[];
@@ -333,15 +354,24 @@ function choose(idx){
       if(!demo)throw new Error('missing 2026 replay lineup');
       currentSelection=demo;
       renderer.clearTrail();
-      const roster=[...Object.entries(demo.lineups.offense).map(([slot,id])=>({id,team:p.offense,slot})),
-        ...Object.entries(demo.lineups.defense).map(([slot,id])=>({id,team:p.defense,slot}))];
+      const roster=[...Object.entries(demo.lineups.offense).map(([slot,id])=>({id,team:demo.play.off,slot})),
+        ...Object.entries(demo.lineups.defense).map(([slot,id])=>({id,team:demo.play.def,slot}))];
       renderer.setRoster(roster);
-      renderer.setLines(demo.play.los,demo.play.los+demo.play.dir*p.togo);
+      // A kick has no line to gain; show only the kick spot.
+      renderer.setLines(demo.play.los,demo.play.kindGroup==='kick'?null:demo.play.los+demo.play.dir*p.togo);
       const result=executeSelectedPlay(demo);
       if(result.failure) throw new Error(result.failure.message);
       if(!result.record?.frames?.length)throw new Error('physics returned no frames');
       current={rec:result.record,duration:(result.record.frames.length-1)/result.record.hz};
-      $('replay-type').textContent='22-player 3D · constrained';
+      const movement=describeWeek7Movement(p,demo,result.record,physicsGame?.players);
+      if(movement)$('play-detail').innerHTML+='<p class="note">'+esc(movement)+'</p>';
+      if(demo.play.kindGroup==='kick'){
+        $('play-detail').innerHTML+='<p class="note">3D replay: the kick and return are reconstructed from this sampled outcome, not predicted. The game log itself does not simulate kick flight.</p>';
+        for(const a of demo.selection.role_adaptations||[])
+          $('play-detail').innerHTML+='<p class="note">Roster note: '+esc(a.reason)+'.</p>';
+      }
+      $('replay-type').textContent=demo.play.kindGroup==='kick'
+        ?'22-player 3D · special teams':'22-player 3D · constrained';
       drawPlayerList(demo);
       animating=true;
     }catch(e){

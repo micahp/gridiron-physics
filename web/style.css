@@ -112,6 +112,8 @@ button { cursor: pointer; }
 #scrub { flex: 1 1 160px; accent-color: var(--firstdown); min-width: 0; }
 select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
 .auto { font-size: 13px; color: var(--dim); display: flex; gap: 6px; align-items: center; }
+.autonomous-entry { margin-left: auto; color: var(--firstdown); font: 600 13px var(--f-display); letter-spacing: .04em; text-transform: uppercase; text-decoration: none; }
+.autonomous-entry:hover { color: var(--chalk); }
 .playtext { margin: 0; font-size: 14px; min-height: 2.9em; max-width: 90ch; }
 .playtext b { font-family: var(--f-display); font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--firstdown); margin-right: 8px; }
 #wp { width: 100%; height: 46px; display: block; cursor: pointer; }

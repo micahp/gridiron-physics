@@ -59,15 +59,17 @@ try{
     assert.match(status,/^Ready ·/,game.id+' must report ready after simulating, not a finished game: '+status);
     const n=await page.locator('#timeline button[data-index]').count();
     assert.ok(n>40,'not enough generated events for '+game.id+': '+n);
-    // The game opens with a kickoff, which is text-only (no 3D), so select the
-    // first scrimmage play to exercise the physical 22-player animation.
+    // The game opens with a kickoff, which the director now replays with a
+    // real 22-player kicking formation.
     await page.locator('#timeline button[data-index="0"]').click();
-    assert.match(await page.locator('#replay-type').innerText(),/Text-only event/,game.id+' opening kickoff should be text-only');
+    assert.match(await page.locator('#replay-type').innerText(),/22-player 3D · special teams/,game.id+' opening kickoff should replay physically');
     // The kickoff is a special-teams event and must show both teams.
     const koText=await page.locator('#play-detail').innerText();
     assert.match(koText,/→/,game.id+' kickoff detail should name the kicking and receiving teams: '+koText);
     assert.match(koText,/touchback|return|out of bounds/i,game.id+' kickoff detail should name the outcome: '+koText);
-    await page.locator('#timeline button.pl:not(.admin)').first().click();
+    assert.match(koText,/reconstructed from this sampled outcome/,game.id+' kickoff replay must state it is a reconstruction: '+koText);
+    // Then a scrimmage snap: the original 22-player run/pass animation.
+    await page.locator('#timeline button.pl:not(.admin)',{hasText:'RUN'}).first().click();
     const event=await page.locator('#replay-type').innerText();
     assert.match(event,/22-player 3D/,game.id+' physical animation unavailable: '+await page.locator('#play-detail').innerText());
     const playText=await page.locator('#play-detail').innerText();
@@ -80,6 +82,16 @@ try{
       game.id+' timeline row lacks matching player attribution');
     assert.match(playText,/Illustrative 2026 roster assignment/,
       game.id+' missing historical-credit disclaimer');
+    // A punt and a field goal also replay physically when the outcome has a
+    // model (blocked kicks stay text-only and carry the admin class).
+    for(const label of ['PUNT','FIELD GOAL']){
+      const row=page.locator('#timeline button.pl:not(.admin)',{hasText:label}).first();
+      if(!(await row.count()))continue;
+      await row.click();
+      const kindText=await page.locator('#replay-type').innerText();
+      assert.match(kindText,/22-player 3D · special teams/,game.id+' '+label+' did not replay: '+await page.locator('#play-detail').innerText());
+      assert.match(await page.locator('#play-detail').innerText(),/reconstructed from this sampled outcome/,game.id+' '+label+' replay must state its provenance');
+    }
     rendered.push({game:game.id,seed,events:n,first:event});
   }
   await page.locator('#again').click();

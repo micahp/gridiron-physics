@@ -192,6 +192,93 @@ export function sampleBlockedPuntOutcome(puntTable, rand) {
   }
   return last;
 }
+// Safety free kick from the kicking team's own 20, sampled from the 2025
+// regular-season kickoffs that followed a safety (data/special_teams
+// safety_kicks, classified by pipeline/build_special_teams_2025.py).
+//
+// Classes are drawn in proportion to their observed 2025 counts, which stands in
+// for the kicking team's onside decision; the simulator does not model that
+// decision. Fails closed in three ways: a missing or empty table throws, a class
+// below SAFETY_KICK_MIN_SAMPLE is refused, and an observed kicking-team onside
+// recovery is sampled as first and 10 at its recovery spot (Rule 7-3-1(e)), with
+// no floor. Nothing falls back to another table.
+//
+// The minimum of 2 is a floor, not a sufficiency claim: one observed kick is a
+// single draw, and two is the smallest count that is not a single row. A
+// higher floor would refuse every onside draw, since only 2 receiving-team onside
+// kicks exist in 2025. The kicking-recovery class has one 2025 row. The floor is
+// not applied to it because its outcome (first and 10) comes from the rule, and
+// only the spot is observed. Refusing it would refuse the one case the table
+// records.
+export const SAFETY_KICK_MIN_SAMPLE = 2;
+export const SAFETY_KICK_CLASSES = ['normal_free_kick', 'onside_receiving_possession', 'onside_kicking_recovery'];
+const ONSIDE_CLASSES = ['onside_receiving_possession', 'onside_kicking_recovery'];
+// The decision to attempt an onside kick is a game-situation rule, not the 2025
+// class shares. Rule 6-1-6 lets a team declare an onside kick at any time; the
+// simulator attempts one only when the kicking team trails in the fourth quarter
+// with two minutes or less, and takes a normal free kick otherwise. A table may
+// carry `onside_rule` to override the policy; the audit and tests use that to
+// force a class, and the shipped league file does not set it.
+export const ONSIDE_RULE = {quarter: 4, window_seconds: 120, require_trailing: true};
+export function shouldAttemptOnside({quarter, clock, trailing}, rule = ONSIDE_RULE) {
+  const r = {...ONSIDE_RULE, ...(rule || {})};
+  return (r.quarter === null || quarter === r.quarter) && clock <= r.window_seconds &&
+    (!r.require_trailing || !!trailing);
+}
+// `onsideAttempt` selects the groups to draw from. When it is undefined the
+// sampler draws across every class, which tests use to force a single class.
+export function sampleSafetyKickOutcome(safetyTable, rand, {onsideAttempt} = {}) {
+  const cats = safetyTable?.categories;
+  if (!cats) throw new Error('missing safety-kick outcome table');
+  const pool = onsideAttempt === undefined ? SAFETY_KICK_CLASSES
+    : onsideAttempt ? ONSIDE_CLASSES : ['normal_free_kick'];
+  const total = pool.reduce((n, k) => n + (cats[k]?.n || 0), 0);
+  if (!(total > 0)) {
+    if (SAFETY_KICK_CLASSES.some(k => (cats[k]?.n || 0) > 0))
+      return { category: onsideAttempt ? 'onside_attempt' : 'normal_free_kick',
+        refusal: 'safety_kick_no_class_observations',
+        detail: `No observed 2025 safety-kick row for the ${onsideAttempt ? 'onside attempt' : 'normal free kick'} class; it is refused rather than drawn from another class.` };
+    throw new Error('safety-kick outcome table has no observations');
+  }
+  let pick = rand() * total;
+  let cls = null;
+  for (const k of pool) {
+    const n = cats[k]?.n || 0;
+    if (!n) continue;
+    cls = k;
+    pick -= n;
+    if (pick < 0) break;
+  }
+  const cat = cats[cls];
+  if (!Array.isArray(cat.rows) || cat.rows.length !== cat.n)
+    throw new Error(`safety-kick table ${cls}: row list does not match n`);
+  if (cls === 'onside_kicking_recovery') {
+    // Rule 7-3-1(e): the kicking team keeps the ball as a new series, first and 10,
+    // at the recovery spot. Only the spot is observed; it is validated against the
+    // next scrimmage play recorded in the table, and the floor below does not apply.
+    const row = cat.rows[Math.floor(rand() * cat.rows.length)];
+    const offenseSpot = Number(row.offense_spot_yardline_100);
+    if (!Number.isFinite(offenseSpot) || offenseSpot < 1 || offenseSpot > 99)
+      throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no valid recovery spot`);
+    if (row.next_play_down !== 1 || row.next_play_ydstogo !== 10)
+      throw new Error(`safety-kick row ${row.game_id} ${row.play_id} does not record first and 10`);
+    if (typeof row.clock_starts !== 'boolean')
+      throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no clock_starts flag`);
+    return { category: cls, refusal: null, outcome: row.outcome, return_yards: 0, clock_starts: row.clock_starts,
+      spot: null, offense_spot: offenseSpot, source: { game_id: row.game_id, play_id: row.play_id } };
+  }
+  if (cat.n < SAFETY_KICK_MIN_SAMPLE)
+    return { category: cls, refusal: 'safety_kick_below_minimum_sample',
+      detail: `Safety-kick class ${cls} has ${cat.n} observed 2025 kick(s), below the minimum of ${SAFETY_KICK_MIN_SAMPLE}; it is refused rather than sampled.` };
+  const row = cat.rows[Math.floor(rand() * cat.rows.length)];
+  const spot = Number(row.receiving_spot_yardline_100);
+  if (!Number.isFinite(spot) || spot < 1 || spot > 99) throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no valid receiving spot`);
+  if (typeof row.clock_starts !== 'boolean')
+    throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no clock_starts flag`);
+  return { category: cls, refusal: null, outcome: row.outcome, return_yards: Number(row.return_yards || 0),
+    clock_starts: row.clock_starts, spot, source: { game_id: row.game_id, play_id: row.play_id } };
+}
+
 // Normal-mode coin toss ledger, from docs/rules/NFL-2026-GAME-STATE-RULES.md.
 // The winner's receive/defer choice is an authored simulation assumption, not
 // an observed or verified rate.
@@ -366,6 +453,9 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
   // clock are advanced to the next period before the kickoff is recorded, so
   // the kickoff never appears at 00:00 in the period that just ended.
   let pendingKickoff = null;
+  // A safety free kick deferred out of an expired Q1 or Q3, taken at the start
+  // of the next period (Rule 4-3-2).
+  let pendingSafetyKick = null;
   function kickoff(kicking, endReason, options = {}) {
     if (endReason) finishDrive(endReason);
     const receiving = other(match.home, match.away, kicking);
@@ -388,6 +478,58 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
       possession_after:receiving,
       reason:options.reason || null,
       note:sampled.note });
+  }
+  // Safety free kick: the kicking team (the team scored on) kicks from its own
+  // 20. The caller has already closed the drive that ended in the safety. The
+  // sampled outcome gives the receiving team's spot; a normal kick is a
+  // safety_kick event, and an onside kick is an onside_kick event. Refusals are
+  // recorded with a null spot and possession, and the game stops.
+  function safetyKick(kicking, receiving) {
+    // Rule 4-3-2: a safety does not extend the period, so a free kick is not
+    // taken after the clock expires. In Q1/Q3 it is deferred to the next
+    // period; after Q2 the half-opening kickoff supersedes it, and after Q4 the
+    // game is over. The stored restart is what the quarter loop consumes.
+    if (clock <= 0) {
+      return {deferred: quarter === 1 || quarter === 3 ? {kicking, receiving} : null};
+    }
+    const onsideAttempt = shouldAttemptOnside({quarter, clock, trailing: scores[kicking] < scores[receiving]},
+      league.safety_kicks?.onside_rule);
+    const decisionClock = clock;
+    const s = sampleSafetyKickOutcome(league.safety_kicks, rand, {onsideAttempt});
+    const onside = s.category !== 'normal_free_kick';
+    // Rule 4-3-1: the clock starts only when the ball is legally touched in the
+    // field of play. A touchback, fair catch or kicking-team recovery does not
+    // start it, so those kicks consume no clock.
+    const runoff = s.clock_starts ? Math.min(6, clock) : 0;
+    clock -= runoff;
+    const base = { type: onside ? 'onside_kick' : 'safety_kick', kind:'free_kick',
+      action: onside ? 'ONSIDE KICK' : 'SAFETY KICK', points:0, runoff,
+      onside_attempt: onsideAttempt, onside_clock: decisionClock, clock_starts: s.clock_starts,
+      offense:receiving, defense:kicking, kicking_team:kicking, receiving_team:receiving,
+      kick_type:s.category, kick_spot_own:20 };
+    offense = receiving;
+    if (s.refusal) {
+      event({ ...base, receiving_spot:null, outcome:null, possession_after:null,
+        note:'Safety-kick outcome refused: ' + s.refusal + '.' });
+      refuse(s.refusal, s.detail);
+      return;
+    }
+    if (s.category === 'onside_kicking_recovery') {
+      // Rule 7-3-1(e): the kicking team legally recovered; it keeps the ball, first and 10.
+      offense = kicking;
+      newSeries(s.offense_spot);
+      event({ ...base, offense:kicking, defense:receiving, outcome:s.outcome, return_yards:0,
+        receiving_spot:null, recovery_spot:s.offense_spot, possession_after:kicking, source:s.source,
+        note:'Onside kick recovered by the kicking team (2025 post-safety sample). Rule 7-3-1(e): new series, first and 10 at the recovery spot.' });
+      return;
+    }
+    newSeries(s.spot);
+    event({ ...base, outcome:s.outcome, return_yards:s.return_yards,
+      receiving_spot:s.spot, possession_after:receiving,
+      source:s.source,
+      note: onside
+        ? 'Onside kick from the kicking team\'s own 20, recovered or fair caught by the receiving team (2025 post-safety sample).'
+        : 'Free kick from the kicking team\'s own 20 after a safety (2025 post-safety sample).' });
   }
   // Estimate the punt spot from kickYl and the sampled distance/return. The
   // generator does not model the full kick trajectory or the outcome-distance
@@ -424,6 +566,15 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
       const { kicking, reason } = pendingKickoff;
       pendingKickoff = null;
       kickoff(kicking, reason, { reason });
+    }
+    if (pendingSafetyKick) {
+      // A safety free kick deferred out of the previous period is taken at the
+      // start of this one. At Q3 the half-opening kickoff has already run and
+      // replaced any deferred restart from Q2.
+      const { kicking, receiving } = pendingSafetyKick;
+      pendingSafetyKick = null;
+      const deferred = safetyKick(kicking, receiving);
+      if (deferred?.deferred) pendingSafetyKick = deferred.deferred;
     }
     let qSnaps = 0;
     while (clock > 0 && snaps < 220 && qSnaps < 80 && !refusal) {
@@ -507,13 +658,8 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
               scores[receiving] += 2;
               punt.scoreAfter = {...scores};
               finishDrive('safety');
-              offense = receiving;
-              event({type:'safety_kick',kind:'free_kick',action:'SAFETY KICK',points:0,
-                offense:receiving, defense:offense, kicking_team:offense, receiving_team:receiving,
-                kick_spot_own:20, receiving_spot:null, outcome:null, possession_after:receiving,
-                note:'Safety kick from the kicking team\'s own 20. The 2025 data has no safety-kick outcome table, so the receiving spot is not sampled.'});
-              refuse('safety_kick',
-                'Safety kick receiving spot has no observed outcome table. The 2025 data has no safety-kick counts, so none are sampled.');
+              const deferred = safetyKick(offense, receiving);
+              if (deferred?.deferred) pendingSafetyKick = deferred.deferred;
             }
             else if (resolution === 'receiving_recovery' && sampleBlockedTouchdown(league.punts, rand)) {
               scores[receiving] += 6;
@@ -528,7 +674,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
             else turnover('blocked_punt', pt.spot);
           } else {
             event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff,distance:pt.distance,
-              outcome:pt.outcome,return_yards:pt.return_yards,
+              outcome:pt.outcome,return_yards:pt.return_yards,receiving_spot:pt.spot,
               note:'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
             clock -= runoff;
             turnover('punt',pt.spot);
@@ -574,6 +720,10 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
     // A post-score kickoff deferred out of Q2 is superseded by the second
     // half's own half-opening kickoff.
     if (quarter === 2 && pendingKickoff) pendingKickoff = null;
+    // A safety kick deferred out of Q2 is superseded by the second half's own
+    // half-opening kickoff, and one deferred out of Q4 has no period to start.
+    if (quarter === 2 && pendingSafetyKick) pendingSafetyKick = null;
+    if (quarter === 4 && pendingSafetyKick) pendingSafetyKick = null;
   }
   const completeRegulation = !refusal && quarter > 4 && clock <= 0;
   if (driveStart < plays.length && !drives.some(d=>d.end===plays.length-1))
@@ -593,7 +743,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
     status, refusal, complete_regulation:completeRegulation,
     score:{...scores}, plays, drives, source_play_count:snaps,
     warnings:['Not a validated NFL full-game simulator or betting forecast.',
-      'Timeouts, penalties, play clock, onside kicks and overtime are unsupported.',
+      'Timeouts, penalties, play clock, onside kicks outside the post-safety free kick, and overtime are unsupported.',
       'Kickoffs, punts and field goals use 2025 league rates, not kicker or team rates. Kick flight and returns are not simulated.',
       '2022 player tracking informs ongoing movement research; the trained team movement prior is not connected.'],
   };

@@ -1,0 +1,1178 @@
+{
+  "schema_version": "gridiron.autonomous-inside-zone-bdb-evaluation.v1",
+  "evaluation_only": true,
+  "source": {
+    "dataset": "NFL Big Data Bowl 2025 tracking mirror; 2022 season",
+    "tracking_observation_sha256": "ac97f4257d18977af0bd858c5701b7897ce30b4fd079a5a65c0a17515fb5a9a3",
+    "plays_csv_sha256": "a103cbc3a1ddf7678cb6d77ea5f9919c4292b5d55c7876f7cad6cce3d62dca04",
+    "source_commit": "e28d3b25725799ef2213680016db5325f6f90014",
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "selection": {
+    "evaluator_only_filter": "2022 weeks 1-5; pff_runConceptPrimary=INSIDE ZONE; passResult empty; isDropback=FALSE; pff_runConceptSecondary=NA; supported 11-player offensive personnel and supported defensive front",
+    "historical_chart_fields_are_not_simulation_inputs": true,
+    "excluded_from_decisions": [
+      "PFF run concept fields",
+      "pass result",
+      "rush location",
+      "tracking observations at t>0",
+      "credited tacklers",
+      "realized yards and terminal result"
+    ]
+  },
+  "input_contract": {
+    "simulator_inputs": [
+      "play direction at snap",
+      "22 player IDs and positions",
+      "reported player mass",
+      "last six pre-snap/snap positions",
+      "pre-snap velocity fit",
+      "snap ball position"
+    ],
+    "run_side_proxy": "tight-end side inferred from snap alignment; not read from the retrospective run-location label",
+    "trajectory_targets_read_after_simulation": true,
+    "coordinate_transform": "BDB meters to yards; subtract 10 yards from raw x to map the 100-yard goal-to-goal field; preserve y across the 53.33-yard width",
+    "target_frames": "BDB 10 Hz labels at +0.5s and +1.0s; observed future coordinates are evaluation-only"
+  },
+  "coverage": {
+    "cohort_records": 9388,
+    "pff_inside_zone": 1067,
+    "designed_inside_zone_run": 796,
+    "simple_inside_zone": 349,
+    "simulated": 53,
+    "skipped": {
+      "unsupported_offensive_personnel": 236,
+      "unsupported_defensive_front": 60
+    }
+  },
+  "horizon_coverage": {
+    "0.5s": {
+      "available_player_targets": 1166,
+      "scored_player_samples": 1144,
+      "unscored_after_simulated_terminal": 22
+    },
+    "1.0s": {
+      "available_player_targets": 1166,
+      "scored_player_samples": 1144,
+      "unscored_after_simulated_terminal": 22
+    }
+  },
+  "metrics": {
+    "0.5s": {
+      "player_samples": 1144,
+      "mean_xy_error_meters": 0.8222768660341834,
+      "constant_velocity_baseline_mean_xy_error_meters": 0.26608879587076384,
+      "model_minus_baseline_meters": 0.5561880701634195,
+      "by_team_and_role": {
+        "D": {
+          "player_samples": 572,
+          "mean_xy_error_meters": 0.8769621417924037,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.24661506481442,
+          "model_minus_baseline_meters": 0.6303470769779838
+        },
+        "D.FS": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.1039352153661142,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.18752365144386357,
+          "model_minus_baseline_meters": 0.9164115639222505
+        },
+        "D.LCB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.1825264673119997,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.16141392983027775,
+          "model_minus_baseline_meters": 1.021112537481722
+        },
+        "D.LDE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.4645034033177748,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.34541770574085146,
+          "model_minus_baseline_meters": 0.11908569757692337
+        },
+        "D.LDT": {
+          "player_samples": 48,
+          "mean_xy_error_meters": 0.427067233605764,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.3115912102832332,
+          "model_minus_baseline_meters": 0.11547602332253078
+        },
+        "D.LOLB": {
+          "player_samples": 4,
+          "mean_xy_error_meters": 1.0066552431195426,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.260983002532247,
+          "model_minus_baseline_meters": 0.7456722405872955
+        },
+        "D.MIKE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.0360694844717335,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.24424045211952444,
+          "model_minus_baseline_meters": 0.7918290323522091
+        },
+        "D.NB": {
+          "player_samples": 46,
+          "mean_xy_error_meters": 1.1672247030395424,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.19641620639444807,
+          "model_minus_baseline_meters": 0.9708084966450943
+        },
+        "D.NT": {
+          "player_samples": 5,
+          "mean_xy_error_meters": 0.28021609670929637,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.3726266879364649,
+          "model_minus_baseline_meters": -0.09241059122716852
+        },
+        "D.RCB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.1645753042656937,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.18424809988447816,
+          "model_minus_baseline_meters": 0.9803272043812156
+        },
+        "D.RDE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.5334200002587631,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.36509561336504504,
+          "model_minus_baseline_meters": 0.1683243868937181
+        },
+        "D.RDT": {
+          "player_samples": 48,
+          "mean_xy_error_meters": 0.4725811953535712,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.3162614203386345,
+          "model_minus_baseline_meters": 0.15631977501493666
+        },
+        "D.ROLB": {
+          "player_samples": 4,
+          "mean_xy_error_meters": 1.0190618716506945,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.3403271139536491,
+          "model_minus_baseline_meters": 0.6787347576970454
+        },
+        "D.SAM": {
+          "player_samples": 1,
+          "mean_xy_error_meters": 1.1420466299929766,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.02876795870691202,
+          "model_minus_baseline_meters": 1.1132786712860645
+        },
+        "D.SS": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.0478759563712783,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.17948694215043387,
+          "model_minus_baseline_meters": 0.8683890142208445
+        },
+        "D.WILL": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.0459574109975565,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.2093929024947794,
+          "model_minus_baseline_meters": 0.836564508502777
+        },
+        "O": {
+          "player_samples": 572,
+          "mean_xy_error_meters": 0.7675915902759629,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.28556252692710754,
+          "model_minus_baseline_meters": 0.4820290633488554
+        },
+        "O.C": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.48388354109544174,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.377924073548753,
+          "model_minus_baseline_meters": 0.1059594675466887
+        },
+        "O.LG": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.5755647579678583,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.3447321170498451,
+          "model_minus_baseline_meters": 0.23083264091801325
+        },
+        "O.LT": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.7213605755424924,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.36635189111431105,
+          "model_minus_baseline_meters": 0.3550086844281814
+        },
+        "O.QB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.5232172274574693,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.10262945356017815,
+          "model_minus_baseline_meters": 0.4205877738972912
+        },
+        "O.RB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.9808314222302432,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.19350476548816892,
+          "model_minus_baseline_meters": 0.7873266567420742
+        },
+        "O.RG": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.6040147641799869,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.3309305554771416,
+          "model_minus_baseline_meters": 0.27308420870284533
+        },
+        "O.RT": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.7134778706398198,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.42731632020043203,
+          "model_minus_baseline_meters": 0.28616155043938785
+        },
+        "O.TE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.9038920426693687,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.27376587982747747,
+          "model_minus_baseline_meters": 0.6301261628418913
+        },
+        "O.WR1": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.9981593088939137,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.22513483062790815,
+          "model_minus_baseline_meters": 0.7730244782660056
+        },
+        "O.WR2": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.9630931900950748,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.2506497291332557,
+          "model_minus_baseline_meters": 0.7124434609618191
+        },
+        "O.WR3": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 0.9760127922639251,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.24824818017071074,
+          "model_minus_baseline_meters": 0.7277646120932144
+        }
+      }
+    },
+    "1.0s": {
+      "player_samples": 1144,
+      "mean_xy_error_meters": 2.092298801928274,
+      "constant_velocity_baseline_mean_xy_error_meters": 0.9917963871961427,
+      "model_minus_baseline_meters": 1.1005024147321314,
+      "by_team_and_role": {
+        "D": {
+          "player_samples": 572,
+          "mean_xy_error_meters": 2.426603589645813,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.8648052724621322,
+          "model_minus_baseline_meters": 1.5617983171836811
+        },
+        "D.FS": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 2.9382892719970855,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.6805301585554702,
+          "model_minus_baseline_meters": 2.2577591134416153
+        },
+        "D.LCB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 3.367244260530486,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.5826587767457165,
+          "model_minus_baseline_meters": 2.7845854837847694
+        },
+        "D.LDE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.2581043726443097,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.158193774672839,
+          "model_minus_baseline_meters": 0.09991059797147067
+        },
+        "D.LDT": {
+          "player_samples": 48,
+          "mean_xy_error_meters": 1.037801863482321,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.9531510227724267,
+          "model_minus_baseline_meters": 0.08465084070989433
+        },
+        "D.LOLB": {
+          "player_samples": 4,
+          "mean_xy_error_meters": 2.6854637722238444,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.9048752886499215,
+          "model_minus_baseline_meters": 1.780588483573923
+        },
+        "D.MIKE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 3.134809207414762,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.9254883663942871,
+          "model_minus_baseline_meters": 2.209320841020475
+        },
+        "D.NB": {
+          "player_samples": 46,
+          "mean_xy_error_meters": 3.5629692908464485,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.7650716298720808,
+          "model_minus_baseline_meters": 2.7978976609743675
+        },
+        "D.NT": {
+          "player_samples": 5,
+          "mean_xy_error_meters": 0.9190819275985607,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.1082218071556489,
+          "model_minus_baseline_meters": -0.18913987955708828
+        },
+        "D.RCB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 3.234334801302415,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.6260188471490828,
+          "model_minus_baseline_meters": 2.6083159541533325
+        },
+        "D.RDE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.2266334649255695,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.2766114411617013,
+          "model_minus_baseline_meters": -0.049977976236131684
+        },
+        "D.RDT": {
+          "player_samples": 48,
+          "mean_xy_error_meters": 1.0590378800213986,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.970685016257169,
+          "model_minus_baseline_meters": 0.08835286376422975
+        },
+        "D.ROLB": {
+          "player_samples": 4,
+          "mean_xy_error_meters": 2.3675139936639225,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.3677935576468934,
+          "model_minus_baseline_meters": 0.9997204360170291
+        },
+        "D.SAM": {
+          "player_samples": 1,
+          "mean_xy_error_meters": 3.312079436784349,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.4323193966218801,
+          "model_minus_baseline_meters": 2.879760040162469
+        },
+        "D.SS": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 2.855685098181228,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.6277931442379001,
+          "model_minus_baseline_meters": 2.2278919539433275
+        },
+        "D.WILL": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 3.0493794859264978,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.893226398452543,
+          "model_minus_baseline_meters": 2.1561530874739545
+        },
+        "O": {
+          "player_samples": 572,
+          "mean_xy_error_meters": 1.7579940142107342,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.118787501930153,
+          "model_minus_baseline_meters": 0.6392065122805812
+        },
+        "O.C": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.1436577879612968,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.066626997312587,
+          "model_minus_baseline_meters": 0.07703079064870991
+        },
+        "O.LG": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.0937208906824647,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.0864710124338903,
+          "model_minus_baseline_meters": 0.007249878248574422
+        },
+        "O.LT": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.340462413438774,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.149393219587368,
+          "model_minus_baseline_meters": 0.19106919385140594
+        },
+        "O.QB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.2659163577750223,
+          "constant_velocity_baseline_mean_xy_error_meters": 0.46641738704800095,
+          "model_minus_baseline_meters": 0.7994989707270214
+        },
+        "O.RB": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.9337863376137794,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.2778173751226767,
+          "model_minus_baseline_meters": 0.6559689624911027
+        },
+        "O.RG": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.105647930316595,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.0245796806480234,
+          "model_minus_baseline_meters": 0.08106824966857136
+        },
+        "O.RT": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 1.5542486369334436,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.3506632300216863,
+          "model_minus_baseline_meters": 0.20358540691175728
+        },
+        "O.TE": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 2.049188494796749,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.1464713072146446,
+          "model_minus_baseline_meters": 0.9027171875821043
+        },
+        "O.WR1": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 2.5587181355763593,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.198412748094301,
+          "model_minus_baseline_meters": 1.3603053874820585
+        },
+        "O.WR2": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 2.7071360134343365,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.2576269204732218,
+          "model_minus_baseline_meters": 1.4495090929611147
+        },
+        "O.WR3": {
+          "player_samples": 52,
+          "mean_xy_error_meters": 2.5854511577892527,
+          "constant_velocity_baseline_mean_xy_error_meters": 1.282182643275283,
+          "model_minus_baseline_meters": 1.3032685145139697
+        }
+      }
+    }
+  },
+  "worst_1_0s_plays": [
+    {
+      "week": 5,
+      "game_id": "2022100911",
+      "play_id": "364",
+      "front": "odd",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.9760887680209489,
+      "constant_velocity_baseline_meters_0_5s": 0.2079054606300511,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.687578149667761,
+      "constant_velocity_baseline_meters_1_0s": 0.9131703190633914
+    },
+    {
+      "week": 3,
+      "game_id": "2022092509",
+      "play_id": "3274",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8973495966436064,
+      "constant_velocity_baseline_meters_0_5s": 0.20907650742971692,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.6756747243095362,
+      "constant_velocity_baseline_meters_1_0s": 0.8192191764614387
+    },
+    {
+      "week": 1,
+      "game_id": "2022091109",
+      "play_id": "2941",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8725268956104347,
+      "constant_velocity_baseline_meters_0_5s": 0.44673291135317644,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.5192886823630443,
+      "constant_velocity_baseline_meters_1_0s": 1.386309552355734
+    },
+    {
+      "week": 5,
+      "game_id": "2022100909",
+      "play_id": "3574",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.9134564466476688,
+      "constant_velocity_baseline_meters_0_5s": 0.25880943177356247,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.4532278530700413,
+      "constant_velocity_baseline_meters_1_0s": 0.9404297688776387
+    },
+    {
+      "week": 4,
+      "game_id": "2022100204",
+      "play_id": "3428",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.9345267960156391,
+      "constant_velocity_baseline_meters_0_5s": 0.31278902800370506,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.4322417708781376,
+      "constant_velocity_baseline_meters_1_0s": 1.0644937146899567
+    }
+  ],
+  "per_play": [
+    {
+      "week": 1,
+      "game_id": "2022091111",
+      "play_id": "730",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8455773914957969,
+      "constant_velocity_baseline_meters_0_5s": 0.2290830946287237,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.108280927232602,
+      "constant_velocity_baseline_meters_1_0s": 0.9682927414284287
+    },
+    {
+      "week": 1,
+      "game_id": "2022091111",
+      "play_id": "839",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7874206921816448,
+      "constant_velocity_baseline_meters_0_5s": 0.31733507360939506,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.0878681887756647,
+      "constant_velocity_baseline_meters_1_0s": 1.1170923382951912
+    },
+    {
+      "week": 1,
+      "game_id": "2022091110",
+      "play_id": "3357",
+      "front": "odd",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7892239982350581,
+      "constant_velocity_baseline_meters_0_5s": 0.2547344798903166,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.6178963472028889,
+      "constant_velocity_baseline_meters_1_0s": 0.9862388446100472
+    },
+    {
+      "week": 1,
+      "game_id": "2022091109",
+      "play_id": "2941",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8725268956104347,
+      "constant_velocity_baseline_meters_0_5s": 0.44673291135317644,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.5192886823630443,
+      "constant_velocity_baseline_meters_1_0s": 1.386309552355734
+    },
+    {
+      "week": 1,
+      "game_id": "2022091104",
+      "play_id": "1460",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8569831351195937,
+      "constant_velocity_baseline_meters_0_5s": 0.12344216806184385,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.2371923422279174,
+      "constant_velocity_baseline_meters_1_0s": 0.7783085807229868
+    },
+    {
+      "week": 1,
+      "game_id": "2022091104",
+      "play_id": "2109",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.823251497834723,
+      "constant_velocity_baseline_meters_0_5s": 0.41227377100437756,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.332041169805037,
+      "constant_velocity_baseline_meters_1_0s": 1.412879871969228
+    },
+    {
+      "week": 1,
+      "game_id": "2022091104",
+      "play_id": "2516",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8994142414595192,
+      "constant_velocity_baseline_meters_0_5s": 0.2353745748079083,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.3000291569519598,
+      "constant_velocity_baseline_meters_1_0s": 1.0453212913879562
+    },
+    {
+      "week": 1,
+      "game_id": "2022091104",
+      "play_id": "2662",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8303065601489574,
+      "constant_velocity_baseline_meters_0_5s": 0.24502522085842945,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.977034542365765,
+      "constant_velocity_baseline_meters_1_0s": 0.9978645988476675
+    },
+    {
+      "week": 1,
+      "game_id": "2022091104",
+      "play_id": "4313",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8400016482583404,
+      "constant_velocity_baseline_meters_0_5s": 0.2821725195803477,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.1434353404007243,
+      "constant_velocity_baseline_meters_1_0s": 1.0385199002201722
+    },
+    {
+      "week": 1,
+      "game_id": "2022091103",
+      "play_id": "743",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7772358255011785,
+      "constant_velocity_baseline_meters_0_5s": 0.36171543477857454,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.7480972331522833,
+      "constant_velocity_baseline_meters_1_0s": 1.1661865870036119
+    },
+    {
+      "week": 2,
+      "game_id": "2022091810",
+      "play_id": "3646",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8179353738368357,
+      "constant_velocity_baseline_meters_0_5s": 0.17601695898243735,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.1888042814576716,
+      "constant_velocity_baseline_meters_1_0s": 0.8086399120963916
+    },
+    {
+      "week": 2,
+      "game_id": "2022091804",
+      "play_id": "2742",
+      "front": "odd",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7927339885784725,
+      "constant_velocity_baseline_meters_0_5s": 0.3312564955748707,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.8186816113742492,
+      "constant_velocity_baseline_meters_1_0s": 1.2053416048542573
+    },
+    {
+      "week": 2,
+      "game_id": "2022091801",
+      "play_id": "1183",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7683092590346985,
+      "constant_velocity_baseline_meters_0_5s": 0.20130738869926673,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.863064416132159,
+      "constant_velocity_baseline_meters_1_0s": 0.7017740855561236
+    },
+    {
+      "week": 2,
+      "game_id": "2022091500",
+      "play_id": "2831",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7636555064667867,
+      "constant_velocity_baseline_meters_0_5s": 0.25784978198007996,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.735212252235192,
+      "constant_velocity_baseline_meters_1_0s": 0.9192625808512935
+    },
+    {
+      "week": 3,
+      "game_id": "2022092513",
+      "play_id": "466",
+      "front": "even",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8726268644723822,
+      "constant_velocity_baseline_meters_0_5s": 0.2673790549566146,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.3095391307752764,
+      "constant_velocity_baseline_meters_1_0s": 1.0279037436760465
+    },
+    {
+      "week": 3,
+      "game_id": "2022092513",
+      "play_id": "3128",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8597384216605947,
+      "constant_velocity_baseline_meters_0_5s": 0.10216812116695767,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.321673978107486,
+      "constant_velocity_baseline_meters_1_0s": 0.6307035074275978
+    },
+    {
+      "week": 3,
+      "game_id": "2022092513",
+      "play_id": "3589",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8207021521515002,
+      "constant_velocity_baseline_meters_0_5s": 0.23983984839093112,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.8875161833319025,
+      "constant_velocity_baseline_meters_1_0s": 0.919221024442984
+    },
+    {
+      "week": 3,
+      "game_id": "2022092510",
+      "play_id": "2377",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8313513942314973,
+      "constant_velocity_baseline_meters_0_5s": 0.29695046065277286,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.325495739609051,
+      "constant_velocity_baseline_meters_1_0s": 1.1272502127007584
+    },
+    {
+      "week": 3,
+      "game_id": "2022092510",
+      "play_id": "2398",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7665184841464383,
+      "constant_velocity_baseline_meters_0_5s": 0.19577167526708858,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.1848088994706263,
+      "constant_velocity_baseline_meters_1_0s": 0.7607929939732542
+    },
+    {
+      "week": 3,
+      "game_id": "2022092510",
+      "play_id": "3522",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 0,
+      "mean_xy_error_meters_0_5s": null,
+      "constant_velocity_baseline_meters_0_5s": null,
+      "scored_players_1_0s": 0,
+      "mean_xy_error_meters_1_0s": null,
+      "constant_velocity_baseline_meters_1_0s": null
+    },
+    {
+      "week": 3,
+      "game_id": "2022092509",
+      "play_id": "320",
+      "front": "bear",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8568953057333304,
+      "constant_velocity_baseline_meters_0_5s": 0.19207799910820106,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.142295925336243,
+      "constant_velocity_baseline_meters_1_0s": 0.8414596881731689
+    },
+    {
+      "week": 3,
+      "game_id": "2022092509",
+      "play_id": "1581",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8729313519477078,
+      "constant_velocity_baseline_meters_0_5s": 0.3209550823426256,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.0930876908371228,
+      "constant_velocity_baseline_meters_1_0s": 1.12096047194929
+    },
+    {
+      "week": 3,
+      "game_id": "2022092509",
+      "play_id": "3274",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8973495966436064,
+      "constant_velocity_baseline_meters_0_5s": 0.20907650742971692,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.6756747243095362,
+      "constant_velocity_baseline_meters_1_0s": 0.8192191764614387
+    },
+    {
+      "week": 3,
+      "game_id": "2022092509",
+      "play_id": "3496",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7946688981692981,
+      "constant_velocity_baseline_meters_0_5s": 0.18594492684080693,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.8728500347451824,
+      "constant_velocity_baseline_meters_1_0s": 0.7853216656510504
+    },
+    {
+      "week": 3,
+      "game_id": "2022092508",
+      "play_id": "255",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7650527274248634,
+      "constant_velocity_baseline_meters_0_5s": 0.32951170638163724,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.9970168127946395,
+      "constant_velocity_baseline_meters_1_0s": 1.1646948246147117
+    },
+    {
+      "week": 3,
+      "game_id": "2022092508",
+      "play_id": "1241",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8367454871407164,
+      "constant_velocity_baseline_meters_0_5s": 0.2817506220230996,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.173032991613317,
+      "constant_velocity_baseline_meters_1_0s": 1.0847841945422894
+    },
+    {
+      "week": 3,
+      "game_id": "2022092508",
+      "play_id": "2570",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7958351761114317,
+      "constant_velocity_baseline_meters_0_5s": 0.27854725210683867,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.883790150164461,
+      "constant_velocity_baseline_meters_1_0s": 1.1124812529759875
+    },
+    {
+      "week": 3,
+      "game_id": "2022092506",
+      "play_id": "1116",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8119632790689658,
+      "constant_velocity_baseline_meters_0_5s": 0.2806503313744715,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.161395388365775,
+      "constant_velocity_baseline_meters_1_0s": 0.8976453624378959
+    },
+    {
+      "week": 3,
+      "game_id": "2022092506",
+      "play_id": "1391",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7701106588763482,
+      "constant_velocity_baseline_meters_0_5s": 0.1990064682246149,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.9074282805892502,
+      "constant_velocity_baseline_meters_1_0s": 0.7406838369224253
+    },
+    {
+      "week": 3,
+      "game_id": "2022092506",
+      "play_id": "2790",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7683798755645322,
+      "constant_velocity_baseline_meters_0_5s": 0.15824218333674128,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.971528741855545,
+      "constant_velocity_baseline_meters_1_0s": 0.7626751577317187
+    },
+    {
+      "week": 3,
+      "game_id": "2022092506",
+      "play_id": "3612",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7763917216228214,
+      "constant_velocity_baseline_meters_0_5s": 0.3991311502700773,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.228798707983283,
+      "constant_velocity_baseline_meters_1_0s": 1.200661980420119
+    },
+    {
+      "week": 3,
+      "game_id": "2022092506",
+      "play_id": "3644",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8987927394850033,
+      "constant_velocity_baseline_meters_0_5s": 0.4566893530650984,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.3109665720621138,
+      "constant_velocity_baseline_meters_1_0s": 1.3668952734382565
+    },
+    {
+      "week": 3,
+      "game_id": "2022092502",
+      "play_id": "1301",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8078391150324764,
+      "constant_velocity_baseline_meters_0_5s": 0.3158104385462057,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.222629562440683,
+      "constant_velocity_baseline_meters_1_0s": 1.076232960758258
+    },
+    {
+      "week": 3,
+      "game_id": "2022092501",
+      "play_id": "724",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7386326631313008,
+      "constant_velocity_baseline_meters_0_5s": 0.2334453131415562,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.5953174566383248,
+      "constant_velocity_baseline_meters_1_0s": 0.9216276440099667
+    },
+    {
+      "week": 3,
+      "game_id": "2022092200",
+      "play_id": "770",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7760600336944741,
+      "constant_velocity_baseline_meters_0_5s": 0.2689351928378231,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.9895959834069237,
+      "constant_velocity_baseline_meters_1_0s": 0.9953796143090394
+    },
+    {
+      "week": 3,
+      "game_id": "2022092200",
+      "play_id": "826",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.786380545770937,
+      "constant_velocity_baseline_meters_0_5s": 0.25989384774968927,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.9521297732670964,
+      "constant_velocity_baseline_meters_1_0s": 0.9983757786153713
+    },
+    {
+      "week": 4,
+      "game_id": "2022100209",
+      "play_id": "3581",
+      "front": "odd",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8057987029495254,
+      "constant_velocity_baseline_meters_0_5s": 0.3818376207737571,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.677969265780202,
+      "constant_velocity_baseline_meters_1_0s": 1.1937433262853745
+    },
+    {
+      "week": 4,
+      "game_id": "2022100207",
+      "play_id": "507",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7503051394932135,
+      "constant_velocity_baseline_meters_0_5s": 0.25309537027326523,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.967127992677421,
+      "constant_velocity_baseline_meters_1_0s": 0.9964908632198799
+    },
+    {
+      "week": 4,
+      "game_id": "2022100204",
+      "play_id": "1321",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8509928731312068,
+      "constant_velocity_baseline_meters_0_5s": 0.28306188770085106,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.2474019354778236,
+      "constant_velocity_baseline_meters_1_0s": 0.9059433052476437
+    },
+    {
+      "week": 4,
+      "game_id": "2022100204",
+      "play_id": "1496",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8439272358300484,
+      "constant_velocity_baseline_meters_0_5s": 0.29112329430809314,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.1309675659369876,
+      "constant_velocity_baseline_meters_1_0s": 0.9795089588069538
+    },
+    {
+      "week": 4,
+      "game_id": "2022100204",
+      "play_id": "3428",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.9345267960156391,
+      "constant_velocity_baseline_meters_0_5s": 0.31278902800370506,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.4322417708781376,
+      "constant_velocity_baseline_meters_1_0s": 1.0644937146899567
+    },
+    {
+      "week": 4,
+      "game_id": "2022100200",
+      "play_id": "1679",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8492571368214495,
+      "constant_velocity_baseline_meters_0_5s": 0.2847167717976908,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.2140348060213855,
+      "constant_velocity_baseline_meters_1_0s": 1.0341910517438144
+    },
+    {
+      "week": 5,
+      "game_id": "2022100912",
+      "play_id": "1472",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8586323971729943,
+      "constant_velocity_baseline_meters_0_5s": 0.1779956673884628,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.0979253430069287,
+      "constant_velocity_baseline_meters_1_0s": 0.8809247381184918
+    },
+    {
+      "week": 5,
+      "game_id": "2022100912",
+      "play_id": "3030",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8009648625147202,
+      "constant_velocity_baseline_meters_0_5s": 0.16443103129998884,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.961115586478507,
+      "constant_velocity_baseline_meters_1_0s": 0.6984848050516217
+    },
+    {
+      "week": 5,
+      "game_id": "2022100912",
+      "play_id": "3114",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.766845499460621,
+      "constant_velocity_baseline_meters_0_5s": 0.25601391536341794,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.8845275936257628,
+      "constant_velocity_baseline_meters_1_0s": 0.9994520710232818
+    },
+    {
+      "week": 5,
+      "game_id": "2022100911",
+      "play_id": "364",
+      "front": "odd",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.9760887680209489,
+      "constant_velocity_baseline_meters_0_5s": 0.2079054606300511,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.687578149667761,
+      "constant_velocity_baseline_meters_1_0s": 0.9131703190633914
+    },
+    {
+      "week": 5,
+      "game_id": "2022100909",
+      "play_id": "3574",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.9134564466476688,
+      "constant_velocity_baseline_meters_0_5s": 0.25880943177356247,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.4532278530700413,
+      "constant_velocity_baseline_meters_1_0s": 0.9404297688776387
+    },
+    {
+      "week": 5,
+      "game_id": "2022100903",
+      "play_id": "688",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8507257021670399,
+      "constant_velocity_baseline_meters_0_5s": 0.27495913542508194,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.3132502368912995,
+      "constant_velocity_baseline_meters_1_0s": 1.0643675754022854
+    },
+    {
+      "week": 5,
+      "game_id": "2022100903",
+      "play_id": "754",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.8715309452499597,
+      "constant_velocity_baseline_meters_0_5s": 0.2567574552319382,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 2.0973954903065004,
+      "constant_velocity_baseline_meters_1_0s": 0.9942686087637864
+    },
+    {
+      "week": 5,
+      "game_id": "2022100903",
+      "play_id": "2581",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7952309010622669,
+      "constant_velocity_baseline_meters_0_5s": 0.3008860675631201,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.9890671198899545,
+      "constant_velocity_baseline_meters_1_0s": 1.1361449677186397
+    },
+    {
+      "week": 5,
+      "game_id": "2022100901",
+      "play_id": "2931",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7809282278748069,
+      "constant_velocity_baseline_meters_0_5s": 0.18900170828829274,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.852164251622616,
+      "constant_velocity_baseline_meters_1_0s": 0.8151363367051858
+    },
+    {
+      "week": 5,
+      "game_id": "2022100600",
+      "play_id": "3809",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7807704569365101,
+      "constant_velocity_baseline_meters_0_5s": 0.3329333984599017,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.9802470929816811,
+      "constant_velocity_baseline_meters_1_0s": 1.1035101964739873
+    },
+    {
+      "week": 5,
+      "game_id": "2022100600",
+      "play_id": "3938",
+      "front": "nickel",
+      "run_side_source": "pre-snap tight-end alignment",
+      "scored_players_0_5s": 22,
+      "mean_xy_error_meters_0_5s": 0.7588724365866522,
+      "constant_velocity_baseline_meters_0_5s": 0.2642027319752188,
+      "scored_players_1_0s": 22,
+      "mean_xy_error_meters_1_0s": 1.9297964265762408,
+      "constant_velocity_baseline_meters_1_0s": 0.9661486715767751
+    }
+  ]
+}

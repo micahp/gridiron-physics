@@ -297,5 +297,169 @@
    "landing_zone": 81,
    "in_air": 495
   }
+ },
+ "safety_kicks": {
+  "scope": "2025 regular-season kickoffs that follow a safety (safety=1 rows). Every post-safety kick in the data is taken from the kicking team's own 20. League-wide counts, not team or kicker rates.",
+  "classification_rule": "Each REG safety row is paired with the next play in the same game. A kickoff with kickoff_attempt=1 by the team scored on is a post-safety kick. Onside label (desc 'kicks onside'): genuine only if kick_distance > 0 and <= 30 yards and the fields show a fair catch, a kicking-team recovery, or a receiving-team recovery; otherwise suspect. No onside label: touchback or return is a normal free kick; a penalty or fumble on the kick play is excluded. Spots are the receiving team's yardline_100 (yards to the kicking team's goal). A kicking-team onside recovery (Rule 7-3-1(e)) keeps the ball with the kicking team at first and 10; its spot is the offense-view yardline_100 and is checked against the next scrimmage play.",
+  "safeties": 12,
+  "no_kick_after_safety": {
+   "n": 1,
+   "rows": [
+    {
+     "game_id": "2025_04_PHI_TB",
+     "play_id": "4548",
+     "reason": "no kickoff follows the safety (game ended)"
+    }
+   ]
+  },
+  "categories": {
+   "normal_free_kick": {
+    "n": 5,
+    "outcomes": {
+     "returned": 4,
+     "touchback": 1
+    },
+    "rows": [
+     {
+      "game_id": "2025_03_ARI_SF",
+      "play_id": "3727",
+      "outcome": "returned",
+      "return_yards": 25,
+      "receiving_spot_yardline_100": 65,
+      "kicking_team": "SF",
+      "receiving_team": "ARI",
+      "clock_starts": true
+     },
+     {
+      "game_id": "2025_06_DEN_NYJ",
+      "play_id": "2681",
+      "outcome": "returned",
+      "return_yards": 22,
+      "receiving_spot_yardline_100": 64,
+      "kicking_team": "DEN",
+      "receiving_team": "NYJ",
+      "clock_starts": true
+     },
+     {
+      "game_id": "2025_07_WAS_DAL",
+      "play_id": "427",
+      "outcome": "touchback",
+      "return_yards": 0,
+      "receiving_spot_yardline_100": 65,
+      "kicking_team": "DAL",
+      "receiving_team": "WAS",
+      "clock_starts": false
+     },
+     {
+      "game_id": "2025_10_PIT_LAC",
+      "play_id": "687",
+      "outcome": "returned",
+      "return_yards": 25,
+      "receiving_spot_yardline_100": 66,
+      "kicking_team": "PIT",
+      "receiving_team": "LAC",
+      "clock_starts": true
+     },
+     {
+      "game_id": "2025_16_PIT_DET",
+      "play_id": "2602",
+      "outcome": "returned",
+      "return_yards": 20,
+      "receiving_spot_yardline_100": 69,
+      "kicking_team": "DET",
+      "receiving_team": "PIT",
+      "clock_starts": true
+     }
+    ]
+   },
+   "onside_receiving_possession": {
+    "n": 2,
+    "outcomes": {
+     "fair_catch": 1,
+     "receiving_recovery": 1
+    },
+    "rows": [
+     {
+      "game_id": "2025_11_DAL_LV",
+      "play_id": "3505",
+      "outcome": "fair_catch",
+      "return_yards": 0,
+      "receiving_spot_yardline_100": 38,
+      "kicking_team": "LV",
+      "receiving_team": "DAL",
+      "next_play_id": "3533",
+      "next_play_down": 1,
+      "next_play_ydstogo": 10,
+      "clock_starts": false
+     },
+     {
+      "game_id": "2025_14_IND_JAX",
+      "play_id": "3918",
+      "outcome": "receiving_recovery",
+      "return_yards": 0,
+      "receiving_spot_yardline_100": 31,
+      "kicking_team": "IND",
+      "receiving_team": "JAX",
+      "next_play_id": "3954",
+      "next_play_down": 1,
+      "next_play_ydstogo": 10,
+      "clock_starts": true
+     }
+    ]
+   },
+   "onside_kicking_recovery": {
+    "n": 1,
+    "outcomes": {
+     "kicking_recovery": 1
+    },
+    "rows": [
+     {
+      "game_id": "2025_08_CLE_NE",
+      "play_id": "3742",
+      "outcome": "kicking_recovery",
+      "return_yards": 0,
+      "offense_spot_yardline_100": 67,
+      "kicking_team": "CLE",
+      "receiving_team": "NE",
+      "next_play_id": "3771",
+      "next_play_down": 1,
+      "next_play_ydstogo": 10,
+      "clock_starts": false
+     }
+    ]
+   }
+  },
+  "suspect_onside_labels": {
+   "n": 1,
+   "rows": [
+    {
+     "game_id": "2025_05_DET_CIN",
+     "play_id": "4114",
+     "reason": "kick_distance field is 0 but the text says 26 yards"
+    }
+   ]
+  },
+  "excluded": {
+   "penalty_on_kick": {
+    "n": 1,
+    "rows": [
+     {
+      "game_id": "2025_16_KC_TEN",
+      "play_id": "1194",
+      "reason": "penalty on the kick play; the spot is set by enforcement"
+     }
+    ]
+   },
+   "return_fumble": {
+    "n": 1,
+    "rows": [
+     {
+      "game_id": "2025_18_KC_LV",
+      "play_id": "3557",
+      "reason": "fumble on the kick or return; the recovery spot has no down-and-distance rule in this table"
+     }
+    ]
+   }
+  }
  }
 }

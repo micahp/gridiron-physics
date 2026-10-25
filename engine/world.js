@@ -134,6 +134,15 @@ export class Player {
     v.x += (ax + this.ext.x / this.m) * dt;
     v.y += (ay + this.ext.y / this.m) * dt;
     this.ext.x = this.ext.y = 0;
+    // external forces (wrap springs, shed bursts, collisions) are applied after
+    // the propulsive cap above and can otherwise drive a body past its own top
+    // speed; no player runs faster than his v_max
+    const sOut = Math.hypot(v.x, v.y);
+    const vLimit = this.vmax * this.speedCap;
+    if (sOut > vLimit) {
+      v.x *= vLimit / sOut;
+      v.y *= vLimit / sOut;
+    }
     this.p.x += v.x * dt;
     this.p.y += v.y * dt;
 

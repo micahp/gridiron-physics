@@ -356,6 +356,38 @@ export class Renderer {
     this.selected = null;
     this.paths = new THREE.Group();
     scene.add(this.paths);
+    // Debug annotations (assignment targets, pursuit lines, lanes). Off unless
+    // the sandbox asks for them; never part of an ordinary broadcast view.
+    this.debug = new THREE.Group();
+    this.debug.visible = false;
+    scene.add(this.debug);
+  }
+
+  /**
+   * Draw coaching annotations.
+   * @param {{segments: Array<{x0:number,y0:number,x1:number,y1:number,color?:string}>, marks: Array<{x:number,y:number,color?:string,radius?:number}>}} spec
+   */
+  setDebugOverlay(spec) {
+    for (const child of [...this.debug.children]) {
+      child.geometry?.dispose();
+      child.material?.dispose();
+      this.debug.remove(child);
+    }
+    if (!spec) { this.debug.visible = false; return; }
+    for (const s of spec.segments ?? []) {
+      const geo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(s.x0, 0.12, s.y0), new THREE.Vector3(s.x1, 0.12, s.y1),
+      ]);
+      this.debug.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: s.color ?? '#f5d33a', transparent: true, opacity: 0.85 })));
+    }
+    for (const m of spec.marks ?? []) {
+      const geo = new THREE.RingGeometry((m.radius ?? 0.55) * 0.75, m.radius ?? 0.55, 20);
+      const ring = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: m.color ?? '#4ad2ff', transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(m.x, 0.12, m.y);
+      this.debug.add(ring);
+    }
+    this.debug.visible = this.debug.children.length > 0;
   }
 
   makeKits() {

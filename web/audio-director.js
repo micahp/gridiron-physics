@@ -35,8 +35,21 @@ export function planFootballSound(play, record, homeTeam) {
     }
     if (!(record?.events || []).some(e => e.type === 'whistle')) cues.push(cue(duration - 0.16, 'whistle', 0.5));
   } else if (play.type === 'punt' || play.type === 'field_goal' || play.type === 'kickoff') {
-    cues.push(cue(0.25, 'hit1', 0.22));
-    cues.push(cue(1.6, 'whistle', 0.48));
+    if (record?.events?.length) {
+      // A replayed kick has real snap, kick, catch and whistle times.
+      for (const ev of record.events) {
+        const at = Number(ev.t) - Number(record.t0 ?? 0);
+        if (!Number.isFinite(at) || at < 0 || at > duration + 0.25) continue;
+        if (ev.type === 'snap' || ev.type === 'kick') cues.push(cue(at, 'hit1', 0.3));
+        else if (ev.type === 'catch' || ev.type === 'hit') cues.push(cue(at, 'hit1', 0.2));
+        else if (ev.type === 'tackle') cues.push(cue(at, 'hit2', 0.6));
+        else if (ev.type === 'whistle') cues.push(cue(at, 'whistle', 0.55));
+      }
+    } else {
+      // Text-only kick: no physical event times to follow.
+      cues.push(cue(0.25, 'hit1', 0.22));
+      cues.push(cue(1.6, 'whistle', 0.48));
+    }
   }
 
   let react = null;
