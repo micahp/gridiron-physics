@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1016">
+  <title>Autonomous Inside Zone · Gridiron Physics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="web/autonomous.css">
+</head>
+<body>
+  <main class="lab">
+    <header class="lab-head">
+      <div>
+        <p class="eyebrow">Gridiron Physics · prospective execution</p>
+        <h1>Inside Zone</h1>
+        <p class="dek">22 authored player profiles · decisions update from live positions · outcome resolved by simulated ball motion and contact</p>
+      </div>
+      <a class="back" href="index.html">Film Room ↗</a>
+    </header>
+
+    <section class="stage" aria-label="Autonomous 3D football play">
+      <canvas id="field" aria-label="3D football field with 22 autonomous players"></canvas>
+      <div class="stage-label" id="stage-label">Set the front and seed, then snap the ball.</div>
+      <div class="cams" aria-label="Camera controls">
+        <button data-cam="broadcast" class="on">Broadcast</button>
+        <button data-cam="all22">All-22</button>
+        <button data-cam="sky">Skycam</button>
+        <button data-cam="top">Top</button>
+        <button data-cam="follow">Follow</button>
+        <button data-cam="free">Orbit</button>
+      </div>
+    </section>
+
+    <aside class="controls">
+      <div class="control-head">
+        <span class="eyebrow">Play setup</span>
+        <span class="mode-tag">AUTONOMOUS</span>
+      </div>
+      <label>Play call
+        <select id="play-call"><option value="inside_zone">Inside zone</option></select>
+      </label>
+      <div class="row">
+        <label>Defense front
+          <select id="front">
+            <option value="even">Even 4–3</option><option value="over">Over 4–3</option>
+            <option value="under">Under 4–3</option><option value="nickel">Nickel 4–2–5</option>
+            <option value="odd">Odd 3–4</option><option value="bear">Bear 5–2</option>
+          </select>
+        </label>
+        <label>Run side
+          <select id="run-side"><option value="left">Left</option><option value="right" selected>Right</option></select>
+        </label>
+      </div>
+      <label>Fixed seed <input id="seed" value="inside-zone-demo-1" autocomplete="off"></label>
+      <details class="ratings">
+        <summary>Player ratings <span>authored 1–99 inputs</span></summary>
+        <label>OL run block <output id="ol-value">76</output>
+          <input id="ol-rating" type="range" min="40" max="99" value="76">
+        </label>
+        <label>DL block shed <output id="dl-value">75</output>
+          <input id="dl-rating" type="range" min="40" max="99" value="75">
+        </label>
+        <label>RB ball-carrier vision <output id="rb-value">78</output>
+          <input id="rb-rating" type="range" min="40" max="99" value="78">
+        </label>
+        <p class="note">Ratings alter movement capacity, blocking drive, lane reads and tackle contests. They are sandbox inputs, not measured NFL forces.</p>
+      </details>
+      <button id="snap" class="snap">Snap</button>
+
+      <section class="result" aria-live="polite">
+        <h2>Simulated result</h2>
+        <p id="result-main">No play has been run.</p>
+        <p id="result-detail" class="muted">The spot and tackler will come from this run’s motion and contact.</p>
+      </section>
+
+      <section class="assignments">
+        <div class="section-title">
+          <h2>Live decisions</h2>
+          <label class="check"><input id="show-decisions" type="checkbox"> Show all 22</label>
+        </div>
+        <label class="focus-label">Inspect player
+          <select id="focus-player" disabled><option>Select after snap</option></select>
+        </label>
+        <p id="focus-decision" class="focus-decision">Player assignments and current reads appear here.</p>
+        <div id="decision-list" class="decision-list" hidden></div>
+      </section>
+    </aside>
+
+    <footer class="transport">
+      <button id="toggle" title="Play / pause" disabled>▶ Play</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Scrub play" disabled>
+      <label class="speed-label">Slow motion
+        <select id="speed"><option value="0.2">0.2×</option><option value="0.35">0.35×</option><option value="0.5" selected>0.5×</option><option value="1">1×</option><option value="2">2×</option></select>
+      </label>
+      <span id="clock">—</span>
+      <span class="transport-note">Drag to orbit in Orbit view · scroll to zoom</span>
+    </footer>
+  </main>
+  <script type="module" src="web/autonomous.js"></script>
+</body>
+</html>
