@@ -24,7 +24,7 @@ page.on('pageerror',e=>errors.push(String(e)));
 page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text());});
 const waitForStatus=()=>page.waitForFunction(()=>{
   const s=document.querySelector('#status')?.textContent||'';
-  return s.includes('Regulation ended')||s.includes('Simulation incomplete ·')||s.includes('Simulation stopped:')||
+  return s.startsWith('Ready ·')||s.includes('Regulation ended')||s.includes('Simulation incomplete ·')||s.includes('Simulation stopped:')||
     s.includes('Assets not ready:')||s.includes('Simulation failed:');
 },null,{timeout:100000,polling:250});
 const safety=[];
@@ -36,7 +36,7 @@ try{
     await waitForStatus();
     const status=await page.locator('#status').innerText();
     const refused=/Simulation stopped: unsupported rule \(/.test(status);
-    const regulationEnded=/Regulation ended/.test(status);
+    const regulationEnded=/Ready ·|Regulation ended/.test(status);
     const incomplete=/Simulation incomplete ·/.test(status);
     assert.ok(refused||regulationEnded||incomplete,'matchup '+game.id+' did not initialize: '+status);
     if(refused){
@@ -56,7 +56,7 @@ try{
     await page.fill('#seed',seed);
     await page.click('#simulate');
     const status=await page.locator('#status').innerText();
-    assert.match(status,/Regulation ended/,game.id+' pinned seed '+seed+' must reach regulation end without refusal: '+status);
+    assert.match(status,/^Ready ·/,game.id+' must report ready after simulating, not a finished game: '+status);
     const n=await page.locator('#timeline button[data-index]').count();
     assert.ok(n>40,'not enough generated events for '+game.id+': '+n);
     // The game opens with a kickoff, which is text-only (no 3D), so select the
@@ -115,10 +115,10 @@ try{
   // Recover: remove the forced table and switch to a normal game.
   await rpage.unroute('**/data/special_teams/2025-league.json');
   await rpage.goto(BASE+'/week7.html?game='+encodeURIComponent(MATCHUPS[1].id),{waitUntil:'domcontentloaded'});
-  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Regulation ended|Simulation incomplete|Simulation stopped|failed|not ready/),null,{timeout:100000});
+  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Ready ·|Regulation ended|Simulation incomplete|Simulation stopped|failed|not ready/),null,{timeout:100000});
   const recovered = await rpage.locator('#status').innerText();
   assert.doesNotMatch(recovered,/blocked_punt_kicking_recovery/,'forced refusal is gone after recovery');
-  assert.match(recovered,/Regulation ended|Simulation incomplete ·|Simulation stopped: unsupported rule \(/,'viewer recovers after a refused game: '+recovered);
+  assert.match(recovered,/Ready ·|Simulation incomplete ·|Simulation stopped: unsupported rule \(/,'viewer recovers after a refused game: '+recovered);
   await rpage.close();
   console.log('PASS refusal display: stop status, refused event, reason, and recovery');
 }
