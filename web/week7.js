@@ -45,6 +45,14 @@ function makeViewer(){
   if(new URLSearchParams(location.search).has('debug')){
     window.__gridironRenderer=renderer;
     window.__gridironState=()=>({selected,hasRecord:Boolean(current),duration:current?.duration,animating,playing,playerCount:renderer.players.size});
+    window.__gridironRecordMeta=()=>!current?.rec?null:({
+      selectedKind:currentPlay?.kind,
+      selectedOutcome:currentPlay?.outcome,
+      requestedKind:currentSelection?.play?.kind,
+      throwSpeed:current.rec.throwSpeed,
+      end:current.rec.end,
+      events:current.rec.events.map(e=>({type:e.type,t:e.t,by:e.by})),
+    });
     // Test-only visibility: examine the *simulation's* per-frame pose codes
     // alongside the actual glTF action currently active on each player's rig.
     window.__gridironFrameSnapshot=()=>{
