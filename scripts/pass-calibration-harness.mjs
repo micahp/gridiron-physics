@@ -20,7 +20,7 @@ const PROTECTION = {
   strong: Object.fromEntries(['LT', 'LG', 'C', 'RG', 'RT'].map((s) => [`O.${s}`, { PBK: 85, RBK: 85, STR: 85 }])),
 };
 
-const blank = () => ({ dropbacks: 0, throws: 0, completions: 0, interceptions: 0, sacks: 0, touchdowns: 0,
+const blank = () => ({ dropbacks: 0, unresolved: 0, defensiveTouchdowns: 0, throws: 0, completions: 0, interceptions: 0, sacks: 0, touchdowns: 0,
   throwaways: 0, checkdowns: 0, throwTimes: [], yards: [], yac: [] });
 const total = blank();
 const byProtection = Object.fromEntries(Object.keys(PROTECTION).map((k) => [k, blank()]));
@@ -35,7 +35,10 @@ for (const los of LOS) for (const front of FRONTS) for (const coverage of COVERA
       ...(overrides ? { ratingOverrides: overrides } : {}),
     };
     const run = simulatePassPlay(cfg);
-    if (!run.resolved || !run.terminal) continue;
+    if (!run.resolved || !run.terminal) {
+      for (const bucket of [total, byProtection[pname]]) bucket.unresolved++;
+      continue;
+    }
     for (const bucket of [total, byProtection[pname]]) {
       bucket.dropbacks++;
       const throwEv = run.events.find((e) => e.type === 'throw');
@@ -48,7 +51,11 @@ for (const los of LOS) for (const front of FRONTS) for (const coverage of COVERA
       if (run.events.some((e) => e.type === 'throw_away')) bucket.throwaways++;
       if (run.terminal.reason === 'sack') bucket.sacks++;
       if (run.interception_id) bucket.interceptions++;
-      if (run.terminal.reason === 'touchdown') bucket.touchdowns++;
+      // A defensive touchdown after an interception is not an offensive passing touchdown.
+      if (run.terminal.reason === 'touchdown') {
+        if (run.possession_team === 'D') bucket.defensiveTouchdowns++;
+        else bucket.touchdowns++;
+      }
       const caught = run.events.find((e) => e.type === 'catch' && String(e.player_id).startsWith('O.'));
       if (caught) {
         bucket.completions++;
@@ -65,6 +72,9 @@ const med = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) =>
 const mean = (a) => (a.length ? Number((a.reduce((x, y) => x + y, 0) / a.length).toFixed(2)) : null);
 const summarize = (b) => ({
   dropbacks: b.dropbacks,
+  unresolved: b.unresolved,
+  unresolved_pct_of_snaps: pct(b.unresolved, b.dropbacks + b.unresolved),
+  defensive_touchdowns: b.defensiveTouchdowns,
   // Attempts follow the football convention: a throwaway is an incomplete attempt, and sacks are not attempts.
   attempts: b.throws + b.throwaways,
   completion_pct: pct(b.completions, b.throws + b.throwaways),
