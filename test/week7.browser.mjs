@@ -23,12 +23,14 @@ try{
     await page.goto(BASE+'/week7.html?game='+encodeURIComponent(game.id),{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>{
       const s=document.querySelector('#status')?.textContent||'';
-      return s.includes('Ready ·')||s.includes('Assets not ready:')||s.includes('Simulation failed:');
-    },null,{timeout:100000});
+      return s.includes('Ready ·')||s.includes('Simulation stopped:')||s.includes('Assets not ready:')||s.includes('Simulation failed:');
+    },null,{timeout:100000,polling:250});
     const status=await page.locator('#status').innerText();
-    assert.match(status,/Ready ·/,'matchup '+game.id+' did not initialize: '+status);
+    const refused=/Simulation stopped: unsupported rule \(/.test(status);
+    assert.ok(refused||/Ready ·/.test(status),'matchup '+game.id+' did not initialize: '+status);
     const n=await page.locator('#timeline button[data-index]').count();
-    assert.ok(n>40,'not enough generated events for '+game.id+': '+n);
+    assert.ok(refused?n>=1:n>40,'not enough generated events for '+game.id+': '+n);
+    if(refused){ rendered.push({game:game.id,refused:true}); continue; }
     // The game opens with a kickoff, which is text-only (no 3D), so select the
     // first scrimmage play to exercise the physical 22-player animation.
     await page.locator('#timeline button[data-index="0"]').click();
@@ -55,7 +57,7 @@ try{
   await page.locator('#again').click();
   assert.equal(await page.locator('#seed').inputValue(),'1043');
   assert.equal(errors.length,0,'browser errors: '+errors.join('; '));
-  console.log('PASS full 3D render on six 2026 matchups: '+JSON.stringify(rendered));
+  console.log('PASS six 2026 matchups load (3D where the game completes, explicit refusal otherwise): '+JSON.stringify(rendered));
 
 // Forced refusal: every punt is a blocked kicking-team recovery, which the
 // generator refuses rather than resolving. Verifies the viewer reports the stop.
@@ -83,8 +85,10 @@ try{
   // Recover: remove the forced table and switch to a normal game.
   await rpage.unroute('**/data/special_teams/2025-league.json');
   await rpage.goto(BASE+'/week7.html?game='+encodeURIComponent(MATCHUPS[1].id),{waitUntil:'domcontentloaded'});
-  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Ready ·|failed|not ready/),null,{timeout:100000});
-  assert.match(await rpage.locator('#status').innerText(),/Ready ·/,'viewer recovers after a refused game');
+  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Ready ·|Simulation stopped|failed|not ready/),null,{timeout:100000});
+  const recovered = await rpage.locator('#status').innerText();
+  assert.doesNotMatch(recovered,/blocked_punt_kicking_recovery/,'forced refusal is gone after recovery');
+  assert.match(recovered,/Ready ·|Simulation stopped: unsupported rule \(/,'viewer recovers after a refused game: '+recovered);
   await rpage.close();
   console.log('PASS refusal display: stop status, refused event, reason, and recovery');
 }

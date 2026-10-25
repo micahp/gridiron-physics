@@ -36,7 +36,12 @@
     "attempts": 22,
     "made": 12
    }
-  ]
+  ],
+  "non_make_split": {
+   "blocked": 23,
+   "missed": 134,
+   "source": "nflverse play_by_play_2025 REG field_goal_result"
+  }
  },
  "extra_points": {
   "good": 1210,
@@ -128,6 +133,10 @@
    "kicking_recovery": 11,
    "out_of_bounds": 4,
    "safety": 3
+  },
+  "blocked_receiving_touchdown_pooled": {
+   "touchdown": 10,
+   "no_touchdown": 11
   },
   "return_yards": {
    "-10": 1,

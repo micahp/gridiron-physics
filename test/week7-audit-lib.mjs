@@ -110,7 +110,7 @@ export function auditModule(core, league, book) {
 
     // ---- 5. Missed field goal restarts -----------------------------------
     for(const p of plays){
-      if(p.type!=='field_goal' || p.good) continue;
+      if(p.type!=='field_goal' || p.good || p.blocked) continue;
       if(p.restart_spot===undefined){ tag('missed_fg',`${p.id} missed field goal has no restart spot`); continue; }
       // Rule 11-4-2(a)/(b) with the estimated kick spot: LOS plus the 8-yard
       // holder offset, measured from the receivers' goal. The old LOS-as-spot
@@ -153,7 +153,10 @@ export function auditModule(core, league, book) {
           tag('score_continuity',`${p.id} pre-play score ${t}=${p.score[t]} but carried ${running[t]}`);
       }
       const pts=(p.touchdown?6:0)+(p.try?.startsWith('XP good')?1:0)+(p.type==='field_goal'&&p.good?3:0);
+      const scorer=p.touchdown_return?p.recovery_team:p.offense;
+      if(p.touchdown_return) running[scorer]+=6;
       if(pts) running[p.offense]+=pts;
+      if(p.touchdown_return&&p.try?.startsWith('XP good')) running[scorer]+=1;
       if(p.possession_resolution==='safety') running[p.offense===m.home?m.away:m.home]+=2;
       // The score after the play.
       if(p.scoreAfter){
@@ -241,6 +244,7 @@ export function auditKickoffSampler(core, league, book) {
   // in real generated games.
   for(const outcome of core.BLOCKED_PUNT_OUTCOMES){
     const only={...league,punts:{outcomes:{blocked:1},distance_yards:{'0':1,'40':1},
+      blocked_receiving_touchdown_pooled:{touchdown:0,no_touchdown:1},
       blocked_resolution_pooled:Object.fromEntries(core.BLOCKED_PUNT_OUTCOMES.map(k=>[k,k===outcome?1:0]))}};
     const seen=new Set();
     for(const m of core.MATCHUPS.slice(0,2)) for(const seed of ['1042','1','2','3']){
@@ -249,6 +253,7 @@ export function auditKickoffSampler(core, league, book) {
       for(const p of g.plays){
         if(p.type!=='punt') continue;
         seen.add(p.possession_resolution);
+        assert.equal(p.distance,0,`${p.id} blocked punt must be a zero-yard punt`);
         if(p.possession_resolution==='safety')
           assert.equal(p.scoreAfter[p.possession_after],p.score[p.possession_after]+2,'safety scores 2 for the receiving team');
         if(p.possession_resolution==='kicking_recovery'||p.possession_resolution==='safety'){
@@ -258,10 +263,30 @@ export function auditKickoffSampler(core, league, book) {
         if(p.possession_resolution==='safety')
           assert.equal(p.scoreAfter[p.possession_after],p.score[p.possession_after]+2,'safety scores 2 for the receiving team');
         const next=g.plays[p.index];
-        if(next && next.quarter===p.quarter && next.offense!==p.possession_after)
+        if(next && next.quarter===p.quarter && next.type!=='kickoff' && next.offense!==p.possession_after)
           throw new Error(`${p.id} blocked punt possession ${p.possession_after} but next play offense is ${next.offense}`);
       }
     }
     assert.deepEqual([...seen],[outcome],`generated blocked punts must all resolve as ${outcome}`);
   }
+
+  // Receiving recoveries returned for a touchdown: six points for the recovering
+  // team, then a kickoff that the scoring team takes.
+  const tdTable={...league,punts:{outcomes:{blocked:1},distance_yards:{'0':1,'40':1},
+    blocked_resolution_pooled:{receiving_recovery:1,kicking_recovery:0,out_of_bounds:0,safety:0},
+    blocked_receiving_touchdown_pooled:{touchdown:1,no_touchdown:0}}};
+  let tds=0;
+  for(const m of core.MATCHUPS.slice(0,2)) for(const seed of ['1042','1','2']){
+    const g=core.generateGame(m,{[m.home]:book(m.home),[m.away]:book(m.away)},seed,tdTable);
+    for(const p of g.plays){
+      if(!p.touchdown_return) continue;
+      tds++;
+      assert.equal(p.scoreAfter[p.recovery_team],p.score[p.recovery_team]+6+(p.try?.startsWith('XP good')?1:0),
+        `${p.id} touchdown return must score 6 plus any XP`);
+      const next=g.plays[p.index];
+      assert.equal(next.type,'kickoff',`${p.id} touchdown return must be followed by a kickoff`);
+      assert.equal(next.kicking_team,p.recovery_team,`${p.id} scoring team must kick off`);
+    }
+  }
+  assert.ok(tds>0,'forced touchdown returns are generated');
 }
