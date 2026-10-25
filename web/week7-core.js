@@ -674,7 +674,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
             else turnover('blocked_punt', pt.spot);
           } else {
             event({type:'punt',kind:'punt',action:'PUNT',points:0,runoff,distance:pt.distance,
-              outcome:pt.outcome,return_yards:pt.return_yards,
+              outcome:pt.outcome,return_yards:pt.return_yards,receiving_spot:pt.spot,
               note:'Distance, outcome and return from 2025 league punts (nflverse). Kick flight is not simulated.'});
             clock -= runoff;
             turnover('punt',pt.spot);

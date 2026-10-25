@@ -1498,8 +1498,11 @@ export function simulatePlay(game, S, ctx = {}) {
   }
 
   W.t = -PRE;
+  // A kick has a four-second flight and a return behind it; give the kicking
+  // game its own clock so a long return is not truncated as a technical stop.
+  const maxT = S.kindGroup === 'kick' ? 20 : MAX_T;
   let snapped = false;
-  while (W.t < MAX_T) {
+  while (W.t < maxT) {
     if (!snapped && W.t >= 0) {
       snapped = true;
       st.phase = 'live';
@@ -1560,6 +1563,12 @@ export function simulatePlay(game, S, ctx = {}) {
       if (kind === 'kickoff') {
         if (S.touchback && !S.returner) {
           W.ball.state = 'loose';
+        } else if (R && !S.oob && S.fairCatch) {
+          ev('catch', { by: R.id, kick: true, fair: true });
+          Object.assign(W.ball, { state: 'held', holder: R, hand: 'chest' });
+          R.hasBall = true;
+          R.pose = POSE.CATCH;
+          whistle('fair_catch', { by: R.id });
         } else if (R && !S.oob) {
           ev('catch', { by: R.id, kick: true });
           const endY = S.retOob ? (R.p.y / YD > FIELD_W_YD / 2 ? FIELD_W_YD + 1.2 : -1.2) : clamp(R.p.y / YD + (rand() - 0.5) * 16, 4, FIELD_W_YD - 4);
@@ -1623,7 +1632,10 @@ export function simulatePlay(game, S, ctx = {}) {
       const b = W.ball;
       const out = b.y < 0 || b.y > FIELD_W || b.x < -10 * YD || b.x > 110 * YD;
       if (['incomplete', 'spike'].includes(kind) && b.z <= 0.12) whistle('incomplete');
-      else if (out) whistle(kind === 'punt' || kind === 'kickoff' ? 'kick_out_of_bounds' : 'out_of_bounds');
+      // A field-goal attempt that sails through or wide of the end zone is
+      // already decided by the post-crossing event; the loose ball must not
+      // overwrite that whistle with a generic out of bounds.
+      else if (out && kind !== 'fg' && kind !== 'xp') whistle(kind === 'punt' || kind === 'kickoff' ? 'kick_out_of_bounds' : 'out_of_bounds');
       else if ((kind === 'punt' || kind === 'kickoff') && (S.touchback || S.oob || S.downed) && Math.hypot(b.vx, b.vy) < 0.4 && b.z < 0.15) whistle(S.touchback ? 'touchback' : 'downed');
       else if ((kind === 'punt' || kind === 'kickoff') && S.touchback && ((dir > 0 && b.x > 100 * YD) || (dir < 0 && b.x < 0)) && W.t > (st.ballLandT ?? 0) + 0.8) whistle('touchback');
     }
@@ -1636,7 +1648,10 @@ export function simulatePlay(game, S, ctx = {}) {
     if (W.ball.y >= 0 && W.ball.y <= FIELD_W) st.lastIn = { x: W.ball.x, y: W.ball.y };
     if (st.carrier && !st.dead && st.tTackle == null && !st.carrier.ai.oob && !st.carrier.ai.td) {
       const c = st.carrier;
-      const budget = Math.abs(st.endX - c.ai.startX) * YD / (0.55 * c.vmax) + 2.5;
+      // A returner covers ground faster than a run from scrimmage; a generous
+      // 0.55*vmax budget lets a long return run out the clock before contact.
+      const pace = S.kindGroup === 'kick' ? 0.9 : 0.55;
+      const budget = Math.abs(st.endX - c.ai.startX) * YD / (pace * c.vmax) + 2.5;
       if (W.t - st.carrierSince > budget) {
         const near = W.players.filter((q) => q.team !== c.team && !q.down).sort((a, b) => d2(a.p, c.p) - d2(b.p, c.p))[0];
         if (near && d2(near.p, c.p) < 3) startTackle(near, c);
@@ -1656,7 +1671,10 @@ export function simulatePlay(game, S, ctx = {}) {
       nextRec += 1 / REC_HZ;
     }
     if (st.dead && W.t - st.deadT > POST) break;
-    if (!st.dead && W.t > MAX_T - POST - 0.05) whistle('timeout_sim');
+    // A wrap that is already in progress is real contact, not a truncated
+    // play: let it finish rather than reporting a technical timeout.
+    if (!st.dead && st.tTackle != null && W.t > maxT - 0.05) whistle('tackle', { by: st.tackler.id });
+    else if (!st.dead && st.tTackle == null && W.t > maxT - POST - 0.05) whistle('timeout_sim');
   }
 
   // final ball spot (yards) for validation
