@@ -5,7 +5,7 @@
 // separation, throwing lanes and pressure; the ball is launched with the real
 // flight model; receivers and defenders contest it from their simulated
 // positions. Nothing here imports the historical play director.
-import { DT, FIELD_W_YD, REC_HZ, YD } from '../constants.js';
+import { DT, FIELD_W_YD, G, REC_HZ, YD } from '../constants.js';
 import { rng } from '../rng.js';
 import { AERO, solveLaunch } from '../ball.js';
 import { Player, POSE, World } from '../world.js';
@@ -272,6 +272,8 @@ export function simulatePassPlay(options = {}) {
   let possession = 'O';
   let throwInfo = null;
   let resolveAttempt = null;
+  // One catch opportunity per pass: a failed contest must not roll again as the ball falls through the catch band.
+  let contestUsed = false;
   let sack = null, tackle = null, terminal = null;
   let maxForward = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
@@ -550,6 +552,25 @@ export function simulatePassPlay(options = {}) {
   // Resolve the first player able to play the ball. The receiver wins the ball
   // on his own merits; an interception needs a defender who is genuinely at
   // the catch point, which is why most failed catches are simply incomplete.
+  // A defender perceives a thrown ball only after a reaction delay, from its observed flight, with noise set by awareness.
+  // The exact landing spot is never read; the perceived point is a defender's estimate.
+  function perceivedLanding(p) {
+    const b = W.ball;
+    if (b.state !== 'air' || b.thrownAt == null) return null;
+    const reaction = clamp(0.22 + (70 - (p.R.PRC ?? p.R.AWR ?? 70)) * 0.004, 0.16, 0.42);
+    if (W.t - b.thrownAt < reaction) return null;
+    if (!p.ai.perception || p.ai.perception.throwAt !== b.thrownAt) {
+      const z = Math.max(b.z, 0);
+      const flightLeft = (b.vz + Math.sqrt(b.vz * b.vz + 2 * G * z)) / G;
+      const noise = clamp((85 - (p.R.AWR ?? 70)) * 0.02, 0.1, 1.0) * YD;
+      p.ai.perception = {
+        throwAt: b.thrownAt,
+        point: { x: b.x + b.vx * flightLeft + rand.normal() * noise, y: b.y + b.vy * flightLeft + rand.normal() * noise },
+      };
+    }
+    return p.ai.perception.point;
+  }
+
   function resolveContest() {
     const candidates = catchCandidates();
     if (!candidates.length) return;
@@ -570,12 +591,12 @@ export function simulatePassPlay(options = {}) {
         player_id: receiver.player.id, team: receiver.player.team, chance: Number(chance.toFixed(3)),
         separation_yards: Number(separation.toFixed(2)), ball_z: Number(ballZ.toFixed(2)),
       });
-      if (rand() < chance) { secure(receiver.player); return; }
+      if (rand() < chance) { secure(receiver.player, receiver.planar); return; }
       // Contested and not caught: only a defender on top of the ball picks it.
       const interceptionChance = defender
         ? clamp(0.045 - separation * 0.03 + ((defender.player.R.PRC ?? 60) - 60) * 0.0005, 0.005, 0.05)
         : 0;
-      if (defender && rand() < interceptionChance) { secure(defender.player); return; }
+      if (defender && rand() < interceptionChance) { secure(defender.player, defender.planar); return; }
       knockDown(defender?.player ?? receiver.player);
       return;
     }
@@ -583,7 +604,7 @@ export function simulatePassPlay(options = {}) {
     // Nobody on offence is at the ball: a defender can only catch what he can reach.
     const interceptionChance = clamp(0.10 - (defender?.planar ?? 2) * 0.04
       + ((defender?.player.R.PRC ?? 60) - 60) * 0.001, 0.01, 0.12);
-    if (defender && rand() < interceptionChance) { secure(defender.player); return; }
+    if (defender && rand() < interceptionChance) { secure(defender.player, defender.planar); return; }
     knockDown(defender?.player ?? null);
   }
 
@@ -594,7 +615,7 @@ export function simulatePassPlay(options = {}) {
     resolveAttempt = null;
   }
 
-  function secure(player) {
+  function secure(player, planar = null) {
     const b = W.ball;
     b.state = 'held';
     b.holder = player;
@@ -605,6 +626,7 @@ export function simulatePassPlay(options = {}) {
     const interception = player.team !== 'O';
     W.event(interception ? 'interception' : 'catch', {
       player_id: player.id, at: { x: b.x / YD, y: b.y / YD }, time: W.t,
+      reach_yards: planar == null ? null : Number(planar.toFixed(3)),
     });
     catches.push({ player_id: player.id, team: player.team, t: W.t, x: b.x / YD, y: b.y / YD });
     if (interception) {
@@ -785,11 +807,9 @@ export function simulatePassPlay(options = {}) {
       p.dv = seek(p, at(4, lOf(p)), 0.5, 8);
     }
     if (throwInfo) {
-      // Attack the ball once it is in the air.
-      const b = W.ball;
-      if (b.state === 'air') {
-        p.dv = seek(p, { x: b.landing?.x ?? b.x, y: b.landing?.y ?? b.y }, 1, 14);
-      }
+      // Attack the ball once it has been perceived; the exact landing spot is never read.
+      const perceived = perceivedLanding(p);
+      if (perceived) p.dv = seek(p, perceived, 1, 14);
     }
   }
 
@@ -857,11 +877,11 @@ export function simulatePassPlay(options = {}) {
       return;
     }
     if (p.info.group === 'DL') { rushPasser(p); return; }
-    if (throwInfo && W.ball.state === 'air') {
-      const b = W.ball;
-      p.dv = seek(p, { x: b.landing?.x ?? b.x, y: b.landing?.y ?? b.y }, 1, 16);
-      p.face = Math.atan2((b.landing?.y ?? b.y) - p.p.y, (b.landing?.x ?? b.x) - p.p.x);
-      setIntent(p, 'break on the thrown ball', 'drive toward the landing spot');
+    const perceived = throwInfo && W.ball.state === 'air' ? perceivedLanding(p) : null;
+    if (perceived) {
+      p.dv = seek(p, perceived, 1, 16);
+      p.face = Math.atan2(perceived.y - p.p.y, perceived.x - p.p.x);
+      setIntent(p, 'break on the thrown ball', 'drive toward the perceived landing spot');
       return;
     }
     if (cfg.coverage === 'cover_1') {
@@ -941,8 +961,10 @@ export function simulatePassPlay(options = {}) {
   function trackLive() {
     const b = W.ball;
     if (b.state === 'air') {
-      if (!resolveAttempt && b.z <= 2.4 && b.vz < 0) resolveAttempt = true;
-      if (resolveAttempt) resolveContest();
+      if (!contestUsed && b.z <= 2.4 && b.vz < 0 && catchCandidates().length) {
+        contestUsed = true;
+        resolveContest();
+      }
       // Out-of-bounds flight is not a rule violation until the ball lands.
     }
     if (carrier && W.ball.holder === carrier) {
