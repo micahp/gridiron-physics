@@ -393,9 +393,9 @@ function simulate(){
       simulation.source_play_count+' hypothetical snaps · no final result.',true);
     else if(simulation.score[match.home]===simulation.score[match.away])status('Regulation ended tied · '+
       simulation.source_play_count+' hypothetical snaps · overtime is unsupported · no final game result.',true);
-    else status('Regulation ended at 0:00 · modeled score '+match.away+' '+simulation.score[match.away]+' / '+
-      match.home+' '+simulation.score[match.home]+' · '+simulation.source_play_count+' hypothetical snaps · '+
-      'result illustrative; legal status unvalidated');
+    else status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
+      ' drives · modeled final '+match.away+' '+simulation.score[match.away]+' / '+
+      match.home+' '+simulation.score[match.home]+' · result illustrative; legal status unvalidated');
   }catch(e){status('Simulation failed: '+e.message,true);}
 }
 function animate(now){
