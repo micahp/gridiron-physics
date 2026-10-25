@@ -407,6 +407,50 @@ const nextPlay = (g, p) => g.plays.find(q => q.index === p.index + 1);
     'an onside attempt draws from the two onside outcomes');
 }
 
+// (1h) Rule 4-3-1: a kick that does not start the clock consumes no time. Late-Q4
+// cases are pinned: a touchback at 4 s and a fair catch at 2 s both keep the clock.
+{
+  const safetyPunts = {outcomes:{blocked:1}, distance_yards:{'0':1,'40':1}, blocked_receiving_touchdown_pooled:{touchdown:0,no_touchdown:1},
+    blocked_resolution_pooled:{receiving_recovery:0,kicking_recovery:0,out_of_bounds:0,safety:1}};
+  const cases = [
+    ['2026_07_MIA_NYJ', '85', 'normal_free_kick', 'touchback', 2],
+    ['2026_07_CIN_BAL', '461', 'onside_receiving_possession', 'fair_catch', 3],
+    ['2026_07_CIN_BAL', '493', 'onside_kicking_recovery', 'kicking_recovery', 4],
+  ];
+  for (const [mid, seed, kickType, outcome, left] of cases) {
+    const m = MATCHUPS.find(x=>x.id===mid);
+    const g = generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed,
+      {...league, punts:safetyPunts});
+    const k = g.plays.find(p=>(p.type==='safety_kick'||p.type==='onside_kick') && p.onside_clock===left);
+    assert.ok(k, `${mid}#${seed} has a safety kick with ${left} s left`);
+    assert.equal(k.kick_type, kickType);
+    assert.equal(k.outcome, outcome);
+    assert.equal(k.quarter, 4, 'the pinned kick is in Q4');
+    assert.equal(k.clock_starts, false, 'this kick does not start the clock');
+    assert.equal(k.onside_clock, left, `the kick is taken with ${left} s left`);
+    assert.equal(k.runoff, 0, 'a kick that does not start the clock takes no time off it');
+    assert.equal(k.clock, left, 'the clock is unchanged by the kick');
+    const next = nextPlay(g, k);
+    assert.ok(next, 'the game continues after the kick');
+    assert.equal(next.quarter, 4, 'the kick does not end the quarter that had time left');
+    assert.ok(g.complete_regulation, 'the game still reaches the end of regulation');
+  }
+  // The same rule for a kicking-team recovery, whose clock also does not start.
+  {
+    const m = MATCHUPS.find(x=>x.id==='2026_07_CIN_BAL');
+    const g = generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, '493',
+      {...league, punts:safetyPunts});
+    const k = g.plays.find(p=>p.kick_type==='onside_kicking_recovery');
+    assert.ok(k, 'the pinned kicking-team recovery is generated');
+    assert.equal(k.clock_starts, false);
+    assert.equal(k.runoff, 0);
+    assert.equal(k.clock, k.onside_clock, 'a recovery that does not start the clock keeps it');
+    const next = nextPlay(g, k);
+    assert.equal(next.offense, k.kicking_team, 'the kicking team keeps the ball after the recovery');
+    assert.equal(next.quarter, 4, 'the recovery does not end the quarter that had time left');
+  }
+}
+
 // (3) Observed blocked-punt counts are preserved; zero-count outcomes are never sampled.
 assert.deepEqual(punts.blocked_resolution, {receiving_recovery:7, kicking_recovery:2, out_of_bounds:0, safety:0},
   'observed 2025 blocked-punt counts');

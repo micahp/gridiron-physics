@@ -327,7 +327,8 @@
       "return_yards": 25,
       "receiving_spot_yardline_100": 65,
       "kicking_team": "SF",
-      "receiving_team": "ARI"
+      "receiving_team": "ARI",
+      "clock_starts": true
      },
      {
       "game_id": "2025_06_DEN_NYJ",
@@ -336,7 +337,8 @@
       "return_yards": 22,
       "receiving_spot_yardline_100": 64,
       "kicking_team": "DEN",
-      "receiving_team": "NYJ"
+      "receiving_team": "NYJ",
+      "clock_starts": true
      },
      {
       "game_id": "2025_07_WAS_DAL",
@@ -345,7 +347,8 @@
       "return_yards": 0,
       "receiving_spot_yardline_100": 65,
       "kicking_team": "DAL",
-      "receiving_team": "WAS"
+      "receiving_team": "WAS",
+      "clock_starts": false
      },
      {
       "game_id": "2025_10_PIT_LAC",
@@ -354,7 +357,8 @@
       "return_yards": 25,
       "receiving_spot_yardline_100": 66,
       "kicking_team": "PIT",
-      "receiving_team": "LAC"
+      "receiving_team": "LAC",
+      "clock_starts": true
      },
      {
       "game_id": "2025_16_PIT_DET",
@@ -363,7 +367,8 @@
       "return_yards": 20,
       "receiving_spot_yardline_100": 69,
       "kicking_team": "DET",
-      "receiving_team": "PIT"
+      "receiving_team": "PIT",
+      "clock_starts": true
      }
     ]
    },
@@ -384,7 +389,8 @@
       "receiving_team": "DAL",
       "next_play_id": "3533",
       "next_play_down": 1,
-      "next_play_ydstogo": 10
+      "next_play_ydstogo": 10,
+      "clock_starts": false
      },
      {
       "game_id": "2025_14_IND_JAX",
@@ -396,7 +402,8 @@
       "receiving_team": "JAX",
       "next_play_id": "3954",
       "next_play_down": 1,
-      "next_play_ydstogo": 10
+      "next_play_ydstogo": 10,
+      "clock_starts": true
      }
     ]
    },
@@ -416,7 +423,8 @@
       "receiving_team": "NE",
       "next_play_id": "3771",
       "next_play_down": 1,
-      "next_play_ydstogo": 10
+      "next_play_ydstogo": 10,
+      "clock_starts": false
      }
     ]
    }

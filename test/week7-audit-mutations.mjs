@@ -120,6 +120,9 @@ const MUTATIONS = [
   {name:'safety kick free-kick runoff is not applied to the clock',
     from:'    clock -= runoff;\n    const base',
     to:'    clock -= 0;\n    const base'},
+  {name:'safety kick takes clock even when the clock does not start',
+    from:'const runoff = s.clock_starts ? Math.min(6, clock) : 0;',
+    to:'const runoff = Math.min(6, clock);'},
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'week7-mut-'));

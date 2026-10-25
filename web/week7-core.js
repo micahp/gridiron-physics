@@ -262,7 +262,9 @@ export function sampleSafetyKickOutcome(safetyTable, rand, {onsideAttempt} = {})
       throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no valid recovery spot`);
     if (row.next_play_down !== 1 || row.next_play_ydstogo !== 10)
       throw new Error(`safety-kick row ${row.game_id} ${row.play_id} does not record first and 10`);
-    return { category: cls, refusal: null, outcome: row.outcome, return_yards: 0,
+    if (typeof row.clock_starts !== 'boolean')
+      throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no clock_starts flag`);
+    return { category: cls, refusal: null, outcome: row.outcome, return_yards: 0, clock_starts: row.clock_starts,
       spot: null, offense_spot: offenseSpot, source: { game_id: row.game_id, play_id: row.play_id } };
   }
   if (cat.n < SAFETY_KICK_MIN_SAMPLE)
@@ -271,8 +273,10 @@ export function sampleSafetyKickOutcome(safetyTable, rand, {onsideAttempt} = {})
   const row = cat.rows[Math.floor(rand() * cat.rows.length)];
   const spot = Number(row.receiving_spot_yardline_100);
   if (!Number.isFinite(spot) || spot < 1 || spot > 99) throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no valid receiving spot`);
+  if (typeof row.clock_starts !== 'boolean')
+    throw new Error(`safety-kick row ${row.game_id} ${row.play_id} has no clock_starts flag`);
   return { category: cls, refusal: null, outcome: row.outcome, return_yards: Number(row.return_yards || 0),
-    spot, source: { game_id: row.game_id, play_id: row.play_id } };
+    clock_starts: row.clock_starts, spot, source: { game_id: row.game_id, play_id: row.play_id } };
 }
 
 // Normal-mode coin toss ledger, from docs/rules/NFL-2026-GAME-STATE-RULES.md.
@@ -493,13 +497,14 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
     const decisionClock = clock;
     const s = sampleSafetyKickOutcome(league.safety_kicks, rand, {onsideAttempt});
     const onside = s.category !== 'normal_free_kick';
-    // Free-kick timing is not simulated: the clock runs for a short kick and
-    // return, capped at the time left in the period.
-    const runoff = Math.min(6, clock);
+    // Rule 4-3-1: the clock starts only when the ball is legally touched in the
+    // field of play. A touchback, fair catch or kicking-team recovery does not
+    // start it, so those kicks consume no clock.
+    const runoff = s.clock_starts ? Math.min(6, clock) : 0;
     clock -= runoff;
     const base = { type: onside ? 'onside_kick' : 'safety_kick', kind:'free_kick',
       action: onside ? 'ONSIDE KICK' : 'SAFETY KICK', points:0, runoff,
-      onside_attempt: onsideAttempt, onside_clock: decisionClock,
+      onside_attempt: onsideAttempt, onside_clock: decisionClock, clock_starts: s.clock_starts,
       offense:receiving, defense:kicking, kicking_team:kicking, receiving_team:receiving,
       kick_type:s.category, kick_spot_own:20 };
     offense = receiving;

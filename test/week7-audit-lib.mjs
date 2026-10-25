@@ -376,7 +376,12 @@ export function auditSafetyKickPath(core, league, book) {
       assert.equal(p.onside_attempt, p.kick_type !== 'normal_free_kick', `${p.id} kick type follows the onside decision`);
       assert.ok(p.onside_clock > 0, `${p.id} safety kick taken after the period expired`);
       assert.equal(p.clock, p.onside_clock - p.runoff, `${p.id} free-kick runoff is taken off the clock`);
-      assert.ok(p.runoff > 0, `${p.id} free kick consumes clock`);
+      // Rule 4-3-1: nothing runs on a kick the clock does not start.
+      assert.equal(p.clock_starts, p.kick_type === 'normal_free_kick' ? p.outcome === 'returned'
+        : p.kick_type === 'onside_receiving_possession' ? p.outcome === 'receiving_recovery' : false,
+        `${p.id} clock_starts follows Rule 4-3-1`);
+      if (p.clock_starts) assert.ok(p.runoff > 0, `${p.id} a live kick consumes time`);
+      else assert.equal(p.runoff, 0, `${p.id} a kick that does not start the clock consumes no time`);
       if (p.onside_attempt) {
         assert.equal(p.quarter, core.ONSIDE_RULE.quarter, `${p.id} onside attempt is in Q4`);
         assert.ok(p.onside_clock <= core.ONSIDE_RULE.window_seconds, `${p.id} onside attempt is inside the window`);

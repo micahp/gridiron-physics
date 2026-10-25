@@ -118,7 +118,9 @@ def classify_post_safety_kick(kick, follow=None):
                 raise SystemExit(f"kicking-team onside recovery {ref} does not match its next play {follow['play_id']}")
             return "onside_kicking_recovery", {**ref, "outcome": outcome, "return_yards": 0,
                 "offense_spot_yardline_100": 100 - yl, "kicking_team": kicking, "receiving_team": receiving,
-                "next_play_id": follow["play_id"], "next_play_down": 1, "next_play_ydstogo": 10}
+                "next_play_id": follow["play_id"], "next_play_down": 1, "next_play_ydstogo": 10,
+                # Rule 4-3-1(b): the clock does not start when the kicking team recovers.
+                "clock_starts": False}
         cat = "onside_receiving_possession"
         # The landing spot is not automatically the dead-ball spot. The next scrimmage
         # play must show the receiving team with a new series at that spot, or the
@@ -129,7 +131,8 @@ def classify_post_safety_kick(kick, follow=None):
                              f"{follow['play_id'] if follow else None}: expected {receiving} first and 10 at yardline {yl}")
         return cat, {**ref, "outcome": outcome, "return_yards": 0, "receiving_spot_yardline_100": yl,
                      "kicking_team": kicking, "receiving_team": receiving,
-                     "next_play_id": follow["play_id"], "next_play_down": 1, "next_play_ydstogo": 10}
+                     "next_play_id": follow["play_id"], "next_play_down": 1, "next_play_ydstogo": 10,
+                     "clock_starts": outcome == "receiving_recovery"}
 
     if kick["penalty"] == "1":
         return "excluded_penalty_on_kick", {**ref, "reason": "penalty on the kick play; the spot is set by enforcement"}
@@ -149,7 +152,10 @@ def classify_post_safety_kick(kick, follow=None):
         raise SystemExit(f"post-safety return {ref} spotted for {team}, not the receiving team {receiving}")
     return "normal_free_kick", {**ref, "outcome": outcome, "return_yards": ret,
                                 "receiving_spot_yardline_100": spot_for(team, yd),
-                                "kicking_team": kicking, "receiving_team": receiving}
+                                "kicking_team": kicking, "receiving_team": receiving,
+                                # Rule 4-3-1: the clock starts only when the ball is legally
+                                # touched in the field of play, so a touchback does not start it.
+                                "clock_starts": outcome == "returned"}
 
 
 def build_safety_kicks(reg_rows):
