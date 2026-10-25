@@ -65,14 +65,16 @@ const med = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) =>
 const mean = (a) => (a.length ? Number((a.reduce((x, y) => x + y, 0) / a.length).toFixed(2)) : null);
 const summarize = (b) => ({
   dropbacks: b.dropbacks,
-  completion_pct: pct(b.completions, b.throws),
-  interception_pct: pct(b.interceptions, b.throws),
+  // Attempts follow the football convention: a throwaway is an incomplete attempt, and sacks are not attempts.
+  attempts: b.throws + b.throwaways,
+  completion_pct: pct(b.completions, b.throws + b.throwaways),
+  interception_pct: pct(b.interceptions, b.throws + b.throwaways),
   sack_pct_of_dropbacks: pct(b.sacks, b.dropbacks),
-  td_pct_of_throws: pct(b.touchdowns, b.throws),
-  throwaway_pct: pct(b.throwaways, b.dropbacks),
-  checkdown_share_pct: pct(b.checkdowns, b.throws),
+  td_pct_of_attempts: pct(b.touchdowns, b.throws + b.throwaways),
+  throwaway_pct_of_attempts: pct(b.throwaways, b.throws + b.throwaways),
+  checkdown_share_pct: pct(b.checkdowns, b.throws + b.throwaways),
   median_time_to_throw_s: med(b.throwTimes),
-  yards_per_attempt: mean(b.yards.concat(Array(Math.max(0, b.throws - b.completions)).fill(0))),
+  yards_per_attempt: mean(b.yards.concat(Array(Math.max(0, b.throws + b.throwaways - b.completions)).fill(0))),
   median_yac: med(b.yac),
 });
 console.log(JSON.stringify({ engine: root.split('/').slice(-2).join('/'), set, perCell, total: summarize(total),

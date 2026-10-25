@@ -339,7 +339,7 @@ export function simulatePassPlay(options = {}) {
   function seenDefenders() {
     const out = [];
     for (const q of defense) {
-      const est = q.down ? null : perceive(eyes, q, W.t);
+      const est = perceive(eyes, q, W.t);
       if (est) out.push({ player: q, ...est });
     }
     return out;
@@ -404,7 +404,7 @@ export function simulatePassPlay(options = {}) {
   // A read he has never seen is looked for at its formation spot.
   function attention() {
     for (const rec of [z, slotRec, rb]) {
-      if (!rec || rec.down) continue;
+      if (!rec) continue;
       const est = perceive(eyes, rec, W.t);
       if (!est) return alignment.get(rec.id);
       if (est.age > 0.3) return { x: est.x, y: est.y };
@@ -413,7 +413,7 @@ export function simulatePassPlay(options = {}) {
   }
 
   function readOptions() {
-    const throwers = [z, slotRec, rb].filter((p) => p && !p.down);
+    const throwers = [z, slotRec, rb].filter(Boolean);
     return throwers.flatMap((rec) => {
       // A receiver he has not seen is not a read yet.
       const seen = perceive(eyes, rec, W.t);

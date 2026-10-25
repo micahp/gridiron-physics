@@ -42,7 +42,7 @@ function inSightline(eyes, q, players) {
   if (d > SIGHT_M) return false;
   if (Math.abs(wrap(Math.atan2(dy, dx) - eyes.gaze)) > FOV_HALF) return false;
   for (const o of players) {
-    if (o === q || o === qb || o.down) continue;
+    if (o === q || o === qb) continue;
     const ox = o.p.x - qb.p.x, oy = o.p.y - qb.p.y;
     const along = (ox * dx + oy * dy) / (d * d);
     if (along <= 0.02 || along >= 0.98) continue;
@@ -61,7 +61,7 @@ export function observe(eyes, players, t, dt, attention) {
     eyes.gaze = wrap(eyes.gaze + clamp(turn, -GAZE_RATE * dt, GAZE_RATE * dt));
   }
   for (const q of players) {
-    if (q === qb || q.down) continue;
+    if (q === qb) continue;
     const near = Math.hypot(q.p.x - qb.p.x, q.p.y - qb.p.y) <= CONTACT_M;
     if (!near && !inSightline(eyes, q, players)) {
       eyes.seenSince.delete(q.id);
