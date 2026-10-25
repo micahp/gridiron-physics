@@ -57,5 +57,29 @@ for (const key of ['gain', 'endX', 'tacklers', 'complete', 'touchdown', 'outcome
   assert.throws(() => simulatePassPlay({ ...base, [key]: 1 }), /no realized outcome fields/);
 }
 
+// An interception return scores at the goal the returner's team attacks.
+// The defense attacks x=100 when the offense attacks -x, and x=0 when it attacks +x.
+const pickSixMinus = simulatePassPlay({ seed: 'search-453', concept: 'slant_flat', coverage: 'cover_1', front: 'nickel_under', direction: 'right', dir: -1, los: 95, ballY: 26.667 });
+assert.ok(pickSixMinus.interception_id, 'the ball was intercepted');
+assert.equal(pickSixMinus.possession_team, 'D');
+assert.equal(pickSixMinus.terminal.reason, 'touchdown', 'the pick-six is a defensive touchdown');
+assert.ok(Math.abs(pickSixMinus.terminal.spot.x - 100) < 1e-6, 'defense scores at x=100 when the offense attacks -x');
+
+const pickSixPlus = simulatePassPlay({ seed: 'pick-plus-2574', concept: 'slant_flat', coverage: 'cover_1', front: 'nickel_under', direction: 'right', dir: 1, los: 6, ballY: 26.667 });
+assert.ok(pickSixPlus.interception_id, 'the ball was intercepted');
+assert.equal(pickSixPlus.possession_team, 'D');
+assert.equal(pickSixPlus.terminal.reason, 'touchdown', 'the pick-six is a defensive touchdown');
+assert.ok(Math.abs(pickSixPlus.terminal.spot.x) < 1e-6, 'defense scores at x=0 when the offense attacks +x');
+
+// A tackled interception return measures forward progress toward the returner's goal.
+const interceptedAndTackled = simulatePassPlay({ seed: 'int-tackle-95', concept: 'slant_flat', coverage: 'cover_1',
+  front: 'nickel_under', direction: 'right', dir: 1, los: 45, ballY: 26.667 });
+const interception = interceptedAndTackled.events.find((e) => e.type === 'interception');
+assert.ok(interception, 'the defender intercepted the pass');
+assert.equal(interceptedAndTackled.terminal.reason, 'tackle', 'the return ended in a tackle');
+assert.equal(interceptedAndTackled.possession_team, 'D');
+assert.ok(interception.at.x - interceptedAndTackled.terminal.spot.x > 0.5,
+  'the dead-ball spot reflects the returner advancing toward x=0');
+
 console.log(`autonomous passing ok: ${[...seen].join(', ')}; ${yards.length} plays, `
   + `gain range ${Math.min(...yards).toFixed(1)} to ${Math.max(...yards).toFixed(1)} yd`);

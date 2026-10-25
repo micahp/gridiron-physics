@@ -50,10 +50,12 @@ export function scenarioFromCall(call) {
   const rosterFront = RUSH_FRONT[call.defense.front];
   const allowed = roleKeysForFront(rosterFront);
   const keep = (map) => Object.fromEntries(Object.entries(map).filter(([key]) => allowed.has(key)));
+  // yardline_100 counts toward the goal the offense attacks; the engine takes the absolute x of the line.
+  const dir = call.situation.offense_direction;
   const common = {
     seed: call.seed,
-    los: call.situation.yardline_100,
-    dir: call.situation.offense_direction,
+    los: dir === 1 ? 100 - call.situation.yardline_100 : call.situation.yardline_100,
+    dir,
     ballY: call.situation.ball_lateral_yards,
     ratingOverrides,
     massOverrides,
@@ -98,5 +100,10 @@ export function simulateAutonomousPlay(input) {
   const run = scenario.kind === 'run' ? simulateInsideZone(scenario.config) : simulatePassPlay(scenario.config);
   const record = toResultRecord(call, run);
   record.diagnostics.reconciliation = reconcileResult(record);
+  if (record.status === 'complete' && !record.diagnostics.reconciliation.ok) {
+    record.status = 'failed';
+    record.result = null;
+    record.failure = { reason: 'reconciliation', problems: record.diagnostics.reconciliation.problems };
+  }
   return record;
 }

@@ -471,6 +471,8 @@ export function simulatePassPlay(options = {}) {
     const out = [];
     for (const p of W.players) {
       if (p.down) continue;
+      // Offensive linemen are ineligible to catch a forward pass.
+      if (p.team === 'O' && p.info.group === 'OL') continue;
       const planar = Math.hypot(p.p.x - b.x, p.p.y - b.y) / YD;
       const reach = 1.15 + p.r / YD;
       if (planar > reach) continue;
@@ -547,6 +549,7 @@ export function simulatePassPlay(options = {}) {
     }
     carrier = player;
     carrierSince = W.t;
+    if (interception) maxForward = null;
     pCarrierReset();
     resolveAttempt = null;
     throwInfo = null;
@@ -879,11 +882,13 @@ export function simulatePassPlay(options = {}) {
       // Out-of-bounds flight is not a rule violation until the ball lands.
     }
     if (carrier && W.ball.holder === carrier) {
-      const f = (W.ball.x / YD - cfg.los) * dir;
+      const attack = carrier.team === 'O' ? dir : -dir;
+      const f = (W.ball.x / YD - cfg.los) * attack;
       if (!maxForward || f > maxForward.f) maxForward = { f, x: W.ball.x, y: W.ball.y };
       const x = W.ball.x / YD;
-      if ((dir > 0 && x >= 100) || (dir < 0 && x <= 0)) {
-        const goalX = (dir > 0 ? 100 : 0) * YD;
+      // A returner scores at the goal the returner's team attacks, which is the opposite end after an interception.
+      if ((attack > 0 && x >= 100) || (attack < 0 && x <= 0)) {
+        const goalX = (attack > 0 ? 100 : 0) * YD;
         W.event('touchdown', { carrier_id: carrier.id, spot: { x: goalX / YD, y: W.ball.y / YD } });
         finish('touchdown', { x: goalX, y: W.ball.y });
         return;
@@ -896,7 +901,7 @@ export function simulatePassPlay(options = {}) {
         return;
       }
       lastInBounds = { x: W.ball.x, y: W.ball.y };
-      if ((dir > 0 && x < 0) || (dir < 0 && x > 100)) finish('safety', { x: W.ball.x, y: W.ball.y });
+      if ((attack > 0 && x < 0) || (attack < 0 && x > 100)) finish('safety', { x: W.ball.x, y: W.ball.y });
     }
   }
 
