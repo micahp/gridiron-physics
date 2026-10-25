@@ -1,4 +1,4 @@
-import { adaptLpGamePayload } from './lp-game-record-adapter.js';
+import { adaptLpGamePayload, validatePregameSourcePin } from './lp-game-record-adapter.js';
 import { renderE3Comparison } from './e3-game-comparison.js';
 import {
   MATCHUP_INDEX_URL,
@@ -75,7 +75,9 @@ async function validatePregameSnapshotPayload(payload) {
   if (record.game_id !== snapshot.schedule?.game_id
       || record.as_of_utc !== snapshot.as_of
       || record.teams?.home !== snapshot.schedule?.home_team
-      || record.teams?.away !== snapshot.schedule?.away_team) {
+      || record.teams?.away !== snapshot.schedule?.away_team
+      || record.scheduled_kickoff_utc !== snapshot.schedule?.scheduled_kickoff_utc
+      || record.roster_snapshot_id !== snapshot.roster_snapshot_id) {
     throw new Error('record game identity differs from the frozen schedule snapshot');
   }
   if (payload.data_sources?.observed_reference_sha256 !== snapshot.model_reference?.observed_reference?.sha256) {
@@ -133,7 +135,7 @@ function renderMetadata(verification, sourcePayloadSha256) {
   }
   $('#score-a').textContent = record.points.A;
   $('#score-b').textContent = record.points.B;
-  $('#score-phase').textContent = record.complete_game ? 'FINAL'
+  $('#score-phase').textContent = record.complete_game ? 'FINAL' : record.blocker ? 'BLOCKED'
     : record.regulation_end_reached ? 'REGULATION END' : 'IN PROGRESS';
   $('#game-state').textContent = `regulation_end_reached=${record.regulation_end_reached} · complete_game=${record.complete_game} · valid_full_game=${record.valid_full_game} · tied=${record.tied}`;
   if (requestedPregameGame) {
@@ -226,6 +228,7 @@ function renderPlayerStats() {
       el('td', statSummary(player.passing)),
       el('td', statSummary(player.rushing)),
       el('td', statSummary(player.receiving)),
+      el('td', statSummary(player.miscellaneous)),
       el('td', player.attribution),
     );
     body.append(row);
@@ -338,7 +341,10 @@ async function loadFixture() {
     if (!payload.record && payload.drives) payload = { ...payload, record: payload };
     if (!payload.record) throw new Error('indexed payload has no game record');
     payload.source = payload.source ?? {};
-    if (requestedPregameGame) await validatePregameSnapshotPayload(payload);
+    if (requestedPregameGame) {
+      validatePregameSourcePin(payload, manifest, entry);
+      await validatePregameSnapshotPayload(payload);
+    }
     let upstream = null;
     let upstreamHash = 'not separately supplied';
     if (entry.upstream_source_file && entry.upstream_source_sha256) {

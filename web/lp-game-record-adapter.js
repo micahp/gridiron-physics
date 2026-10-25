@@ -37,6 +37,53 @@ function requireHash(value, label) {
   if (typeof value !== 'string' || !/^[a-f0-9]{64}$/i.test(value)) fail(`${label} must be a SHA-256 hex digest`);
 }
 
+export function validatePregameSourcePin(payload, manifest, fixtureEntry) {
+  requireObject(payload, 'payload');
+  requireObject(manifest, 'pregame manifest');
+  requireObject(fixtureEntry, 'pregame manifest fixture');
+  for (const [label, value] of [['payload.contract', payload.contract], ['pregame manifest.contract', manifest.contract]]) {
+    requireObject(value, label);
+    if (value.name !== GAME_PAYLOAD_NAME || value.version !== GAME_PAYLOAD_VERSION) {
+      fail(`${label} must use ${GAME_PAYLOAD_NAME} ${GAME_PAYLOAD_VERSION}`);
+    }
+  }
+  requireObject(payload.source, 'payload.source');
+  requireObject(manifest.lp_source, 'pregame manifest.lp_source');
+  if (manifest.lp_source.repository !== 'micahp/legendarypicks') {
+    fail('pregame manifest repository must pin micahp/legendarypicks');
+  }
+  requireString(payload.source.repository, 'payload.source.repository');
+  requireString(payload.source.branch, 'payload.source.branch');
+  requireString(payload.source.base_commit, 'payload.source.base_commit');
+  requireString(manifest.lp_source.branch, 'pregame manifest.lp_source.branch');
+  requireString(manifest.lp_source.base_commit, 'pregame manifest.lp_source.base_commit');
+  if (payload.source.repository !== manifest.lp_source.repository
+      || payload.source.branch !== manifest.lp_source.branch
+      || payload.source.base_commit !== manifest.lp_source.base_commit) {
+    fail('pregame producer repository, branch, or commit differs from its manifest pin');
+  }
+  if (payload.source.producer_worktree_dirty !== false) {
+    fail('pregame fixture must be generated from a clean committed producer');
+  }
+  const expected = manifest.lp_source.producer_file_sha256;
+  const actual = payload.source.producer_file_sha256;
+  requireObject(expected, 'pregame manifest.lp_source.producer_file_sha256');
+  requireObject(actual, 'payload.source.producer_file_sha256');
+  const expectedFiles = Object.keys(expected).sort();
+  const actualFiles = Object.keys(actual).sort();
+  if (!equal(expectedFiles, actualFiles) || expectedFiles.some((file) => expected[file] !== actual[file])) {
+    fail('pregame producer code hashes differ from the manifest pin');
+  }
+  for (const [file, hash] of Object.entries(actual)) requireHash(hash, `payload.source.producer_file_sha256.${file}`);
+  if (payload.game_id !== fixtureEntry.game_id || payload.seed !== fixtureEntry.seed
+      || payload.pregame_snapshot?.snapshot_sha256 !== fixtureEntry.snapshot_sha256
+      || payload.valid_full_game !== fixtureEntry.valid_full_game
+      || payload.record?.game_id !== fixtureEntry.game_id || payload.record?.seed !== fixtureEntry.seed) {
+    fail('pregame fixture identity or validity fields differ from the manifest pin');
+  }
+  return true;
+}
+
 function equal(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
 }

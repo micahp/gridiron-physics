@@ -1,5 +1,5 @@
 {
-  "label": "CAR at GB \u00b7 2026-10-29",
+  "label": "Kansas City at Seattle · 2026-10-25",
   "contract": {
     "name": "gridiron.lp-full-game-payload",
     "version": "1.0.0"
@@ -7,15 +7,23 @@
   "lp_source": {
     "repository": "micahp/legendarypicks",
     "branch": "feat/statistical-full-game-e2-2026-10-25",
-    "base_commit": "453c0de58c8c84e68af4dc3d01673caf581acc3b"
+    "base_commit": "9813fcc7f6706d8396806b6cbb1bcb8b36c6b52b",
+    "producer_file_sha256": {
+      "scripts/nfl_sequence/e1_drive.py": "95e2ea34153c7c85a1166898b08cec5c6f45a02f74a5fe0b5ea38c0af9fd78fd",
+      "scripts/nfl_sequence/e2_reference.py": "e32fce9724ce6d1ad1715706a80b82a4d58f40bbcc90858dd9adee6e675b3895",
+      "scripts/nfl_sequence/game_state.py": "8d31b68d9fc8845b59c78810ce80eb6bc419fa31e90b03d8691b1257dbf046ca",
+      "scripts/nfl_sequence/game_stats.py": "98c6c43d560a7c103f8de99b3bb53f035c54eb21cc42c4a04c6a4c29d7e0e20d",
+      "scripts/nfl_sequence/pregame_snapshot.py": "3bcacaa444cbed066f06f011eb0891d33156a775cbaf57cdf12b1a084facc11d",
+      "scripts/nfl_sequence/simulate_pregame_game.py": "bf7cf8e09c7b506619164afdc3f241dcf96a674f1cb5e33712e83fdadab9280a"
+    }
   },
   "fixtures": [
     {
       "file": "game-seed1.json",
-      "sha256": "b8faa4089b68421f334177803ca601c5b4ff2acae8679618e4334b4f07969070",
-      "game_id": "2026_08_CAR_GB",
+      "sha256": "88ab1919cf9dff2e25ad6abf3b4382a08e4c625debefd41f63f9fef8420a77b4",
+      "game_id": "2026_07_KC_SEA",
       "seed": 1,
-      "snapshot_sha256": "e04a8562ac7ee6ed83eeda916bc900c251a121cac29f50090bf87ba2b47091e2",
+      "snapshot_sha256": "8f10ea73f02ddc66fac685eabbcca2ac23cb30cc774321971710056f3491f4db",
       "valid_full_game": false
     }
   ]
