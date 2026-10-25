@@ -1,0 +1,32 @@
+name: Week 7 licensed audio and 3D playback
+on:
+  pull_request:
+    paths:
+      - 'web/audio/**'
+      - 'web/audio-director.js'
+      - 'web/week7.js'
+      - 'week7.html'
+      - 'test/week7-audio*'
+      - '.github/workflows/test-week7-audio.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Check audio event planning and current Week 7 rules
+        run: node --test test/week7-audio.mjs test/week7-core.mjs
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser playback, game UI and stadium audio
+        run: |
+          python3 -m http.server 8137 --directory . >/tmp/gridiron-audio-http.log 2>&1 &
+          BASE_URL=http://127.0.0.1:8137 node --test test/week7.browser.mjs test/week7-audio.browser.mjs

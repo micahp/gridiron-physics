@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gridiron Physics · Patriots–Bears prototype</title>
+  <style>
+    body { margin: 0; }
+    body { overflow: auto; }
+    #prototype { min-height: 100vh; background: #0b1016; color: #e8ecf1; font: 14px/1.45 Inter, system-ui, sans-serif; }
+    .p-head { padding: 18px 24px 12px; border-bottom: 1px solid #28313b; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .p-head h1 { margin:0; font-size:20px; letter-spacing:.02em; }
+    .p-head p { margin:4px 0 0; color:#9eaaba; }
+    .p-warning { color:#ffe39c; font-weight:700; }
+    .p-controls { padding:12px 24px; display:flex; flex-wrap:wrap; align-items:end; gap:10px; background:#111821; border-bottom:1px solid #28313b; }
+    .p-field { display:grid; gap:4px; color:#9eaaba; font-size:11px; text-transform:uppercase; letter-spacing:.07em; }
+    .p-field select,.p-field input,.p-controls button { height:34px; border:1px solid #3b4858; background:#1a2531; color:#eef3f8; border-radius:5px; padding:0 9px; font:inherit; }
+    .p-controls button { cursor:pointer; font-weight:650; }
+    .p-controls button.primary { background:#235a91; border-color:#3b79b5; }
+    .p-layout { display:grid; grid-template-columns:minmax(0,1fr) 370px; min-height:calc(100vh - 130px); }
+    .p-field-view { min-width:0; position:relative; height:calc(100vh - 132px); min-height:500px; }
+    #field { width:100%; height:100%; display:block; }
+    .p-inspect { border-left:1px solid #28313b; padding:16px; overflow:auto; max-height:calc(100vh - 130px); }
+    .p-inspect h2 { margin:0 0 9px; font-size:16px; }
+    .p-inspect h3 { margin:18px 0 7px; font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:#9eaaba; }
+    .p-card { padding:10px; margin:8px 0; border:1px solid #2c3947; border-radius:6px; background:#111821; }
+    .p-card strong { color:#f4f7fa; }
+    .p-muted { color:#9eaaba; font-size:12px; }
+    .p-alert { padding:9px 10px; border-left:3px solid #e8b84f; background:#302a1b; color:#ffe7ae; margin:8px 0; }
+    .p-roster { display:grid; grid-template-columns:1fr 54px 48px; gap:5px 8px; align-items:center; font-size:11px; }
+    .p-roster button { border:0; text-align:left; color:#dfe7ef; background:none; padding:2px; cursor:pointer; font:inherit; }
+    .p-roster button:hover { color:#fff; text-decoration:underline; }
+    .p-roster span { text-align:right; color:#9eaaba; }
+    .p-status { min-height:24px; color:#abd4ff; }
+    @media (max-width: 950px) { .p-layout { grid-template-columns:1fr; } .p-field-view { height:60vh; } .p-inspect { max-height:none; border-left:0; border-top:1px solid #28313b; } }
+  </style>
+</head>
+<body>
+<main id="prototype">
+  <header class="p-head">
+    <div><h1>Patriots at Bears · Gridiron Physics prototype</h1><p>Pregame roster snapshot · 22-player unit swap · 2025 playbook evidence</p></div>
+    <div class="p-warning">INTEGRATION DEMO · NOT A PREDICTION</div>
+  </header>
+  <section class="p-controls" aria-label="Scenario controls">
+    <label class="p-field">Offense <select id="offense"><option value="NE">New England Patriots</option><option value="CHI">Chicago Bears</option></select></label>
+    <label class="p-field">Action <select id="kind"><option value="run">Run</option><option value="pass">Pass</option></select></label>
+    <label class="p-field">Observed formation reference <select id="formation"></select></label>
+    <label class="p-field">Observed playbook entry <select id="playbook-entry"></select></label>
+    <label class="p-field">Random seed <input id="seed" value="gridiron-demo-1" size="18"></label>
+    <label class="p-field">Downfield direction <select id="direction"><option value="1">Toward +x</option><option value="-1">Toward −x</option></select></label>
+    <button class="primary" id="execute">Execute / reproduce</button>
+    <button id="new-seed">Change seed</button>
+    <div class="p-status" id="status" role="status">Loading pinned pregame data…</div>
+  </section>
+  <section class="p-layout">
+    <div class="p-field-view"><canvas id="field" aria-label="3D simulated play"></canvas></div>
+    <aside class="p-inspect">
+      <h2>Play selection and execution</h2>
+      <div id="summary" class="p-card p-muted">Loading profiles…</div>
+      <div id="provenance" class="p-card p-muted">No play selected.</div>
+      <h3>Personnel substitution</h3>
+      <div class="p-card">
+        <label class="p-field">Unit <select id="sub-side"><option value="offense">Offense</option><option value="defense">Defense</option></select></label>
+        <label class="p-field">Slot <select id="sub-slot"></select></label>
+        <label class="p-field">Available player <select id="sub-player"></select></label>
+        <button id="apply-sub">Apply substitution</button>
+        <button id="reset-sub">Reset personnel</button>
+      </div>
+      <div id="limitations" class="p-alert">The current director pins run gain and pass resolution. Results below are constrained visualizations, not predictive outcomes.</div>
+      <h3>On-field players · estimated ratings</h3>
+      <div id="players" class="p-roster"></div>
+      <div id="player-detail" class="p-card p-muted">Choose a player to inspect attributes.</div>
+    </aside>
+  </section>
+</main>
+<script type="module" src="web/prototype.js"></script>
+</body>
+</html>

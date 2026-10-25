@@ -1,0 +1,75 @@
+name: Build Week 7 six-matchup demo assets
+on:
+  push:
+    branches: [feat/week7-six-matchup-sim-ui-2026-10-24]
+    paths:
+      - 'pipeline/build_week7_six.py'
+      - 'pipeline/fetch_prototype_data.py'
+      - 'pipeline/build_matchup_snapshot.py'
+      - 'pipeline/build_playbooks.py'
+      - 'test/week7-core.mjs'
+      - 'test/week7.browser.mjs'
+      - 'web/week7*.js'
+      - 'week7.html'
+      - '.github/workflows/week7-six-assets.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Fetch pinned 2025 and current 2026 sources
+        run: |
+          python3 - <<'PY'
+          import pipeline.fetch_prototype_data as fetch
+          # 2026 season files are rolling releases. The 2022/2025 sources stay
+          # SHA-pinned, while each 2026 asset is independently hashed and
+          # recorded in the generated snapshot. The builders limit
+          # performance inputs to weeks 1-6, before these six week-7 games.
+          for name in ('pbp_2026.csv.gz', 'roster_weekly_2026.csv.gz', 'stats_player_week_2026.csv.gz'):
+              url, _ = fetch.FILES[name]
+              fetch.FILES[name] = (url, None)
+          fetch.main()
+          PY
+      - name: Build twelve teams and six matchups
+        run: python3 pipeline/build_week7_six.py
+      - name: Check all six are loadable
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('data/teams/week7-six-2026-10-24.json').read_text())
+          assert len(s['matchups']) == 6 and len(s['teams']) == 12
+          for game in s['matchups']:
+              for team in (game['home'],game['away']):
+                  assert s['teams'][team]['roster']
+                  b=json.loads(Path(f'data/playbooks/{team}-2025.json').read_text())
+                  assert b['offense']['play_candidates']['run']['candidates']
+                  assert b['offense']['play_candidates']['pass']['candidates']
+          print('PASS 6 games, 12 rosters, 12 playbooks')
+          PY
+      - name: Verify six-game simulation logic and JavaScript syntax
+        run: |
+          node --check web/week7-core.js
+          node --check web/week7.js
+          node test/week7-core.mjs
+      - name: Browser end-to-end six-matchup 3D smoke test
+        run: |
+          npm install --no-save --package-lock=false playwright
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8080 --directory . >/tmp/gridiron-week7-http.log 2>&1 &
+          node test/week7.browser.mjs
+      - name: Commit generated source-pinned assets to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/teams/week7-six-2026-10-24.json data/playbooks
+          if git diff --cached --quiet; then echo "No asset changes"; exit 0; fi
+          git commit -m "data: generate six-game 2026 roster and 2025 playbook bundle"
+          git push origin HEAD:feat/week7-six-matchup-sim-ui-2026-10-24

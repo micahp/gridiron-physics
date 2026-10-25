@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
+const viewerHtml = await readFile(resolve(root, 'e2-game-viewer.html'), 'utf8');
 const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
 const fixtureEntry = manifest.fixtures[0];
 const currentEnvelope = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', fixtureEntry.file), 'utf8'));
@@ -113,6 +114,11 @@ assert.equal(get('score-a').textContent, String(sourceRecord.points.A));
 assert.equal(get('score-b').textContent, String(sourceRecord.points.B));
 assert.match(get('state-audit-summary').textContent, /0 findings/);
 assert.match(get('e3-clock-caveat').textContent, /594 \/ 7016/);
+assert.match(get('e3-lp-clock-status').textContent, /15,768 rows/);
+assert.match(get('e3-lp-clock-status').textContent, /9,066 matched/);
+assert.match(get('e3-lp-clock-status').textContent, /0 keyed records without an LP source row/);
+assert.match(viewerHtml, /LP values labelled unresolvable remain null/);
+assert.equal(get('e3-lp-clock-table').querySelectorAll('tr').length, 9);
 assert.match(get('e3-unsupported-list').textContent, /timeouts/);
 assert.match(get('conversion-source-status').textContent, /PASS/);
 assert.match(get('e3-play-table').textContent, new RegExp(`Generated · n=${playCount}`));
@@ -120,4 +126,4 @@ assert.equal(get('e3-play-table').querySelectorAll('tr').length, 5);
 assert.equal(get('e3-drive-table').querySelectorAll('tr').length, 6);
 assert.equal(get('e3-game-table').querySelectorAll('tr').length, 14);
 
-console.log(`E2 viewer DOM audit: LP ${manifest.lp_source.base_commit} loads ${fixtureEntry.drives} drives / ${playCount} plays; E3 diagnostics and caveats rendered`);
+console.log(`E2 viewer DOM audit: LP ${manifest.lp_source.base_commit} loads ${fixtureEntry.drives} drives / ${playCount} plays; E3 clock decomposition and null policy rendered`);

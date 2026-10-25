@@ -1,0 +1,88 @@
+{
+  "provenance": {
+    "impact": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+    "rpg": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+    "interface": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+    "crowd": "https://opengameart.org/sites/default/files/gregor_quendel_-_free_crowd_cheering_sounds_-_mp3.zip",
+    "whistles": "https://opengameart.org/sites/default/files/whistles.zip"
+  },
+  "files": [
+    {
+      "source_pack": "crowd",
+      "filename": "stadium-bed.ogg",
+      "from": "Gregor Quendel - Free Crowd Cheering Sounds - MP3/Gregor Quendel - Crowd Cheering Sounds - 10 - Ambience.mp3",
+      "sha256": "b36b29476f307a4acd35c422cff1b93fcdfd4bb1f417dd954d5e919a1219e760",
+      "bytes": 430963
+    },
+    {
+      "source_pack": "crowd",
+      "filename": "crowd-cheer.ogg",
+      "from": "Gregor Quendel - Free Crowd Cheering Sounds - MP3/Gregor Quendel - Crowd Cheering Sounds - 05 - Soft cheering - I.mp3",
+      "sha256": "8cc90acdf56a60bb58937f9dc0e6bda94a77e4b773ea2f1a2dd3a14b869ccbf8",
+      "bytes": 184390
+    },
+    {
+      "source_pack": "crowd",
+      "filename": "crowd-big-cheer.ogg",
+      "from": "Gregor Quendel - Free Crowd Cheering Sounds - MP3/Gregor Quendel - Crowd Cheering Sounds - 03 - Strong cheering - I.mp3",
+      "sha256": "34d5e9460368802cee61f4249636265a5333287c76cd20409a50f57112216c3d",
+      "bytes": 184786
+    },
+    {
+      "source_pack": "crowd",
+      "filename": "crowd-murmur.ogg",
+      "from": "Gregor Quendel - Free Crowd Cheering Sounds - MP3/Gregor Quendel - Crowd Cheering Sounds - 07 - Soft cheering and chatter.mp3",
+      "sha256": "6a3bedb21d9699fe542fc9b354eaf598e8e4ddb6fd2cf9243b9cbc67e8cb894a",
+      "bytes": 184211
+    },
+    {
+      "source_pack": "whistles",
+      "filename": "whistle.ogg",
+      "from": "whistle_1.wav",
+      "sha256": "5dd670f062acf16a0f3c6f9fa803d02f33bcb577134a8676a9042793b5808f36",
+      "bytes": 5548
+    },
+    {
+      "source_pack": "impact",
+      "filename": "pads-1.ogg",
+      "from": "Audio/impactSoft_heavy_001.ogg",
+      "sha256": "3c41b6e34ffa264f6b1ac967375782482d8431496a7a6d0d9a02bec5b1af7427",
+      "bytes": 4998
+    },
+    {
+      "source_pack": "impact",
+      "filename": "pads-2.ogg",
+      "from": "Audio/impactSoft_heavy_002.ogg",
+      "sha256": "582e280666ca678a81b54cd391b59776de46663a767b51c3b4e26dd7a7f15c14",
+      "bytes": 4982
+    },
+    {
+      "source_pack": "impact",
+      "filename": "snap.ogg",
+      "from": "Audio/impactWood_heavy_001.ogg",
+      "sha256": "20cfbc822a038d8654021f8f2333d12024c42ccadced4dc24ad9eec693e6a5cb",
+      "bytes": 4569
+    },
+    {
+      "source_pack": "rpg",
+      "filename": "cleat-1.ogg",
+      "from": "Audio/footstep00.ogg",
+      "sha256": "998a2a91452c0154c056efce449fcd0a50c6ebe41648edc4f5b6a66829645a64",
+      "bytes": 6113
+    },
+    {
+      "source_pack": "rpg",
+      "filename": "cleat-2.ogg",
+      "from": "Audio/footstep02.ogg",
+      "sha256": "23f4689c5fa51a274e924f820b508e672fbc63fa9a6325a9c5d6bcfc89d8520c",
+      "bytes": 6041
+    },
+    {
+      "source_pack": "interface",
+      "filename": "ui-select.ogg",
+      "from": "Audio/click_001.ogg",
+      "sha256": "05de24cd354f6e0bfcc4807f1634658e111334bdb5ad8667f5c9ebe94772aa14",
+      "bytes": 4484
+    }
+  ]
+}
