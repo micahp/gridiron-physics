@@ -38,6 +38,12 @@ def num(v):
         return 0.0
 
 
+def pooled_blocked_resolution():
+    with open(os.path.join(ROOT, "data", "special_teams", "blocked-punts-2022-2025.json")) as f:
+        counts = json.load(f)["outcome_counts"]
+    return {k: counts[k] for k in ("receiving_recovery", "kicking_recovery", "out_of_bounds", "safety")}
+
+
 def main():
     digest = sha256(RAW)
     if digest != EXPECTED_SHA256:
@@ -83,7 +89,7 @@ def main():
                     elif "out of bounds" in r["desc"].lower():
                         blocked_res["out_of_bounds"] += 1
                     else:
-                        blocked_res["unclassified"] += 1
+                        raise SystemExit(f"unclassified blocked punt {r['game_id']} {r['play_id']}: {r['desc'][:120]}")
                 if r["touchback"] == "1":
                     cat = "touchback"
                 elif r["punt_fair_catch"] == "1":
@@ -142,6 +148,7 @@ def main():
             "distance_yards": {str(k): v for k, v in sorted(punt_dist.items())},
             "outcomes": dict(punt_cats),
             "blocked_resolution": {k: blocked_res[k] for k in ("receiving_recovery", "kicking_recovery", "out_of_bounds", "safety")},
+            "blocked_resolution_pooled": pooled_blocked_resolution(),
             "return_yards": {str(k): v for k, v in sorted(punt_ret.items())},
         },
         "kickoffs": {

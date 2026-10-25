@@ -142,7 +142,7 @@ const BLOCKED_PUNT_NOTES = {
 // Samples a blocked-punt outcome from the observed 2025 counts. Fails closed
 // when the table is missing or has no observations rather than inventing one.
 export function sampleBlockedPuntOutcome(puntTable, rand) {
-  const counts = puntTable?.blocked_resolution;
+  const counts = puntTable?.blocked_resolution_pooled;
   if (!counts) throw new Error('missing blocked-punt resolution table');
   const total = BLOCKED_PUNT_OUTCOMES.reduce((n, k) => n + (counts[k] || 0), 0);
   if (!(total > 0)) throw new Error('blocked-punt resolution table has no observations');
