@@ -1,11 +1,32 @@
 # Gridiron Physics: Stage One Autonomous Football AI
 
-Technical implementation specification v1.0
+Technical implementation specification v1.1 (Phase 1 MVP clarification, 2026-10-25)
 
-Status: Ready for engineering implementation
+Status: Implementation in progress; final Stage One acceptance not established
 Primary repository: micahp/gridiron-physics
 Initial scope: Autonomous 11-on-11 rushing and quick passing
 Primary deliverable: Browser-playable football simulation with independently determined play outcomes
+
+## 2026-10-25 Phase 1 MVP clarification (normative)
+
+**Purpose.** Deliver one inspectable, deterministic, genuinely autonomous 11-on-11 snap in the supported inside-zone and slant/flat families. A user selects the supported play, matchup archetypes and seed; the 22 agents execute assignments, perception, movement and contact; the live ball and football rules produce a result. **No successful pass, tackle, turnover, yardage or scoring event may be supplied as a target outcome.** This clarification takes precedence if an older paragraph of this specification could be read as allowing omniscient player decisions, target-forced completions or fixed per-player release timers.
+
+**Three separate outputs must remain distinct:** (1) an LP-authored *statistical hypothetical full game* replayed through Gridiron under the existing v1 contract, (2) the Stage One *physics-caused single-play MVP*, and (3) a future *LP-state + selected GP physical-result* hybrid/full-game executor under a separately versioned contract. Stage One is **not** a dependency of the E0–E2 statistically generated game delivery, and neither mode may claim a validated NFL prediction.
+
+### Minimum Phase 1 behavior
+
+- **Football causality:** complete handoffs, legitimate catch/incompletion/deflection/drop/interception, RB checkdowns, physical sacks, carrier contact, forward progress, sidelines, touchdown/safety and a consistent live-ball/dead-ball state on the supported plays. Unsupported outcomes fail explicitly; do not repair them using a historical future or sampled success label.
+- **Read vs throw vs catch:** a *designed primary read* belongs to the offensive call; the *throw target* is chosen from the quarterback's live observations; the *actual possessor* is decided by the physically reachable ball contest and legal possession. These may be different players. A correctly chosen and accurately thrown pass may still be dropped, broken up, grounded or caught out of bounds. No receiver gets catch priority merely because the play design or QB named him.
+- **Minimum credible QB perception:** distinct gaze/head and body directions; a broad but bounded field of view; approximate QB-height sightline obstruction by nearby player bodies; a deterministic observation/reaction delay; last-seen position/velocity memory with increasing uncertainty; knowledge of the called routes; and observable/palpable nearby pocket pressure. Never evaluate unseen defenders or receivers using their instantaneous true positions. The *physics and officiating* systems retain ground truth. Detailed articulated eyes, ray-traced cameras and full 3D visual recognition are deferred.
+- **QB state machine:** snap/drop/read primary/read secondary/pressure/checkdown/throw, hold, move, scramble, throw away or suffer a sack. Throw timing emerges from route development, perceived coverage, risk, available space, pocket integrity and quarterback tendencies. It must **not** be hard-coded from observed average time to throw.
+- **Real player differences without blocking the MVP:** use generic, meaningfully differentiated 0–99 ratings and physical profiles for Phase 1. Design a versioned *behavior-profile* extension now (read processing, risk preference, pocket patience, scramble/checkdown propensity, intended depth and confidence), but **do not require** complete NFL player-level ingestion or statistical fitting to ship 1A–1D. Madden-style ability ratings and learned/observed tendencies are conceptually separate. A team label alone must not be presented as an authentic roster.
+- **Repeatable, interpretable diagnostics:** for every throw report the designed progression, selected target, perceived versus actual coverage/pressure, ball trajectory and legal receiving opportunities; for each carrier report catch or handoff, tackles, pursuit, forward progress and whistle. Log missing/obstructed/stale observations. Tuning and untouched evaluation seeds must remain separate.
+
+### Release boundary
+
+**Must pass for Phase 1:** supported play families and situations resolve legally and deterministically; physically attainable sack, RB checkdown and throwaway fixtures; correct catch/drop/deflection/ground/out-of-bounds cases; QB perspective tests; possession/ball/holder/spot consistency including returns; passing, rushing and browser acceptance tests; refreshed frozen batch and final Section 21 report. An outcome-rate improvement that conceals a rule or perception defect does not pass.
+
+**Deferred to subsequent phases:** real roster-wide behavior fitting, full-game autonomous playcalling, a complete NFL playbook, sophisticated coverage disguise/eye mechanics, learned player policies, complete penalty/officiating and special-teams execution, and proof of forecast lift. The game-sequence statistical baseline and E0–E2 delivery remain a parallel critical path (see end-to-end roadmap).
 
 ## 1. Product objective
 
@@ -440,7 +461,7 @@ An agent may not observe:
 
 Use a bounded position/velocity history to model reaction delays. The defense should react to actual run/pass cues rather than learning the offensive call from the input structure.
 
-For Stage One, a simple deterministic perception model with positional awareness, a reaction delay and team-specific assignments is acceptable. Full visual occlusion is not required yet.
+For Stage One, require a **lightweight geometric QB perception boundary**: independent head/gaze and torso headings, forward field of view, approximate sightline obstruction from players using QB eye height and body radius/height, reaction delay and last-seen states with confidence decay. The QB can reason from the playbook, memory and inferred receiver routes but cannot silently read the exact live state of an unseen defender. Use a nearby-contact/blindside pressure cue where visual awareness is unavailable. Full articulated eye tracking, rendered-camera vision and detailed volumetric occlusion are not required yet. Other player roles may begin with simpler bounded perception as long as they do not obtain hidden assignments or future outcomes.
 
 ## 7. Team-level coordination
 
@@ -952,7 +973,7 @@ READ_SECOND_OPTION
 CHECK_PRESSURE
 THROW / SCRAMBLE / TAKE_SACK / THROW_AWAY
 
-The QB must select a target from observations, not from a preselected completed-pass label.
+The QB must select a target from **perceived or remembered** observations, not from a preselected completed-pass label, an unseen player's ground-truth coordinates or a guaranteed primary receiver. The designed first read, QB-selected throw target, actual receiver and official credited completion are separate concepts. Passing to a secondary read or checkdown is normal execution, not a failure to throw to the designed first read.
 
 At each decision point, evaluate:
 
@@ -977,7 +998,9 @@ throw utility =
   - pressure_risk
 ```
 
-The QB may choose a less valuable but safer checkdown when pressure is high.
+The QB may choose a less valuable but safer checkdown when pressure is high. Gaze/head orientation can move independently of body heading; the QB must turn attention toward a different read and update observations after a plausible recognition delay. An obstructed or out-of-view player may be estimated only from earlier observations, route knowledge and uncertainty, never queried at an otherwise unknown exact location. A physical blindside threat may be recognized through close contact/pressure cues.
+
+Observed player-level **time to throw** is a later *calibration and validation target*, not a timer that forces a throw. Model decision latency from awareness/processing, progressions, pressure, route timing and personal tendencies; evaluate release-time distributions conditionally on pass concept, protection, coverage and situation. Do not tune completion or interception rates by bypassing a broken pocket or contest mechanic.
 
 If no throw is viable, the QB may continue holding the ball, move in the pocket, scramble or throw away when legal.
 
@@ -1014,6 +1037,8 @@ A receiver or defender must be within a supported catch/reach volume while the b
 The throw must not be re-aimed in flight to guarantee success.
 
 Use an explicitly approximate reach and catch model because the current physics engine does not yet simulate full articulated hand and body contact.
+
+**Legal and causal catch outcomes:** identify every player's physically valid opportunity based on ball flight/height, body position, reaction, timing and eligibility; distinguish a controlled in-bounds catch, receiver drop, defender breakup/tip, interception, untouched ball-ground incompletion and out-of-bounds/invalid possession. The intended target has no automatic first claim on the ball. A defender or different eligible receiver can make a legitimate play on an inaccurately thrown ball, but only within actual reach. A ball touching the ground before possession cannot become a completion. Resolve at most one stochastic contest per actual physical catch opportunity, without repeated catch rolls as the ball falls through the same reach envelope. Preserve the ball's unaltered flight after release (apart from actual collision/contact).
 
 ### 12.5 After the catch
 
@@ -1312,6 +1337,16 @@ Test:
 
 A historically labeled completion must not be an input to these tests.
 
+**Additional Phase 1 perception and passing fixtures:**
+- A defender beyond the QB's field of view changes position without instantly affecting the QB's read; turning gaze toward him updates the belief after reaction delay.
+- A blocker occludes the sightline, including a height-dependent case; a remembered receiver/defender can still be estimated, with uncertainty, but not refreshed from hidden ground truth.
+- The same world and seed with differing *legal observations* can produce different read choices; the actual physics/officials result is unaffected by what the agent does not know.
+- Designed primary covered, secondary legitimately selected; primary open and selected; RB visibly available for a checkdown; pressure produces real physical sack; no acceptable throw can lead to lawful throwaway.
+- Ball lands short, receiver drop, defender tip/breakup, legal interception, an eligible unintended receiver legitimately catching, catch out of bounds, and ball grounded before secure possession. Test catch conditions separately from QB target choice.
+- Pursuit/interception-angle and tackle outcomes from live positions; ball-holder and whistle agreement, correct forward-progress spot and possession switch for intercepted returns in both attack directions.
+
+Do not enforce a minimum fraction of catches credited to the designated primary or the throw target. Measure target/actual-catcher mismatch as a diagnostic and verify whether ball placement, receiver motion or reach can explain it.
+
 ### 16.10 Batch simulation
 
 Run a frozen collection containing:
@@ -1336,6 +1371,8 @@ Report:
 - Contact-driven vs unsupported play endings.
 - Movement warnings.
 - Execution time.
+
+Report **conditional** passing diagnostics: designed primary, actual QB target, intended air yards, completion/drop/breakup/ground/out-of-bounds/interception outcomes, time to throw (dropbacks including sacks), pressure timing, sack/checkdown/throwaway rate, receiver catch opportunities, air yards/YAC, first contact and tackle time, broken tackles and legal spot. Report these by concept, front, coverage, direction, position and ability cohort before comparing aggregate league reference ranges. Real NFL targets must be labeled reference data, not forced per-play labels.
 
 Engineering acceptance: All supported fixture cases pass; no invented terminal results; no NaN or non-finite physics states; no duplicate players or simultaneous ball holders. Target at least 99% legal completion on the frozen supported-scenario suite, with every remaining failure named and inspected.
 
@@ -1485,7 +1522,7 @@ Deliver:
 7. Sacks and post-catch ball carrying.
 8. Regression and matched-seed batch results.
 
-Gate: The system can generate successful and failed passes from live player interactions.
+Gate: The system can generate successful and failed passes from live player interactions, with only perceived QB observations determining decisions; demonstrate a physically caused sack, real RB checkdown, lawful throwaway, legal catch and unsuccessful pass variants.
 
 ### Milestone 1D: Product completion
 
