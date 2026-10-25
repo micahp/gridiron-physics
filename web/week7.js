@@ -357,7 +357,9 @@ function simulate(){
     ({scoring:scoringAt,key:keyAt}=classify(simulation));
     playing=false;
     renderFilter();renderTimeline();renderBox();choose(playable(-1,1)??0);renderPlayButton();
-    status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
+    if(simulation.refusal)status('Simulation stopped: unsupported rule ('+simulation.refusal.rule+'). '+
+      simulation.refusal.detail+' Partial record through play '+simulation.plays.length+'; no final result.',true);
+    else status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
       ' drives · '+match.away+' '+simulation.score[match.away]+' / '+match.home+' '+simulation.score[match.home]+
       ' · experimental, not legally validated');
   }catch(e){status('Simulation failed: '+e.message,true);}
