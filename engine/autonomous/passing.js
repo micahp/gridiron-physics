@@ -514,12 +514,21 @@ export function simulatePassPlay(options = {}) {
     // Read order (spec 12.2): first option, second option, then the checkdown under pressure.
     // A read is viable only when the receiver has a window: enough separation and a clear lane.
     const viable = (o) => o && o.arrivalSep >= 1.8 && o.lane < 0.6 && o.utility >= T_THROW;
-    if (viable(primary)) { launchPass(primary); return; }
-    if (viable(secondary)) { launchPass(secondary); return; }
-    if (pressure < P_PRESS && back && back.utility >= T_CHECK) { launchPass(back); return; }
+    // Pocket instrumentation: each branch records what the quarterback could see and why he acted.
+    const pocket = (action) => W.event('qb_decision', {
+      quarterback_id: qb.id, action, elapsed_seconds: Number(elapsed.toFixed(2)),
+      pressure_yards: Number(Math.min(pressure, 99).toFixed(2)), seen: perceived !== null,
+      closing_yards_per_s: Number(closing.toFixed(2)), contact_in_s: Number(Math.min(contactIn, 99).toFixed(2)),
+      viable: [primary, secondary].filter(viable).map((o) => o.receiver.id),
+      back_utility: back ? Number(back.utility.toFixed(2)) : null,
+    });
+    if (viable(primary)) { pocket('throw_primary'); launchPass(primary); return; }
+    if (viable(secondary)) { pocket('throw_secondary'); launchPass(secondary); return; }
+    if (pressure < P_PRESS && back && back.utility >= T_CHECK) { pocket('checkdown_back'); launchPass(back); return; }
 
     const lane = escapeLane(rusher);
     if (pressure < P_SCRAMBLE && lane.open) {
+      pocket('scramble');
       qb.ai.escape = { x: lane.away.x, y: lane.away.y };
       setIntent(qb, 'scramble away from pressure', `move off ${rusher.slot} into open space`);
       return;
@@ -527,6 +536,7 @@ export function simulatePassPlay(options = {}) {
     // Pocket awareness decides how late the quarterback can still throw the ball away.
     const awarenessWindow = clamp(0.35 + (75 - (qb.R.AWR ?? 70)) * 0.02, 0.15, 0.8);
     if (contactIn < awarenessWindow || elapsed > 4.5) {
+      pocket('throw_away');
       const target = at(-1.0, side * 22);
       const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
       Object.assign(W.ball, { state: 'air', holder: null, vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k });
@@ -542,6 +552,7 @@ export function simulatePassPlay(options = {}) {
         separation_yards: Number(options[0].separation.toFixed(2)), pressure_yards: Number(pressure.toFixed(2)),
       });
     }
+    pocket('hold');
     setIntent(qb, 'hold and keep reading', 'no viable throw yet; the protection and the reads continue');
   }
 
