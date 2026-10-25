@@ -256,43 +256,38 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
     animation.activeAction.setEffectiveTimeScale(timeScale);
   }
   animation.mixer.update(dt);
-  applyArmClearance(root);
+  // The idle clips hold the hands behind the back; keep their body motion but
+  // give the stance a natural arm hang.
+  applyStanceArms(root, dt, selection.clipName === POSE_ANIMATIONS[POSE.STANCE].clipName);
   return true;
 }
 
-// A few degrees of abduction and forward swing on each shoulder. The asset is
-// modelled without pads: a barrel chest, thin arms, and hands that hang at hip
-// depth, so from behind the forearm sits inside the torso silhouette and the
-// player reads as standing with his hands clasped behind his back. Pushing the
-// arms a hand's width off the ribs and slightly forward keeps daylight between
-// arm and body in every clip without changing the authored pose.
-const ARM_OUT = 0.26;  // radians away from the ribs
-const ARM_FWD = -0.62; // radians toward the front of the hip
-const _qParent = new THREE.Quaternion();
-const _qDelta = new THREE.Quaternion();
-const _axis = new THREE.Vector3();
-function rotateBoneInWorld(bone, axisWorld, angle) {
-  if (!bone?.parent) return;
-  // Refresh the parent chain first: on the frame a clip is applied the parent's
-  // world matrix still reflects the previous pose, and rotating about a stale
-  // axis threw the arms backwards for that frame.
-  bone.parent.updateWorldMatrix(true, false);
-  bone.parent.getWorldQuaternion(_qParent);
-  _axis.copy(axisWorld).applyQuaternion(_qParent.invert()).normalize();
-  _qDelta.setFromAxisAngle(_axis, angle);
-  bone.quaternion.premultiply(_qDelta);
-}
-function applyArmClearance(root) {
+// Every relaxed standing clip in this asset clasps the hands behind the back,
+// a parade-rest pose. The stance keeps the clip's torso and legs but drives the
+// arms itself: a rigid shoulder offset was worse than the pose it was fixing,
+// because the elbow and forearm swung through the torso and the joint read as
+// dislocated. These angles are the ready-stance arms the procedural poser uses.
+const STANCE_ARM = Object.freeze({ flexL: 0.25, flexR: 0.25, out: -0.45, elbow: 0.5 });
+function applyStanceArms(root, dt, active) {
   const b = root.userData.bones;
-  if (!b?.upL || !b?.upR) return;
-  const h = root.rotation.y;
-  // character's forward and left-right axes in world space
-  const fwd = new THREE.Vector3(Math.cos(h), 0, -Math.sin(h));
-  const side = new THREE.Vector3(-Math.sin(h), 0, -Math.cos(h));
-  rotateBoneInWorld(b.upL, side, ARM_FWD);
-  rotateBoneInWorld(b.upR, side, ARM_FWD);
-  rotateBoneInWorld(b.upL, fwd, ARM_OUT);
-  rotateBoneInWorld(b.upR, fwd, -ARM_OUT);
+  const hinge = root.userData.hinge;
+  if (!b?.upL || !b?.upR || !b?.foreL || !b?.foreR) return;
+  const u = root.userData;
+  // Fade the override in and out so the arms do not snap when a player leaves
+  // the stance for a run or a block.
+  const target = active ? 1 : 0;
+  const step = dt / 0.15;
+  const blend = u.stanceBlend ?? 0;
+  u.stanceBlend = target > blend ? Math.min(target, blend + step) : Math.max(target, blend - step);
+  if (u.stanceBlend <= 0.001) return;
+  // A slow breath keeps the arms alive instead of locked to the ribs.
+  u.stancePhase = (u.stancePhase ?? 0) + dt * 1.5;
+  const breathe = Math.sin(u.stancePhase) * 0.03;
+  const k = u.stanceBlend;
+  rotWorldComposed(b.upL, [{ axis: AX_SIDE, angle: STANCE_ARM.flexL + breathe }, { axis: AX_FWD, angle: STANCE_ARM.out }], k);
+  rotWorldComposed(b.upR, [{ axis: AX_SIDE, angle: STANCE_ARM.flexR + breathe }, { axis: AX_FWD, angle: -STANCE_ARM.out }], k);
+  rotWorld(b.foreL, hinge?.foreL ?? AX_SIDE, STANCE_ARM.elbow + breathe, k);
+  rotWorld(b.foreR, hinge?.foreR ?? AX_SIDE, STANCE_ARM.elbow + breathe, k);
 }
 
 export function buildRiggedPlayer(gltf, info, kit) {

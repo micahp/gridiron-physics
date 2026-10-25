@@ -39,22 +39,45 @@ try {
       const b = o.userData?.bones;
       const clip = o.userData?.animation?.activeClipName;
       if (!b?.handL || !b?.handR || !b?.hip || clip !== 'Idle') continue;
-      const hd = o.rotation.y, fx = Math.cos(hd), fz = -Math.sin(hd);
+      const hd = o.rotation.y;
+      const fx = Math.cos(hd), fz = -Math.sin(hd);   // character forward
+      const sx = -Math.sin(hd), sz = -Math.cos(hd);  // character left
       const hp = b.hip.matrixWorld.elements;
-      const lf = ((b.handL.matrixWorld.elements[12] - hp[12]) * fx) + ((b.handL.matrixWorld.elements[14] - hp[14]) * fz);
-      const rf = ((b.handR.matrixWorld.elements[12] - hp[12]) * fx) + ((b.handR.matrixWorld.elements[14] - hp[14]) * fz);
-      rows.push({ id, fwd: +(((lf + rf) / 2)).toFixed(3) });
+      const rel = (bone) => {
+        const m = bone.matrixWorld.elements;
+        return {
+          fwd: ((m[12] - hp[12]) * fx) + ((m[14] - hp[14]) * fz),
+          side: ((m[12] - hp[12]) * sx) + ((m[14] - hp[14]) * sz),
+        };
+      };
+      const l = rel(b.handL), rr = rel(b.handR);
+      rows.push({
+        id,
+        fwd: +(((l.fwd + rr.fwd) / 2)).toFixed(3),
+        sideL: +l.side.toFixed(3),
+        sideR: +rr.side.toFixed(3),
+        apart: +Math.hypot(l.side - rr.side, l.fwd - rr.fwd).toFixed(3),
+      });
     }
     return rows;
   });
 
   assert.ok(sample && sample.length >= 6, `expected a full stance, sampled ${sample ? sample.length : 0} players`);
+  // Hands meeting behind the spine sit within a hand's width of each other; a
+  // natural hang puts them roughly a shoulder apart.
+  const closest = sample.reduce((min, r) => (r.apart < min.apart ? r : min), sample[0]);
+  const claspedSide = sample.filter((r) => Math.abs(r.sideL) < 0.1 || Math.abs(r.sideR) < 0.1);
+  assert.ok(closest.apart > 0.3, `hands nearly meet (${closest.apart} yd apart) — reads as clasped behind the back`);
+  assert.deepEqual(claspedSide.slice(0, 4), [], 'a hand sits on the spine centre line');
   const mean = sample.reduce((s, r) => s + r.fwd, 0) / sample.length;
-  const behind = sample.filter((r) => r.fwd < -0.02);
-  assert.deepEqual(behind, [], `players whose hands sit behind the hip line: ${JSON.stringify(behind.slice(0, 4))}`);
-  assert.ok(mean > 0.05, `stance hands sit at the hip line (mean ${mean.toFixed(3)} yd in front)`);
+  assert.ok(mean > -0.02, `stance hands sit behind the hip line (mean ${mean.toFixed(3)} yd)`);
   assert.deepEqual(errors, [], 'page errors while sampling the stance');
-  console.log('PASS stance hands clear the torso:', JSON.stringify({ players: sample.length, mean: +mean.toFixed(3), min: Math.min(...sample.map((r) => r.fwd)) }));
+  console.log('PASS stance hands hang at the sides:', JSON.stringify({
+    players: sample.length,
+    meanFwd: +mean.toFixed(3),
+    closestPair: closest.apart,
+    meanSpread: +(sample.reduce((s, r) => s + r.apart, 0) / sample.length).toFixed(3),
+  }));
 } finally {
   await browser.close();
 }
