@@ -4,7 +4,8 @@
     "rpg": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
     "interface": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
     "crowd": "https://opengameart.org/sites/default/files/gregor_quendel_-_free_crowd_cheering_sounds_-_mp3.zip",
-    "whistles": "https://opengameart.org/sites/default/files/whistles.zip"
+    "whistles": "https://opengameart.org/sites/default/files/whistles.zip",
+    "synthesized": "scripts/make_stadium_sfx.py (generated in-repo; no third-party samples)"
   },
   "files": [
     {
@@ -36,32 +37,32 @@
       "bytes": 184211
     },
     {
-      "source_pack": "whistles",
+      "source_pack": "synthesized",
       "filename": "whistle.ogg",
-      "from": "whistle_1.wav",
-      "sha256": "5dd670f062acf16a0f3c6f9fa803d02f33bcb577134a8676a9042793b5808f36",
-      "bytes": 5548
+      "from": "scripts/make_stadium_sfx.py: referee pea whistle: 3.48 kHz tone, pea rattle at ~26 Hz, breathy release",
+      "sha256": "e5039be25442ce0089dba86e0c0c51a6564563a2f10e3b2c77664a1839716cc4",
+      "bytes": 6847
     },
     {
-      "source_pack": "impact",
+      "source_pack": "synthesized",
       "filename": "pads-1.ogg",
-      "from": "Audio/impactSoft_heavy_001.ogg",
-      "sha256": "3c41b6e34ffa264f6b1ac967375782482d8431496a7a6d0d9a02bec5b1af7427",
-      "bytes": 4998
+      "from": "scripts/make_stadium_sfx.py: shoulder pad contact on a hit: plastic clack over a body thump",
+      "sha256": "c99701589aef463ef911bb34da7e8807719884ced781def003dcf721f5aec01e",
+      "bytes": 5654
     },
     {
-      "source_pack": "impact",
+      "source_pack": "synthesized",
       "filename": "pads-2.ogg",
-      "from": "Audio/impactSoft_heavy_002.ogg",
-      "sha256": "582e280666ca678a81b54cd391b59776de46663a767b51c3b4e26dd7a7f15c14",
-      "bytes": 4982
+      "from": "scripts/make_stadium_sfx.py: tackle: heavier body thud, pad clack, second landing impact 85 ms later",
+      "sha256": "2b41505b0dabb47e41b5a4e7f2df19a6884963ae144bbaf8d16eb6ddbff56d82",
+      "bytes": 6308
     },
     {
-      "source_pack": "impact",
+      "source_pack": "synthesized",
       "filename": "snap.ogg",
-      "from": "Audio/impactWood_heavy_001.ogg",
-      "sha256": "20cfbc822a038d8654021f8f2333d12024c42ccadced4dc24ad9eec693e6a5cb",
-      "bytes": 4569
+      "from": "scripts/make_stadium_sfx.py: center snap: leather slap, short low thump, small ring",
+      "sha256": "c3e301579946cdcf2bb5e5feb6fc39d9a6df186cb7373a155a29e36d8012fe8a",
+      "bytes": 5413
     },
     {
       "source_pack": "rpg",
