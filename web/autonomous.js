@@ -363,11 +363,20 @@ function updateOverlay(frame) {
     const s = laneCarrier ? at(laneCarrier.id) : null;
     if (s) {
       for (const lane of [-2.65, -1.68, -0.58, 0.58, 1.68, 2.65]) {
-        marks.push({ x: s.x + simulation.direction * 2, y: simulation.ball_y + simulation.direction * lane, color: '#b6f36b', radius: 0.5 });
+        marks.push({ x: s.x + stepDirection(simulation) * 2, y: simulation.ball_y + stepDirection(simulation) * lane, color: '#b6f36b', radius: 0.5 });
       }
     }
   }
   renderer.setDebugOverlay({ segments, marks });
+}
+
+/**
+ * Step direction along the field, +1 or -1. Run records carry it as a number in `direction`. Pass records use
+ * `direction` for the side ('left' or 'right') and carry the step in `dir`. Reading the side as a number gives NaN,
+ * which leaves the camera and the field off screen.
+ */
+function stepDirection(rec) {
+  return Number.isFinite(rec.direction) ? rec.direction : (rec.dir ?? 1);
 }
 
 function draw(dt) {
@@ -375,7 +384,7 @@ function draw(dt) {
   const endT = playEndTime(simulation);
   state.t = Math.max(0, Math.min(endT, state.t));
   renderer.draw(simulation, state.t, dt);
-  renderer.updateCamera(dt, { dir: simulation.direction });
+  renderer.updateCamera(dt, { dir: stepDirection(simulation) });
   renderer.render();
   if (state.t >= endT - 1e-6 && !state.resultShown) showResult();
   el.scrub.value = endT > 0 ? String(Math.round(state.t / endT * 1000)) : '0';
