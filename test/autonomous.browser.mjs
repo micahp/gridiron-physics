@@ -15,6 +15,26 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, de
 page.on('pageerror', (error) => errors.push(String(error)));
 page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
 
+// Share of the 3D canvas that is drawn (any pixel clearly brighter than the background). A blank canvas, from a camera
+// placed at NaN, reads near zero, so this catches a field and players that are not on screen at all.
+async function drawnFraction() {
+  const png = await page.locator('#field').screenshot();
+  return page.evaluate(async (url) => {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let lit = 0;
+    for (let i = 0; i < data.length; i += 4) if (Math.max(data[i], data[i + 1], data[i + 2]) > 60) lit++;
+    return lit / (data.length / 4);
+  }, `data:image/png;base64,${png.toString('base64')}`);
+}
+
 async function runToWhistle() {
   await page.locator('#snap').click();
   await page.waitForFunction(() => {
@@ -89,6 +109,7 @@ try {
   assert.match(await page.locator('#compare-runs').innerText(), /slant.fl&#x2013;?flat|slant–flat|slant-flat/);
   await page.locator('#focus-player').selectOption('O.QB');
   assert.match(await page.locator('#focus-decision').innerText(), /O\.QB/);
+  assert.ok(await drawnFraction() > 0.2, 'the slant-flat field and players are drawn on the 3D canvas');
   await page.screenshot({ path: new URL('slant-flat-outcome.png', SHOTS).pathname });
 
   await page.locator('#play-call').selectOption('inside_zone');
