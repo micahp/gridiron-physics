@@ -1,4 +1,4 @@
-"""Retarget a folder of FBX FBX clips onto the existing football-player GLB.
+"""Retarget a folder of FBX clips onto the existing football-player GLB.
 
 Run with Blender 4.2+:
   blender.exe -b --python scripts/retarget_fbx_animations.py -- \
@@ -13,34 +13,43 @@ from pathlib import Path
 import bpy
 from mathutils import Matrix, Quaternion, Vector
 
+# Source rigs namespace their bones ("<prefix>:Hips"). Map by bare name and
+# resolve the prefix from the imported armature, so no exporter namespace is
+# baked into the script.
 BONE_MAP = {
-    'fbxrig:Hips': 'spine',
-    'fbxrig:Spine': 'spine.001',
-    'fbxrig:Spine1': 'spine.002',
-    'fbxrig:Spine2': 'spine.003',
-    'fbxrig:Neck': 'Bone',
-    'fbxrig:Head': 'spine.006',
-    'fbxrig:LeftShoulder': 'shoulder.L',
-    'fbxrig:LeftArm': 'upper_arm.L',
-    'fbxrig:LeftForeArm': 'forearm.L',
-    'fbxrig:LeftHand': 'hand.L',
-    'fbxrig:RightShoulder': 'shoulder.R',
-    'fbxrig:RightArm': 'upper_arm.R',
-    'fbxrig:RightForeArm': 'forearm.R',
-    'fbxrig:RightHand': 'hand.R',
-    'fbxrig:LeftUpLeg': 'thigh.L',
-    'fbxrig:LeftLeg': 'shin.L',
-    'fbxrig:LeftFoot': 'foot.L',
-    'fbxrig:LeftToeBase': 'toe.L',
-    'fbxrig:RightUpLeg': 'thigh.R',
-    'fbxrig:RightLeg': 'shin.R',
-    'fbxrig:RightFoot': 'foot.R',
-    'fbxrig:RightToeBase': 'toe.R',
+    'Hips': 'spine',
+    'Spine': 'spine.001',
+    'Spine1': 'spine.002',
+    'Spine2': 'spine.003',
+    'Neck': 'Bone',
+    'Head': 'spine.006',
+    'LeftShoulder': 'shoulder.L',
+    'LeftArm': 'upper_arm.L',
+    'LeftForeArm': 'forearm.L',
+    'LeftHand': 'hand.L',
+    'RightShoulder': 'shoulder.R',
+    'RightArm': 'upper_arm.R',
+    'RightForeArm': 'forearm.R',
+    'RightHand': 'hand.R',
+    'LeftUpLeg': 'thigh.L',
+    'LeftLeg': 'shin.L',
+    'LeftFoot': 'foot.L',
+    'LeftToeBase': 'toe.L',
+    'RightUpLeg': 'thigh.R',
+    'RightLeg': 'shin.R',
+    'RightFoot': 'foot.R',
+    'RightToeBase': 'toe.R',
 }
 for mix_side, target_side in (('Left', 'L'), ('Right', 'R')):
     for finger, target_finger in (('Index', 'f_index'), ('Middle', 'f_middle'), ('Ring', 'f_ring'), ('Pinky', 'f_pinky'), ('Thumb', 'thumb')):
         for digit in (1, 2, 3):
-            BONE_MAP[f'fbxrig:{mix_side}Hand{finger}{digit}'] = f'{target_finger}.{digit:02d}.{target_side}'
+            BONE_MAP[f'{mix_side}Hand{finger}{digit}'] = f'{target_finger}.{digit:02d}.{target_side}'
+
+
+def resolve_source_bones(source_arm):
+    """Map bare bone names to the armature's actual names, dropping any prefix."""
+    actual = {bone.name.split(':')[-1]: bone.name for bone in source_arm.data.bones}
+    return {bare: actual[bare] for bare in BONE_MAP if bare in actual}
 
 
 def parse_args():
@@ -60,16 +69,19 @@ def world_matrix(obj, matrix):
 
 def retarget_clip(arm, source_arm, source_action, clip_name):
     scene = bpy.context.scene
-    mapping = BONE_MAP
-    missing = [(source, target) for source, target in mapping.items() if not source_arm.data.bones.get(source) or not arm.data.bones.get(target)]
+    resolved = resolve_source_bones(source_arm)
+    missing = [(bare, target) for bare, target in BONE_MAP.items()
+               if bare not in resolved or not arm.data.bones.get(target)]
     if missing:
         raise RuntimeError(f'{clip_name}: missing retarget bones {missing}')
+    mapping = {resolved[bare]: target for bare, target in BONE_MAP.items()}
+    hips_name = resolved['Hips']
     frames = sorted({int(round(key.co.x)) for curve in source_action.fcurves for key in curve.keyframe_points})
     if len(frames) < 2:
         raise RuntimeError(f'{clip_name}: expected at least two keyed frames, got {frames}')
     source_to_target = {target: source for source, target in mapping.items()}
     target_bones = [bone for bone in arm.data.bones if bone.name in source_to_target]
-    source_root_rest = world_matrix(source_arm, source_arm.data.bones['fbxrig:Hips'].matrix_local).translation.copy()
+    source_root_rest = world_matrix(source_arm, source_arm.data.bones[hips_name].matrix_local).translation.copy()
     target_rest_world = {bone.name: world_matrix(arm, bone.matrix_local) for bone in arm.data.bones}
     arm_inverse = arm.matrix_world.inverted()
     action = bpy.data.actions.new(clip_name)
@@ -92,7 +104,7 @@ def retarget_clip(arm, source_arm, source_action, clip_name):
             pose_bone.matrix_basis = Matrix.Identity(4)
         bpy.context.view_layer.update()
 
-        source_hips = source_arm.pose.bones['fbxrig:Hips']
+        source_hips = source_arm.pose.bones[hips_name]
         source_hips_world = world_matrix(source_arm, source_hips.head)
         source_root_delta = source_hips_world - source_root_rest
         root_deltas.append(source_root_delta.copy())
