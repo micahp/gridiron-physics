@@ -9,7 +9,9 @@ import {
 } from './e2-matchup-index.js';
 
 const MANIFEST_URL = 'docs/fixtures/e2/MANIFEST.json';
+const PREGAME_MANIFEST_URL = 'docs/fixtures/pregame/MANIFEST.json';
 const FIXTURE_DIR = 'docs/fixtures/e2/';
+const PREGAME_FIXTURE_DIR = 'docs/fixtures/pregame/';
 const $ = (selector) => document.querySelector(selector);
 const status = $('#record-status');
 const errorPanel = $('#load-error');
@@ -17,6 +19,7 @@ const validationPanel = $('#validation');
 const viewerContent = $('#viewer-content');
 let adapted;
 let activeMatchupLabel = null;
+let requestedPregameGame = false;
 
 function el(tag, text, className) {
   const node = document.createElement(tag);
@@ -36,6 +39,10 @@ function formatClock(seconds) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function teamLabel(team) {
+  return adapted?.record?.team_identity?.[team]?.team ?? team;
+}
+
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') {
@@ -53,6 +60,57 @@ async function sha256Hex(buffer) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+async function validatePregameSnapshotPayload(payload) {
+  const snapshot = payload.pregame_snapshot;
+  if (!snapshot || typeof snapshot !== 'object' || !snapshot.snapshot_sha256) {
+    throw new Error('pregame payload is missing its frozen snapshot hash');
+  }
+  const { snapshot_sha256: declaredHash, ...snapshotBody } = snapshot;
+  const calculatedHash = await sha256Hex(new TextEncoder().encode(canonicalJson(snapshotBody)));
+  if (calculatedHash !== declaredHash) throw new Error('frozen pregame snapshot SHA-256 mismatch');
+  const record = payload.record;
+  if (record.snapshot_hash !== declaredHash || canonicalJson(record.pregame_snapshot) !== canonicalJson(snapshot)) {
+    throw new Error('record snapshot reference differs from the pinned pregame snapshot');
+  }
+  if (record.game_id !== snapshot.schedule?.game_id
+      || record.as_of_utc !== snapshot.as_of
+      || record.teams?.home !== snapshot.schedule?.home_team
+      || record.teams?.away !== snapshot.schedule?.away_team) {
+    throw new Error('record game identity differs from the frozen schedule snapshot');
+  }
+  if (payload.data_sources?.observed_reference_sha256 !== snapshot.model_reference?.observed_reference?.sha256) {
+    throw new Error('empirical model reference hash differs from the frozen snapshot');
+  }
+  const rosterById = new Map();
+  for (const side of ['home', 'away']) {
+    const roster = snapshot.rosters?.[side];
+    if (roster?.team !== record.teams[side] || !Array.isArray(roster.players) || roster.players.length === 0) {
+      throw new Error(`frozen ${side} roster is missing or disagrees with the matchup`);
+    }
+    for (const player of roster.players) rosterById.set(`${player.gsis_id}:${player.pos_abb}`, player);
+  }
+  for (const drive of record.drives ?? []) {
+    for (const play of drive.plays ?? []) {
+      const participants = play.participants ?? {};
+      for (const role of ['passer', 'rusher', 'receiver']) {
+        if (participants[`${role}_id`] == null) continue;
+        const player = rosterById.get(`${participants[`${role}_id`]}:${participants[`${role}_position`]}`);
+        if (!player || player.player_name !== participants[`${role}_name`]
+            || player.team !== participants[`${role}_team`]) {
+          throw new Error(`${role} on play ${play.sequence} is not present in the frozen roster snapshot`);
+        }
+      }
+    }
+  }
+  for (const player of record.stats?.player ?? []) {
+    const rosterPlayer = rosterById.get(`${player.player_id}:${player.player_position}`);
+    if (!rosterPlayer || rosterPlayer.player_name !== player.player_name
+        || rosterPlayer.team !== player.player_team || rosterPlayer.pos_abb !== player.player_position) {
+      throw new Error(`player line ${player.player_id} is not present in the frozen roster snapshot`);
+    }
+  }
+}
+
 function appendMeta(container, pairs) {
   container.replaceChildren();
   for (const [label, value] of pairs) {
@@ -62,26 +120,49 @@ function appendMeta(container, pairs) {
 
 function renderMetadata(verification, sourcePayloadSha256) {
   const record = adapted.record;
+  const identities = record.team_identity
+    ? `A: ${record.team_identity.A.team} (home), B: ${record.team_identity.B.team} (away)`
+    : 'A/B labels only';
   $('#mode-label').textContent = activeMatchupLabel
     ? `${activeMatchupLabel} · ${adapted.displayLabel}`
     : adapted.displayLabel;
   status.textContent = `${record.status} · Q${record.final_quarter} ${formatClock(record.final_clock_seconds)} · seed ${record.seed}`;
+  if (record.team_identity) {
+    $('#team-a-label').textContent = record.team_identity.A.team;
+    $('#team-b-label').textContent = record.team_identity.B.team;
+  }
   $('#score-a').textContent = record.points.A;
   $('#score-b').textContent = record.points.B;
-  $('#game-state').textContent = `complete_regulation=${record.complete_regulation} · valid_full_game=${record.valid_full_game} · tied=${record.tied}`;
+  $('#score-phase').textContent = record.complete_game ? 'FINAL'
+    : record.regulation_end_reached ? 'REGULATION END' : 'IN PROGRESS';
+  $('#game-state').textContent = `regulation_end_reached=${record.regulation_end_reached} · complete_game=${record.complete_game} · valid_full_game=${record.valid_full_game} · tied=${record.tied}`;
+  if (requestedPregameGame) {
+    $('#record-banner').textContent = `FROZEN PREGAME SNAPSHOT · STATISTICAL SIMULATION · valid_full_game=${record.valid_full_game}`;
+    $('#replay-scope').textContent = 'LP supplies immutable play outcomes and player role assignments from the frozen depth chart. It does not include formations, routes, motion, or player tracking, so no 3D player replay is inferred.';
+  }
   appendMeta($('#record-meta'), [
     ['LP mode', record.mode],
+    ['Scheduled game', record.game_id],
+    ['Scheduled kickoff (source time)', record.scheduled_kickoff_local
+      ? `${record.scheduled_kickoff_local.date} ${record.scheduled_kickoff_local.time} (${record.scheduled_kickoff_local.timezone ?? 'timezone not supplied'})`
+      : undefined],
+    ['Pregame cutoff', record.as_of_utc],
+    ['Frozen snapshot SHA-256', record.snapshot_hash],
+    ['Model version', record.model_version],
+    ['Rules version', record.rules_version],
     ['Seed', record.seed],
     ['Game simulation ID', record.simulation_id],
     ['Drives', adapted.drives.length],
     ['Plays', adapted.sourcePlayCount],
     ['LP producer commit', adapted.source.base_commit],
     ['Fixture hash', verification],
-    ['LP source payload SHA-256 (index/manifest pin)', sourcePayloadSha256],
+    [requestedPregameGame ? 'Pregame snapshot SHA-256' : 'LP source payload SHA-256 (index/manifest pin)', sourcePayloadSha256],
     ['Producer tree', adapted.source.producer_worktree_dirty ? 'dirty; file hashes pinned' : 'committed'],
-    ['Team identities', 'A/B labels only'],
+    ['Team identities', identities],
   ]);
-  $('#producer-note').textContent = adapted.source.producer_worktree_dirty
+  $('#producer-note').textContent = requestedPregameGame
+    ? `This game is generated from snapshot ${record.snapshot_hash}. LP's unresolved rule guards keep valid_full_game=false; the viewer preserves and displays those limitations.`
+    : adapted.source.producer_worktree_dirty
     ? 'Producer code was uncommitted when sampled; its file hashes are pinned, but this handoff is not stable.'
     : `Producer code is pinned at LP commit ${adapted.source.base_commit}. PBP outcomes are retrospective samples, not a forecast.`;
 }
@@ -93,7 +174,7 @@ function renderValidation() {
     for (const finding of adapted.validation.findings) messages.push(finding);
   }
   if (!adapted.sharedV1Audit.conforms) {
-    messages.push('Shared GRIDIRON-CONTRACT-v1 gate: NOT CONFORMING. This E2 transport view preserves the retrospective source; it does not promote it to a pregame simulation.');
+    messages.push('Shared GRIDIRON-CONTRACT-v1 gate: NOT CONFORMING. This viewer preserves the LP record and reports its remaining contract gaps without filling them.');
     for (const violation of adapted.sharedV1Audit.violations) messages.push(violation);
   }
   validationPanel.hidden = messages.length === 0;
@@ -107,7 +188,7 @@ function renderLedgerAndKickoffs() {
   const list = $('#kickoff-list');
   list.replaceChildren();
   for (const kickoff of adapted.record.kickoffs) {
-    list.append(el('li', `Q${kickoff.quarter} ${kickoff.kind}: ${kickoff.kicking_team} kicks to ${kickoff.receiving_team}; after drive ${kickoff.after_drive}; source ${kickoff.source?.game_id ?? 'unknown'} play ${kickoff.source?.play_id ?? 'unknown'}`));
+    list.append(el('li', `Q${kickoff.quarter} ${kickoff.kind}: ${teamLabel(kickoff.kicking_team)} kicks to ${teamLabel(kickoff.receiving_team)}; after drive ${kickoff.after_drive}; source ${kickoff.source?.game_id ?? 'unknown'} play ${kickoff.source?.play_id ?? 'unknown'}`));
   }
   const unsupported = $('#unsupported-list');
   unsupported.replaceChildren();
@@ -120,9 +201,34 @@ function renderTeamStats() {
   for (const [team, stats] of Object.entries(adapted.record.stats?.team ?? {})) {
     for (const [name, value] of Object.entries(stats)) {
       const row = document.createElement('tr');
-      row.append(el('td', team), el('td', name), el('td', shown(value)));
+      row.append(el('td', teamLabel(team)), el('td', name), el('td', shown(value)));
       body.append(row);
     }
+  }
+}
+
+function statSummary(line) {
+  if (!line) return '—';
+  return Object.entries(line).map(([key, value]) => `${key} ${value}`).join(', ');
+}
+
+function renderPlayerStats() {
+  const stats = adapted.record.stats ?? {};
+  $('#player-stats-note').textContent = stats.player_note ?? 'No player lines supplied.';
+  const body = $('#player-stats');
+  body.replaceChildren();
+  for (const player of stats.player ?? []) {
+    const row = document.createElement('tr');
+    row.append(
+      el('td', player.player_name ?? player.player_id),
+      el('td', player.player_team ?? '—'),
+      el('td', player.player_position ?? '—'),
+      el('td', statSummary(player.passing)),
+      el('td', statSummary(player.rushing)),
+      el('td', statSummary(player.receiving)),
+      el('td', player.attribution),
+    );
+    body.append(row);
   }
 }
 
@@ -133,8 +239,8 @@ function renderPlay(playEntry, drive) {
     ['LP play ID', playEntry.sourceId],
     ['Drive / game sequence', `${drive.index} / ${playEntry.sourceSequence}`],
     ['Event', play.event_type],
-    ['Before', `Q${play.state_before.quarter} ${formatClock(play.state_before.clock_seconds)} · ${play.state_before.offense_team} · ${play.state_before.down} & ${play.state_before.yards_to_go} · ydline100 ${play.state_before.yardline_100}`],
-    ['After', `Q${play.state_after.quarter} ${formatClock(play.state_after.clock_seconds)} · ${play.state_after.offense_team} · ${play.state_after.down} & ${play.state_after.yards_to_go} · ydline100 ${play.state_after.yardline_100}`],
+    ['Before', `Q${play.state_before.quarter} ${formatClock(play.state_before.clock_seconds)} · ${teamLabel(play.state_before.offense_team)} · ${play.state_before.down} & ${play.state_before.yards_to_go} · ydline100 ${play.state_before.yardline_100}`],
+    ['After', `Q${play.state_after.quarter} ${formatClock(play.state_after.clock_seconds)} · ${teamLabel(play.state_after.offense_team)} · ${play.state_after.down} & ${play.state_after.yards_to_go} · ydline100 ${play.state_after.yardline_100}`],
     ['Field assignment', `${play.field?.assignment_version ?? 'Not provided'} · ${play.field?.source ?? 'source unknown'}`],
     ['Participant attribution', play.participants?.attribution],
   ]);
@@ -155,7 +261,7 @@ function renderDrive(driveIndex) {
   if (drive.source.points_scored_on_drive) {
     afterPoints[drive.source.points_scored_on_drive.team] += drive.source.points_scored_on_drive.points;
   }
-  $('#drive-summary').textContent = `Drive ${drive.index} · ${drive.offenseTeam} · Q${drive.quarterStart} ${formatClock(drive.clockStart)} · ${drive.plays.length} plays · ${drive.terminal} · score before ${priorPoints.A}–${priorPoints.B}, after ${afterPoints.A}–${afterPoints.B}`;
+  $('#drive-summary').textContent = `Drive ${drive.index} · ${teamLabel(drive.offenseTeam)} · Q${drive.quarterStart} ${formatClock(drive.clockStart)} · ${drive.plays.length} plays · ${drive.terminal} · score before ${priorPoints.A}–${priorPoints.B}, after ${afterPoints.A}–${afterPoints.B}`;
   playSelect.replaceChildren();
   list.replaceChildren();
   for (const [offset, entry] of drive.plays.entries()) {
@@ -193,10 +299,12 @@ function showError(error) {
 
 async function loadFixture() {
   try {
-    const manifestResponse = await fetch(MANIFEST_URL);
+    const params = new URLSearchParams(globalThis.window?.location?.search ?? '');
+    requestedPregameGame = params.get('pregame') === '1';
+    const manifestResponse = await fetch(requestedPregameGame ? PREGAME_MANIFEST_URL : MANIFEST_URL);
     if (!manifestResponse.ok) throw new Error(`manifest HTTP ${manifestResponse.status}`);
     const baseManifest = await manifestResponse.json();
-    const requestedMatchup = new URLSearchParams(globalThis.window?.location?.search ?? '').get('matchup');
+    const requestedMatchup = params.get('matchup');
     let manifest = baseManifest;
     let matchupRow = null;
     if (requestedMatchup) {
@@ -213,10 +321,13 @@ async function loadFixture() {
       };
       manifest.fixtures = [indexedFixture];
       activeMatchupLabel = MATCHUPS.find((item) => item.slug === requestedMatchup)?.label ?? requestedMatchup;
+    } else if (requestedPregameGame) {
+      activeMatchupLabel = baseManifest.label ?? 'Frozen pregame simulation';
     }
     const entry = manifest.fixtures[0];
     if (!entry) throw new Error('the game fixture is missing from its manifest');
-    const fixturePath = entry.file.startsWith('docs/') ? entry.file : FIXTURE_DIR + entry.file;
+    const fixtureBase = requestedPregameGame ? PREGAME_FIXTURE_DIR : FIXTURE_DIR;
+    const fixturePath = entry.file.startsWith('docs/') ? entry.file : fixtureBase + entry.file;
     const fixtureResponse = await fetch(fixturePath);
     if (!fixtureResponse.ok) throw new Error(`fixture HTTP ${fixtureResponse.status}`);
     const bytes = await fixtureResponse.arrayBuffer();
@@ -227,6 +338,7 @@ async function loadFixture() {
     if (!payload.record && payload.drives) payload = { ...payload, record: payload };
     if (!payload.record) throw new Error('indexed payload has no game record');
     payload.source = payload.source ?? {};
+    if (requestedPregameGame) await validatePregameSnapshotPayload(payload);
     let upstream = null;
     let upstreamHash = 'not separately supplied';
     if (entry.upstream_source_file && entry.upstream_source_sha256) {
@@ -252,6 +364,9 @@ async function loadFixture() {
       }
       upstream = { record: payload.record, sources: payload.sources ?? matchupRow.sources ?? {} };
       upstreamHash = declaredSourceHash ?? payload.source?.payload_sha256 ?? 'not separately supplied';
+    } else if (requestedPregameGame) {
+      upstream = { record: payload.record, sources: payload.source ?? {} };
+      upstreamHash = payload.pregame_snapshot?.snapshot_sha256 ?? 'snapshot hash missing';
     } else {
       throw new Error('manifest does not pin the original LP source payload');
     }
@@ -261,7 +376,7 @@ async function loadFixture() {
         || (payload.source.payload_path && lpSource.payload_file && payload.source.payload_path !== lpSource.payload_file)) {
       throw new Error('LP producer revision or source path does not match its matchup index');
     }
-    if (!requestedMatchup) {
+    if (!requestedMatchup && !requestedPregameGame) {
       const conversionSource = lpSource.conversion_source_script_sha256;
       if (lpSource.conversion_source_script_commit !== lpSource.base_commit
           || !/^[a-f0-9]{64}$/i.test(conversionSource ?? '')) {
@@ -281,22 +396,25 @@ async function loadFixture() {
       await renderE3Comparison(auditPayload);
     } else {
       $('#e3-comparison').hidden = true;
-      const sides = matchupRow.score_sides ?? matchupRow.team_labels ?? matchupRow.teams ?? {};
-      const a = sides.A ?? sides.a ?? matchupRow.team_a ?? matchupRow.teamA;
-      const b = sides.B ?? sides.b ?? matchupRow.team_b ?? matchupRow.teamB;
-      const label = (value) => typeof value === 'object' ? value.name ?? value.abbr ?? value.code : value;
-      if (a) $('#team-a-label').textContent = label(a);
-      if (b) $('#team-b-label').textContent = label(b);
+      if (requestedMatchup) {
+        const sides = matchupRow.score_sides ?? matchupRow.team_labels ?? matchupRow.teams ?? {};
+        const a = sides.A ?? sides.a ?? matchupRow.team_a ?? matchupRow.teamA;
+        const b = sides.B ?? sides.b ?? matchupRow.team_b ?? matchupRow.teamB;
+        const label = (value) => typeof value === 'object' ? value.name ?? value.abbr ?? value.code : value;
+        if (a) $('#team-a-label').textContent = label(a);
+        if (b) $('#team-b-label').textContent = label(b);
+      }
     }
-    adapted = adaptLpGamePayload(payload);
+    adapted = adaptLpGamePayload(payload, { requireCompleteRegulation: !requestedPregameGame });
     viewerContent.hidden = false;
     renderMetadata(`matches index (${hash.slice(0, 12)})`, upstreamHash);
     renderValidation();
     renderLedgerAndKickoffs();
     renderTeamStats();
+    renderPlayerStats();
     const driveSelect = $('#drive-select');
     for (const [offset, drive] of adapted.drives.entries()) {
-      const option = el('option', `Drive ${drive.index} · ${drive.offenseTeam} · Q${drive.quarterStart} · ${drive.plays.length} plays`);
+      const option = el('option', `Drive ${drive.index} · ${teamLabel(drive.offenseTeam)} · Q${drive.quarterStart} · ${drive.plays.length} plays`);
       option.value = String(offset);
       driveSelect.append(option);
     }

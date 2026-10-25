@@ -1,0 +1,22 @@
+{
+  "label": "CAR at GB \u00b7 2026-10-29",
+  "contract": {
+    "name": "gridiron.lp-full-game-payload",
+    "version": "1.0.0"
+  },
+  "lp_source": {
+    "repository": "micahp/legendarypicks",
+    "branch": "feat/statistical-full-game-e2-2026-10-25",
+    "base_commit": "453c0de58c8c84e68af4dc3d01673caf581acc3b"
+  },
+  "fixtures": [
+    {
+      "file": "game-seed1.json",
+      "sha256": "b8faa4089b68421f334177803ca601c5b4ff2acae8679618e4334b4f07969070",
+      "game_id": "2026_08_CAR_GB",
+      "seed": 1,
+      "snapshot_sha256": "e04a8562ac7ee6ed83eeda916bc900c251a121cac29f50090bf87ba2b47091e2",
+      "valid_full_game": false
+    }
+  ]
+}

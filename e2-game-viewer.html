@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="web/e2-game-viewer.css">
 </head>
 <body>
-  <div class="retrospective-banner">2022-pool retrospective demonstration · Not a 2026 forecast · valid_full_game=false</div>
+  <div id="record-banner" class="retrospective-banner">2022-pool retrospective demonstration · Not a 2026 forecast · valid_full_game=false</div>
   <main class="shell">
     <header class="hero">
       <p class="eyebrow">Gridiron Physics · E2 research viewer</p>
@@ -54,9 +54,9 @@
     </section>
 
     <div id="viewer-content" hidden>
-    <section class="scoreboard" aria-label="Final score">
+    <section class="scoreboard" aria-label="Game score">
       <div><span id="team-a-label">Team A</span><strong id="score-a">—</strong></div>
-      <div class="score-separator">FINAL</div>
+      <div id="score-phase" class="score-separator">SCORE</div>
       <div><span id="team-b-label">Team B</span><strong id="score-b">—</strong></div>
       <p id="game-state" class="score-note"></p>
     </section>
@@ -68,7 +68,7 @@
       </article>
       <article class="card">
         <h2>Not supplied</h2>
-        <p>This is event and field-state inspection. No game roster, lineup, route, or motion is present, so no 3D player replay is inferred.</p>
+        <p id="replay-scope">This is event and field-state inspection. No game roster, lineup, route, or motion is present, so no 3D player replay is inferred.</p>
         <p id="producer-note" class="muted"></p>
       </article>
     </section>
@@ -104,8 +104,14 @@
 
     <section class="card">
       <h2>Team lines</h2>
-      <p class="muted">Lines are copied from LP. Player attribution describes participants from sampled historical plays, not this game's roster.</p>
+      <p class="muted">Lines are copied from LP and preserve the producer's attribution and limitations.</p>
       <div class="table-wrap"><table><thead><tr><th>Team</th><th>Statistic</th><th>Value</th></tr></thead><tbody id="team-stats"></tbody></table></div>
+    </section>
+
+    <section class="card">
+      <h2>Player lines</h2>
+      <p id="player-stats-note" class="muted"></p>
+      <div class="table-wrap"><table><thead><tr><th>Player</th><th>Team</th><th>Pos.</th><th>Passing</th><th>Rushing</th><th>Receiving</th><th>Attribution</th></tr></thead><tbody id="player-stats"></tbody></table></div>
     </section>
     </div>
     <footer>Read-only research display · source IDs, outcomes, and nulls are preserved.</footer>

@@ -5,6 +5,7 @@ import { auditDriveIndex, auditFootballState } from './lp-game-state-audit.js';
 export const GAME_PAYLOAD_NAME = 'gridiron.lp-full-game-payload';
 export const GAME_PAYLOAD_VERSION = '1.0.0';
 export const GAME_DISPLAY_LABEL = 'RETROSPECTIVE STATISTICAL GAME · NOT A FORECAST · LP OUTCOMES UNCHANGED';
+export const PREGAME_DISPLAY_LABEL = 'PREGAME STATISTICAL SIMULATION · RULE LIMITATIONS SHOWN · LP OUTCOMES UNCHANGED';
 
 const TEAM_KEYS = ['A', 'B'];
 const STATE_KEYS = ['quarter', 'clock_seconds', 'offense_team', 'defense_team', 'down', 'yards_to_go', 'yardline_100',
@@ -125,7 +126,9 @@ function validateLedger(record, findings) {
 function validateRecord(record, { requireCompleteRegulation }) {
   const findings = new Set();
   requireObject(record, 'record');
-  if (record.mode !== 'legal_game_state_first_piece') fail('record.mode is not the supported LP E2 mode');
+  if (!['legal_game_state_first_piece', 'pregame_statistical_game'].includes(record.mode)) {
+    fail('record.mode is not a supported LP statistical game mode');
+  }
   requireInteger(record.seed, 'record.seed', 0, Number.MAX_SAFE_INTEGER);
   requireString(record.simulation_id, 'record.simulation_id');
   requireString(record.status, 'record.status');
@@ -407,7 +410,7 @@ export function adaptLpGamePayload(payload, { requireCompleteRegulation = true }
   return Object.freeze({
     contractName: GAME_PAYLOAD_NAME,
     contractVersion: GAME_PAYLOAD_VERSION,
-    displayLabel: GAME_DISPLAY_LABEL,
+    displayLabel: payload.record.mode === 'pregame_statistical_game' ? PREGAME_DISPLAY_LABEL : GAME_DISPLAY_LABEL,
     source: deepFreeze(structuredClone(payload.source)),
     record,
     drives: deepFreeze(drives),
