@@ -33,8 +33,14 @@ const POSE_ANIMATIONS = Object.freeze({
   [POSE.KNEEL]: Object.freeze({ clipName: 'Kneel', loop: false }),
 });
 const CARRY_RUN_CLIP = Object.freeze({ clipName: 'Running While Holding Something', loop: true });
+// Below this speed (m/s) a locomotion clip reads as jogging in place, so the
+// player waits in a stance instead.
+const STATIONARY_SPEED = 0.35;
 
-export function getRiggedAnimationSelection(pose, carrying = false) {
+export function getRiggedAnimationSelection(pose, carrying = false, speed = null) {
+  if ((pose === POSE.RUN || pose === POSE.BACKPEDAL) && speed != null && speed < STATIONARY_SPEED) {
+    return { ...POSE_ANIMATIONS[POSE.STANCE] };
+  }
   if (pose === POSE.RUN && carrying) return { ...CARRY_RUN_CLIP };
   const selection = POSE_ANIMATIONS[pose];
   return selection ? { ...selection } : null;
@@ -204,8 +210,8 @@ export function isNeutralMode() { return neutralMode; }
 function updateRiggedAnimation(root, pose, speed, dt, carrying) {
   const animation = root.userData.animation;
   if (!animation?.mixer) return false;
-  const selection = getRiggedAnimationSelection(pose, carrying);
-  animation.lastRequest = { pose, carrying: !!carrying, clipName: selection?.clipName ?? null };
+  const selection = getRiggedAnimationSelection(pose, carrying, speed);
+  animation.lastRequest = { pose, carrying: !!carrying, speed, clipName: selection?.clipName ?? null };
   const clip = selection && animation.clips.get(selection.clipName);
   if (!clip) {
     if (animation.activeAction) {
@@ -217,7 +223,7 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
     return false;
   }
 
-  const locomotion = pose === POSE.RUN || pose === POSE.BACKPEDAL;
+  const locomotion = selection.loop && (pose === POSE.RUN || pose === POSE.BACKPEDAL);
   const timeScale = locomotion ? THREE.MathUtils.clamp(speed / 5, 0.55, 1.55) : 1;
   if (animation.activeClipName !== selection.clipName) {
     const next = animation.mixer.clipAction(clip);

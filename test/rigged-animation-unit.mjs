@@ -31,3 +31,27 @@ test('running with the ball uses the in-place ball-carry clip', () => {
 test('unknown pose codes request procedural fallback', () => {
   assert.equal(getRiggedAnimationSelection(999, false), null);
 });
+
+test('a stationary runner waits in a stance instead of jogging in place', () => {
+  assert.deepEqual(getRiggedAnimationSelection(POSE.RUN, false, 0), {
+    clipName: 'Football Stance', loop: false,
+  });
+  assert.deepEqual(getRiggedAnimationSelection(POSE.BACKPEDAL, false, 0.1), {
+    clipName: 'Football Stance', loop: false,
+  });
+});
+
+test('the run clip returns as soon as the player is actually moving', () => {
+  assert.deepEqual(getRiggedAnimationSelection(POSE.RUN, false, 4.2), {
+    clipName: 'Running in place', loop: true,
+  });
+  assert.deepEqual(getRiggedAnimationSelection(POSE.RUN, true, 4.2), {
+    clipName: 'Running While Holding Something', loop: true,
+  });
+});
+
+test('a stationary ball carrier holds his stance rather than jogging', () => {
+  assert.deepEqual(getRiggedAnimationSelection(POSE.RUN, true, 0.12), {
+    clipName: 'Football Stance', loop: false,
+  });
+});
