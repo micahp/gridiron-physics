@@ -32,6 +32,8 @@ for (const los of LOS) for (const front of FRONTS) for (const coverage of COVERA
     const cfg = {
       seed, front, coverage, los, dir: 1, ballY: 26.667,
       direction: i % 2 ? 'left' : 'right',
+      qbPolicy: process.env.QB_POLICY ?? 'stage_one',
+      priorMode: process.env.PRIOR_MODE ?? 'exact',
       ...(overrides ? { ratingOverrides: overrides } : {}),
     };
     const run = simulatePassPlay(cfg);

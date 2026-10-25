@@ -14,6 +14,7 @@ import { createQbEyes, expectFormation, observe, perceive } from './perception.j
 
 const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
+const CHECKDOWN_S = 1.8;
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const unit = (x, y) => {
@@ -29,7 +30,7 @@ const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
   // Test-only: lets a regression test start a named player at a point (yards).
-  'initialPositions',
+  'initialPositions', 'qbPolicy', 'priorMode',
 ]);
 
 function validateConfig(input) {
@@ -47,6 +48,8 @@ function validateConfig(input) {
     front: input.front ?? 'nickel_over',
     coverage: input.coverage ?? 'cover_1',
     ratingOverrides: input.ratingOverrides ?? {},
+    qbPolicy: input.qbPolicy ?? 'stage_one',
+    priorMode: input.priorMode ?? 'exact',
     playerIds: input.playerIds ?? {},
     massOverrides: input.massOverrides ?? {},
     offenseTeam: input.offenseTeam ?? 'OFF',
@@ -63,6 +66,8 @@ function validateConfig(input) {
   if (!Number.isFinite(cfg.los) || cfg.los < 1 || cfg.los > 99) throw new RangeError('los must be between 1 and 99 yards');
   if (cfg.dir !== 1 && cfg.dir !== -1) throw new RangeError('dir must be 1 or -1');
   if (!Number.isFinite(cfg.ballY) || cfg.ballY < 1 || cfg.ballY > FIELD_W_YD - 1) throw new RangeError('ballY must be inside the field');
+  if (!['stage_one', 'zero_openness', 'belief'].includes(cfg.qbPolicy)) throw new RangeError(`unsupported qbPolicy: ${cfg.qbPolicy}`);
+  if (!['exact', 'observed'].includes(cfg.priorMode)) throw new RangeError(`unsupported priorMode: ${cfg.priorMode}`);
   return cfg;
 }
 
@@ -176,7 +181,22 @@ export function simulatePassPlay(options = {}) {
   // The called formation is known before the snap: the quarterback's prior for players he has not yet seen.
   const alignment = new Map(W.players.map((p) => [p.id, { x: p.p.x, y: p.p.y }]));
   const eyes = createQbEyes(qb);
+  const qbPolicy = cfg.qbPolicy ?? 'stage_one';
+  // Observed priors look at the defense for three tenths of a second before the snap. Any defender still
+  // unseen is expected at his called alignment, with the wider uncertainty of an inferred position.
+  if ((cfg.priorMode ?? 'exact') === 'observed') for (let t = -0.3; t <= 1e-9; t += DT) observe(eyes, W.players, t, DT, null);
   expectFormation(eyes, defense, W.t);
+  // How open a receiver looks to the quarterback. Zero openness for an unconfirmed defender is a diagnostic extreme;
+  // the belief policy averages over how far the nearest defender may be from his last-known position.
+  const openness = (nearest) => {
+    if (qbPolicy === 'belief') {
+      const offsets = [-1.2, -0.4, 0.4, 1.2];
+      return offsets.reduce((sum, k) => sum + clamp((Math.max(0, nearest.distance + nearest.uncertainty * k) / YD - 0.7) / 2.2, 0, 1), 0) / offsets.length;
+    }
+    const unconfirmed = nearest.player ? eyes.memory.get(nearest.player.id)?.prior : true;
+    if (qbPolicy === 'zero_openness' && unconfirmed) return 0;
+    return clamp((Math.max(0, nearest.distance - nearest.uncertainty) / YD - 0.7) / 2.2, 0, 1);
+  };
 
   const setIntent = (p, assignment, decision) => {
     if (p.ai.assignment === assignment && p.ai.decision === decision) return;
@@ -436,12 +456,12 @@ export function simulatePassPlay(options = {}) {
         if (perp < 1.0 * YD) lane += 1 - perp / (1.0 * YD);
       }
       const pressure = qbPressure().distance / YD;
-      const open = clamp((separation - 0.7) / 2.2, 0, 1);
+      const open = openness(nearest);
       const utility = open * 1.6 + (1 - clamp(lane / 2.4, 0, 1)) * 0.75
         - clamp(lane * 0.55, 0, 1.35) - clamp((1.6 - pressure) * 0.45, 0, 0.9)
         - clamp(Math.hypot(seen.x - qb.p.x, seen.y - qb.p.y) / (28 * YD), 0, 0.5);
       const readiness = rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
-      return [{ receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness }];
+      return [{ receiver: rec, aim, flight, separation, open, uncertainty: nearest.uncertainty / YD, lane, pressure, utility, readyAt: readiness }];
     }).sort((a, b) => b.utility - a.utility || a.receiver.id.localeCompare(b.receiver.id));
   }
 
@@ -483,9 +503,33 @@ export function simulatePassPlay(options = {}) {
     if (elapsed < 0.75) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
     const options = readOptions().filter((o) => elapsed >= o.readyAt);
     const pressure = qbPressure().distance / YD;
+    // Diagnostic record of what the quarterback knew and why he acted. Decisions never read pressure_actual_yards.
+    const trace = (action, reason) => {
+      const known = seenDefenders();
+      W.event('decision_trace', {
+        quarterback_id: qb.id,
+        elapsed_s: Number(elapsed.toFixed(2)),
+        gaze_deg: Number((eyes.gaze * 180 / Math.PI).toFixed(0)),
+        confirmed_defenders: known.filter((k) => !eyes.memory.get(k.player.id)?.prior).length,
+        prior_defenders: known.filter((k) => eyes.memory.get(k.player.id)?.prior).length,
+        options: options.map((o) => ({
+          receiver: o.receiver.slot,
+          separation_yards: Number(o.separation.toFixed(2)),
+          uncertainty_yards: Number(o.uncertainty.toFixed(2)),
+          openness: Number(o.open.toFixed(3)),
+          lane: Number(o.lane.toFixed(2)),
+          utility: Number(o.utility.toFixed(3)),
+        })),
+        pressure_perceived_yards: Number(pressure.toFixed(2)),
+        pressure_actual_yards: Number((nearestRusherToQb().distance / YD).toFixed(2)),
+        action,
+        reason,
+      });
+    };
     if (options.length) {
       const best = options[0];
       if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
+        trace('throw', `${best.receiver.slot} utility ${best.utility.toFixed(2)}`);
         launchPass(best);
         return;
       }
@@ -497,13 +541,23 @@ export function simulatePassPlay(options = {}) {
         pressure_yards: Number(pressure.toFixed(2)),
       });
     }
+    if (qbPolicy === 'belief' && elapsed >= CHECKDOWN_S) {
+      const back = options.find((o) => o.receiver === rb);
+      if (back && back.utility > 0.34) {
+        trace('checkdown', `no read cleared the threshold by ${CHECKDOWN_S} s`);
+        launchPass(back);
+        return;
+      }
+    }
     if (pressure < 1.1 && elapsed < 3.0) {
+      trace('scramble', 'rusher within 1.1 yd');
       // Escape the nearest rusher rather than standing in a collapsing pocket.
       const rusher = qbPressure();
       const away = unit(qb.p.x - rusher.x, qb.p.y - rusher.y);
       qb.ai.escape = { x: away.x, y: away.y };
       setIntent(qb, 'scramble away from pressure', `move off ${rusher.player.slot} and keep the ball alive`);
     } else if (elapsed > 3.0) {
+      trace('throw_away', 'no read after 3 s');
       const target = at(-1.0, side * 22);
       const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
       Object.assign(W.ball, { state: 'air', holder: null, vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k });
@@ -511,6 +565,8 @@ export function simulatePassPlay(options = {}) {
       W.ball.thrower = qb;
       W.ball.intentionalGround = true;
       W.event('throw_away', { quarterback_id: qb.id });
+    } else {
+      trace('hold', 'no read open, pocket holding');
     }
   }
 
