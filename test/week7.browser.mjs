@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { MATCHUPS } from '../web/week7-core.js';
 
@@ -44,4 +45,36 @@ try{
   assert.equal(await page.locator('#seed').inputValue(),'1043');
   assert.equal(errors.length,0,'browser errors: '+errors.join('; '));
   console.log('PASS full 3D render on six 2026 matchups: '+JSON.stringify(rendered));
+
+// Forced refusal: every punt is a blocked kicking-team recovery, which the
+// generator refuses rather than resolving. Verifies the viewer reports the stop.
+{
+  const forced = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
+  forced.punts = {...forced.punts, outcomes:{blocked:1}, distance_yards:{'0':1,'40':1},
+    blocked_resolution:{receiving_recovery:0, kicking_recovery:1, out_of_bounds:0, safety:0}};
+  const refusalErrors = [];
+  const rpage = await browser.newPage({viewport:{width:1280,height:880}});
+  rpage.on('pageerror',e=>refusalErrors.push(String(e)));
+  rpage.on('console',m=>{if(m.type()==='error')refusalErrors.push('console: '+m.text());});
+  await rpage.route('**/data/special_teams/2025-league.json', route=>route.fulfill({
+    contentType:'application/json', body:JSON.stringify(forced)}));
+  const game = MATCHUPS[0];
+  await rpage.goto(BASE+'/week7.html?game='+encodeURIComponent(game.id),{waitUntil:'domcontentloaded'});
+  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Simulation stopped|Ready ·|failed|not ready/),null,{timeout:100000});
+  const st = await rpage.locator('#status').innerText();
+  assert.match(st,/Simulation stopped: unsupported rule \(blocked_punt_kicking_recovery\)/,'refusal status: '+st);
+  assert.match(st,/no final result/,'refusal must not present a final result');
+  const refused = rpage.locator('#timeline button[data-index]', {hasText:'REFUSED'});
+  assert.equal(await refused.count(), 1, 'refusal event is listed once in the timeline');
+  await refused.first().click();
+  assert.match(await rpage.locator('#play-detail').innerText(), /Blocked punt|line of scrimmage|Rule 2-3-1/i,'refusal reason shown');
+  assert.equal(refusalErrors.length, 0, 'refusal browser errors: '+refusalErrors.join('; '));
+  // Recover: remove the forced table and switch to a normal game.
+  await rpage.unroute('**/data/special_teams/2025-league.json');
+  await rpage.goto(BASE+'/week7.html?game='+encodeURIComponent(MATCHUPS[1].id),{waitUntil:'domcontentloaded'});
+  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Ready ·|failed|not ready/),null,{timeout:100000});
+  assert.match(await rpage.locator('#status').innerText(),/Ready ·/,'viewer recovers after a refused game');
+  await rpage.close();
+  console.log('PASS refusal display: stop status, refused event, reason, and recovery');
+}
 }finally{await browser.close();}
