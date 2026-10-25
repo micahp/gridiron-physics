@@ -24,13 +24,12 @@ const POSE_ANIMATIONS = Object.freeze({
   [POSE.BLOCK]: Object.freeze({ clipName: 'Standing Block Idle Leaning Back', loop: true }),
   [POSE.DOWN]: Object.freeze({ clipName: 'Stunned (Knocked Down)', loop: false }),
   [POSE.THROW]: Object.freeze({ clipName: 'Quarterback Pass', loop: false }),
-  [POSE.CATCH]: Object.freeze({ clipName: 'Football Catch 1', loop: false }),
   [POSE.KICK]: Object.freeze({ clipName: 'Goalkeeper Drop Kick', loop: false }),
   [POSE.HOLD]: Object.freeze({ clipName: 'Football Hike', loop: false }),
   [POSE.CELEBRATE]: Object.freeze({ clipName: 'Fist Pump', loop: false }),
   [POSE.BACKPEDAL]: Object.freeze({ clipName: 'Running Backward in place', loop: true }),
   [POSE.WRAP]: Object.freeze({ clipName: 'Running To Tackle', loop: false }),
-  [POSE.KNEEL]: Object.freeze({ clipName: 'Kneel', loop: false }),
+  [POSE.KNEEL]: Object.freeze({ clipName: 'Idle', loop: true }),
 });
 const CARRY_RUN_CLIP = Object.freeze({ clipName: 'Running While Holding Something', loop: true });
 // Below this speed (m/s) a locomotion clip reads as jogging in place, so the
@@ -38,6 +37,10 @@ const CARRY_RUN_CLIP = Object.freeze({ clipName: 'Running While Holding Somethin
 const STATIONARY_SPEED = 0.35;
 
 export function getRiggedAnimationSelection(pose, carrying = false, speed = null) {
+  // No catch clip: a receiver goes through the ball mid-stride. The asset's
+  // catches are a forward lunge that snaps him out of the run, so catching
+  // keeps the run cycle (and drops to the stance when he is standing still).
+  if (pose === POSE.CATCH) pose = POSE.RUN;
   if ((pose === POSE.RUN || pose === POSE.BACKPEDAL) && speed != null && speed < STATIONARY_SPEED) {
     return { ...POSE_ANIMATIONS[POSE.STANCE] };
   }

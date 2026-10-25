@@ -9,13 +9,13 @@ test('each gameplay pose selects its authored FBX clip and loop policy', () => {
     [POSE.BLOCK, 'Standing Block Idle Leaning Back', true],
     [POSE.DOWN, 'Stunned (Knocked Down)', false],
     [POSE.THROW, 'Quarterback Pass', false],
-    [POSE.CATCH, 'Football Catch 1', false],
+    [POSE.CATCH, 'Running in place', true],
     [POSE.KICK, 'Goalkeeper Drop Kick', false],
     [POSE.HOLD, 'Football Hike', false],
     [POSE.CELEBRATE, 'Fist Pump', false],
     [POSE.BACKPEDAL, 'Running Backward in place', true],
     [POSE.WRAP, 'Running To Tackle', false],
-    [POSE.KNEEL, 'Kneel', false],
+    [POSE.KNEEL, 'Idle', true],
   ];
   for (const [pose, clipName, loop] of expected) {
     assert.deepEqual(getRiggedAnimationSelection(pose, false), { clipName, loop });

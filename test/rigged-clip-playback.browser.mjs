@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 // Proves the authored clips actually run in a real game, frame by frame, rather
 // than only that the GLB loads:
 //   THROW frames  -> Quarterback Pass
-//   CATCH frames  -> Football Catch 1
+//   CATCH frames  -> a run clip, never a catch clip
 //   moving carrier-> Running While Holding Something
 //   standing      -> Idle (nobody jogs in place)
 // Run against a static server: BASE_URL=http://127.0.0.1:8160 node --test test/rigged-clip-playback.browser.mjs
@@ -81,7 +81,7 @@ try {
         const clip = clips.get(ids[i]) ?? 'none';
         const who = names[ids[i]] ?? ids[i];
         if (pose === 4) { bump(out.throw, `${who}:${clip}`); if (clip !== 'Quarterback Pass') out.bad.push({ k, who, kind: 'throw', clip }); }
-        if (pose === 5) { bump(out.catch, `${who}:${clip}`); if (clip !== 'Football Catch 1') out.bad.push({ k, who, kind: 'catch', clip }); }
+        if (pose === 5) { bump(out.catch, `${who}:${clip}`); if (/catch/i.test(clip)) out.bad.push({ k, who, kind: 'catch', clip }); }
         if (pose === 1 && carrying && speed >= 0.35) { bump(out.carry, clip); if (clip !== 'Running While Holding Something') out.bad.push({ k, who, kind: 'carry', clip }); }
         if (pose === 1 && speed < stationary) { bump(out.standing, clip); if (clip !== 'Idle') out.bad.push({ k, who, kind: 'standing', clip }); }
         if (k < preSnapFrames) {
