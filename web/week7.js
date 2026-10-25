@@ -45,6 +45,21 @@ function makeViewer(){
   if(new URLSearchParams(location.search).has('debug')){
     window.__gridironRenderer=renderer;
     window.__gridironState=()=>({selected,hasRecord:Boolean(current),duration:current?.duration,animating,playing,playerCount:renderer.players.size});
+    // Test-only visibility: examine the *simulation's* per-frame pose codes
+    // alongside the actual glTF action currently active on each player's rig.
+    window.__gridironFrameSnapshot=()=>{
+      if(!current?.rec)return null;
+      const rec=current.rec;
+      const k=Math.max(0,Math.min(rec.frames.length-1,Math.floor(playSeconds*rec.hz)));
+      const frame=rec.frames[k];
+      return {time:playSeconds,index:k,playing,
+        players:rec.roster.map((p,i)=>({
+          id:p.id,slot:p.slot,pose:frame[i*6+4],
+          carrying:frame[i*6+5]>0.5,
+          clip:renderer.players.get(p.id)?.userData.animation?.activeClipName||null,
+          clipTime:renderer.players.get(p.id)?.userData.animation?.activeAction?.time??null,
+        }))};
+    };
   }
   renderer.setCamera('broadcast');renderer.resize();
   window.addEventListener('resize',()=>renderer.resize());
