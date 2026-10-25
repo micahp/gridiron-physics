@@ -59,13 +59,13 @@ for (const key of ['gain', 'endX', 'tacklers', 'complete', 'touchdown', 'outcome
 
 // An interception return scores at the goal the returner's team attacks.
 // The defense attacks x=100 when the offense attacks -x, and x=0 when it attacks +x.
-const pickSixMinus = simulatePassPlay({ seed: 'search-453', concept: 'slant_flat', coverage: 'cover_1', front: 'nickel_under', direction: 'right', dir: -1, los: 95, ballY: 26.667 });
+const pickSixMinus = simulatePassPlay({ seed: 'pick-1-s1761', concept: 'slant_flat', coverage: 'cover_1', front: 'nickel_under', direction: 'right', dir: -1, los: 95, ballY: 26.667 });
 assert.ok(pickSixMinus.interception_id, 'the ball was intercepted');
 assert.equal(pickSixMinus.possession_team, 'D');
 assert.equal(pickSixMinus.terminal.reason, 'touchdown', 'the pick-six is a defensive touchdown');
 assert.ok(Math.abs(pickSixMinus.terminal.spot.x - 100) < 1e-6, 'defense scores at x=100 when the offense attacks -x');
 
-const pickSixPlus = simulatePassPlay({ seed: 'pick-plus-2574', concept: 'slant_flat', coverage: 'cover_1', front: 'nickel_under', direction: 'right', dir: 1, los: 6, ballY: 26.667 });
+const pickSixPlus = simulatePassPlay({ seed: 'pick1-s5002', concept: 'slant_flat', coverage: 'cover_1', front: 'nickel_under', direction: 'right', dir: 1, los: 6, ballY: 26.667 });
 assert.ok(pickSixPlus.interception_id, 'the ball was intercepted');
 assert.equal(pickSixPlus.possession_team, 'D');
 assert.equal(pickSixPlus.terminal.reason, 'touchdown', 'the pick-six is a defensive touchdown');
@@ -78,18 +78,18 @@ const complete = simulatePassPlay(named({}));
 assert.ok(complete.events.some((e) => e.type === 'catch' && e.player_id.startsWith('O.')), 'an eligible receiver completes the pass');
 assert.equal(complete.events.filter((e) => e.type === 'whistle').length, 1);
 
-const incomplete = simulatePassPlay(named({ seed: 'named-8', direction: 'right', dir: -1 }));
+const incomplete = simulatePassPlay(named({ seed: 'named-s70', direction: 'right', dir: -1 }));
 assert.equal(incomplete.terminal.reason, 'incomplete');
 assert.ok(incomplete.events.some((e) => e.type === 'incomplete'));
 
-const interception = simulatePassPlay(named({ seed: 'named-38', front: 'nickel_under', direction: 'right' }));
+const interception = simulatePassPlay(named({ seed: 'int4-s83', front: 'nickel_under', direction: 'right' }));
 assert.ok(interception.interception_id, 'the defense takes the ball');
 assert.equal(interception.possession_team, 'D');
 
 assert.ok(complete.events.some((e) => e.type === 'catch_contest'), 'the contested catch is resolved and logged');
 
-const low = simulatePassPlay(named({ seed: 'named-212', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 25, CIT: 25 }, 'O.WR2': { CTH: 25, CIT: 25 }, 'O.WR3': { CTH: 25, CIT: 25 } } }));
-const high = simulatePassPlay(named({ seed: 'named-212', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 99, CIT: 99 }, 'O.WR2': { CTH: 99, CIT: 99 }, 'O.WR3': { CTH: 99, CIT: 99 } } }));
+const low = simulatePassPlay(named({ seed: 'rate3-s1', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 25, CIT: 25 }, 'O.WR2': { CTH: 25, CIT: 25 }, 'O.WR3': { CTH: 25, CIT: 25 } } }));
+const high = simulatePassPlay(named({ seed: 'rate3-s1', direction: 'right', ratingOverrides: { 'O.WR1': { CTH: 99, CIT: 99 }, 'O.WR2': { CTH: 99, CIT: 99 }, 'O.WR3': { CTH: 99, CIT: 99 } } }));
 assert.equal(low.terminal.reason, 'incomplete', 'low catch ratings drop the pass');
 assert.notEqual(high.terminal.reason, 'incomplete', 'high catch ratings complete the same pass');
 

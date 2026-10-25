@@ -10,6 +10,7 @@ import { rng } from '../rng.js';
 import { AERO, solveLaunch } from '../ball.js';
 import { Player, POSE, World } from '../world.js';
 import { createInsideZoneRoster } from '../autonomous-run.js';
+import { createQbEyes, expectFormation, observe, perceive } from './perception.js';
 
 const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
@@ -172,6 +173,10 @@ export function simulatePassPlay(options = {}) {
   const ballAtSnap = at(0, 0);
   Object.assign(W.ball, { x: ballAtSnap.x, y: ballAtSnap.y, z: 0.15, state: 'held', holder: center, hand: 'chest' });
   center.hasBall = true;
+  // The called formation is known before the snap: the quarterback's prior for players he has not yet seen.
+  const alignment = new Map(W.players.map((p) => [p.id, { x: p.p.x, y: p.p.y }]));
+  const eyes = createQbEyes(qb);
+  expectFormation(eyes, defense, W.t);
 
   const setIntent = (p, assignment, decision) => {
     if (p.ai.assignment === assignment && p.ai.decision === decision) return;
@@ -271,7 +276,8 @@ export function simulatePassPlay(options = {}) {
   let carrier = null, carrierSince = null;
   let possession = 'O';
   let throwInfo = null;
-  let resolveAttempt = null;
+  // One catch contest per pass: a failed contest deflects the ball, and it does not get another roll.
+  let contestUsed = false;
   let sack = null, tackle = null, terminal = null;
   let maxForward = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
@@ -329,14 +335,34 @@ export function simulatePassPlay(options = {}) {
     if (rand() < rate * DT) W.disengage(e, d);
   }
 
-  function nearestDefenderTo(p) {
-    let best = null, bestD = Infinity;
+  // Defenders the quarterback has seen, each at his estimate of where that defender is.
+  function seenDefenders() {
+    const out = [];
     for (const q of defense) {
-      if (q.down) continue;
-      const d = d2(q, p);
-      if (d < bestD) { best = q; bestD = d; }
+      const est = q.down ? null : perceive(eyes, q, W.t);
+      if (est) out.push({ player: q, ...est });
     }
-    return { player: best, distance: bestD };
+    return out;
+  }
+
+  function nearestSeenDefenderTo(pt) {
+    let best = null, bestD = Infinity;
+    for (const k of seenDefenders()) {
+      const d = Math.hypot(k.x - pt.x, k.y - pt.y);
+      if (d < bestD) { best = k; bestD = d; }
+    }
+    return { player: best?.player ?? null, distance: bestD, uncertainty: best?.uncertainty ?? 0 };
+  }
+
+  // The nearest rusher the quarterback has seen or felt.
+  function qbPressure() {
+    let best = null, bestD = Infinity;
+    for (const k of seenDefenders()) {
+      if (k.player.info.group !== 'DL') continue;
+      const d = Math.hypot(k.x - qb.p.x, k.y - qb.p.y);
+      if (d < bestD) { best = k; bestD = d; }
+    }
+    return best ? { ...best, distance: bestD } : { player: null, x: 0, y: 0, distance: Infinity };
   }
 
   function nearestRusherToQb() {
@@ -374,32 +400,48 @@ export function simulatePassPlay(options = {}) {
   }
 
   // ------------------------------------------------------------ quarterback
+  // Where the quarterback's eyes go: the first read he has not confirmed this moment, else nothing.
+  // A read he has never seen is looked for at its formation spot.
+  function attention() {
+    for (const rec of [z, slotRec, rb]) {
+      if (!rec || rec.down) continue;
+      const est = perceive(eyes, rec, W.t);
+      if (!est) return alignment.get(rec.id);
+      if (est.age > 0.3) return { x: est.x, y: est.y };
+    }
+    return null;
+  }
+
   function readOptions() {
     const throwers = [z, slotRec, rb].filter((p) => p && !p.down);
-    return throwers.map((rec) => {
-      const flight = clamp(d2(qb, rec) / (16 * YD), 0.32, 1.25);
-      const aim = { x: rec.p.x + rec.v.x * flight * 0.75, y: rec.p.y + rec.v.y * flight * 0.75 };
-      const nearest = nearestDefenderTo(rec);
-      const separation = nearest.distance / YD;
+    return throwers.flatMap((rec) => {
+      // A receiver he has not seen is not a read yet.
+      const seen = perceive(eyes, rec, W.t);
+      if (!seen) return [];
+      const flight = clamp(Math.hypot(seen.x - qb.p.x, seen.y - qb.p.y) / (16 * YD), 0.32, 1.25);
+      const aim = { x: seen.x + seen.vx * flight * 0.75, y: seen.y + seen.vy * flight * 0.75 };
+      const nearest = nearestSeenDefenderTo(seen);
+      // Separation is conservative: the nearest defender may be closer than he last looked.
+      const separation = Math.max(0, nearest.distance - nearest.uncertainty) / YD;
       // Defenders sitting on the throwing line are the interception risk.
       let lane = 0;
       const ux = aim.x - qb.p.x, uy = aim.y - qb.p.y;
       const len = Math.hypot(ux, uy) || 1;
-      for (const q of defense) {
-        if (q.down || q === nearest.player) continue;
-        const rx = q.p.x - qb.p.x, ry = q.p.y - qb.p.y;
+      for (const k of seenDefenders()) {
+        if (k.player === nearest.player) continue;
+        const rx = k.x - qb.p.x, ry = k.y - qb.p.y;
         const along = (rx * ux + ry * uy) / len;
         if (along <= 0.4 || along >= len) continue;
         const perp = Math.abs(rx * uy - ry * ux) / len;
         if (perp < 1.0 * YD) lane += 1 - perp / (1.0 * YD);
       }
-      const pressure = nearestRusherToQb().distance / YD;
+      const pressure = qbPressure().distance / YD;
       const open = clamp((separation - 0.7) / 2.2, 0, 1);
       const utility = open * 1.6 + (1 - clamp(lane / 2.4, 0, 1)) * 0.75
         - clamp(lane * 0.55, 0, 1.35) - clamp((1.6 - pressure) * 0.45, 0, 0.9)
-        - clamp(d2(qb, rec) / (28 * YD), 0, 0.5);
+        - clamp(Math.hypot(seen.x - qb.p.x, seen.y - qb.p.y) / (28 * YD), 0, 0.5);
       const readiness = rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
-      return { receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness };
+      return [{ receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness }];
     }).sort((a, b) => b.utility - a.utility || a.receiver.id.localeCompare(b.receiver.id));
   }
 
@@ -440,7 +482,7 @@ export function simulatePassPlay(options = {}) {
     // A three-step drop from the gun takes about 0.8 s before the first read is live.
     if (elapsed < 0.75) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
     const options = readOptions().filter((o) => elapsed >= o.readyAt);
-    const pressure = nearestRusherToQb().distance / YD;
+    const pressure = qbPressure().distance / YD;
     if (options.length) {
       const best = options[0];
       if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
@@ -457,10 +499,10 @@ export function simulatePassPlay(options = {}) {
     }
     if (pressure < 1.1 && elapsed < 3.0) {
       // Escape the nearest rusher rather than standing in a collapsing pocket.
-      const rusher = nearestRusherToQb().player;
-      const away = unit(qb.p.x - rusher.p.x, qb.p.y - rusher.p.y);
+      const rusher = qbPressure();
+      const away = unit(qb.p.x - rusher.x, qb.p.y - rusher.y);
       qb.ai.escape = { x: away.x, y: away.y };
-      setIntent(qb, 'scramble away from pressure', `move off ${rusher.slot} and keep the ball alive`);
+      setIntent(qb, 'scramble away from pressure', `move off ${rusher.player.slot} and keep the ball alive`);
     } else if (elapsed > 3.0) {
       const target = at(-1.0, side * 22);
       const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
@@ -536,7 +578,6 @@ export function simulatePassPlay(options = {}) {
     W.ball.vz = -Math.abs(W.ball.vz) * 0.4 - 1.2;
     W.ball.vx *= 0.3; W.ball.vy *= 0.3;
     W.event('pass_deflected', { by: by?.id ?? null });
-    resolveAttempt = null;
   }
 
   function secure(player) {
@@ -560,7 +601,6 @@ export function simulatePassPlay(options = {}) {
     carrier = player;
     carrierSince = W.t;
     pCarrierReset();
-    resolveAttempt = null;
     throwInfo = null;
     W.ball.thrower = null;
     W.ball.target = null;
@@ -886,8 +926,10 @@ export function simulatePassPlay(options = {}) {
   function trackLive() {
     const b = W.ball;
     if (b.state === 'air') {
-      if (!resolveAttempt && b.z <= 2.4 && b.vz < 0) resolveAttempt = true;
-      if (resolveAttempt) resolveContest();
+      if (!contestUsed && b.z <= 2.4 && b.vz < 0 && catchCandidates().length) {
+        contestUsed = true;
+        resolveContest();
+      }
       // Out-of-bounds flight is not a rule violation until the ball lands.
     }
     if (carrier && W.ball.holder === carrier) {
@@ -945,6 +987,7 @@ export function simulatePassPlay(options = {}) {
     if (received && !carrier && W.ball.state === 'air') throwInfo = { snapT: W.ball.receivedAt, thrownAt: W.t };
     if (received && carrier) throwInfo = null;
 
+    observe(eyes, W.players, W.t, DT, attention());
     W.step(DT, brains);
     for (const row of activeBlock.values()) {
       row.minDefF = Math.min(row.minDefF, fOf(row.defender));
