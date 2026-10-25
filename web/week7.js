@@ -47,6 +47,8 @@ function makeViewer(){
   if(new URLSearchParams(location.search).has('debug')){
     window.__gridironRenderer=renderer;
     window.__gridironState=()=>({selected,hasRecord:Boolean(current),duration:current?.duration,animating,playing,playerCount:renderer.players.size});
+    window.__gridironAnimation=()=>renderer.debugAnimation();
+    window.__gridironPlay=()=>current?.rec?{hz:current.rec.hz,ids:current.rec.roster.map(r=>r.id),frames:current.rec.frames}:null;
   }
   renderer.setCamera('broadcast');renderer.resize();
   window.addEventListener('resize',()=>renderer.resize());
