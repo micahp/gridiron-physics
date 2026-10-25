@@ -111,6 +111,15 @@ const MUTATIONS = [
   {name:'blocked punt keeps a positive kick distance',
     from:"const distance = outcome === 'blocked' ? 0 : Math.round(sampleHist(nonBlockedPuntDistances, rand));",
     to:'const distance = Math.round(sampleHist(nonBlockedPuntDistances, rand));'},
+  {name:'safety kick is taken after the clock expires',
+    from:"    if (clock <= 0) {\n      return {deferred: quarter === 1 || quarter === 3 ? {kicking, receiving} : null};",
+    to:"    if (false) {\n      return {deferred: quarter === 1 || quarter === 3 ? {kicking, receiving} : null};"},
+  {name:'every safety kick is an onside attempt',
+    from:'return (r.quarter === null || quarter === r.quarter) && clock <= r.window_seconds &&',
+    to:'return (r.quarter === null || quarter === r.quarter) && clock >= 0 &&'},
+  {name:'safety kick free-kick runoff is not applied to the clock',
+    from:'    clock -= runoff;\n    const base',
+    to:'    clock -= 0;\n    const base'},
 ];
 
 const dir = mkdtempSync(join(tmpdir(), 'week7-mut-'));

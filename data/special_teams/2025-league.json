@@ -381,7 +381,10 @@
       "return_yards": 0,
       "receiving_spot_yardline_100": 38,
       "kicking_team": "LV",
-      "receiving_team": "DAL"
+      "receiving_team": "DAL",
+      "next_play_id": "3533",
+      "next_play_down": 1,
+      "next_play_ydstogo": 10
      },
      {
       "game_id": "2025_14_IND_JAX",
@@ -390,7 +393,10 @@
       "return_yards": 0,
       "receiving_spot_yardline_100": 31,
       "kicking_team": "IND",
-      "receiving_team": "JAX"
+      "receiving_team": "JAX",
+      "next_play_id": "3954",
+      "next_play_down": 1,
+      "next_play_ydstogo": 10
      }
     ]
    },

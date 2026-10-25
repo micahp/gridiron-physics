@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createPuntSampler, MATCHUPS, generateGame, seeded, missedFieldGoalRestart, BLOCKED_PUNT_OUTCOMES,
   sampleBlockedPuntOutcome, sampleBlockedFieldGoalOutcome, sampleCoinTossLedger, validateHalfStartKickoffs, validateCoinTossLedger,
-  sampleSafetyKickOutcome, SAFETY_KICK_CLASSES } from '../web/week7-core.js';
+  sampleSafetyKickOutcome, SAFETY_KICK_CLASSES, shouldAttemptOnside, ONSIDE_RULE } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
 
@@ -254,8 +254,11 @@ const findGame = (predicate, league_, count=8) => {
 // (1) Safety free kick, sampled from the 2025 post-safety rows. Each test forces
 // a single class so the outcome is known. The kicking team is the one scored on,
 // kicks from its own 20, and possession and drive continue with the receiving team.
-const onlyClass = (name) => ({...league.safety_kicks, categories: Object.fromEntries(
-  SAFETY_KICK_CLASSES.map(k => [k, k === name ? league.safety_kicks.categories[k] : {n:0, rows:[]}]))});
+const ONSIDE_ALWAYS = {quarter: null, window_seconds: 900, require_trailing: false};
+const ONSIDE_NEVER = {quarter: null, window_seconds: 0, require_trailing: true};
+const onlyClass = (name) => ({...league.safety_kicks, onside_rule: name === 'normal_free_kick' ? ONSIDE_NEVER : ONSIDE_ALWAYS,
+  categories: Object.fromEntries(
+    SAFETY_KICK_CLASSES.map(k => [k, k === name || k === 'normal_free_kick' ? league.safety_kicks.categories[k] : {n:0, rows:[]}]))});
 const withSafety = (name) => ({...forcedBlocked('safety'), safety_kicks: onlyClass(name)});
 const nextPlay = (g, p) => g.plays.find(q => q.index === p.index + 1);
 // (1a) Normal free kick: the spot is an observed 2025 post-safety spot, and play continues with the receiving team.
@@ -383,6 +386,25 @@ const nextPlay = (g, p) => g.plays.find(q => q.index === p.index + 1);
       if (p.receiving_spot !== null) assert.ok(p.source, 'a sampled safety-kick event names its 2025 source row');
     }
   }
+}
+
+// (1g) The onside decision is a game-situation rule, not the 2025 class shares.
+{
+  assert.deepEqual(ONSIDE_RULE, {quarter:4, window_seconds:120, require_trailing:true});
+  assert.equal(shouldAttemptOnside({quarter:4, clock:120, trailing:true}), true, 'trailing in the Q4 window attempts onside');
+  assert.equal(shouldAttemptOnside({quarter:4, clock:121, trailing:true}), false, 'outside the window takes a normal kick');
+  assert.equal(shouldAttemptOnside({quarter:4, clock:60, trailing:false}), false, 'leading in the window takes a normal kick');
+  assert.equal(shouldAttemptOnside({quarter:3, clock:60, trailing:true}), false, 'Q3 never attempts an onside kick');
+  // The 2025 class shares (5 normal, 2 receiving onside, 1 kicking recovery) must
+  // not drive the decision: a normal draw is not the complement of an attempt.
+  const rng = seeded('onside-decision');
+  const normal = sampleSafetyKickOutcome(league.safety_kicks, rng, {onsideAttempt:false});
+  assert.equal(normal.category, 'normal_free_kick', 'a normal-kick draw is always normal');
+  const onside = new Set();
+  for (let i = 0; i < 200; i++) onside.add(sampleSafetyKickOutcome(league.safety_kicks, rng, {onsideAttempt:true}).category);
+  assert.ok(!onside.has('normal_free_kick'), 'an onside attempt never draws a normal free kick');
+  assert.deepEqual([...onside].sort(), ['onside_kicking_recovery', 'onside_receiving_possession'],
+    'an onside attempt draws from the two onside outcomes');
 }
 
 // (3) Observed blocked-punt counts are preserved; zero-count outcomes are never sampled.

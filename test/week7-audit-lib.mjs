@@ -321,8 +321,10 @@ export function auditSafetyKickPath(core, league, book) {
   const observed = (cls) => league.safety_kicks.categories[cls].rows.map(r => r.receiving_spot_yardline_100);
   const punts = {outcomes:{blocked:1}, distance_yards:{'0':1,'40':1}, blocked_receiving_touchdown_pooled:{touchdown:0,no_touchdown:1},
     blocked_resolution_pooled:{receiving_recovery:0,kicking_recovery:0,out_of_bounds:0,safety:1}};
+  const ALWAYS = {quarter:null, window_seconds:900, require_trailing:false};
+  const NEVER = {quarter:null, window_seconds:0, require_trailing:true};
   for (const cls of CLASSES) {
-    const only = {categories: Object.fromEntries(core.SAFETY_KICK_CLASSES.map(k =>
+    const only = {onside_rule: cls === 'normal_free_kick' ? NEVER : ALWAYS, categories: Object.fromEntries(core.SAFETY_KICK_CLASSES.map(k =>
       [k, k === cls ? league.safety_kicks.categories[k] : {n:0, rows:[]}]))};
     const table = {...league, punts, safety_kicks: {...league.safety_kicks, ...only}};
     let kicks = 0;
@@ -333,6 +335,7 @@ export function auditSafetyKickPath(core, league, book) {
         if (p.receiving_spot === null) continue;
         kicks++;
         assert.equal(p.kick_type, cls, `${p.id} kick class must be ${cls}`);
+        assert.equal(p.onside_attempt, cls !== 'normal_free_kick', `${p.id} kick type follows the onside decision`);
         assert.equal(p.kick_spot_own, 20, `${p.id} safety kick is taken from the own 20`);
         assert.equal(p.offense, p.receiving_team, `${p.id} safety kick is owned by the receiving team`);
         assert.ok(observed(cls).includes(p.receiving_spot), `${p.id} spot ${p.receiving_spot} is an observed 2025 spot`);
@@ -345,7 +348,7 @@ export function auditSafetyKickPath(core, league, book) {
     assert.ok(kicks > 0, `forced ${cls} safety kicks are generated`);
   }
   // A kicking-team onside recovery keeps the ball with the kicking team at first and 10 (Rule 7-3-1(e)).
-  const recovery = {...league, punts:{...punts}, safety_kicks:{...league.safety_kicks, categories:Object.fromEntries(
+  const recovery = {...league, punts:{...punts}, safety_kicks:{...league.safety_kicks, onside_rule: ALWAYS, categories:Object.fromEntries(
     core.SAFETY_KICK_CLASSES.map(k => [k, k === 'onside_kicking_recovery' ? league.safety_kicks.categories[k] : {n:0, rows:[]}]))}};
   let recoveries = 0;
   for (const m of core.MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2','3']) {
@@ -355,9 +358,32 @@ export function auditSafetyKickPath(core, league, book) {
       assert.equal(p.offense, p.kicking_team, `${p.id} recovery is owned by the kicking team`);
       assert.equal(p.recovery_spot, 67, `${p.id} recovery spot is the observed offense yardline 67`);
       const next = g.plays.find(q => q.index === p.index + 1);
+      if (!next || next.quarter !== p.quarter || next.type === 'kickoff') continue;
       assert.equal(next.offense, p.kicking_team, `${p.id} next play is the kicking team`);
       assert.deepEqual([next.down, next.togo], [1, 10], `${p.id} next play is first and 10`);
     }
   }
   assert.ok(recoveries > 0, 'forced kicking-team recoveries are generated');
+  // Shipped-table decision rule, exercised through forced safeties: an onside
+  // kick is attempted only in the Q4 two-minute window while trailing, and every
+  // safety kick is taken with time left in the period (Rule 4-3-2: a safety does
+  // not extend the period).
+  let onsideSeen = 0, normalSeen = 0;
+  for (const m of core.MATCHUPS.slice(0,2)) for (const seed of ['1042','1','2','3','4','5','6','7','8','9',
+      '10','11','12','13','14','15','16','17','18','19','20']) {
+    const g = core.generateGame(m, {[m.home]:book(m.home), [m.away]:book(m.away)}, seed, {...league, punts});
+    for (const p of g.plays.filter(q => q.type === 'safety_kick' || q.type === 'onside_kick')) {
+      assert.equal(p.onside_attempt, p.kick_type !== 'normal_free_kick', `${p.id} kick type follows the onside decision`);
+      assert.ok(p.onside_clock > 0, `${p.id} safety kick taken after the period expired`);
+      assert.equal(p.clock, p.onside_clock - p.runoff, `${p.id} free-kick runoff is taken off the clock`);
+      assert.ok(p.runoff > 0, `${p.id} free kick consumes clock`);
+      if (p.onside_attempt) {
+        assert.equal(p.quarter, core.ONSIDE_RULE.quarter, `${p.id} onside attempt is in Q4`);
+        assert.ok(p.onside_clock <= core.ONSIDE_RULE.window_seconds, `${p.id} onside attempt is inside the window`);
+        onsideSeen++;
+      } else normalSeen++;
+    }
+  }
+  assert.ok(onsideSeen > 0, 'the shipped table attempts an onside kick in its window');
+  assert.ok(normalSeen > 0, 'the shipped table takes normal free kicks outside its window');
 }

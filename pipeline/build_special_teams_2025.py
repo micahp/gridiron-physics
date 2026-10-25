@@ -120,8 +120,16 @@ def classify_post_safety_kick(kick, follow=None):
                 "offense_spot_yardline_100": 100 - yl, "kicking_team": kicking, "receiving_team": receiving,
                 "next_play_id": follow["play_id"], "next_play_down": 1, "next_play_ydstogo": 10}
         cat = "onside_receiving_possession"
+        # The landing spot is not automatically the dead-ball spot. The next scrimmage
+        # play must show the receiving team with a new series at that spot, or the
+        # build exits rather than recording a spot the data does not support.
+        if follow is None or follow["posteam"] != receiving or follow["down"] != "1" \
+                or follow["ydstogo"] != "10" or int(num(follow["yardline_100"])) != yl:
+            raise SystemExit(f"receiving-team onside recovery {ref} does not match its next play "
+                             f"{follow['play_id'] if follow else None}: expected {receiving} first and 10 at yardline {yl}")
         return cat, {**ref, "outcome": outcome, "return_yards": 0, "receiving_spot_yardline_100": yl,
-                     "kicking_team": kicking, "receiving_team": receiving}
+                     "kicking_team": kicking, "receiving_team": receiving,
+                     "next_play_id": follow["play_id"], "next_play_down": 1, "next_play_ydstogo": 10}
 
     if kick["penalty"] == "1":
         return "excluded_penalty_on_kick", {**ref, "reason": "penalty on the kick play; the spot is set by enforcement"}
