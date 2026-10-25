@@ -13,6 +13,8 @@ const pregameManifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/p
 const pregameEntry = pregameManifest.fixtures[0];
 const pregamePayload = JSON.parse(await readFile(resolve(root, 'docs/fixtures/pregame', pregameEntry.file), 'utf8'));
 const pregamePlayCount = pregamePayload.record.drives.reduce((sum, drive) => sum + drive.plays.length, 0);
+const pregameBlockedPlays = pregamePayload.record.drives.flatMap((drive) => drive.plays)
+  .filter((play) => ['blocked_punt', 'blocked_field_goal'].includes(play.event_type));
 
 class FakeNode {
   constructor(tag = 'div') {
@@ -149,4 +151,14 @@ assert.ok(get('capability-limitations').children.length > 0, 'remaining model li
 assert.equal(get('validation').hidden, true, 'this complete pinned record should pass the viewer audits');
 assert.equal(get('player-stats').children.length, pregamePayload.record.stats.player.length);
 assert.match(get('record-meta').textContent, new RegExp(String(pregamePlayCount)));
-console.log(`Pregame viewer DOM audit: ${pregameManifest.lp_source.base_commit} renders Chiefs at Seahawks as a complete ${pregamePlayCount}-play statistical game with remaining model scope shown`);
+assert.equal(pregameBlockedPlays.length, 1, 'the pinned Chiefs-Seahawks game exercises a real blocked-kick outcome');
+const blocked = pregameBlockedPlays[0];
+const blockedDriveOffset = pregamePayload.record.drives.findIndex((drive) => drive.plays.includes(blocked));
+get('drive-select').value = String(blockedDriveOffset);
+get('drive-select').listeners.change();
+const blockedPlayOffset = pregamePayload.record.drives[blockedDriveOffset].plays.indexOf(blocked);
+get('play-select').value = String(blockedPlayOffset);
+get('play-select').onchange();
+assert.match(get('play-meta').textContent, /blocked_field_goal/);
+assert.match(get('play-json').textContent, /classified_dead_ball_award/);
+console.log(`Pregame viewer DOM audit: LP ${pregameManifest.lp_source.base_commit} renders Chiefs at Seahawks as a complete ${pregamePlayCount}-play game and navigates to its blocked field-goal recovery`);

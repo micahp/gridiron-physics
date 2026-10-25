@@ -1,5 +1,5 @@
 {
-  "label": "Kansas City at Seattle · 2026-10-25",
+  "label": "Kansas City at Seattle \u00b7 2026-10-25",
   "contract": {
     "name": "gridiron.lp-full-game-payload",
     "version": "1.0.0"
@@ -7,24 +7,29 @@
   "lp_source": {
     "repository": "micahp/legendarypicks",
     "branch": "feat/statistical-full-game-e2-2026-10-25",
-    "base_commit": "e71984ac72cd49ace0fa9f6f74cae1fc433870b6",
+    "base_commit": "f21d3b4f8502f3aadf21805103cb87598b1e1c5c",
     "producer_file_sha256": {
-      "scripts/nfl_sequence/e1_drive.py": "95e2ea34153c7c85a1166898b08cec5c6f45a02f74a5fe0b5ea38c0af9fd78fd",
-      "scripts/nfl_sequence/e2_reference.py": "e32fce9724ce6d1ad1715706a80b82a4d58f40bbcc90858dd9adee6e675b3895",
-      "scripts/nfl_sequence/game_state.py": "1cdfce2bee9e334dc1d09ec67778f30a4cc1805f9f62849c188bc3d0a7444435",
-      "scripts/nfl_sequence/game_stats.py": "472463b013061e81e4c7e7c3774be14d7ac9ee99e604efaf3a91099b36084093",
+      "scripts/nfl_sequence/build_blocked_kick_outcomes.py": "535a5ed8a3487cec90f17874cf4ca8c970809c9a605555df92e3172e86a60acf",
+      "scripts/nfl_sequence/e1_drive.py": "ad675e5ced37aa1569d513d8dffc7d3904f68e421bf8c2251bdd9f40bb779a98",
+      "scripts/nfl_sequence/e2_reference.py": "7da652907a4059da432f062dafd799ba4883180896e0e1af9e9142e3b45a318b",
+      "scripts/nfl_sequence/game_state.py": "7fc27b9f5c22251a38c4e4a6957a408227b6ddc54342df9e732e7179a165239e",
+      "scripts/nfl_sequence/game_stats.py": "2eba6bbc2ccbe186944a0418c828fd37dd9084922031a9d3a4229fb7da7a8ac7",
+      "scripts/nfl_sequence/measure_kick_outcomes.py": "09aa04bc3c0741222f9b1138b0aa14a1628fd21fda4f730188cd1a8ee6226cf3",
       "scripts/nfl_sequence/pregame_snapshot.py": "3bcacaa444cbed066f06f011eb0891d33156a775cbaf57cdf12b1a084facc11d",
-      "scripts/nfl_sequence/simulate_pregame_game.py": "2d7c7c56e1e49c9c7a52a48a17f4e7e8bac9b6b65634614e48f04c2b03e5bb37"
+      "scripts/nfl_sequence/reducer.py": "8d7fa279e6e608a662285cbf2a22559491fa1ebd704095845dde76301455d51a",
+      "scripts/nfl_sequence/simulate_pregame_game.py": "ef20c2e599ec36683f7555b5a432abc32ac4d46f447023071917ee01b4c93fc0"
     }
   },
   "fixtures": [
     {
-      "file": "game-seed1.json",
-      "sha256": "cb32d5e981a340f3cbf1d8790252a7a80b197d914917c470db8b13362fe1ea51",
+      "file": "game-kc-sea-seed8-blocked.json",
+      "sha256": "ff9d29f9474c2269e762a8f6fccf4a69907afc63ca297a9e27558d61fe62bea0",
       "game_id": "2026_07_KC_SEA",
-      "seed": 1,
-      "snapshot_sha256": "8f10ea73f02ddc66fac685eabbcca2ac23cb30cc774321971710056f3491f4db",
-      "valid_full_game": true
+      "seed": 8,
+      "snapshot_sha256": "7cd0b2d9a8cbccca8887738322cdd1cd05a09856e4eecd9ea5af7701d1afa4c0",
+      "valid_full_game": true,
+      "drives": 24,
+      "plays": 144
     }
   ]
 }
