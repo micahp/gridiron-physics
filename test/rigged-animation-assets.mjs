@@ -7,13 +7,6 @@ import { getRiggedAnimationSelection, POSE } from '../web/rigged-player.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const assetPath = path.join(root, '../web/assets/football-player-rigged-animated.glb');
-// The baked FBX clips are licensed for use inside the game but not for
-// redistribution, so the GLB is never committed. These assertions run against a
-// local build (scripts/retarget_fbx_animations.py) and are skipped in a clean
-// clone, where the renderer falls back to the procedural pose driver.
-const skip = fs.existsSync(assetPath)
-  ? false
-  : 'local FBX bake absent; see web/assets/FOOTBALL_PLAYER_ATTRIBUTION.md';
 const required = [
   ...new Set([
     getRiggedAnimationSelection(POSE.STANCE).clipName,
@@ -47,7 +40,7 @@ function readGlbJson(file) {
   throw new Error('GLB has no JSON chunk');
 }
 
-test('animated player GLB preserves textured 56-bone rig and all 49 imported clips', { skip }, () => {
+test('animated player GLB preserves textured 56-bone rig and all 49 imported clips', () => {
   const gltf = readGlbJson(assetPath);
   assert.equal(gltf.skins?.[0]?.joints?.length, 56);
   assert.ok(gltf.images?.length >= 9, 'team-tintable player textures must survive export');
@@ -57,7 +50,7 @@ test('animated player GLB preserves textured 56-bone rig and all 49 imported cli
   assert.ok(gltf.animations.every((clip) => clip.channels.length > 0), 'every FBX must yield animation channels');
 });
 
-test('animated clips never animate the outer armature object transform', { skip }, () => {
+test('animated clips never animate the outer armature object transform', () => {
   const gltf = readGlbJson(assetPath);
   const nodes = gltf.nodes || [];
   const rootBoneNodes = new Set(nodes.flatMap((node, index) => node.name === 'spine' ? [index] : []));

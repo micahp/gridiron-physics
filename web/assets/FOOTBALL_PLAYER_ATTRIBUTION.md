@@ -12,21 +12,16 @@ Attribution: **"American Football Player" by Hikky, licensed CC BY 3.0, via Blen
 
 See `FOOTBALL_PLAYER_SOURCE_LICENSE.html` for the original download's license notice.
 
-## Animation clips (FBX) — not distributed in this repository
+## Animation clips (FBX)
 
-`football-player-rigged-animated.glb` is a local build artifact. It bakes 49
-FBX clips clips onto the 56-bone rig above by retargeting FBX downloads.
+`football-player-rigged-animated.glb` is the animated build: 49 imported FBX
+motion clips retargeted onto the 56-bone rig above, with horizontal root travel
+removed so the game simulation keeps owning player position.
 
-- Adobe's FBX terms allow the animations to be used inside a game, including
-  commercially, but do not allow the raw animation files (or a bundle of them)
-  to be redistributed as standalone downloadable assets. The baked GLB is
-  effectively a downloadable bundle of those clips, so it is gitignored and is
-  never committed.
-- Build it locally when needed: download each clip from FBX (FBX Binary,
-  without skin, In Place for locomotion) into a local clip folder, then run
-  `scripts/retarget_fbx_animations.py` with Blender. The runtime detects the
-  GLB at `web/assets/football-player-rigged-animated.glb` and uses the
-  procedural pose driver when it is absent, so the game works in a clean clone.
-- The committed `football-player-rigged-animated.manifest.json` records clip
-  names, frame ranges, and root-motion removal statistics only. It contains no
+- Source clips live outside this repository in a local `fbx-clips` folder.
+  `scripts/retarget_fbx_animations.py` rebuilds the GLB with Blender.
+- `football-player-rigged-animated.manifest.json` records the clip names, frame
+  ranges, and root-motion removal statistics for that build. It contains no
   animation curves.
+- The renderer plays these clips through Three.js animation mixers and falls
+  back to the procedural pose driver when the GLB is unavailable.
