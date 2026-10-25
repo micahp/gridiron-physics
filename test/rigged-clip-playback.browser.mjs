@@ -31,7 +31,13 @@ const waitForRecord = async () => {
 
 try {
   await page.goto(`${BASE}/week7.html?game=2026_07_CIN_BAL&debug`, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.querySelector('#status')?.textContent?.startsWith('Ready'), null, { timeout: 90000 });
+  await page.waitForFunction(() => {
+    const s = document.querySelector('#status')?.textContent || '';
+    return s.includes('Ready ·') || s.startsWith('Regulation ended')
+      || s.includes('Simulation stopped') || s.includes('Assets not ready') || s.includes('Simulation failed');
+  }, null, { timeout: 90000 });
+  const status = await page.evaluate(() => document.querySelector('#status')?.textContent || '');
+  assert.ok(!/Assets not ready|Simulation failed/.test(status), `app did not load: ${status}`);
 
   // Walk to a pass play: the run play has no THROW frames.
   let found = null;
