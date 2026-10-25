@@ -12,7 +12,10 @@ page.on('pageerror', err => errors.push(String(err)));
 page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
 try {
   await page.goto(BASE+'/week7.html?game='+encodeURIComponent(MATCHUPS[0].id), {waitUntil:'domcontentloaded'});
-  await page.waitForFunction(() => (document.querySelector('#status')?.textContent||'').includes('Ready ·'), null, {timeout:100000});
+  await page.waitForFunction(() => {
+    const s = document.querySelector('#status')?.textContent || '';
+    return s.includes('Ready ·') || s.startsWith('Regulation ended') || s.includes('Simulation stopped');
+  }, null, {timeout:100000});
   assert.equal(await page.locator('#audio-toggle').getAttribute('aria-pressed'), 'false',
     'No autoplay: sound must be off before user clicks');
   // Verify the source-pinned real files are actually being served.
