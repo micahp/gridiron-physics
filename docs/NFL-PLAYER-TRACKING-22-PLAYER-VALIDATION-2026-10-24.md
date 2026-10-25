@@ -25,7 +25,7 @@ Keep three distinct claims:
 | Gridiron canonical weeks 1 to 5 movement cohort | 9,289 eligible plays, 9,248 with all required 22-player pre-snap history frames (-10, -5, 0) | Do not silently remove the 41 with missing input history |
 | Gridiron complete-tracks inventory | 9,283 of 9,289 with 22 full snap-to-terminal paths; six lack a terminal marker | 9,282 of 9,283 have full ball paths; one is missing two ball frames |
 | Gridiron movement research | Team movement interface and ablation | Defines versioned, snap-only inputs and outputs; preserve this contract |
-| Week 5 existing evaluated baseline | `week5-summary.json`, 1,859 evaluated plays | 1 s mean per-play error: constant acceleration about 1.071 m, league-role prior about 0.792 m, role plus team about 0.789 m. Development only; not a pristine holdout |
+| Week 5 existing evaluated baseline | `data/research/team-movement/week5-summary.json`, 1,859 evaluated plays | 1 s mean per-play error: constant acceleration about 1.071 m, league-role prior about 0.792 m, role plus team about 0.789 m. Development only; not a pristine holdout |
 | Current 3D and physics code | `gridiron-physics/engine/`, `web/` renderer and research runner | Inventory the actual current player controller and visualizer before modifying it. Do not assume historical trajectories already drive live game playback |
 
 **Available external sources for expansion:** Big Data Bowl 2024 tackling (2022 tracking, overlapping the 2025 source season); Big Data Bowl 2022 special teams (2018 to 2020 tracking); Big Data Bowl 2026 passing and ball-flight tracking (competition-defined 2023 to 2024 plays); Big Data Bowl 2027 Combine-to-game tracking (availability, exact source and terms, and local possession to be reverified). Do not sum overlapping BDB releases as independent seasons. Check competition licenses and downstream commercial, training and redistribution permissions before adoption.
@@ -94,7 +94,7 @@ Existing Gridiron decision documentation specifies that a new movement policy be
 
 These floors were chosen after development results and must not be described as originally preregistered. The prior locomotion-controller improvement over constant acceleration was measured in millimeters in a separate development study. It must not be conflated with the larger role-prior improvement over constant acceleration.
 
-Reference: `docs/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md`.
+Reference: `docs/research/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md`.
 
 ## 7. Evaluation stages and acceptance
 
@@ -121,7 +121,7 @@ A successful M2 report is evidence of tracked player movement accuracy. It is no
 ## 9. Reference links
 
 - LP BDB and PBP join and counts: LP repository, E3 tracking join documentation
-- Gridiron complete trajectory inventory: `docs/research/gridiron-e3-presnap-tracking-features-weeks1-5-2026-10-24.json`
-- Gridiron team movement interface and ablation plan: `docs/OBSERVED-FOOTBALL-MOVEMENT-REVIEW-2026-10-24.md`
-- Existing movement week-5 results: `week5-summary.json`
-- Gridiron movement policy decision: `docs/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md`
+- Gridiron complete trajectory inventory: `docs/research/gridiron-e3-presnap-tracking-features-weeks1-5-2026-10-24.json` (on branch `fix/week7-game-state-rules`, not yet on `main`)
+- Gridiron team movement interface and ablation plan: `docs/research/OBSERVED-FOOTBALL-MOVEMENT-REVIEW-2026-10-24.md`
+- Existing movement week-5 results: `data/research/team-movement/week5-summary.json`
+- Gridiron movement policy decision: `docs/research/MOVEMENT-POLICY-MATERIALITY-DECISION-2026-10-24.md`
