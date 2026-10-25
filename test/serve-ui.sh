@@ -19,4 +19,4 @@ trap 'kill "$SRV" 2>/dev/null || true' EXIT
 
 # Give the server a moment to bind, then run the browser test.
 sleep 1
-BASE_URL="${BASE_URL}" node --test test/week7.browser.mjs
+BASE_URL="${BASE_URL}" node --test test/week7.browser.mjs test/rigged-clip-playback.browser.mjs
