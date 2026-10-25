@@ -471,6 +471,8 @@ export function simulatePassPlay(options = {}) {
     const out = [];
     for (const p of W.players) {
       if (p.down) continue;
+      // Offensive linemen are ineligible to catch a forward pass.
+      if (p.team === 'O' && p.info.group === 'OL') continue;
       const planar = Math.hypot(p.p.x - b.x, p.p.y - b.y) / YD;
       const reach = 1.15 + p.r / YD;
       if (planar > reach) continue;
