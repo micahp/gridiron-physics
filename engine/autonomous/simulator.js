@@ -100,5 +100,10 @@ export function simulateAutonomousPlay(input) {
   const run = scenario.kind === 'run' ? simulateInsideZone(scenario.config) : simulatePassPlay(scenario.config);
   const record = toResultRecord(call, run);
   record.diagnostics.reconciliation = reconcileResult(record);
+  if (record.status === 'complete' && !record.diagnostics.reconciliation.ok) {
+    record.status = 'failed';
+    record.result = null;
+    record.failure = { reason: 'reconciliation', problems: record.diagnostics.reconciliation.problems };
+  }
   return record;
 }
