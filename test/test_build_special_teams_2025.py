@@ -6,7 +6,7 @@ import sys
 import tempfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-RAW = os.environ.get("PBP_2025_RAW", os.path.join(ROOT, "data", "raw", "pbp_2025.csv.gz"))
+RAW = os.path.join(ROOT, "test", "fixtures", "special-teams", "pbp_2025_safety_onside_recovery.csv.gz")
 BUILDER = os.path.join(ROOT, "pipeline", "build_special_teams_2025.py")
 LEAGUE = os.path.join(ROOT, "data", "special_teams", "2025-league.json")
 TARGET = ("2025_08_CLE_NE", "3742")
