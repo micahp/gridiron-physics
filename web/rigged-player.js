@@ -205,6 +205,7 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
   const animation = root.userData.animation;
   if (!animation?.mixer) return false;
   const selection = getRiggedAnimationSelection(pose, carrying);
+  animation.lastRequest = { pose, carrying: !!carrying, clipName: selection?.clipName ?? null };
   const clip = selection && animation.clips.get(selection.clipName);
   if (!clip) {
     if (animation.activeAction) {

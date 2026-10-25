@@ -433,6 +433,16 @@ export class Renderer {
     this.trailN = 0;
   }
 
+  /** Debug/testing hook: which authored clip (if any) each player is running. */
+  debugAnimation() {
+    return [...this.players].map(([id, o]) => ({
+      id,
+      name: this.game.players?.[id]?.name ?? '',
+      rigged: !!o.userData.rigged,
+      clip: o.userData.animation?.activeClipName ?? null,
+    }));
+  }
+
   setLines(losX, fdX) {
     this.losLine.visible = losX != null;
     this.fdLine.visible = fdX != null;
