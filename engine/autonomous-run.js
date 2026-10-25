@@ -19,7 +19,7 @@ const ALLOWED = new Set([
 ]);
 const RATING_NAMES = new Set([
   'SPD', 'ACC', 'AGI', 'STR', 'AWR', 'RBK', 'IBL', 'PBK', 'BSH', 'PMV',
-  'FMV', 'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC',
+  'FMV', 'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC', 'CTH', 'CIT',
 ]);
 
 const OFFENSE = [
@@ -146,6 +146,12 @@ function allRoleKeys(front) {
     ...OFFENSE.map(([role]) => roleKey('O', role)),
     ...DEFENSE[front].map(([role]) => roleKey('D', role)),
   ]);
+}
+
+/** Role keys a given front actually aligns, for callers mapping into it. */
+export function roleKeysForFront(front) {
+  if (!Object.hasOwn(DEFENSE, front)) throw new RangeError(`unsupported defensive front: ${front}`);
+  return allRoleKeys(front);
 }
 
 function makeSpecs(cfg) {
