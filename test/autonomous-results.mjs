@@ -34,7 +34,13 @@ assert.equal(a.diagnostics.reconciliation.ok, true, a.diagnostics.reconciliation
 assert.equal(a.trajectory.stride, 22 * 6 + 6);
 assert.equal(a.trajectory.hz, 30);
 assert.equal(a.trajectory.roster.length, 22);
-assert.ok(Math.abs(a.result.final_ball_spot.x_yards - (a.situation.yardline_100 + a.result.yards_gained * a.situation.offense_direction)) < 1e-2);
+// The line of scrimmage is absolute x: yardline_100 counts toward the goal the offense attacks.
+for (const direction of [1, -1]) {
+  const play = simulateAutonomousPlay({ ...call, situation: { ...call.situation, offense_direction: direction } });
+  const lineX = direction === 1 ? 100 - play.situation.yardline_100 : play.situation.yardline_100;
+  assert.ok(Math.abs(play.result.final_ball_spot.x_yards - (lineX + play.result.yards_gained * direction)) < 1e-2,
+    `direction ${direction}: final spot disagrees with the line of scrimmage`);
+}
 
 // The invariant: an unrelated historical outcome cannot change the execution.
 const withHistory = { ...call, historical_record: { game_id: '2024-09-NE-CHI', yards: 99, endX: 99 } };
