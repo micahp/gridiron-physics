@@ -110,8 +110,9 @@ def classify_post_safety_kick(kick, follow=None):
             # Rule 7-3-1(e): the kicking team that legally recovers a free kick starts a
             # new series. The spot is the landing spot in the text; the next scrimmage
             # play must confirm kicking-team first and 10 at the same spot, or the build exits.
-            if "RECOVERED by" not in desc or follow is None:
-                raise SystemExit(f"kicking-team onside recovery {ref} has no recovery text or no following scrimmage play")
+            rec = re.search(r"RECOVERED by (\w+)-", desc)
+            if rec is None or rec.group(1) != kicking or follow is None:
+                raise SystemExit(f"kicking-team onside recovery {ref} is not recovered by {kicking} in its text, or has no following scrimmage play")
             if follow["posteam"] != kicking or follow["down"] != "1" or follow["ydstogo"] != "10" \
                     or int(num(follow["yardline_100"])) != 100 - yl:
                 raise SystemExit(f"kicking-team onside recovery {ref} does not match its next play {follow['play_id']}")

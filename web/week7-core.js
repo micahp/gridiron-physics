@@ -200,13 +200,16 @@ export function sampleBlockedPuntOutcome(puntTable, rand) {
 // for the kicking team's onside decision; the simulator does not model that
 // decision. Fails closed in three ways: a missing or empty table throws, a class
 // below SAFETY_KICK_MIN_SAMPLE is refused, and an observed kicking-team onside
-// recovery is refused as safety_onside_recovery, because its down and distance
-// are not in the table. Nothing falls back to another table.
+// recovery is sampled as first and 10 at its recovery spot (Rule 7-3-1(e)), with
+// no floor. Nothing falls back to another table.
 //
 // The minimum of 2 is a floor, not a sufficiency claim: one observed kick is a
 // single draw, and two is the smallest count that is not a single row. A
 // higher floor would refuse every onside draw, since only 2 receiving-team onside
-// kicks exist in 2025.
+// kicks exist in 2025. The kicking-recovery class has one 2025 row. The floor is
+// not applied to it because its outcome (first and 10) comes from the rule, and
+// only the spot is observed. Refusing it would refuse the one case the table
+// records.
 export const SAFETY_KICK_MIN_SAMPLE = 2;
 export const SAFETY_KICK_CLASSES = ['normal_free_kick', 'onside_receiving_possession', 'onside_kicking_recovery'];
 export function sampleSafetyKickOutcome(safetyTable, rand) {
