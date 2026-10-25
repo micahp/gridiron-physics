@@ -19,9 +19,9 @@ import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 export const POSE = { STANCE: 0, RUN: 1, BLOCK: 2, DOWN: 3, THROW: 4, CATCH: 5, KICK: 6, HOLD: 7, CELEBRATE: 8, BACKPEDAL: 9, WRAP: 10, KNEEL: 11 };
 
 const POSE_ANIMATIONS = Object.freeze({
-  [POSE.STANCE]: Object.freeze({ clipName: 'Football Stance', loop: false }),
+  [POSE.STANCE]: Object.freeze({ clipName: 'Idle', loop: true }),
   [POSE.RUN]: Object.freeze({ clipName: 'Running in place', loop: true }),
-  [POSE.BLOCK]: Object.freeze({ clipName: 'Pushing In Place', loop: true }),
+  [POSE.BLOCK]: Object.freeze({ clipName: 'Standing Block Idle Leaning Back', loop: true }),
   [POSE.DOWN]: Object.freeze({ clipName: 'Stunned (Knocked Down)', loop: false }),
   [POSE.THROW]: Object.freeze({ clipName: 'Quarterback Pass', loop: false }),
   [POSE.CATCH]: Object.freeze({ clipName: 'Football Catch 1', loop: false }),
@@ -233,7 +233,12 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
     next.clampWhenFinished = !selection.loop;
     next.setEffectiveTimeScale(timeScale);
     if (animation.activeAction) {
-      next.setEffectiveWeight(0);
+      // fadeIn ramps the action's interpolant from 0 to 1, but the effective
+      // weight is this.weight * ramp. Setting the weight to 0 here (as this
+      // used to) multiplies the ramp by zero, so the new clip never leaves the
+      // bind pose and every player holds a T-pose. Keep the weight at 1 and let
+      // the fade own the blend.
+      next.setEffectiveWeight(1);
       next.play();
       next.fadeIn(0.12);
       animation.activeAction.fadeOut(0.12);
@@ -243,6 +248,7 @@ function updateRiggedAnimation(root, pose, speed, dt, carrying) {
     }
     animation.activeAction = next;
     animation.activeClipName = selection.clipName;
+    root.userData.body.position.y = root.userData.groundOffsets?.[selection.clipName] ?? 0;
   } else {
     animation.activeAction.setEffectiveTimeScale(timeScale);
   }
@@ -286,6 +292,35 @@ export function buildRiggedPlayer(gltf, info, kit) {
   rig.scale.setScalar(S);
   rig.position.y = -bb.min.y * S; // ground the feet
 
+  // Some retargeted clips drive the hips below the bind height, which buries
+  // the cleats in the field. Measure each clip we actually use once per asset
+  // and lift the body by the depth it would otherwise sink.
+  const footBones = [...new Set(Object.values(bones))].filter((b) => b?.isBone && /foot|toe/i.test(b.name));
+  if (!gltf.userData.groundOffsets && footBones.length && mixer) {
+    const offsets = {};
+    const probe = new THREE.Vector3();
+    for (const selection of Object.values(POSE_ANIMATIONS).concat([CARRY_RUN_CLIP])) {
+      const clip = clips.get(selection.clipName);
+      if (!clip || offsets[clip.name] !== undefined) continue;
+      const action = mixer.clipAction(clip);
+      action.reset(); action.play(); action.setEffectiveWeight(1);
+      let lowest = Infinity;
+      const step = Math.min(0.1, clip.duration / 16);
+      for (let t = 0; t <= clip.duration; t += step) {
+        mixer.setTime(t);
+        root.updateMatrixWorld(true);
+        for (const bone of footBones) {
+          bone.getWorldPosition(probe);
+          if (probe.y < lowest) lowest = probe.y;
+        }
+      }
+      action.stop(); mixer.uncacheAction(clip);
+      offsets[clip.name] = lowest < 0 ? -lowest : 0;
+    }
+    mixer.stopAllAction(); mixer.setTime(0);
+    gltf.userData.groundOffsets = offsets;
+  }
+
   // Capture the bind pose so posing can be expressed as an offset from rest.
   const dir = (from, to) => {
     const a = bones[from], b = bones[to];
@@ -328,6 +363,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
   root.userData = {
     rigged: true, id: info.id, jerseyNumber: String(info.jersey ?? ''), body, ring, bones,
     animation: { mixer, clips, activeAction: null, activeClipName: null },
+    groundOffsets: gltf.userData.groundOffsets || {},
     phase: stablePhase(info.id, info.animationSeed ?? info.seed ?? kit?.seed ?? ''), lie: 0,
     hinge: {
       shinL: hinge('thighL', 'shinL'), shinR: hinge('thighR', 'shinR'),

@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 //   THROW frames  -> Quarterback Pass
 //   CATCH frames  -> Football Catch 1
 //   moving carrier-> Running While Holding Something
-//   standing      -> Football Stance (nobody jogs in place)
+//   standing      -> Idle (nobody jogs in place)
 // Run against a static server: BASE_URL=http://127.0.0.1:8160 node --test test/rigged-clip-playback.browser.mjs
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:8080';
 const PRE_SNAP_FRAMES = 0.9 * 30;
@@ -83,7 +83,7 @@ try {
         if (pose === 4) { bump(out.throw, `${who}:${clip}`); if (clip !== 'Quarterback Pass') out.bad.push({ k, who, kind: 'throw', clip }); }
         if (pose === 5) { bump(out.catch, `${who}:${clip}`); if (clip !== 'Football Catch 1') out.bad.push({ k, who, kind: 'catch', clip }); }
         if (pose === 1 && carrying && speed >= 0.35) { bump(out.carry, clip); if (clip !== 'Running While Holding Something') out.bad.push({ k, who, kind: 'carry', clip }); }
-        if (pose === 1 && speed < stationary) { bump(out.standing, clip); if (clip !== 'Football Stance') out.bad.push({ k, who, kind: 'standing', clip }); }
+        if (pose === 1 && speed < stationary) { bump(out.standing, clip); if (clip !== 'Idle') out.bad.push({ k, who, kind: 'standing', clip }); }
         if (k < preSnapFrames) {
           bump(out.preSnap, clip);
           // Backpedaling defensive backs are correct; a forward jog or a carry
@@ -92,10 +92,20 @@ try {
         }
       }
     }
+    // Regression: a clip switch used to set the incoming action's weight to 0
+    // before fading it in, and fadeIn multiplies by that weight, so the ramp
+    // stayed at zero and every player held the bind pose. A settled clip must
+    // reach full weight.
+    for (let k = 0; k < 40; k++) renderer.draw(rec, t0 + (frames.length - 1) / hz, 1 / 60);
+    const rigged = [...renderer.players.values()].filter((o) => o.userData.rigged);
+    out.minWeight = rigged.length ? Math.min(...rigged.map((o) => o.userData.animation.activeAction?.getEffectiveWeight() ?? 0)) : 0;
+    out.riggedCount = rigged.length;
     return out;
   }, { frames: rec.frames, ids: rec.ids, hz: rec.hz, t0: rec.t0, preSnapFrames: PRE_SNAP_FRAMES, stationary: STATIONARY });
 
   assert.deepEqual(tally.bad.slice(0, 5), [], `clip mismatches: ${JSON.stringify(tally.bad.slice(0, 5))}`);
+  assert.ok(tally.riggedCount > 0, 'no rigged players were built');
+  assert.ok(tally.minWeight > 0.99, `rigged clip weight collapsed to the bind pose: ${tally.minWeight}`);
   assert.ok(Object.keys(tally.throw).length > 0, 'no THROW frames were sampled');
   assert.ok(Object.keys(tally.catch).length > 0, 'no CATCH frames were sampled');
   assert.ok(Object.keys(tally.carry).length > 0, 'no moving-carry frames were sampled');

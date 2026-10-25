@@ -4,9 +4,9 @@ import { POSE, getRiggedAnimationSelection } from '../web/rigged-player.js';
 
 test('each gameplay pose selects its authored FBX clip and loop policy', () => {
   const expected = [
-    [POSE.STANCE, 'Football Stance', false],
+    [POSE.STANCE, 'Idle', true],
     [POSE.RUN, 'Running in place', true],
-    [POSE.BLOCK, 'Pushing In Place', true],
+    [POSE.BLOCK, 'Standing Block Idle Leaning Back', true],
     [POSE.DOWN, 'Stunned (Knocked Down)', false],
     [POSE.THROW, 'Quarterback Pass', false],
     [POSE.CATCH, 'Football Catch 1', false],
@@ -34,10 +34,10 @@ test('unknown pose codes request procedural fallback', () => {
 
 test('a stationary runner waits in a stance instead of jogging in place', () => {
   assert.deepEqual(getRiggedAnimationSelection(POSE.RUN, false, 0), {
-    clipName: 'Football Stance', loop: false,
+    clipName: 'Idle', loop: true,
   });
   assert.deepEqual(getRiggedAnimationSelection(POSE.BACKPEDAL, false, 0.1), {
-    clipName: 'Football Stance', loop: false,
+    clipName: 'Idle', loop: true,
   });
 });
 
@@ -52,6 +52,6 @@ test('the run clip returns as soon as the player is actually moving', () => {
 
 test('a stationary ball carrier holds his stance rather than jogging', () => {
   assert.deepEqual(getRiggedAnimationSelection(POSE.RUN, true, 0.12), {
-    clipName: 'Football Stance', loop: false,
+    clipName: 'Idle', loop: true,
   });
 });
