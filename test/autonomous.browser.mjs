@@ -96,6 +96,18 @@ try {
   await page.locator('#seed').fill('inside-zone-demo-1');
   const replay = await runToWhistle();
   assert.deepEqual(replay, second, 'same seed, front and ratings reproduce the displayed result exactly');
+
+  // Matchup and field position controls: the offense and defense are always different teams,
+  // and the starting spot is a real input.
+  await page.locator('#offense-team').selectOption('CHI');
+  assert.notEqual(await page.locator('#defense-team').inputValue(), 'CHI', 'the defense switches away from the offense');
+  await page.locator('#yardline').fill('90');
+  await page.locator('#snap').click();
+  assert.match(await page.locator('#stage-label').textContent(), /CHI offense vs NE defense/, 'the snap names the matchup');
+  await page.waitForFunction(() => {
+    const result = document.querySelector('#result-main')?.textContent || '';
+    return result !== 'Play in progress' && result.length > 0;
+  }, null, { timeout: 60000 });
   assert.equal(errors.length, 0, `browser errors: ${errors.join('; ')}`);
   console.log(`PASS autonomous browser: ${first.result}; same-seed replay ${replay.result}; comparison screenshot captured`);
 } finally {

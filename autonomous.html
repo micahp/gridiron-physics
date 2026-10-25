@@ -59,6 +59,16 @@
           <select id="run-side"><option value="left">Left</option><option value="right" selected>Right</option></select>
         </label>
       </div>
+      <div class="row">
+        <label>Offense
+          <select id="offense-team"><option value="NE" selected>NE</option><option value="CHI">CHI</option></select>
+        </label>
+        <label>Defense
+          <select id="defense-team"><option value="NE">NE</option><option value="CHI" selected>CHI</option></select>
+        </label>
+      </div>
+      <label>Ball position · yards to opponent goal <input id="yardline" type="number" min="1" max="99" value="50" autocomplete="off"></label>
+      <p class="note">Team names label the play. Rosters are generic authored profiles, so the names do not change the simulation.</p>
       <label id="coverage-row">Coverage
         <select id="coverage"><option value="cover_1" selected>Cover 1 man</option><option value="cover_3">Cover 3 zone</option></select>
       </label>

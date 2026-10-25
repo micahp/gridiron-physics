@@ -6,6 +6,7 @@ const $ = (selector) => document.querySelector(selector);
 const el = {
   canvas: $('#field'), snap: $('#snap'), front: $('#front'), side: $('#run-side'), seed: $('#seed'),
   play: $('#play-call'), coverage: $('#coverage'), coverageRow: $('#coverage-row'),
+  offense: $('#offense-team'), defense: $('#defense-team'), yardline: $('#yardline'),
   ol: $('#ol-rating'), dl: $('#dl-rating'), rb: $('#rb-rating'), scrub: $('#scrub'), toggle: $('#toggle'),
   speed: $('#speed'), clock: $('#clock'), result: $('#result-main'), detail: $('#result-detail'),
   carrier: $('#carrier-readout'), lane: $('#lane-readout'), events: $('#play-events'), compare: $('#compare-runs'),
@@ -85,10 +86,16 @@ function currentRatings() {
   return ratings;
 }
 
+/** Absolute line of scrimmage for the offense attacking +x, from yards to the opponent's goal. */
+function startingLos() {
+  const yardline = Math.min(99, Math.max(1, Math.round(Number(el.yardline.value) || 50)));
+  return 100 - yardline;
+}
+
 function scenarioConfig() {
   const base = {
     seed: el.seed.value.trim() || (isPass() ? 'slant-flat-demo-1' : 'inside-zone-demo-1'),
-    los: 35,
+    los: startingLos(),
     dir: 1,
     ballY: 26.667,
     ratingOverrides: currentRatings(),
@@ -396,7 +403,7 @@ requestAnimationFrame(animate);
 
 el.snap.addEventListener('click', () => {
   el.snap.disabled = true;
-  el.label.textContent = 'Snap · all 22 players are reading the live play.';
+  el.label.textContent = `${el.offense.value} offense vs ${el.defense.value} defense · all 22 players are reading the live play.`;
   requestAnimationFrame(() => {
     try { createPlay(); }
     catch (error) {
@@ -426,6 +433,13 @@ el.scrub.addEventListener('input', () => {
 });
 el.focus.addEventListener('change', () => { renderer.select(el.focus.value); renderDecisionPanel(true); });
 el.play.addEventListener('change', syncControls);
+// The offense and defense are always different teams.
+el.offense.addEventListener('change', () => {
+  if (el.defense.value === el.offense.value) el.defense.selectedIndex = 1 - el.defense.selectedIndex;
+});
+el.defense.addEventListener('change', () => {
+  if (el.offense.value === el.defense.value) el.offense.selectedIndex = 1 - el.offense.selectedIndex;
+});
 for (const box of [el.overlayAssignments, el.overlayPursuit, el.overlayLanes]) {
   box.addEventListener('change', () => draw(1 / 60));
 }
