@@ -148,6 +148,32 @@ export function sampleBlockedTouchdown(puntTable, rand) {
   if (!(total > 0)) throw new Error('blocked-punt touchdown table has no observations');
   return rand() * total < (counts.touchdown || 0);
 }
+// Blocked field goal, from the 2025 regular-season play text. Fails closed when
+// the table is missing or empty, as the blocked-punt samplers do.
+export function sampleBlockedFieldGoalOutcome(fgTable, rand) {
+  const counts = fgTable?.blocked_resolution;
+  if (!counts) throw new Error('missing blocked-field-goal resolution table');
+  const keys = ['receiving_recovery', 'kicking_recovery', 'no_recovery'];
+  const total = keys.reduce((n, k) => n + (counts[k] || 0), 0);
+  if (!(total > 0)) throw new Error('blocked-field-goal resolution table has no observations');
+  let pick = rand() * total;
+  let last = null;
+  for (const k of keys) {
+    const c = counts[k] || 0;
+    if (!c) continue;
+    last = k;
+    pick -= c;
+    if (pick < 0) return k;
+  }
+  return last;
+}
+export function sampleBlockedFieldGoalTouchdown(fgTable, rand) {
+  const counts = fgTable?.blocked_receiving_touchdown;
+  if (!counts) throw new Error('missing blocked-field-goal touchdown table');
+  const total = (counts.touchdown || 0) + (counts.no_touchdown || 0);
+  if (!(total > 0)) throw new Error('blocked-field-goal touchdown table has no observations');
+  return rand() * total < (counts.touchdown || 0);
+}
 // Samples a blocked-punt outcome from the observed 2025 counts. Fails closed
 // when the table is missing or has no observations rather than inventing one.
 export function sampleBlockedPuntOutcome(puntTable, rand) {
@@ -418,9 +444,28 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
             runoff_basis: good ? 'rule_11_4_2_note_5_cap' : 'unverified_miss_estimate',
             note:'Make rate from 2025 league field goals by distance (nflverse). Kick flight is not simulated.'});
           clock -= runoff;
-          if (blocked) {
+          const fgResolution = blocked ? sampleBlockedFieldGoalOutcome(league.field_goals, rand) : null;
+          if (fgResolution === 'kicking_recovery') {
             refuse('blocked_field_goal',
-              'Blocked field goal is a live ball. Its restart (Rule 11-4-2) and possession depend on whether the ball was touched beyond the line and where it was recovered, which the inputs do not record.');
+              'Blocked field goal recovered by the kicking team: the down and distance depend on whether the ball was touched beyond the line, which the inputs do not record.');
+          } else if (fgResolution === 'receiving_recovery') {
+            const receiving = other(match.home, match.away, offense);
+            const blockedPlay = plays[plays.length - 1];
+            blockedPlay.possession_resolution = fgResolution;
+            blockedPlay.recovery_team = receiving;
+            blockedPlay.possession_after = receiving;
+            blockedPlay.note = 'Blocked field goal recovered by the receiving team (2025 split). Recovery spot is estimated at the line of scrimmage.';
+            if (sampleBlockedFieldGoalTouchdown(league.field_goals, rand)) {
+              scores[receiving] += 6;
+              blockedPlay.touchdown_return = true;
+              blockedPlay.note = 'Blocked field goal recovered by the receiving team and returned for a touchdown (2025 split).';
+              if (rand() < xpRate) { scores[receiving] += 1; blockedPlay.try = 'XP good (2025 league rate)'; }
+              else blockedPlay.try = 'XP missed (2025 league rate)';
+              blockedPlay.scoreAfter = {...scores};
+              scheduleKickoff(receiving, 'touchdown');
+            } else {
+              turnover('blocked_field_goal', 100 - yl);
+            }
           } else if (good) {
             scores[offense] += 3;
             scheduleKickoff(offense, 'field_goal_good');
@@ -439,6 +484,7 @@ export function generateGame(match, books, seed = '1042', league = null, { coinT
               ? '2026 Rule 11-4-2(a): untouched miss with the estimated kick spot inside the receivers\' 20; the receiving team takes the ball at its 20.'
               : '2026 Rule 11-4-2(b): untouched miss with the estimated kick spot at or beyond the receivers\' 20; the receiving team takes the ball at the kick spot (estimate: 8 yards behind the LOS).';
             missed.kick_spot_inside_20 = kickSpotInside20;
+            if (blocked) missed.possession_resolution = 'no_recovery';
           }
         } else {
           const pt = puntSampler(yl, rand);

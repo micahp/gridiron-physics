@@ -68,6 +68,9 @@ def main():
     ko_tb_air = 0
     punts = kickoffs = 0
     blocked_res = collections.Counter()
+    fg_missed = fg_blocked = 0
+    fg_blocked_res = collections.Counter()
+    fg_blocked_td = collections.Counter()
 
     with gzip.open(RAW, "rt") as f:
         for r in csv.DictReader(f):
@@ -80,6 +83,18 @@ def main():
                 fg[name]["attempts"] += 1
                 if r["field_goal_result"] == "made":
                     fg[name]["made"] += 1
+                elif r["field_goal_result"] == "missed":
+                    fg_missed += 1
+                elif r["field_goal_result"] == "blocked":
+                    fg_blocked += 1
+                    recovered = re.search(r"recovered by (\w+)-", r["desc"], re.I)
+                    if not recovered:
+                        fg_blocked_res["no_recovery"] += 1
+                    elif recovered.group(1) == r["posteam"]:
+                        fg_blocked_res["kicking_recovery"] += 1
+                    else:
+                        fg_blocked_res["receiving_recovery"] += 1
+                        fg_blocked_td["touchdown" if "TOUCHDOWN" in r["desc"].upper() else "no_touchdown"] += 1
             elif pt == "extra_point" and r["extra_point_attempt"] == "1":
                 xp[r["extra_point_result"] or "unknown"] += 1
             elif pt == "punt" and r["punt_attempt"] == "1" and r["kick_distance"]:
@@ -146,6 +161,10 @@ def main():
                 {"name": name, "attempts": fg[name]["attempts"], "made": fg[name]["made"]}
                 for name, _, _ in FG_BUCKETS
             ],
+            "non_make_split": {"blocked": fg_blocked, "missed": fg_missed,
+                               "source": "nflverse play_by_play_2025 REG field_goal_result"},
+            "blocked_resolution": {k: fg_blocked_res[k] for k in ("receiving_recovery", "kicking_recovery", "no_recovery")},
+            "blocked_receiving_touchdown": {k: fg_blocked_td[k] for k in ("touchdown", "no_touchdown")},
         },
         "extra_points": dict(xp),
         "punts": {

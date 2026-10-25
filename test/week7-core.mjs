@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createPuntSampler, MATCHUPS, generateGame, seeded, missedFieldGoalRestart, BLOCKED_PUNT_OUTCOMES,
-  sampleBlockedPuntOutcome, sampleCoinTossLedger, validateHalfStartKickoffs, validateCoinTossLedger } from '../web/week7-core.js';
+  sampleBlockedPuntOutcome, sampleBlockedFieldGoalOutcome, sampleCoinTossLedger, validateHalfStartKickoffs, validateCoinTossLedger } from '../web/week7-core.js';
 
 const league = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
 
@@ -337,9 +337,10 @@ assert.deepEqual(punts.blocked_resolution, {receiving_recovery:7, kicking_recove
 
 // (7) Blocked field goals refuse explicitly; a table with no blocks never does.
 {
-  const noMake = (blocked, missed) => ({...league, field_goals:{...league.field_goals,
+  const noMake = (blocked, missed, resolution = {receiving_recovery:0, kicking_recovery:1, no_recovery:0}) => ({...league, field_goals:{...league.field_goals,
     buckets:league.field_goals.buckets.map(b=>({...b, made:0})),
-    non_make_split:{blocked, missed}}});
+    non_make_split:{blocked, missed}, blocked_resolution:resolution,
+    blocked_receiving_touchdown:{touchdown:0, no_touchdown:1}}});
   const g = findGame(g=>g.plays.some(p=>p.type==='field_goal'), noMake(1, 0));
   assert.ok(g, 'a forced blocked-FG game has a field goal attempt');
   assert.equal(g.refusal.rule, 'blocked_field_goal');
@@ -352,6 +353,22 @@ assert.deepEqual(punts.blocked_resolution, {receiving_recovery:7, kicking_recove
     assert.ok(!h.refusal || h.refusal.rule !== 'blocked_field_goal', 'no blocked-FG refusal when the table has no blocks');
     assert.ok(!h.plays.some(p=>p.blocked), 'no blocked field goal is sampled');
   }
+  // Receiving recovery: possession passes at the line, with no refusal.
+  const recv = findGame(g=>g.plays.some(p=>p.blocked), noMake(1, 0, {receiving_recovery:1, kicking_recovery:0, no_recovery:0}));
+  assert.ok(recv && !recv.refusal, 'a receiving-team blocked-FG recovery completes without refusal');
+  const bfg = recv.plays.find(p=>p.type==='field_goal'&&p.blocked);
+  assert.equal(bfg.possession_resolution, 'receiving_recovery');
+  assert.equal(bfg.possession_after, bfg.recovery_team, 'receiving team takes possession');
+  assert.notEqual(recv.plays[bfg.index].offense, bfg.offense, 'the next play belongs to the receiving team');
+  // No recovery: the play is restarted as an untouched miss, labelled as such.
+  const none = findGame(g=>g.plays.some(p=>p.blocked), noMake(1, 0, {receiving_recovery:0, kicking_recovery:0, no_recovery:1}));
+  assert.ok(none && !none.refusal, 'a blocked FG with no recovery completes without refusal');
+  const nb = none.plays.find(p=>p.type==='field_goal'&&p.blocked);
+  assert.equal(nb.possession_resolution, 'no_recovery');
+  assert.ok(nb.restart_spot !== undefined, 'no-recovery blocked FG restarts at a spot');
+  // Fail closed: a missing or empty blocked-FG table never invents an outcome.
+  assert.throws(()=>sampleBlockedFieldGoalOutcome({}, seeded('fg')), /missing blocked-field-goal/);
+  assert.throws(()=>sampleBlockedFieldGoalOutcome({blocked_resolution:{}}, seeded('fg')), /no observations/);
 }
 
 // (6) Missed-FG output names kick position, not contact.
