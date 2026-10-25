@@ -50,6 +50,8 @@ function makeViewer(){
       selectedOutcome:currentPlay?.outcome,
       requestedKind:currentSelection?.play?.kind,
       throwSpeed:current.rec.throwSpeed,
+      t0:current.rec.t0,
+      duration:current.duration,
       end:current.rec.end,
       events:current.rec.events.map(e=>({type:e.type,t:e.t,by:e.by})),
     });
