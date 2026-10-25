@@ -549,6 +549,7 @@ export function simulatePassPlay(options = {}) {
     }
     carrier = player;
     carrierSince = W.t;
+    if (interception) maxForward = null;
     pCarrierReset();
     resolveAttempt = null;
     throwInfo = null;
@@ -881,11 +882,11 @@ export function simulatePassPlay(options = {}) {
       // Out-of-bounds flight is not a rule violation until the ball lands.
     }
     if (carrier && W.ball.holder === carrier) {
-      const f = (W.ball.x / YD - cfg.los) * dir;
+      const attack = carrier.team === 'O' ? dir : -dir;
+      const f = (W.ball.x / YD - cfg.los) * attack;
       if (!maxForward || f > maxForward.f) maxForward = { f, x: W.ball.x, y: W.ball.y };
       const x = W.ball.x / YD;
       // A returner scores at the goal the returner's team attacks, which is the opposite end after an interception.
-      const attack = carrier.team === 'O' ? dir : -dir;
       if ((attack > 0 && x >= 100) || (attack < 0 && x <= 0)) {
         const goalX = (attack > 0 ? 100 : 0) * YD;
         W.event('touchdown', { carrier_id: carrier.id, spot: { x: goalX / YD, y: W.ball.y / YD } });
