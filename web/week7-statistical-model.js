@@ -22,11 +22,12 @@ const PROFILES = {
 const OFFENSE_SLOTS = ['LT', 'LG', 'C', 'RG', 'RT', 'QB', 'RB', 'TE', 'WR1', 'WR2', 'WR3'];
 const DEFENSE_SLOTS = ['LEDGE', 'LDT', 'RDT', 'REDGE', 'MLB', 'WLB', 'LCB', 'RCB', 'NB', 'SS', 'FS'];
 const OL_SLOTS = ['LT', 'LG', 'C', 'RG', 'RT'];
+const POSITION_PRIORITY = { QB: 0, RB: 1, FB: 2, WR: 3, TE: 4, LT: 5, LG: 5, C: 5, RG: 5, RT: 5 };
 
-function playerInfo({ id, name, team, pos, profile, jersey }) {
+function playerInfo({ id, name, team, pos, profile, jersey, starter }) {
   const physics = { ...profile, f0: profile.mass * profile.vmax / profile.tau };
   return {
-    id, name, short: name, jersey: jersey == null || jersey === '' ? '?' : String(jersey), team, pos, group: pos,
+    id, name, short: name, jersey: jersey == null || jersey === '' ? '?' : String(jersey), team, pos, group: pos, starter,
     ratings: Object.fromEntries(RATING_KEYS.map((key) => [key, 65])),
     physics,
   };
@@ -35,7 +36,16 @@ function playerInfo({ id, name, team, pos, profile, jersey }) {
 function profileForPosition(position) {
   if (position === 'QB' || position === 'RB' || position === 'WR' || position === 'TE') return PROFILES[position];
   if (position === 'FB') return PROFILES.TE;
+  if (OL_SLOTS.includes(position)) return PROFILES.OL;
   return PROFILES.DB;
+}
+
+function canonicalRosterRole(roles) {
+  return [...roles].sort((a, b) =>
+    (POSITION_PRIORITY[a.pos_abb] ?? 6) - (POSITION_PRIORITY[b.pos_abb] ?? 6)
+    || Number(b.starter) - Number(a.starter)
+    || (a.pos_rank ?? 999) - (b.pos_rank ?? 999)
+    || a.group.localeCompare(b.group))[0];
 }
 
 function sideRoster(payload, side) {
@@ -57,10 +67,18 @@ export function createWeek7StatisticalGame(payload) {
   const rosters = { A: sideRoster(payload, 'A'), B: sideRoster(payload, 'B') };
   const players = {};
   for (const side of ['A', 'B']) {
+    const rolesByPlayer = new Map();
     for (const source of rosters[side]) {
+      const roles = rolesByPlayer.get(source.gsis_id) ?? [];
+      roles.push(source);
+      rolesByPlayer.set(source.gsis_id, roles);
+    }
+    for (const roles of rolesByPlayer.values()) {
+      const source = canonicalRosterRole(roles);
       players[source.gsis_id] = playerInfo({
         id: source.gsis_id, name: source.player_name, team: side, pos: source.pos_abb,
         profile: profileForPosition(source.pos_abb), jersey: source.jersey_number,
+        starter: roles.some((role) => role.starter),
       });
     }
     for (const slot of OL_SLOTS) {
@@ -96,14 +114,21 @@ export function createWeek7StatisticalGame(payload) {
 
 function offenseLineup(game, side, play) {
   const roster = game.rosters[side];
-  const byId = new Map(roster.map((player) => [player.gsis_id, player]));
+  const byId = new Map();
+  for (const player of roster) {
+    const roles = byId.get(player.gsis_id) ?? [];
+    roles.push(player);
+    byId.set(player.gsis_id, roles);
+  }
   const participants = play.participants ?? {};
   const lineup = {};
   const used = new Set();
-  const valid = (id, fieldSide, accepted = null) => {
-    const player = id == null ? null : byId.get(id);
-    return player && (!fieldSide || participants[fieldSide] === side)
-      && (!accepted || accepted.includes(player.pos_abb)) ? player : null;
+  const valid = (id, fieldSide, accepted = null, positionField = null) => {
+    const roles = id == null ? [] : byId.get(id) ?? [];
+    const preferred = positionField ? participants[positionField] : null;
+    const eligible = roles.filter((player) => !accepted || accepted.includes(player.pos_abb));
+    const player = eligible.find((candidate) => candidate.pos_abb === preferred) ?? eligible[0];
+    return player && (!fieldSide || participants[fieldSide] === side) ? player : null;
   };
   const assign = (slot, player) => {
     if (!player || used.has(player.gsis_id)) return false;
@@ -114,9 +139,9 @@ function offenseLineup(game, side, play) {
   const ranked = (positions) => roster.filter((player) => positions.includes(player.pos_abb))
     .sort((a, b) => (a.pos_rank ?? 999) - (b.pos_rank ?? 999) || a.player_name.localeCompare(b.player_name));
 
-  const passer = valid(participants.passer_id, 'passer_side', ['QB']);
-  const rusher = valid(participants.rusher_id, 'rusher_side', ['RB', 'FB', 'QB']);
-  const receiver = valid(participants.receiver_id, 'receiver_side', ['WR', 'TE', 'RB', 'FB']);
+  const passer = valid(participants.passer_id, 'passer_side', ['QB'], 'passer_position');
+  const rusher = valid(participants.rusher_id, 'rusher_side', ['RB', 'FB', 'QB'], 'rusher_position');
+  const receiver = valid(participants.receiver_id, 'receiver_side', ['WR', 'TE', 'RB', 'FB'], 'receiver_position');
   assign('QB', passer ?? (rusher?.pos_abb === 'QB' ? rusher : null) ?? ranked(['QB'])[0]);
   if (rusher && rusher.pos_abb !== 'QB') assign('RB', rusher);
   if (receiver) {
@@ -126,7 +151,7 @@ function offenseLineup(game, side, play) {
   if (!lineup.RB) assign('RB', ranked(['RB', 'FB']).find((player) => !used.has(player.gsis_id)));
   if (!lineup.TE) assign('TE', ranked(['TE']).find((player) => !used.has(player.gsis_id)));
   const wideouts = ranked(['WR']).filter((player) => !used.has(player.gsis_id));
-  if (lineup.WR1?.pid && byId.get(lineup.WR1.pid)?.pos_abb !== 'WR') delete lineup.WR1;
+  if (lineup.WR1?.pid && !byId.get(lineup.WR1.pid)?.some((player) => player.pos_abb === 'WR')) delete lineup.WR1;
   if (receiver?.pos_abb === 'WR' && !lineup.WR1) assign('WR1', receiver);
   for (const slot of ['WR1', 'WR2', 'WR3']) {
     if (!lineup[slot]) assign(slot, wideouts.find((player) => !used.has(player.gsis_id)));

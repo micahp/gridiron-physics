@@ -263,18 +263,20 @@ function renderRoster() {
   const identitySide = physicsGame.identities[side].side;
   const snapshot = gamePayload.pregame_snapshot.rosters[identitySide];
   const roster = snapshot?.players ?? [];
+  const uniquePlayers = new Set(roster.map((player) => player.gsis_id)).size;
   const lineup = currentReplay.script.lineup[side] ?? {};
   const depthRows = [...roster].sort((a, b) => a.pos_abb.localeCompare(b.pos_abb)
     || (a.pos_rank ?? 999) - (b.pos_rank ?? 999)).map((player) =>
-    `<div class="rrow"><span class="pos">${esc(player.pos_abb)}</span><span>${esc(player.player_name)}</span><span class="jersey">#${esc(player.jersey_number ?? '—')}</span><span class="pos">Depth ${esc(player.pos_rank ?? '—')}</span><span class="ovr">—</span></div>`).join('');
+    `<div class="rrow"><span class="pos">${esc(player.pos_abb)}</span><span>${esc(player.player_name)}</span><span class="jersey">#${esc(player.jersey_number ?? '—')}</span><span class="pos">Depth ${esc(player.pos_rank ?? '—')}</span><span class="starter-tag ${player.starter ? 'is-starter' : ''}">${player.starter ? 'Starter' : 'Backup'}</span></div>`).join('');
   const lineupRows = Object.entries(lineup).map(([slot, id]) => {
     const player = physicsGame.players[id];
     const generic = id.startsWith('gridiron:');
     const jersey = player?.jersey && player.jersey !== '?' ? `#${player.jersey}` : '—';
-    return `<div class="rrow"><span class="pos">${esc(slot)}</span><span>${esc(player?.name ?? 'Unknown')}</span><span class="jersey">${esc(jersey)}</span><span class="pos">${generic ? 'Template' : 'LP roster'}</span><span class="ovr">—</span></div>`;
+    const status = generic ? 'Template' : player?.starter ? 'Starter' : 'Backup';
+    return `<div class="rrow"><span class="pos">${esc(slot)}</span><span>${esc(player?.name ?? 'Unknown')}</span><span class="jersey">${esc(jersey)}</span><span class="pos">${generic ? 'Template' : 'LP roster'}</span><span class="starter-tag ${player?.starter ? 'is-starter' : ''}">${esc(status)}</span></div>`;
   }).join('');
   const jerseyWeek = snapshot?.jersey_week;
-  $('players').innerHTML = `<div class="rgroup">Frozen starting units · ${roster.length} roles</div><p class="note">Pregame starters and jersey numbers from the frozen week ${esc(jerseyWeek ?? '—')} snapshot. A player may appear in multiple special-teams roles.</p><div class="rgroup">Pregame roster</div>${depthRows}<div class="rgroup">Current replay lineup · ${Object.keys(lineup).length} slots</div>${lineupRows}<p class="note">Player ratings are not supplied by the LP snapshot. “Template” slots are generic visualization bodies; the 3D physics profiles are not player ratings.</p>`;
+  $('players').innerHTML = `<div class="rgroup">Frozen full depth chart · ${roster.length} role rows / ${uniquePlayers} players</div><p class="note">Jersey numbers and starter/backup flags come from the frozen week ${esc(jerseyWeek ?? '—')} snapshot. Players can have more than one depth-chart role.</p><div class="rgroup">Pregame roster</div>${depthRows}<div class="rgroup">Current replay lineup · ${Object.keys(lineup).length} slots</div>${lineupRows}<p class="note">Player ratings are not supplied by the LP snapshot. “Template” slots are generic visualization bodies; the 3D defense still uses generic bodies because its alignment is not mapped.</p>`;
 }
 
 function pointsByQuarter() {
