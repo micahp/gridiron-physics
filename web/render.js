@@ -5,6 +5,7 @@ import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, setNeutralMode, stablePhase } from './rigged-player.js';
 import { kitsForGame } from './football-kits.js';
+import { loadStadium, placeStadium, STADIUM_SCALE } from './stadium.js';
 
 // ?neutral=1 keeps the imported rig in its bind pose (no procedural posing).
 if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('neutral')) {
@@ -396,6 +397,9 @@ export class Renderer {
   }
 
   buildStadium() {
+    // Cheap blockout while the baked stadium GLB loads (see web/stadium.js).
+    const primitives = (this.stadiumPrimitives = new THREE.Group());
+    this.scene.add(primitives);
     const seat = new THREE.MeshStandardMaterial({ color: '#141b24', roughness: 1 });
     const crowd = new THREE.MeshStandardMaterial({ color: '#202a36', roughness: 1 });
     for (const [x, z, w, d, ry] of [[50, -22, 150, 20, 0], [50, W + 22, 150, 20, 0], [-32, W / 2, 20, 95, 0], [132, W / 2, 20, 95, 0]]) {
@@ -408,7 +412,7 @@ export class Renderer {
         tiers.add(m);
       }
       tiers.rotation.y = ry;
-      this.scene.add(tiers);
+      primitives.add(tiers);
     }
     // light towers
     const tower = new THREE.MeshStandardMaterial({ color: '#2a333d' });
@@ -418,8 +422,28 @@ export class Renderer {
       t.position.set(x, 20, z);
       const l = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 1), lamp);
       l.position.set(x, 41, z);
-      this.scene.add(t, l);
+      primitives.add(t, l);
     }
+    this.loadStadiumModel();
+  }
+
+  /** Swap the blockout for the baked bowl. Failure keeps the primitives, never a blank scene. */
+  loadStadiumModel() {
+    this.stadiumStarted = performance.now();
+    loadStadium().then((group) => {
+      placeStadium(group, { centerX: 50, centerZ: W / 2, scale: STADIUM_SCALE });
+      this.scene.add(group);
+      this.stadiumModel = group;
+      this.stadiumLoadMs = performance.now() - this.stadiumStarted;
+      if (this.stadiumPrimitives) {
+        this.scene.remove(this.stadiumPrimitives);
+        this.stadiumPrimitives.traverse((o) => { o.geometry?.dispose?.(); });
+        this.stadiumPrimitives = null;
+      }
+      console.log('stadium model loaded:', group.userData.meshes, 'meshes in', Math.round(this.stadiumLoadMs), 'ms');
+    }).catch((err) => {
+      console.warn('stadium model unavailable, keeping blockout', err);
+    });
   }
 
   buildPosts() {
