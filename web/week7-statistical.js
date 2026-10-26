@@ -2,6 +2,7 @@ import { Renderer } from './render.js';
 import { FootballAudio } from './audio-director.js';
 import { adaptLpGamePayload, validatePregameSourcePin } from './lp-game-record-adapter.js';
 import { createWeek7StatisticalGame, simulateWeek7StatisticalPlay } from './week7-statistical-model.js';
+import { scoreDelta, scoreMoment, tweenScore } from './score-animation.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -21,6 +22,7 @@ let currentReplay = null;
 let currentTime = 0;
 let playing = false;
 let lastFrame = null;
+let scorePlan = null;
 let endPause = 0;
 let filter = 'all';
 let rosterTeam;
@@ -106,6 +108,55 @@ function playable(index, step) {
   return null;
 }
 
+// Scoreboard state for the selected play. The scorebug shows the pre-play score until the scoring moment, then tweens
+// to the post-play score and flashes the scoring team.
+const SCORE_TWEEN_S = 0.6;
+const SCORE_FLASH_MS = 1400;
+
+function setScorebugScores(scores) {
+  $('away-score').textContent = String(scores.away);
+  $('home-score').textContent = String(scores.home);
+}
+
+function clearScoringFlash() {
+  $('bug-away').classList.remove('scored');
+  $('bug-home').classList.remove('scored');
+}
+
+function updateScorebug(now) {
+  if (!scorePlan || !currentReplay) return;
+  const record = currentReplay.record;
+  if (scorePlan.replay !== currentReplay) {
+    scorePlan.replay = currentReplay;
+    scorePlan.moment = scoreMoment(record) ?? record.t0 + (record.frames.length - 1) / record.hz;
+  }
+  if (!scorePlan.delta.away && !scorePlan.delta.home) return;
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const { pre, post, moment } = scorePlan;
+  if (currentTime < moment) {
+    if (scorePlan.phase !== 'pre') {
+      scorePlan.phase = 'pre';
+      clearScoringFlash();
+    }
+    setScorebugScores(pre);
+    return;
+  }
+  if (scorePlan.phase === 'pre') {
+    scorePlan.phase = 'post';
+    scorePlan.start = now;
+    if (!reduced) {
+      if (scorePlan.delta.away > 0) $('bug-away').classList.add('scored');
+      if (scorePlan.delta.home > 0) $('bug-home').classList.add('scored');
+    }
+  }
+  if (!reduced && now - scorePlan.start > SCORE_FLASH_MS) clearScoringFlash();
+  const progress = reduced ? 1 : (now - scorePlan.start) / 1000 / SCORE_TWEEN_S;
+  setScorebugScores({
+    away: tweenScore(pre.away, post.away, progress),
+    home: tweenScore(pre.home, post.home, progress),
+  });
+}
+
 function renderScorebug(entry) {
   const play = entry.play;
   const state = play.state_before;
@@ -124,6 +175,13 @@ function renderScorebug(entry) {
   $('bug-home').style.setProperty('--team', physicsGame.teams[homeSide].color);
   $('bug-away').classList.toggle('poss', state.offense_team === awaySide);
   $('bug-home').classList.toggle('poss', state.offense_team === homeSide);
+  const after = entry.play.state_after ?? state;
+  scorePlan = {
+    pre: { away: state.away_score ?? 0, home: state.home_score ?? 0 },
+    post: { away: after.away_score ?? 0, home: after.home_score ?? 0 },
+    delta: scoreDelta(entry.play), phase: 'pre', start: 0, replay: null, moment: null,
+  };
+  clearScoringFlash();
 }
 
 function renderSummary(entry, replay) {
@@ -379,6 +437,7 @@ function animate(now) {
       }
     }
     currentTime = Math.min(currentReplay.record.t0 + duration, currentTime);
+    updateScorebug(now);
     renderer.draw(currentReplay.record, currentTime, dt);
     $('scrub').value = String(Math.round(1000 * (currentTime - currentReplay.record.t0) / Math.max(0.01, duration)));
     stadiumAudio?.update(Math.max(0, currentTime - currentReplay.record.t0), playing);
