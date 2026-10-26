@@ -109,8 +109,8 @@ export function createWeek7StatisticalGame(payload) {
     }
   }
   const colors = {
-    KC: { color: '#e31837', alt: '#ffb81c', short: 'KC', name: 'Kansas City Chiefs' },
-    SEA: { color: '#002244', alt: '#69be28', short: 'SEA', name: 'Seattle Seahawks' },
+    KC: { color: '#e31837', alt: '#ffb81c', short: 'Chiefs', name: 'Kansas City Chiefs' },
+    SEA: { color: '#002244', alt: '#69be28', short: 'Seahawks', name: 'Seattle Seahawks' },
   };
   const teamStyle = (side) => colors[identities[side].team]
     ?? { color: '#33485b', alt: '#dbe9f2', short: identities[side].team, name: identities[side].team };

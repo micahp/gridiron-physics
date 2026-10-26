@@ -73,7 +73,7 @@ function mascotName(side) {
 }
 
 function spotFor(state) {
-  const abbr = (side) => physicsGame.teams?.[side]?.short ?? teamName(side);
+  const abbr = (side) => physicsGame.identities?.[side]?.team ?? side;
   return spotText(state.yardline_100, abbr(state.offense_team), abbr(state.defense_team));
 }
 
