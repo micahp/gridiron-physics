@@ -22,6 +22,7 @@ $('matchup').innerHTML = MATCHUPS.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.
 $('matchup').value = match.id;
 for (const [side, id] of [['away', match.away], ['home', match.home]]) {
   $(side+'-name').textContent = teamStyle(id).short;
+  $(side+'-logo').src = teamLogoUrl(id);
   $('bug-'+side).style.setProperty('--team', teamStyle(id).color);
 }
 
@@ -272,6 +273,7 @@ function spotLabel(p) {
   return team + ' ' + (ownSide ? 100 - yl : yl);
 }
 import { afterPlayEnd, animateScoreBug, touchdownScore } from './score-animation.js';
+import { teamLogoUrl } from './team-logo.js';
 function scoreAtPlay(p) {
   // The try (one or two) belongs to the next play's starting score, so a touchdown shows six points here.
   const i = simulation.plays.indexOf(p);

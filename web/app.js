@@ -2,6 +2,7 @@ import { simulatePlay } from '../engine/play.js';
 import { nextBallY } from '../engine/game.js';
 import { Renderer } from './render.js';
 import { afterPlayEnd, animateScoreBug, touchdownScore } from './score-animation.js';
+import { teamLogoUrl } from './team-logo.js';
 
 const $ = (s) => document.querySelector(s);
 const MPH = 2.23694;
@@ -132,7 +133,7 @@ function renderBug(opts = {}) {
   const team = (id, score) => {
     const t = T[id];
     const poss = S.off === id && !['kickoff'].includes(S.kind);
-    return `<img src="${esc(t.logo)}" alt=""><span class="abbr">${esc(t.short || t.abbr)}</span><span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
+    return `<img src="${esc(teamLogoUrl(t.abbr))}" alt=""><span class="abbr">${esc(t.short || t.abbr)}</span><span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
       + (poss ? '' : '');
   };
   const a = $('#bug-away'), h = $('#bug-home');
