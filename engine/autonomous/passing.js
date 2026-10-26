@@ -10,7 +10,7 @@ import { rng } from '../rng.js';
 import { AERO, solveLaunch } from '../ball.js';
 import { Player, POSE, World } from '../world.js';
 import { createInsideZoneRoster } from '../autonomous-run.js';
-import { createQbEyes, expectFormation, observe, perceive } from './perception.js';
+import { createQbEyes, expectFormation, observe, perceive, probeSightline } from './perception.js';
 
 const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
@@ -30,7 +30,7 @@ const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
   // Test-only: lets a regression test start a named player at a point (yards).
-  'initialPositions', 'qbPolicy', 'priorMode', 'qbParts',
+  'initialPositions', 'qbPolicy', 'priorMode', 'qbParts', 'visionModel',
 ]);
 
 function validateConfig(input) {
@@ -51,6 +51,7 @@ function validateConfig(input) {
     qbPolicy: input.qbPolicy ?? 'stage_one',
     priorMode: input.priorMode ?? 'exact',
     qbParts: input.qbParts ?? [],
+    visionModel: input.visionModel ?? 'chest',
     playerIds: input.playerIds ?? {},
     massOverrides: input.massOverrides ?? {},
     offenseTeam: input.offenseTeam ?? 'OFF',
@@ -69,6 +70,7 @@ function validateConfig(input) {
   if (!Number.isFinite(cfg.ballY) || cfg.ballY < 1 || cfg.ballY > FIELD_W_YD - 1) throw new RangeError('ballY must be inside the field');
   if (!['stage_one', 'zero_openness', 'belief'].includes(cfg.qbPolicy)) throw new RangeError(`unsupported qbPolicy: ${cfg.qbPolicy}`);
   if (!['exact', 'observed'].includes(cfg.priorMode)) throw new RangeError(`unsupported priorMode: ${cfg.priorMode}`);
+  if (!['chest', 'anatomical'].includes(cfg.visionModel)) throw new RangeError(`unsupported visionModel: ${cfg.visionModel}`);
   if (!Array.isArray(cfg.qbParts) || cfg.qbParts.some((p) => !['openness', 'routeGate', 'progression', 'motion', 'gaze'].includes(p))) {
     throw new RangeError('qbParts must name openness, routeGate, progression, motion or gaze');
   }
@@ -158,6 +160,7 @@ export function simulatePassPlay(options = {}) {
   const roster = [];
   const byRole = new Map();
   const formationPriors = new Map();
+  const formationSpot = new Map();
   for (const info of rosterInfo) {
     const p = W.add(new Player(info, info.team, info.slot));
     p.roleKey = info.roleKey;
@@ -171,6 +174,7 @@ export function simulatePassPlay(options = {}) {
     p.ai.decision = 'read snap';
     p.ai.nextDecision = 0;
     byRole.set(info.roleKey, p);
+    formationSpot.set(p.id, at(spot.f, spot.l));
     if (info.team !== 'O') formationPriors.set(p.id, at(spot.f, spot.l));
     (info.team === 'O' ? offense : defense).push(p);
     roster.push({ id: p.id, team: p.team, slot: p.slot, roleKey: p.roleKey });
@@ -185,7 +189,7 @@ export function simulatePassPlay(options = {}) {
   Object.assign(W.ball, { x: ballAtSnap.x, y: ballAtSnap.y, z: 0.15, state: 'held', holder: center, hand: 'chest' });
   center.hasBall = true;
   // The called formation is known before the snap: the quarterback's prior for players he has not yet seen.
-  const alignment = new Map(W.players.map((p) => [p.id, { x: p.p.x, y: p.p.y }]));
+  const alignment = formationSpot;
   // Each defender is paired with the receiver he lined up nearest. That is read from the formation, not from the call.
   const pairOf = new Map();
   for (const q of defense) {
@@ -199,7 +203,7 @@ export function simulatePassPlay(options = {}) {
     pairOf.set(q.id, best);
   }
   // Beta-style counts: how often the defenders the quarterback has seen moved like a trailer or like a dropper.
-  const eyes = createQbEyes(qb);
+  const eyes = createQbEyes(qb, cfg.visionModel);
   eyes.evidence = { man: 1, zone: 1 };
   eyes.classified = new Set();
   const qbPolicy = cfg.qbPolicy ?? 'stage_one';
@@ -407,7 +411,7 @@ export function simulatePassPlay(options = {}) {
   // the defenders he has actually seen move. The belief is a single Gaussian moment-matched to the mixture.
   function updateCoverageEvidence() {
     for (const q of defense) {
-      if (eyes.classified.has(q.id)) continue;
+      if (q.info.group === 'DL' || eyes.classified.has(q.id)) continue;
       const m = eyes.memory.get(q.id);
       if (!m || m.prior) continue;
       const a = alignment.get(q.id);
@@ -422,6 +426,7 @@ export function simulatePassPlay(options = {}) {
   }
 
   function expectedMotion(q, est) {
+    if (q.info.group === 'DL') return est;
     const a = alignment.get(q.id);
     const pair = pairOf.get(q.id);
     const mate = perceive(eyes, pair, W.t);
@@ -1133,6 +1138,7 @@ export function simulatePassPlay(options = {}) {
   // --------------------------------------------------------------- main loop
   record();
   nextRecord = 1 / REC_HZ;
+  const probeTimes = [0.5, 1.0, 1.5, 2.0];
   while (W.t < MAX_SECONDS && !terminal) {
     if (!snapped) {
       snapped = true;
@@ -1161,6 +1167,27 @@ export function simulatePassPlay(options = {}) {
     if (received && !carrier && W.ball.state === 'air') throwInfo = { snapT: W.ball.receivedAt, thrownAt: W.t };
     if (received && carrier) throwInfo = null;
 
+    if (probeTimes.length && W.t >= probeTimes[0]) {
+      const probeAt = probeTimes.shift();
+      const rows = [xRec, z, slotRec, rb, ...defense].filter(Boolean).map((q) => {
+        const pr = probeSightline(eyes, q, W.players);
+        const m = eyes.memory.get(q.id);
+        const felt = Boolean(m && !m.prior);
+        const est = perceive(eyes, q, W.t);
+        return {
+          id: q.id, slot: q.slot, group: q.info.group,
+          true_x_yd: Number((q.p.x / YD).toFixed(1)), true_y_yd: Number((q.p.y / YD).toFixed(1)),
+          distance_yd: Number(pr.distanceYd.toFixed(1)), bearing_from_gaze_deg: Number(pr.bearingFromGazeDeg.toFixed(0)),
+          in_fov: pr.inFov, visible_geometry: pr.visible, blocker_id: pr.blockerId,
+          observed: felt, observation_age_s: felt ? Number((W.t - m.t).toFixed(2)) : null,
+          reaction_delay_pending: pr.visible && !felt && eyes.seenSince.has(q.id),
+          estimate_uncertainty_yd: est ? Number((est.uncertainty / YD).toFixed(2)) : null,
+          estimate_x_yd: est ? Number((est.x / YD).toFixed(2)) : null,
+          estimate_y_yd: est ? Number((est.y / YD).toFixed(2)) : null,
+        };
+      });
+      W.event('visibility_probe', { at_s: probeAt, gaze_deg: Number((eyes.gaze * 180 / Math.PI).toFixed(0)), vision_model: cfg.visionModel, rows });
+    }
     observe(eyes, W.players, W.t, DT, attention());
     W.step(DT, brains);
     for (const row of activeBlock.values()) {

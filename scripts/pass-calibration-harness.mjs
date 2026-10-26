@@ -36,6 +36,7 @@ for (const los of LOS) for (const front of FRONTS) for (const coverage of COVERA
       qbPolicy: process.env.QB_POLICY ?? 'stage_one',
       priorMode: process.env.PRIOR_MODE ?? 'exact',
       qbParts: (process.env.QB_PARTS ?? '').split(',').filter(Boolean),
+      visionModel: process.env.VISION_MODEL ?? 'chest',
       ...(overrides ? { ratingOverrides: overrides } : {}),
     };
     const run = simulatePassPlay(cfg);

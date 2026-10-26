@@ -23,8 +23,8 @@ const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 // Linemen stand taller than the quarterback's sightline; everyone else is roughly eye height.
 const bodyHeight = (o) => (o.info.group === 'OL' || o.info.group === 'DL' ? 1.95 : 1.8);
 
-export function createQbEyes(qb) {
-  return { qb, gaze: qb.h, seenSince: new Map(), memory: new Map() };
+export function createQbEyes(qb, model = 'chest') {
+  return { qb, model, gaze: qb.h, seenSince: new Map(), memory: new Map() };
 }
 
 // Before the snap the called formation is known: each defender's alignment is the prior
@@ -35,22 +35,59 @@ export function expectFormation(eyes, expected, t) {
   }
 }
 
-function inSightline(eyes, q, players) {
-  const { qb } = eyes;
-  const dx = q.p.x - qb.p.x, dy = q.p.y - qb.p.y;
-  const d = Math.hypot(dx, dy);
-  if (d > SIGHT_M) return false;
-  if (Math.abs(wrap(Math.atan2(dy, dx) - eyes.gaze)) > FOV_HALF) return false;
+// Heights a target can be seen at. 'chest' is the original single ray to the chest. 'anatomical' is visible
+// if any of the target's sample heights (head, shoulders, chest) clears the bodies between him and the quarterback.
+const TARGET_HEIGHTS = { chest: [CHEST_H], anatomical: [1.75, 1.55, 1.35] };
+
+// Height of an occluding body. The anatomical model lowers a downed body; the chest model is the original.
+const occluderHeight = (o, model) => {
+  if (model === 'anatomical') {
+    if (o.down) return 0.5;
+    return o.info.group === 'OL' || o.info.group === 'DL' || o.info.group === 'TE' ? 1.95 : 1.85;
+  }
+  return bodyHeight(o);
+};
+
+// Which body, if any, stops the sightline from the quarterback's eyes to a point of height h on the target.
+function blockerOf(eyes, q, players, h, dx, dy, d) {
+  const { qb, model } = eyes;
   for (const o of players) {
     if (o === q || o === qb) continue;
     const ox = o.p.x - qb.p.x, oy = o.p.y - qb.p.y;
     const along = (ox * dx + oy * dy) / (d * d);
     if (along <= 0.02 || along >= 0.98) continue;
     if (Math.abs(ox * dy - oy * dx) / d > o.r) continue;
-    // The line rises from eye height to chest height; a body taller than the line hides the target.
-    if (bodyHeight(o) > EYE_H + (CHEST_H - EYE_H) * along) return false;
+    // The line rises from eye height to the target's point; a body taller than the line hides the target there.
+    if (occluderHeight(o, model) > EYE_H + (h - EYE_H) * along) return o;
   }
-  return true;
+  return null;
+}
+
+// Geometry of one sightline, for diagnostics as well as for the decision: range, field of view, and the body that blocks.
+export function probeSightline(eyes, q, players) {
+  const { qb } = eyes;
+  const dx = q.p.x - qb.p.x, dy = q.p.y - qb.p.y;
+  const d = Math.hypot(dx, dy);
+  const inRange = d <= SIGHT_M;
+  const bearing = Math.atan2(dy, dx);
+  const inFov = Math.abs(wrap(bearing - eyes.gaze)) <= FOV_HALF;
+  const blockers = TARGET_HEIGHTS[eyes.model].map((h) => (d > 0 ? blockerOf(eyes, q, players, h, dx, dy, d) : null));
+  const visibleGeometry = inRange && inFov && (d === 0 || blockers.some((b) => b === null));
+  return {
+    inRange, inFov, visible: visibleGeometry,
+    distanceYd: d / YD,
+    bearingFromGazeDeg: wrap(bearing - eyes.gaze) * 180 / Math.PI,
+    blockerId: blockers.every((b) => b) ? blockers[0].id : null,
+  };
+}
+
+function inSightline(eyes, q, players) {
+  const { qb } = eyes;
+  const dx = q.p.x - qb.p.x, dy = q.p.y - qb.p.y;
+  const d = Math.hypot(dx, dy);
+  if (d > SIGHT_M) return false;
+  if (Math.abs(wrap(Math.atan2(dy, dx) - eyes.gaze)) > FOV_HALF) return false;
+  return TARGET_HEIGHTS[eyes.model].some((h) => blockerOf(eyes, q, players, h, dx, dy, d) === null);
 }
 
 // Called every physics step. Gaze turns toward the attention point at a bounded rate.
