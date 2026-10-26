@@ -1,6 +1,7 @@
 import { simulatePlay } from '../engine/play.js';
 import { nextBallY } from '../engine/game.js';
 import { Renderer } from './render.js';
+import { touchdownScore } from './score-animation.js';
 
 const $ = (s) => document.querySelector(s);
 const MPH = 2.23694;
@@ -124,7 +125,9 @@ function renderBug() {
   const S = game.plays[state.i];
   const rec = recs[state.i];
   const after = rec.end.t != null && state.t > rec.end.t;
-  const [as, hs] = after ? S.score : prevScore(state.i);
+  const pre = prevScore(state.i);
+  const held = touchdownScore({ away: pre[0], home: pre[1] }, { away: S.score[0], home: S.score[1] }, { outcome: { touchdown: !!S.td } });
+  const [as, hs] = after ? [held.away, held.home] : pre;
   const team = (id, score) => {
     const t = T[id];
     const poss = S.off === id && !['kickoff'].includes(S.kind);
