@@ -4,6 +4,7 @@ import { adaptLpGamePayload, validatePregameSourcePin } from './lp-game-record-a
 import { createWeek7StatisticalGame, simulateWeek7StatisticalPlay } from './week7-statistical-model.js';
 import { scoreDelta, scoreMoment, touchdownScore, tweenScore } from './score-animation.js';
 import { mascotOf, spotText } from './spot-label.js';
+import { teamLogoUrl } from './team-logo.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -175,6 +176,8 @@ function renderScorebug(entry) {
   const homeSide = physicsGame.home;
   $('away-name').textContent = mascotName(awaySide);
   $('home-name').textContent = mascotName(homeSide);
+  $('away-logo').src = teamLogoUrl(teamName(awaySide));
+  $('home-logo').src = teamLogoUrl(teamName(homeSide));
   $('away-score').textContent = String(state.away_score ?? 0);
   $('home-score').textContent = String(state.home_score ?? 0);
   $('bug-q').textContent = `Q${state.quarter}`;
