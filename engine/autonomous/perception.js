@@ -29,9 +29,9 @@ export function createQbEyes(qb) {
 
 // Before the snap the called formation is known: each defender's alignment is the prior
 // until he is actually seen. An unseen defender is never treated as absent.
-export function expectFormation(eyes, players, t) {
-  for (const q of players) {
-    if (!eyes.memory.has(q.id)) eyes.memory.set(q.id, { x: q.p.x, y: q.p.y, vx: 0, vy: 0, t, prior: true });
+export function expectFormation(eyes, expected, t) {
+  for (const [id, pos] of expected) {
+    if (!eyes.memory.has(id)) eyes.memory.set(id, { x: pos.x, y: pos.y, vx: 0, vy: 0, t, prior: true });
   }
 }
 

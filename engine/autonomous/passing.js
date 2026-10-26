@@ -30,7 +30,7 @@ const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
   // Test-only: lets a regression test start a named player at a point (yards).
-  'initialPositions', 'qbPolicy', 'priorMode',
+  'initialPositions', 'qbPolicy', 'priorMode', 'qbParts',
 ]);
 
 function validateConfig(input) {
@@ -50,6 +50,7 @@ function validateConfig(input) {
     ratingOverrides: input.ratingOverrides ?? {},
     qbPolicy: input.qbPolicy ?? 'stage_one',
     priorMode: input.priorMode ?? 'exact',
+    qbParts: input.qbParts ?? [],
     playerIds: input.playerIds ?? {},
     massOverrides: input.massOverrides ?? {},
     offenseTeam: input.offenseTeam ?? 'OFF',
@@ -68,6 +69,9 @@ function validateConfig(input) {
   if (!Number.isFinite(cfg.ballY) || cfg.ballY < 1 || cfg.ballY > FIELD_W_YD - 1) throw new RangeError('ballY must be inside the field');
   if (!['stage_one', 'zero_openness', 'belief'].includes(cfg.qbPolicy)) throw new RangeError(`unsupported qbPolicy: ${cfg.qbPolicy}`);
   if (!['exact', 'observed'].includes(cfg.priorMode)) throw new RangeError(`unsupported priorMode: ${cfg.priorMode}`);
+  if (!Array.isArray(cfg.qbParts) || cfg.qbParts.some((p) => !['openness', 'routeGate', 'progression'].includes(p))) {
+    throw new RangeError('qbParts must name openness, routeGate or progression');
+  }
   return cfg;
 }
 
@@ -153,6 +157,7 @@ export function simulatePassPlay(options = {}) {
   const defense = [];
   const roster = [];
   const byRole = new Map();
+  const formationPriors = new Map();
   for (const info of rosterInfo) {
     const p = W.add(new Player(info, info.team, info.slot));
     p.roleKey = info.roleKey;
@@ -166,6 +171,7 @@ export function simulatePassPlay(options = {}) {
     p.ai.decision = 'read snap';
     p.ai.nextDecision = 0;
     byRole.set(info.roleKey, p);
+    if (info.team !== 'O') formationPriors.set(p.id, at(spot.f, spot.l));
     (info.team === 'O' ? offense : defense).push(p);
     roster.push({ id: p.id, team: p.team, slot: p.slot, roleKey: p.roleKey });
   }
@@ -182,16 +188,28 @@ export function simulatePassPlay(options = {}) {
   const alignment = new Map(W.players.map((p) => [p.id, { x: p.p.x, y: p.p.y }]));
   const eyes = createQbEyes(qb);
   const qbPolicy = cfg.qbPolicy ?? 'stage_one';
+  const qbParts = new Set(cfg.qbParts);
+  // The belief policy is three separable parts, so each can be ablated: openness and lanes, route gating, read progression.
+  const beliefOn = (part) => qbPolicy === 'belief' && qbParts.has(part);
   // Observed priors look at the defense for three tenths of a second before the snap. Any defender still
   // unseen is expected at his called alignment, with the wider uncertainty of an inferred position.
   if ((cfg.priorMode ?? 'exact') === 'observed') for (let t = -0.3; t <= 1e-9; t += DT) observe(eyes, W.players, t, DT, null);
-  expectFormation(eyes, defense, W.t);
+  expectFormation(eyes, formationPriors, W.t);
   // How open a receiver looks to the quarterback. Zero openness for an unconfirmed defender is a diagnostic extreme;
   // the belief policy averages over how far the nearest defender may be from his last-known position.
-  const openness = (nearest) => {
-    if (qbPolicy === 'belief') {
-      const offsets = [-1.2, -0.4, 0.4, 1.2];
-      return offsets.reduce((sum, k) => sum + clamp((Math.max(0, nearest.distance + nearest.uncertainty * k) / YD - 0.7) / 2.2, 0, 1), 0) / offsets.length;
+  const openness = (nearest, from) => {
+    if (beliefOn('openness')) {
+      // Nothing known means nothing confirmed open.
+      if (!nearest.player) return 0;
+      // Expected openness over the nearest defender's belief: its centre, and eight points 1.2 uncertainty radii out.
+      let sum = 0;
+      for (let i = 0; i <= 8; i++) {
+        const a = ((i - 1) * Math.PI) / 4;
+        const r = i === 0 ? 0 : 1.2 * nearest.uncertainty;
+        const sep = Math.hypot(nearest.x + r * Math.cos(a) - from.x, nearest.y + r * Math.sin(a) - from.y);
+        sum += (i === 0 ? 1 / 3 : 1 / 12) * clamp((sep / YD - 0.7) / 2.2, 0, 1);
+      }
+      return sum;
     }
     const unconfirmed = nearest.player ? eyes.memory.get(nearest.player.id)?.prior : true;
     if (qbPolicy === 'zero_openness' && unconfirmed) return 0;
@@ -371,7 +389,7 @@ export function simulatePassPlay(options = {}) {
       const d = Math.hypot(k.x - pt.x, k.y - pt.y);
       if (d < bestD) { best = k; bestD = d; }
     }
-    return { player: best?.player ?? null, distance: bestD, uncertainty: best?.uncertainty ?? 0 };
+    return { player: best?.player ?? null, x: best?.x, y: best?.y, distance: bestD, uncertainty: best?.uncertainty ?? 0 };
   }
 
   // The nearest rusher the quarterback has seen or felt.
@@ -453,15 +471,22 @@ export function simulatePassPlay(options = {}) {
         const along = (rx * ux + ry * uy) / len;
         if (along <= 0.4 || along >= len) continue;
         const perp = Math.abs(rx * uy - ry * ux) / len;
-        if (perp < 1.0 * YD) lane += 1 - perp / (1.0 * YD);
+        // The belief policy widens the lane by how uncertain the defender's position is.
+        const width = 1.0 * YD + (beliefOn('openness') ? k.uncertainty : 0);
+        if (perp < width) lane += 1 - perp / width;
       }
       const pressure = qbPressure().distance / YD;
-      const open = openness(nearest);
+      const open = openness(nearest, seen);
       const utility = open * 1.6 + (1 - clamp(lane / 2.4, 0, 1)) * 0.75
         - clamp(lane * 0.55, 0, 1.35) - clamp((1.6 - pressure) * 0.45, 0, 0.9)
         - clamp(Math.hypot(seen.x - qb.p.x, seen.y - qb.p.y) / (28 * YD), 0, 0.5);
-      const readiness = rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
-      return [{ receiver: rec, aim, flight, separation, open, uncertainty: nearest.uncertainty / YD, lane, pressure, utility, readyAt: readiness }];
+      // Stage One uses fixed read times. The route-development gate reads a receiver only once he has run his break:
+      // the quarterback sees him displaced from his called alignment by the break distance.
+      const breakYd = rec === z ? 4.0 : rec === slotRec ? 3.0 : 1.5;
+      const start = alignment.get(rec.id);
+      const developed = Math.hypot(seen.x - start.x, seen.y - start.y) / YD >= breakYd;
+      const readiness = beliefOn('routeGate') ? (developed ? 0 : Infinity) : rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
+      return [{ receiver: rec, aim, flight, separation, open, uncertainty: nearest.uncertainty / YD, lane, pressure, utility, developed, readyAt: readiness }];
     }).sort((a, b) => b.utility - a.utility || a.receiver.id.localeCompare(b.receiver.id));
   }
 
@@ -496,6 +521,16 @@ export function simulatePassPlay(options = {}) {
     setIntent(qb, 'throw to the open read', `release to ${best.receiver.slot} with ${best.separation.toFixed(1)} yd separation`);
   }
 
+  // Read progression under the belief policy: primary, secondary, then the back as checkdown. A read that is
+  // open is thrown at once. Otherwise the quarterback keeps looking at it for READ_LOOK_S once it has developed,
+  // then moves on. A pressure response throws any open read. Constants are design choices, not fitted to outcomes.
+  const READ_LOOK_S = 0.5;
+  const OPEN_MIN = 0.6;
+  const LANE_MAX = 0.8;
+  const readNames = ['primary', 'secondary', 'checkdown'];
+  let readIndex = 0;
+  let readSince = null;
+
   function qbDecision() {
     if (!received || W.ball.holder !== qb) return;
     const elapsed = W.t - (W.ball.receivedAt ?? 0);
@@ -503,17 +538,23 @@ export function simulatePassPlay(options = {}) {
     if (elapsed < 0.75) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
     const options = readOptions().filter((o) => elapsed >= o.readyAt);
     const pressure = qbPressure().distance / YD;
+    const reads = [z, slotRec, rb];
+    const opt = (rec) => options.find((o) => o.receiver === rec);
+    const throwable = (o) => Boolean(o) && o.open >= OPEN_MIN && o.lane <= LANE_MAX;
+    let why = 'no read open, pocket holding';
     // Diagnostic record of what the quarterback knew and why he acted. Decisions never read pressure_actual_yards.
     const trace = (action, reason) => {
       const known = seenDefenders();
       W.event('decision_trace', {
         quarterback_id: qb.id,
         elapsed_s: Number(elapsed.toFixed(2)),
+        read: qbParts.size ? readNames[readIndex] : null,
         gaze_deg: Number((eyes.gaze * 180 / Math.PI).toFixed(0)),
         confirmed_defenders: known.filter((k) => !eyes.memory.get(k.player.id)?.prior).length,
         prior_defenders: known.filter((k) => eyes.memory.get(k.player.id)?.prior).length,
         options: options.map((o) => ({
           receiver: o.receiver.slot,
+          developed: o.developed,
           separation_yards: Number(o.separation.toFixed(2)),
           uncertainty_yards: Number(o.uncertainty.toFixed(2)),
           openness: Number(o.open.toFixed(3)),
@@ -526,7 +567,31 @@ export function simulatePassPlay(options = {}) {
         reason,
       });
     };
-    if (options.length) {
+    if (beliefOn('progression')) {
+      const pick = pressure < 1.5 ? options.filter(throwable)[0] : null;
+      if (pick) {
+        trace('throw', `pressure response: ${pick.receiver.slot} open`);
+        launchPass(pick);
+        return;
+      }
+      const cur = opt(reads[readIndex]);
+      if (!cur) {
+        why = `${readNames[readIndex]} route not developed or not yet seen`;
+      } else if (throwable(cur)) {
+        trace('throw', `${readNames[readIndex]} read open (openness ${cur.open.toFixed(2)})`);
+        launchPass(cur);
+        return;
+      } else {
+        readSince ??= elapsed;
+        if (elapsed - readSince >= READ_LOOK_S && readIndex < 2) {
+          readIndex += 1;
+          readSince = null;
+          why = `progressed to ${readNames[readIndex]}`;
+        } else {
+          why = `${readNames[readIndex]} read covered, still looking`;
+        }
+      }
+    } else if (options.length) {
       const best = options[0];
       if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
         trace('throw', `${best.receiver.slot} utility ${best.utility.toFixed(2)}`);
@@ -540,14 +605,6 @@ export function simulatePassPlay(options = {}) {
         separation_yards: Number(best.separation.toFixed(2)),
         pressure_yards: Number(pressure.toFixed(2)),
       });
-    }
-    if (qbPolicy === 'belief' && elapsed >= CHECKDOWN_S) {
-      const back = options.find((o) => o.receiver === rb);
-      if (back && back.utility > 0.34) {
-        trace('checkdown', `no read cleared the threshold by ${CHECKDOWN_S} s`);
-        launchPass(back);
-        return;
-      }
     }
     if (pressure < 1.1 && elapsed < 3.0) {
       trace('scramble', 'rusher within 1.1 yd');
@@ -566,7 +623,7 @@ export function simulatePassPlay(options = {}) {
       W.ball.intentionalGround = true;
       W.event('throw_away', { quarterback_id: qb.id });
     } else {
-      trace('hold', 'no read open, pocket holding');
+      trace('hold', why);
     }
   }
 

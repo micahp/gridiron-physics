@@ -20,9 +20,10 @@ const PROTECTION = {
   strong: Object.fromEntries(['LT', 'LG', 'C', 'RG', 'RT'].map((s) => [`O.${s}`, { PBK: 85, RBK: 85, STR: 85 }])),
 };
 
-const blank = () => ({ dropbacks: 0, unresolved: 0, defensiveTouchdowns: 0, throws: 0, completions: 0, interceptions: 0, sacks: 0, touchdowns: 0,
+const blank = () => ({ dropbacks: 0, unresolved: 0, defensiveTouchdowns: 0, targets: {}, throws: 0, completions: 0, interceptions: 0, sacks: 0, touchdowns: 0,
   throwaways: 0, checkdowns: 0, throwTimes: [], yards: [], yac: [] });
 const total = blank();
+const byCoverage = { cover_1: blank(), cover_3: blank() };
 const byProtection = Object.fromEntries(Object.keys(PROTECTION).map((k) => [k, blank()]));
 
 let seedIndex = 0;
@@ -34,14 +35,15 @@ for (const los of LOS) for (const front of FRONTS) for (const coverage of COVERA
       direction: i % 2 ? 'left' : 'right',
       qbPolicy: process.env.QB_POLICY ?? 'stage_one',
       priorMode: process.env.PRIOR_MODE ?? 'exact',
+      qbParts: (process.env.QB_PARTS ?? '').split(',').filter(Boolean),
       ...(overrides ? { ratingOverrides: overrides } : {}),
     };
     const run = simulatePassPlay(cfg);
     if (!run.resolved || !run.terminal) {
-      for (const bucket of [total, byProtection[pname]]) bucket.unresolved++;
+      for (const bucket of [total, byProtection[pname], byCoverage[coverage]]) bucket.unresolved++;
       continue;
     }
-    for (const bucket of [total, byProtection[pname]]) {
+    for (const bucket of [total, byProtection[pname], byCoverage[coverage]]) {
       bucket.dropbacks++;
       const throwEv = run.events.find((e) => e.type === 'throw');
       const snap = run.events.find((e) => e.type === 'snap');
@@ -49,6 +51,7 @@ for (const los of LOS) for (const front of FRONTS) for (const coverage of COVERA
         bucket.throws++;
         bucket.throwTimes.push(throwEv.t - (snap?.t ?? 0));
         if (throwEv.target_id === 'O.RB') bucket.checkdowns++;
+        bucket.targets[throwEv.target_id] = (bucket.targets[throwEv.target_id] ?? 0) + 1;
       }
       if (run.events.some((e) => e.type === 'throw_away')) bucket.throwaways++;
       if (run.terminal.reason === 'sack') bucket.sacks++;
@@ -79,6 +82,7 @@ const summarize = (b) => ({
   defensive_touchdowns: b.defensiveTouchdowns,
   // Attempts follow the football convention: a throwaway is an incomplete attempt, and sacks are not attempts.
   attempts: b.throws + b.throwaways,
+  targets: b.targets,
   completion_pct: pct(b.completions, b.throws + b.throwaways),
   interception_pct: pct(b.interceptions, b.throws + b.throwaways),
   sack_pct_of_dropbacks: pct(b.sacks, b.dropbacks),
@@ -90,4 +94,5 @@ const summarize = (b) => ({
   median_yac: med(b.yac),
 });
 console.log(JSON.stringify({ engine: root.split('/').slice(-2).join('/'), set, perCell, total: summarize(total),
+  byCoverage: Object.fromEntries(Object.entries(byCoverage).map(([k, v]) => [k, summarize(v)])),
   byProtection: Object.fromEntries(Object.entries(byProtection).map(([k, v]) => [k, summarize(v)])) }, null, 1));

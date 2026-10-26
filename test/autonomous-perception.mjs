@@ -85,7 +85,7 @@ function run(eyes, players, from, seconds) {
   const seen = player('d7', 6, 0);
   const players = [qb, unseen, seen];
   const eyes = createQbEyes(qb);
-  expectFormation(eyes, [unseen, seen], 0);
+  expectFormation(eyes, new Map([[unseen.id, { x: -3, y: 0 }], [seen.id, { x: 6, y: 0 }]]), 0);
   const prior = perceive(eyes, unseen, 0);
   assert.ok(prior, 'an unseen defender is still expected at his alignment');
   assert.equal(prior.x, -3);
