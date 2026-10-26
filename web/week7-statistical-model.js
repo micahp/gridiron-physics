@@ -23,10 +23,10 @@ const OFFENSE_SLOTS = ['LT', 'LG', 'C', 'RG', 'RT', 'QB', 'RB', 'TE', 'WR1', 'WR
 const DEFENSE_SLOTS = ['LEDGE', 'LDT', 'RDT', 'REDGE', 'MLB', 'WLB', 'LCB', 'RCB', 'NB', 'SS', 'FS'];
 const OL_SLOTS = ['LT', 'LG', 'C', 'RG', 'RT'];
 
-function playerInfo({ id, name, team, pos, profile }) {
+function playerInfo({ id, name, team, pos, profile, jersey }) {
   const physics = { ...profile, f0: profile.mass * profile.vmax / profile.tau };
   return {
-    id, name, short: name, jersey: '?', team, pos, group: pos,
+    id, name, short: name, jersey: jersey == null || jersey === '' ? '?' : String(jersey), team, pos, group: pos,
     ratings: Object.fromEntries(RATING_KEYS.map((key) => [key, 65])),
     physics,
   };
@@ -60,7 +60,7 @@ export function createWeek7StatisticalGame(payload) {
     for (const source of rosters[side]) {
       players[source.gsis_id] = playerInfo({
         id: source.gsis_id, name: source.player_name, team: side, pos: source.pos_abb,
-        profile: profileForPosition(source.pos_abb),
+        profile: profileForPosition(source.pos_abb), jersey: source.jersey_number,
       });
     }
     for (const slot of OL_SLOTS) {
@@ -132,8 +132,10 @@ function offenseLineup(game, side, play) {
     if (!lineup[slot]) assign(slot, wideouts.find((player) => !used.has(player.gsis_id)));
   }
   for (const slot of OL_SLOTS) {
-    const id = generatedId(side, `OL-${slot}`);
-    lineup[slot] = { pid: id };
+    // A rostered lineman fills his slot; the generic body is only the fallback when the roster has none.
+    const real = ranked([slot]).find((player) => !used.has(player.gsis_id));
+    if (real) assign(slot, real);
+    else lineup[slot] = { pid: generatedId(side, `OL-${slot}`) };
   }
   for (const slot of ['QB', 'RB', 'TE', 'WR1', 'WR2', 'WR3']) {
     if (!lineup[slot]) throw new Error(`frozen ${game.identities[side].team} depth chart cannot fill ${slot}`);
