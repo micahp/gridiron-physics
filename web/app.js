@@ -130,15 +130,17 @@ function renderBug(opts = {}) {
   const pre = prevScore(state.i);
   const held = touchdownScore({ away: pre[0], home: pre[1] }, { away: S.score[0], home: S.score[1] }, { outcome: { touchdown: !!S.td } });
   const [as, hs] = after ? [held.away, held.home] : pre;
-  const team = (id, score) => {
+  const team = (id, score, right = false) => {
     const t = T[id];
     const poss = S.off === id && !['kickoff'].includes(S.kind);
-    return `<img src="${esc(teamLogoUrl(t.abbr))}" alt=""><span class="abbr">${esc(t.short || t.abbr)}</span><span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
+    const logo = `<img src="${esc(teamLogoUrl(t.abbr))}" alt="">`;
+    const name = `<span class="abbr">${esc(t.short || t.abbr)}</span>`;
+    return (right ? name + logo : logo + name) + `<span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
       + (poss ? '' : '');
   };
   const a = $('#bug-away'), h = $('#bug-home');
   a.innerHTML = team(game.away, as);
-  h.innerHTML = team(game.home, hs);
+  h.innerHTML = team(game.home, hs, true);
   a.style.setProperty('--team', T[game.away].color);
   h.style.setProperty('--team', T[game.home].color);
   a.classList.toggle('poss', S.off === game.away && S.kind !== 'kickoff');
