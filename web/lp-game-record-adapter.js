@@ -49,23 +49,25 @@ export function validatePregameSourcePin(payload, manifest, fixtureEntry) {
   }
   requireObject(payload.source, 'payload.source');
   requireObject(manifest.lp_source, 'pregame manifest.lp_source');
-  if (manifest.lp_source.repository !== 'micahp/legendarypicks') {
+  const sourcePin = fixtureEntry.lp_source ?? manifest.lp_source;
+  requireObject(sourcePin, 'pregame fixture source pin');
+  if (sourcePin.repository !== 'micahp/legendarypicks') {
     fail('pregame manifest repository must pin micahp/legendarypicks');
   }
   requireString(payload.source.repository, 'payload.source.repository');
   requireString(payload.source.branch, 'payload.source.branch');
   requireString(payload.source.base_commit, 'payload.source.base_commit');
-  requireString(manifest.lp_source.branch, 'pregame manifest.lp_source.branch');
-  requireString(manifest.lp_source.base_commit, 'pregame manifest.lp_source.base_commit');
-  if (payload.source.repository !== manifest.lp_source.repository
-      || payload.source.branch !== manifest.lp_source.branch
-      || payload.source.base_commit !== manifest.lp_source.base_commit) {
+  requireString(sourcePin.branch, 'pregame fixture source pin.branch');
+  requireString(sourcePin.base_commit, 'pregame fixture source pin.base_commit');
+  if (payload.source.repository !== sourcePin.repository
+      || payload.source.branch !== sourcePin.branch
+      || payload.source.base_commit !== sourcePin.base_commit) {
     fail('pregame producer repository, branch, or commit differs from its manifest pin');
   }
   if (payload.source.producer_worktree_dirty !== false) {
     fail('pregame fixture must be generated from a clean committed producer');
   }
-  const expected = manifest.lp_source.producer_file_sha256;
+  const expected = sourcePin.producer_file_sha256;
   const actual = payload.source.producer_file_sha256;
   requireObject(expected, 'pregame manifest.lp_source.producer_file_sha256');
   requireObject(actual, 'payload.source.producer_file_sha256');

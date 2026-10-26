@@ -1,13 +1,59 @@
 {
-  "label": "Kansas City at Seattle \u00b7 2026-10-25",
   "contract": {
     "name": "gridiron.lp-full-game-payload",
     "version": "1.0.0"
   },
+  "default_fixture": "game-kc-sea-seed1-full-starters.json",
+  "fixtures": [
+    {
+      "drives": 24,
+      "file": "game-kc-sea-seed8-blocked.json",
+      "game_id": "2026_07_KC_SEA",
+      "plays": 144,
+      "seed": 8,
+      "sha256": "ff9d29f9474c2269e762a8f6fccf4a69907afc63ca297a9e27558d61fe62bea0",
+      "snapshot_sha256": "7cd0b2d9a8cbccca8887738322cdd1cd05a09856e4eecd9ea5af7701d1afa4c0",
+      "valid_full_game": true
+    },
+    {
+      "drives": 24,
+      "file": "game-kc-sea-seed1-full-starters.json",
+      "game_id": "2026_07_KC_SEA",
+      "lp_source": {
+        "base_commit": "dc9fd397680943e4c170c74bbc6612a863958cff",
+        "branch": "feat/statistical-full-game-e2-2026-10-25",
+        "producer_file_sha256": {
+          "scripts/nfl_sequence/build_blocked_kick_outcomes.py": "2b2d3605b8ba1bf483e5ea061869d89476267171e027d618cad26f6c073c2bc1",
+          "scripts/nfl_sequence/e1_drive.py": "ad675e5ced37aa1569d513d8dffc7d3904f68e421bf8c2251bdd9f40bb779a98",
+          "scripts/nfl_sequence/e2_reference.py": "cc804230e186af1457e967de1be56bc6415759915cd7a2ed557332466e4def0d",
+          "scripts/nfl_sequence/game_state.py": "bb877343e107e7f2da84645f070e85382e84f5903df98837328a2a71ce47bb71",
+          "scripts/nfl_sequence/game_stats.py": "2eba6bbc2ccbe186944a0418c828fd37dd9084922031a9d3a4229fb7da7a8ac7",
+          "scripts/nfl_sequence/measure_kick_outcomes.py": "09aa04bc3c0741222f9b1138b0aa14a1628fd21fda4f730188cd1a8ee6226cf3",
+          "scripts/nfl_sequence/pregame_snapshot.py": "31bbe733e001022a4af7257dcd7ffeae39217a98cc46c88f8780d60fa7f550a0",
+          "scripts/nfl_sequence/reducer.py": "531b6b78462e6fbcadcb4410634ed1b0a2cd02bba6cb8c22ad96a1be6e5731a0",
+          "scripts/nfl_sequence/simulate_pregame_batch.py": "11a2d814b5d358634e911fa29a29f843854d4cacac4c5f4cb0e8a29fdf68a122",
+          "scripts/nfl_sequence/simulate_pregame_game.py": "23d0bf5062398df043044bffee74197d8eca17014ba2a61d44e5e0c2f3bdb611"
+        },
+        "producer_worktree_dirty": false,
+        "repository": "micahp/legendarypicks"
+      },
+      "plays": 152,
+      "roster_snapshot": {
+        "file": "docs/fixtures/rosters/kc-sea-2026-10-25-starters-v2.json",
+        "provenance_file": "docs/fixtures/rosters/kc-sea-2026-10-25-starters-v2-provenance.json",
+        "provenance_sha256": "a7827028c37648cedbf2c7009a45d8d53f5fe9fce6278392cac87bf3de3b3268",
+        "sha256": "576539fbde25c670be1f00d858f761548e36e66a982c717827fbb4f3f4a00f51"
+      },
+      "seed": 1,
+      "sha256": "dfcf69eaf352f036e9441c83b7f8d711f131aecc22ad8b20396494f76199fef1",
+      "snapshot_sha256": "6fbd2b85bf8e2421b8330d4f0a5570dc66146ee3981addac1c53520194e84039",
+      "valid_full_game": true
+    }
+  ],
+  "label": "Kansas City at Seattle \u00b7 2026-10-25",
   "lp_source": {
-    "repository": "micahp/legendarypicks",
-    "branch": "feat/statistical-full-game-e2-2026-10-25",
     "base_commit": "f21d3b4f8502f3aadf21805103cb87598b1e1c5c",
+    "branch": "feat/statistical-full-game-e2-2026-10-25",
     "producer_file_sha256": {
       "scripts/nfl_sequence/build_blocked_kick_outcomes.py": "535a5ed8a3487cec90f17874cf4ca8c970809c9a605555df92e3172e86a60acf",
       "scripts/nfl_sequence/e1_drive.py": "ad675e5ced37aa1569d513d8dffc7d3904f68e421bf8c2251bdd9f40bb779a98",
@@ -18,18 +64,7 @@
       "scripts/nfl_sequence/pregame_snapshot.py": "3bcacaa444cbed066f06f011eb0891d33156a775cbaf57cdf12b1a084facc11d",
       "scripts/nfl_sequence/reducer.py": "8d7fa279e6e608a662285cbf2a22559491fa1ebd704095845dde76301455d51a",
       "scripts/nfl_sequence/simulate_pregame_game.py": "ef20c2e599ec36683f7555b5a432abc32ac4d46f447023071917ee01b4c93fc0"
-    }
-  },
-  "fixtures": [
-    {
-      "file": "game-kc-sea-seed8-blocked.json",
-      "sha256": "ff9d29f9474c2269e762a8f6fccf4a69907afc63ca297a9e27558d61fe62bea0",
-      "game_id": "2026_07_KC_SEA",
-      "seed": 8,
-      "snapshot_sha256": "7cd0b2d9a8cbccca8887738322cdd1cd05a09856e4eecd9ea5af7701d1afa4c0",
-      "valid_full_game": true,
-      "drives": 24,
-      "plays": 144
-    }
-  ]
+    },
+    "repository": "micahp/legendarypicks"
+  }
 }

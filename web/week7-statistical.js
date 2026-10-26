@@ -266,13 +266,15 @@ function renderRoster() {
   const lineup = currentReplay.script.lineup[side] ?? {};
   const depthRows = [...roster].sort((a, b) => a.pos_abb.localeCompare(b.pos_abb)
     || (a.pos_rank ?? 999) - (b.pos_rank ?? 999)).map((player) =>
-    `<div class="rrow"><span class="pos">${esc(player.pos_abb)}</span><span>${esc(player.player_name)}</span><span class="pos">Depth ${esc(player.pos_rank ?? '—')}</span><span class="ovr">—</span></div>`).join('');
+    `<div class="rrow"><span class="pos">${esc(player.pos_abb)}</span><span>${esc(player.player_name)}</span><span class="jersey">#${esc(player.jersey_number ?? '—')}</span><span class="pos">Depth ${esc(player.pos_rank ?? '—')}</span><span class="ovr">—</span></div>`).join('');
   const lineupRows = Object.entries(lineup).map(([slot, id]) => {
     const player = physicsGame.players[id];
     const generic = id.startsWith('gridiron:');
-    return `<div class="rrow"><span class="pos">${esc(slot)}</span><span>${esc(player?.name ?? 'Unknown')}</span><span class="pos">${generic ? 'Template' : 'LP roster'}</span><span class="ovr">—</span></div>`;
+    const jersey = player?.jersey && player.jersey !== '?' ? `#${player.jersey}` : '—';
+    return `<div class="rrow"><span class="pos">${esc(slot)}</span><span>${esc(player?.name ?? 'Unknown')}</span><span class="jersey">${esc(jersey)}</span><span class="pos">${generic ? 'Template' : 'LP roster'}</span><span class="ovr">—</span></div>`;
   }).join('');
-  $('players').innerHTML = `<div class="rgroup">Frozen depth chart · ${roster.length} named players</div><p class="note">Snapshot positions: QB, RB, WR, TE and FB. OL, defense and special teams are not in this roster source.</p><div class="rgroup">Pregame roster pool</div>${depthRows}<div class="rgroup">Current replay lineup · ${Object.keys(lineup).length} slots</div>${lineupRows}<p class="note">Player ratings are not supplied by the LP snapshot. “Template” slots are generic visualization bodies; the 3D physics profiles are not player ratings.</p>`;
+  const jerseyWeek = snapshot?.jersey_week;
+  $('players').innerHTML = `<div class="rgroup">Frozen starting units · ${roster.length} roles</div><p class="note">Pregame starters and jersey numbers from the frozen week ${esc(jerseyWeek ?? '—')} snapshot. A player may appear in multiple special-teams roles.</p><div class="rgroup">Pregame roster</div>${depthRows}<div class="rgroup">Current replay lineup · ${Object.keys(lineup).length} slots</div>${lineupRows}<p class="note">Player ratings are not supplied by the LP snapshot. “Template” slots are generic visualization bodies; the 3D physics profiles are not player ratings.</p>`;
 }
 
 function pointsByQuarter() {
@@ -472,7 +474,7 @@ async function load() {
     const manifestResponse = await fetch('docs/fixtures/pregame/MANIFEST.json');
     if (!manifestResponse.ok) throw new Error(`manifest HTTP ${manifestResponse.status}`);
     const manifest = await manifestResponse.json();
-    const fixture = manifest.fixtures?.[0];
+    const fixture = manifest.fixtures?.find((entry) => entry.file === manifest.default_fixture) ?? manifest.fixtures?.[0];
     if (!fixture) throw new Error('pinned full-game fixture is missing from the manifest');
     const fixtureResponse = await fetch(`docs/fixtures/pregame/${fixture.file}`);
     if (!fixtureResponse.ok) throw new Error(`game fixture HTTP ${fixtureResponse.status}`);
