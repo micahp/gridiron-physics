@@ -29,3 +29,14 @@ export function tweenScore(from, to, progress) {
   const p = Math.min(1, Math.max(0, progress));
   return Math.round(from + (to - from) * (1 - (1 - p) ** 3));
 }
+
+// Score shown at the touchdown moment. A touchdown is six points; the try (one or two) is not displayed here and
+// appears when the next play starts, because that play's pre-play score already includes it.
+export function touchdownScore(pre, post, play) {
+  const touchdown = play?.outcome?.touchdown === true;
+  const hold = (side) => {
+    const gained = (post[side] ?? 0) - (pre[side] ?? 0);
+    return touchdown && gained > 6 ? (pre[side] ?? 0) + 6 : post[side];
+  };
+  return { away: hold('away'), home: hold('home') };
+}

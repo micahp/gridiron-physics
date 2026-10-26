@@ -2,7 +2,7 @@ import { Renderer } from './render.js';
 import { FootballAudio } from './audio-director.js';
 import { adaptLpGamePayload, validatePregameSourcePin } from './lp-game-record-adapter.js';
 import { createWeek7StatisticalGame, simulateWeek7StatisticalPlay } from './week7-statistical-model.js';
-import { scoreDelta, scoreMoment, tweenScore } from './score-animation.js';
+import { scoreDelta, scoreMoment, touchdownScore, tweenScore } from './score-animation.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -178,7 +178,10 @@ function renderScorebug(entry) {
   const after = entry.play.state_after ?? state;
   scorePlan = {
     pre: { away: state.away_score ?? 0, home: state.home_score ?? 0 },
-    post: { away: after.away_score ?? 0, home: after.home_score ?? 0 },
+    post: touchdownScore(
+      { away: state.away_score ?? 0, home: state.home_score ?? 0 },
+      { away: after.away_score ?? 0, home: after.home_score ?? 0 },
+      entry.play),
     delta: scoreDelta(entry.play), phase: 'pre', start: 0, replay: null, moment: null,
   };
   clearScoringFlash();

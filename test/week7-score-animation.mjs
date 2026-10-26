@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { scoreDelta, scoreMoment, scoreShown, tweenScore } from '../web/score-animation.js';
+import { scoreDelta, scoreMoment, scoreShown, touchdownScore, tweenScore } from '../web/score-animation.js';
 import { adaptLpGamePayload } from '../web/lp-game-record-adapter.js';
 import { createWeek7StatisticalGame, simulateWeek7StatisticalPlay } from '../web/week7-statistical-model.js';
 
@@ -26,6 +26,12 @@ for (let i = 0; i <= 10; i++) {
   assert.ok(v >= last && Number.isInteger(v), 'tween is monotonic and whole-number');
   last = v;
 }
+
+// A touchdown shows six points at the touchdown; the try is held back until the next play starts.
+assert.deepEqual(touchdownScore({ away: 22, home: 22 }, { away: 22, home: 30 }, { outcome: { touchdown: true } }), { away: 22, home: 28 }, 'two-point try is held back');
+assert.deepEqual(touchdownScore({ away: 9, home: 9 }, { away: 9, home: 16 }, { outcome: { touchdown: true } }), { away: 9, home: 15 }, 'extra point is held back');
+assert.deepEqual(touchdownScore({ away: 0, home: 3 }, { away: 0, home: 6 }, { outcome: { touchdown: true } }), { away: 0, home: 6 }, 'a plain six is shown in full');
+assert.deepEqual(touchdownScore({ away: 0, home: 3 }, { away: 0, home: 6 }, { outcome: { touchdown: false } }), { away: 0, home: 6 }, 'non-touchdown plays are untouched');
 
 // Real touchdowns from the pinned game: the scoring moment must fall inside the replay window.
 const payload = JSON.parse(await readFile(new URL('../docs/fixtures/pregame/game-kc-sea-seed8-blocked.json', import.meta.url), 'utf8'));
