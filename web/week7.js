@@ -21,7 +21,7 @@ const match = MATCHUPS.find(m=>m.id===matchQuery) || MATCHUPS[0];
 $('matchup').innerHTML = MATCHUPS.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.away+' @ '+m.home+' · '+m.day)+'</option>').join('');
 $('matchup').value = match.id;
 for (const [side, id] of [['away', match.away], ['home', match.home]]) {
-  $(side+'-name').textContent = id;
+  $(side+'-name').textContent = teamStyle(id).short;
   $('bug-'+side).style.setProperty('--team', teamStyle(id).color);
 }
 

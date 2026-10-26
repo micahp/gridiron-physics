@@ -132,7 +132,7 @@ function renderBug(opts = {}) {
   const team = (id, score) => {
     const t = T[id];
     const poss = S.off === id && !['kickoff'].includes(S.kind);
-    return `<img src="${esc(t.logo)}" alt=""><span class="abbr">${esc(t.abbr)}</span><span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
+    return `<img src="${esc(t.logo)}" alt=""><span class="abbr">${esc(t.short || t.abbr)}</span><span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
       + (poss ? '' : '');
   };
   const a = $('#bug-away'), h = $('#bug-home');
