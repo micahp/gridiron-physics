@@ -14,10 +14,11 @@ const record = {
     { type: 'whistle', t: 2.0 },
   ],
 };
-test('unconvincing snap/contact/whistle clips stay suspended in live 3D playback', () => {
+test('generic snap and contact clips stay suspended while the recorded referee whistle plays', () => {
   const cues = planFootballSound(p(), record, 'BAL');
-  assert.deepEqual([...SUSPENDED_FOLEY].sort(), ['hit1', 'hit2', 'snap', 'whistle']);
+  assert.deepEqual([...SUSPENDED_FOLEY].sort(), ['hit1', 'hit2', 'snap']);
   assert.ok(cues.some(c => c.name === 'foot1'), 'keep walking and atmosphere');
+  assert.ok(cues.some(c => c.name === 'whistle'), 'the recorded referee blast is audible again');
   assert.ok(cues.every(c => !SUSPENDED_FOLEY.has(c.name)));
   assert.ok(planFootballSound(p({touchdown:true}), record, 'BAL').some(c => c.name === 'bigCheer'));
 });
@@ -34,11 +35,12 @@ test('big gains trigger mild home cheer, not automatic TD roar', () => {
   assert.ok(sounds.includes('cheer'));
   assert.ok(!sounds.includes('bigCheer'));
 });
-test('text-only kicks keep licensed crowd but no fake impact or human-sounding whistle', () => {
+test('text-only kicks keep crowd and the referee whistle but still no fake impact', () => {
   const sounds = planFootballSound({
     type: 'field_goal', good: true, offense: 'BAL', action:'FIELD GOAL GOOD',
   }, null, 'BAL').map(c => c.name);
   assert.ok(sounds.includes('bigCheer'));
+  assert.ok(sounds.includes('whistle'), 'dead-ball whistle is a recorded referee blast');
   assert.ok(sounds.every(name => !SUSPENDED_FOLEY.has(name)));
 });
 test('unknown events do not generate unsourced audio', () => {
