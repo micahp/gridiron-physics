@@ -12,6 +12,7 @@
     "test:autonomous-acceptance": "node test/autonomous-acceptance.mjs",
     "test:autonomous-batch": "node scripts/batch-autonomous-runs.mjs",
     "test:week7": "node test/week7-core.mjs && node test/week7-audit.mjs && node test/week7-audit-mutations.mjs",
+    "test:week7-statistical": "node test/week7-statistical-replay.mjs",
     "test:ui": "bash test/serve-ui.sh",
     "serve": "python3 -m http.server 8080 --directory ."
   },

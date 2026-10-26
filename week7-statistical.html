@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gridiron Physics | Statistical game 3D replay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="web/style.css">
+<style>
+.stat-replay-note { padding: 10px 12px; margin: 10px 0; border-left: 3px solid var(--firstdown); background: var(--rail); font-size: 12px; line-height: 1.45; }
+.stat-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--rail); }
+.stat-controls label { display: grid; gap: 4px; font: 11px var(--f-data); color: var(--dim); }
+.stat-controls select { width: 100%; min-width: 0; background: var(--rail); border: 1px solid var(--rail); padding: 6px 8px; }
+.stat-play-list { max-height: 42vh; overflow: auto; padding: 0 12px 12px; }
+.stat-drive { margin: 12px 0 5px; font: 600 13px var(--f-display); color: var(--dim); }
+.stat-play { display: grid; grid-template-columns: 34px 1fr; gap: 7px; width: 100%; text-align: left; border: 0; border-left: 2px solid transparent; background: transparent; padding: 6px; color: var(--chalk); }
+.stat-play:hover, .stat-play.on { background: var(--rail); border-left-color: var(--firstdown); }
+.stat-play small { display: block; color: var(--dim); font: 11px/1.35 var(--f-data); }
+.stat-play b { font: 600 13px var(--f-display); }
+.stat-summary { padding: 12px 16px; border-bottom: 1px solid var(--rail); }
+.stat-summary p { margin: 5px 0; }
+.stat-table { width: 100%; border-collapse: collapse; font: 12px/1.35 var(--f-data); margin: 8px 0 18px; }
+.stat-table th, .stat-table td { padding: 5px; border-bottom: 1px solid var(--rail); text-align: right; }
+.stat-table th:first-child, .stat-table td:first-child { text-align: left; }
+#play-detail { white-space: normal; }
+@media (max-width: 700px) { .stat-play-list { max-height: 35vh; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="bug" aria-label="Scoreboard">
+    <div class="bug-team" id="bug-away"><span class="abbr" id="away-name">AWAY</span><span class="score" id="away-score">0</span></div>
+    <div class="bug-mid">
+      <div class="bug-clock"><span id="bug-q">Q1</span><span id="game-clock">15:00</span></div>
+      <div class="bug-down" id="down-distance">Loading game…</div>
+    </div>
+    <div class="bug-team" id="bug-home"><span class="score" id="home-score">0</span><span class="abbr" id="home-name">HOME</span></div>
+    <div class="bug-meta">
+      <p>Gridiron Physics · Week 7 · FULL-GAME 3D REPLAY</p>
+      <p><span id="replay-type">Loading pinned statistical game…</span></p>
+      <p id="status">Loading source-pinned LP results…</p>
+    </div>
+  </header>
+
+  <main class="stage">
+    <canvas id="view" aria-label="Three-dimensional statistical football play replay"></canvas>
+    <div class="ticker" aria-live="polite"><div class="big" id="snap-title">Kansas City at Seattle</div></div>
+    <div class="cams" role="group" aria-label="Camera">
+      <button data-cam="broadcast" class="on">Broadcast</button>
+      <button data-cam="all22">All-22</button>
+      <button data-cam="sky">Skycam</button>
+      <button data-cam="top">Chalkboard</button>
+      <button data-cam="follow">Follow</button>
+      <button data-cam="free">Free</button>
+    </div>
+  </main>
+
+  <section class="transport" aria-label="3D play playback">
+    <div class="tp-row">
+      <button id="previous" aria-label="Previous play" title="Previous play">‹</button>
+      <button id="play" aria-label="Play through game" title="Play through game">▶</button>
+      <button id="next" aria-label="Next play" title="Next play">›</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Scrub 3D play">
+      <select id="speed" aria-label="Playback speed"><option value=".5">½×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+    </div>
+    <p class="playtext" id="play-detail">Loading…</p>
+  </section>
+
+  <aside class="panel" aria-label="Game drives, plays, and statistical results">
+    <div class="stat-summary">
+      <div class="sec">Pregame statistical game · source-pinned</div>
+      <p id="game-summary">Kansas City at Seattle · 29–23 · seed 8</p>
+      <p class="note" id="record-status">Checking fixture and producer hashes…</p>
+      <div class="stat-replay-note">The play, score, possession, and player statistics come from LP and stay unchanged. Gridiron generates 3D movement with neutral position templates; LP supplies no blocking or defensive roster and no player trajectories, so this is an outcome-anchored visualization, not a player-specific prediction.</div>
+    </div>
+    <div class="stat-controls">
+      <label for="drive-select">Drive<select id="drive-select" disabled></select></label>
+      <label for="play-select">Play<select id="play-select" disabled></select></label>
+    </div>
+    <div class="sec" id="timeline-head">Drives and plays</div>
+    <div class="stat-play-list" id="timeline"></div>
+    <details class="stat-summary">
+      <summary>LP team and player lines</summary>
+      <table class="stat-table" id="team-stats"></table>
+      <table class="stat-table" id="player-stats"></table>
+    </details>
+  </aside>
+</div>
+<script type="module" src="web/week7-statistical.js"></script>
+</body>
+</html>
