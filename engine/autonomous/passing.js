@@ -69,8 +69,8 @@ function validateConfig(input) {
   if (!Number.isFinite(cfg.ballY) || cfg.ballY < 1 || cfg.ballY > FIELD_W_YD - 1) throw new RangeError('ballY must be inside the field');
   if (!['stage_one', 'zero_openness', 'belief'].includes(cfg.qbPolicy)) throw new RangeError(`unsupported qbPolicy: ${cfg.qbPolicy}`);
   if (!['exact', 'observed'].includes(cfg.priorMode)) throw new RangeError(`unsupported priorMode: ${cfg.priorMode}`);
-  if (!Array.isArray(cfg.qbParts) || cfg.qbParts.some((p) => !['openness', 'routeGate', 'progression'].includes(p))) {
-    throw new RangeError('qbParts must name openness, routeGate or progression');
+  if (!Array.isArray(cfg.qbParts) || cfg.qbParts.some((p) => !['openness', 'routeGate', 'progression', 'motion', 'gaze'].includes(p))) {
+    throw new RangeError('qbParts must name openness, routeGate, progression, motion or gaze');
   }
   return cfg;
 }
@@ -186,7 +186,22 @@ export function simulatePassPlay(options = {}) {
   center.hasBall = true;
   // The called formation is known before the snap: the quarterback's prior for players he has not yet seen.
   const alignment = new Map(W.players.map((p) => [p.id, { x: p.p.x, y: p.p.y }]));
+  // Each defender is paired with the receiver he lined up nearest. That is read from the formation, not from the call.
+  const pairOf = new Map();
+  for (const q of defense) {
+    const a = alignment.get(q.id);
+    let best = xRec, bestD = Infinity;
+    for (const r of [xRec, z, slotRec]) {
+      const ra = alignment.get(r.id);
+      const d = Math.hypot(a.x - ra.x, a.y - ra.y);
+      if (d < bestD) { best = r; bestD = d; }
+    }
+    pairOf.set(q.id, best);
+  }
+  // Beta-style counts: how often the defenders the quarterback has seen moved like a trailer or like a dropper.
   const eyes = createQbEyes(qb);
+  eyes.evidence = { man: 1, zone: 1 };
+  eyes.classified = new Set();
   const qbPolicy = cfg.qbPolicy ?? 'stage_one';
   const qbParts = new Set(cfg.qbParts);
   // The belief policy is three separable parts, so each can be ablated: openness and lanes, route gating, read progression.
@@ -201,13 +216,15 @@ export function simulatePassPlay(options = {}) {
     if (beliefOn('openness')) {
       // Nothing known means nothing confirmed open.
       if (!nearest.player) return 0;
-      // Expected openness over the nearest defender's belief: its centre, and eight points 1.2 uncertainty radii out.
+      // Expected openness over the nearest defender's Gaussian belief (sd = his uncertainty), by three-point
+      // Gauss-Hermite quadrature on each axis: nodes at 0 and plus or minus root 3, weights 2/3 and 1/6.
+      const nodes = [[-Math.sqrt(3), 1 / 6], [0, 2 / 3], [Math.sqrt(3), 1 / 6]];
       let sum = 0;
-      for (let i = 0; i <= 8; i++) {
-        const a = ((i - 1) * Math.PI) / 4;
-        const r = i === 0 ? 0 : 1.2 * nearest.uncertainty;
-        const sep = Math.hypot(nearest.x + r * Math.cos(a) - from.x, nearest.y + r * Math.sin(a) - from.y);
-        sum += (i === 0 ? 1 / 3 : 1 / 12) * clamp((sep / YD - 0.7) / 2.2, 0, 1);
+      for (const [ox, wx] of nodes) {
+        for (const [oy, wy] of nodes) {
+          const sep = Math.hypot(nearest.x + ox * nearest.uncertainty - from.x, nearest.y + oy * nearest.uncertainty - from.y);
+          sum += wx * wy * clamp((sep / YD - 0.7) / 2.2, 0, 1);
+        }
       }
       return sum;
     }
@@ -378,9 +395,42 @@ export function simulatePassPlay(options = {}) {
     const out = [];
     for (const q of defense) {
       const est = perceive(eyes, q, W.t);
-      if (est) out.push({ player: q, ...est });
+      if (!est) continue;
+      const unseen = eyes.memory.get(q.id)?.prior;
+      out.push({ player: q, ...(beliefOn('motion') && unseen ? expectedMotion(q, est) : est) });
     }
     return out;
+  }
+
+  // An unseen defender is not frozen at his alignment, and the quarterback does not know the coverage call. He holds two
+  // hypotheses: he trails the receiver he lined up nearest (man), or he drops downfield (zone). Their weights come from
+  // the defenders he has actually seen move. The belief is a single Gaussian moment-matched to the mixture.
+  function updateCoverageEvidence() {
+    for (const q of defense) {
+      if (eyes.classified.has(q.id)) continue;
+      const m = eyes.memory.get(q.id);
+      if (!m || m.prior) continue;
+      const a = alignment.get(q.id);
+      if (Math.hypot(m.x - a.x, m.y - a.y) / YD < 1.5) continue;
+      eyes.classified.add(q.id);
+      const pair = pairOf.get(q.id);
+      const ra = alignment.get(pair.id);
+      const mate = perceive(eyes, pair, W.t);
+      if (mate && Math.hypot(m.x - mate.x, m.y - mate.y) < Math.hypot(a.x - ra.x, a.y - ra.y) - YD) eyes.evidence.man += 1;
+      else if (dir * (m.x - a.x) / YD > 1) eyes.evidence.zone += 1;
+    }
+  }
+
+  function expectedMotion(q, est) {
+    const a = alignment.get(q.id);
+    const pair = pairOf.get(q.id);
+    const mate = perceive(eyes, pair, W.t);
+    const manX = mate ? mate.x : a.x, manY = mate ? mate.y : a.y;
+    const zoneX = a.x + dir * 5 * YD * clamp(W.t / 1.5, 0, 1), zoneY = a.y;
+    const wMan = eyes.evidence.man / (eyes.evidence.man + eyes.evidence.zone);
+    const variance = wMan * 1.37 ** 2 + (1 - wMan) * 2.29 ** 2 + wMan * (1 - wMan) * ((manX - zoneX) ** 2 + (manY - zoneY) ** 2);
+    return { ...est, x: wMan * manX + (1 - wMan) * zoneX, y: wMan * manY + (1 - wMan) * zoneY,
+      vx: mate ? mate.vx : 0, vy: mate ? mate.vy : 0, uncertainty: Math.sqrt(variance) + 1.2 * est.age };
   }
 
   function nearestSeenDefenderTo(pt) {
@@ -441,6 +491,12 @@ export function simulatePassPlay(options = {}) {
   // Where the quarterback's eyes go: the first read he has not confirmed this moment, else nothing.
   // A read he has never seen is looked for at its formation spot.
   function attention() {
+    if (beliefOn('gaze')) {
+      // The quarterback looks at the read the progression is on, so observations follow the decision.
+      const rec = [z, slotRec, rb][readIndex];
+      const est = rec && perceive(eyes, rec, W.t);
+      return est ? { x: est.x, y: est.y } : rec ? alignment.get(rec.id) : null;
+    }
     for (const rec of [z, slotRec, rb]) {
       if (!rec) continue;
       const est = perceive(eyes, rec, W.t);
@@ -451,6 +507,7 @@ export function simulatePassPlay(options = {}) {
   }
 
   function readOptions() {
+    if (beliefOn('motion')) updateCoverageEvidence();
     const throwers = [z, slotRec, rb].filter(Boolean);
     return throwers.flatMap((rec) => {
       // A receiver he has not seen is not a read yet.
@@ -543,18 +600,22 @@ export function simulatePassPlay(options = {}) {
     const throwable = (o) => Boolean(o) && o.open >= OPEN_MIN && o.lane <= LANE_MAX;
     let why = 'no read open, pocket holding';
     // Diagnostic record of what the quarterback knew and why he acted. Decisions never read pressure_actual_yards.
+    const trueNearest = (rec) => Math.min(...defense.filter((q) => !q.down).map((q) => Math.hypot(q.p.x - rec.p.x, q.p.y - rec.p.y) / YD));
     const trace = (action, reason) => {
       const known = seenDefenders();
+      const priors = known.filter((k) => eyes.memory.get(k.player.id)?.prior);
       W.event('decision_trace', {
         quarterback_id: qb.id,
         elapsed_s: Number(elapsed.toFixed(2)),
         read: qbParts.size ? readNames[readIndex] : null,
         gaze_deg: Number((eyes.gaze * 180 / Math.PI).toFixed(0)),
         confirmed_defenders: known.filter((k) => !eyes.memory.get(k.player.id)?.prior).length,
-        prior_defenders: known.filter((k) => eyes.memory.get(k.player.id)?.prior).length,
+        prior_defenders: priors.length,
+        belief_error_yards: priors.length ? Number((priors.reduce((t, k) => t + Math.hypot(k.x - k.player.p.x, k.y - k.player.p.y) / YD, 0) / priors.length).toFixed(2)) : null,
         options: options.map((o) => ({
           receiver: o.receiver.slot,
           developed: o.developed,
+          true_nearest_yards: Number(trueNearest(o.receiver).toFixed(2)),
           separation_yards: Number(o.separation.toFixed(2)),
           uncertainty_yards: Number(o.uncertainty.toFixed(2)),
           openness: Number(o.open.toFixed(3)),
