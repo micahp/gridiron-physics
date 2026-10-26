@@ -27,6 +27,7 @@ for (const [side, id] of [['away', match.away], ['home', match.home]]) {
 
 let snapshot, books, physicsGame, renderer, simulation, selected = 0, current = null, currentSelection = null;
 let animating = false, lastTick = null, playSeconds = 0;
+let scoreCue = null;
 // Reuse the same 2026 lineups for timeline credits and the actual 3D play.
 const selectedDemos = new Map();
 const stadiumAudio = new FootballAudio(match.home);
@@ -270,7 +271,7 @@ function spotLabel(p) {
   const team = ownSide ? p.offense : (p.offense === match.home ? match.away : match.home);
   return team + ' ' + (ownSide ? 100 - yl : yl);
 }
-import { animateScoreBug, touchdownScore } from './score-animation.js';
+import { afterPlayEnd, animateScoreBug, touchdownScore } from './score-animation.js';
 function scoreAtPlay(p) {
   // The try (one or two) belongs to the next play's starting score, so a touchdown shows six points here.
   const i = simulation.plays.indexOf(p);
@@ -279,8 +280,11 @@ function scoreAtPlay(p) {
   const held = touchdownScore({away: before[match.away]??0, home: before[match.home]??0},
     {away: after[match.away]??0, home: after[match.home]??0}, {outcome: {touchdown: !!p.touchdown}});
   const score = {[match.away]: held.away, [match.home]: held.home};
-  animateScoreBug($('bug-away'), $('away-score'), before[match.away]??0, score[match.away]??0);
-  animateScoreBug($('bug-home'), $('home-score'), before[match.home]??0, score[match.home]??0);
+  // The score changes in the 3D play, when its touchdown is reached, not when the play is selected.
+  scoreCue = {pre: {away: before[match.away]??0, home: before[match.home]??0},
+    held: {away: score[match.away]??0, home: score[match.home]??0}, applied: false};
+  $('away-score').textContent = String(scoreCue.pre.away);
+  $('home-score').textContent = String(scoreCue.pre.home);
   $('bug-q').textContent='Q'+p.quarter;
   $('game-clock').textContent=clock(p.clock);
   $('down-distance').textContent=p.down+' & '+p.togo+' · '+spotLabel(p);
@@ -426,12 +430,31 @@ function simulate(){
       match.home+' '+simulation.score[match.home]+' · result illustrative; legal status unvalidated');
   }catch(e){status('Simulation failed: '+e.message,true);}
 }
+// Score cue: the post-play score appears when the 3D play's clock crosses the play's end (the touchdown), and
+// reverts when the clock is scrubbed back before it.
+function updatePlayScore(){
+  if(!scoreCue||!current)return;
+  const t=current.rec.t0+playSeconds;
+  const at=current.rec.end&&current.rec.end.t!=null?current.rec.end.t:current.rec.t0+current.duration;
+  const after=afterPlayEnd(at,t);
+  if(after===scoreCue.applied)return;
+  scoreCue.applied=after;
+  if(after){
+    animateScoreBug($('bug-away'),$('away-score'),scoreCue.pre.away,scoreCue.held.away);
+    animateScoreBug($('bug-home'),$('home-score'),scoreCue.pre.home,scoreCue.held.home);
+  }else{
+    $('away-score').textContent=String(scoreCue.pre.away);
+    $('home-score').textContent=String(scoreCue.pre.home);
+    $('bug-away').classList.remove('scored');$('bug-home').classList.remove('scored');
+  }
+}
 function animate(now){
   if(lastTick===null)lastTick=now;
   const dt=Math.min(.06,(now-lastTick)/1000);lastTick=now;
   if(current&&renderer){
     if(animating&&playing)playSeconds=Math.min(current.duration,playSeconds+dt*Number($('speed').value));
     renderer.draw(current.rec,current.rec.t0+playSeconds,dt);
+    updatePlayScore();
     $('scrub').value=String(Math.round(1000*playSeconds/Math.max(.01,current.duration)));
     if(playSeconds>=current.duration)animating=false;
   }
