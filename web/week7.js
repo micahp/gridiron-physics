@@ -270,7 +270,7 @@ function spotLabel(p) {
   const team = ownSide ? p.offense : (p.offense === match.home ? match.away : match.home);
   return team + ' ' + (ownSide ? 100 - yl : yl);
 }
-import { touchdownScore } from './score-animation.js';
+import { animateScoreBug, touchdownScore } from './score-animation.js';
 function scoreAtPlay(p) {
   // The try (one or two) belongs to the next play's starting score, so a touchdown shows six points here.
   const i = simulation.plays.indexOf(p);
@@ -279,8 +279,8 @@ function scoreAtPlay(p) {
   const held = touchdownScore({away: before[match.away]??0, home: before[match.home]??0},
     {away: after[match.away]??0, home: after[match.home]??0}, {outcome: {touchdown: !!p.touchdown}});
   const score = {[match.away]: held.away, [match.home]: held.home};
-  $('away-score').textContent=score[match.away]??0;
-  $('home-score').textContent=score[match.home]??0;
+  animateScoreBug($('bug-away'), $('away-score'), before[match.away]??0, score[match.away]??0);
+  animateScoreBug($('bug-home'), $('home-score'), before[match.home]??0, score[match.home]??0);
   $('bug-q').textContent='Q'+p.quarter;
   $('game-clock').textContent=clock(p.clock);
   $('down-distance').textContent=p.down+' & '+p.togo+' · '+spotLabel(p);
