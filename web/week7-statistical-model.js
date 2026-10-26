@@ -22,7 +22,14 @@ const PROFILES = {
 const OFFENSE_SLOTS = ['LT', 'LG', 'C', 'RG', 'RT', 'QB', 'RB', 'TE', 'WR1', 'WR2', 'WR3'];
 const DEFENSE_SLOTS = ['LEDGE', 'LDT', 'RDT', 'REDGE', 'MLB', 'WLB', 'LCB', 'RCB', 'NB', 'SS', 'FS'];
 const OL_SLOTS = ['LT', 'LG', 'C', 'RG', 'RT'];
-const POSITION_PRIORITY = { QB: 0, RB: 1, FB: 2, WR: 3, TE: 4, LT: 5, LG: 5, C: 5, RG: 5, RT: 5 };
+const POSITION_PRIORITY = {
+  QB: 0, RB: 1, FB: 2, WR: 3, TE: 4,
+  LT: 5, LG: 5, C: 5, RG: 5, RT: 5,
+  LDE: 6, LDT: 6, NT: 6, RDT: 6, RDE: 6,
+  MLB: 7, WLB: 7, SLB: 7, LILB: 7, RILB: 7,
+  LCB: 8, RCB: 8, NB: 8, SS: 8, FS: 8,
+  PK: 9, P: 9, LS: 9, H: 9,
+};
 
 function playerInfo({ id, name, team, pos, profile, jersey, starter }) {
   const physics = { ...profile, f0: profile.mass * profile.vmax / profile.tau };
@@ -37,6 +44,10 @@ function profileForPosition(position) {
   if (position === 'QB' || position === 'RB' || position === 'WR' || position === 'TE') return PROFILES[position];
   if (position === 'FB') return PROFILES.TE;
   if (OL_SLOTS.includes(position)) return PROFILES.OL;
+  if (['LDE', 'RDE'].includes(position)) return PROFILES.EDGE;
+  if (['LDT', 'RDT', 'NT'].includes(position)) return PROFILES.IDL;
+  if (['MLB', 'WLB', 'SLB', 'LILB', 'RILB'].includes(position)) return PROFILES.LB;
+  if (['PK', 'P', 'LS', 'H'].includes(position)) return PROFILES.K;
   return PROFILES.DB;
 }
 
@@ -170,21 +181,52 @@ function offenseLineup(game, side, play) {
   return lineup;
 }
 
-function defenseLineup(side) {
-  return Object.fromEntries(DEFENSE_SLOTS.map((slot) => [slot, { pid: generatedId(side, `DEF-${slot}`) }]));
+const DEFENSE_ROLE_SLOTS = {
+  'Base 4-3 D': {
+    LEDGE: 'LDE', LDT: 'LDT', RDT: 'RDT', REDGE: 'RDE', MLB: 'MLB', WLB: 'WLB',
+    LCB: 'LCB', RCB: 'RCB', NB: 'SLB', SS: 'SS', FS: 'FS',
+  },
+  'Base 3-4 D': {
+    LEDGE: 'LDE', LDT: 'NT', RDT: 'RDE', REDGE: 'SLB', MLB: 'LILB', WLB: 'RILB',
+    LCB: 'LCB', RCB: 'RCB', NB: 'WLB', SS: 'SS', FS: 'FS',
+  },
+};
+
+function specialTeamsPlayer(game, side, position, fallbackRole) {
+  const player = game.rosters[side]
+    .filter((entry) => entry.group === 'Special Teams' && entry.pos_abb === position)
+    .sort((a, b) => Number(b.starter) - Number(a.starter) || (a.pos_rank ?? 999) - (b.pos_rank ?? 999))[0];
+  return player?.gsis_id ?? generatedId(side, fallbackRole);
+}
+
+function defenseLineup(game, side) {
+  const roster = game.rosters[side];
+  const defenseGroup = roster.find((player) => player.group?.startsWith('Base '))?.group;
+  const roleSlots = DEFENSE_ROLE_SLOTS[defenseGroup];
+  return Object.fromEntries(DEFENSE_SLOTS.map((slot) => {
+    const position = roleSlots?.[slot];
+    const player = position && roster
+      .filter((entry) => entry.group === defenseGroup && entry.pos_abb === position)
+      .sort((a, b) => Number(b.starter) - Number(a.starter) || (a.pos_rank ?? 999) - (b.pos_rank ?? 999))[0];
+    return [slot, { pid: player?.gsis_id ?? generatedId(side, `DEF-${slot}`) }];
+  }));
 }
 
 function teamUnits(game, side, kind, offense, defense) {
   const defenseIds = Object.values(defense).map((entry) => entry.pid);
+  const punter = specialTeamsPlayer(game, side, 'P', 'P');
+  const kicker = specialTeamsPlayer(game, side, 'PK', 'K');
+  const longSnapper = specialTeamsPlayer(game, side, 'LS', 'LS');
+  const holder = specialTeamsPlayer(game, side, 'H', 'H');
+  const linemen = OL_SLOTS.map((slot) => offense[slot].pid);
   if (kind === 'punt') {
     return {
-      [side]: [generatedId(side, 'P'), generatedId(side, 'LS'), ...OL_SLOTS.map((slot) => generatedId(side, `OL-${slot}`)),
+      [side]: [punter, longSnapper, ...linemen,
         offense.QB.pid, offense.RB.pid, offense.TE.pid, offense.WR1.pid],
       [side === 'A' ? 'B' : 'A']: defenseIds,
     };
   }
-  const fieldGoalUnit = [generatedId(side, 'K'), generatedId(side, 'LS'), generatedId(side, 'H'),
-    ...OL_SLOTS.map((slot) => generatedId(side, `OL-${slot}`)), offense.QB.pid, offense.RB.pid, offense.TE.pid];
+  const fieldGoalUnit = [kicker, longSnapper, holder, ...linemen, offense.QB.pid, offense.RB.pid, offense.TE.pid];
   return { [side]: fieldGoalUnit, [side === 'A' ? 'B' : 'A']: defenseIds };
 }
 
@@ -198,7 +240,7 @@ export function buildWeek7StatisticalPlay(game, play) {
     throw new Error(`LP play ${play.sequence} has no pinned field direction and line of scrimmage`);
   }
   const offense = offenseLineup(game, off, play);
-  const defense = defenseLineup(def);
+  const defense = defenseLineup(game, def);
   const lineups = { [off]: offense, [def]: defense };
   const engineLineup = Object.fromEntries(Object.entries(lineups).map(([side, slots]) => [side,
     Object.fromEntries(Object.entries(slots).map(([slot, entry]) => [slot, entry.pid]))]));
@@ -217,7 +259,7 @@ export function buildWeek7StatisticalPlay(game, play) {
     gap: 'guard',
     td: o.touchdown === true,
     gain: Number.isFinite(o.yards_gained) ? o.yards_gained : 0,
-    replayNote: '3D movement is generated from generic position templates; the LP play result remains authoritative.',
+    replayNote: '3D movement uses schematic position templates and frozen roster identities; the LP play result remains authoritative.',
   };
   let visualKind;
   switch (play.event_type) {
@@ -265,8 +307,8 @@ export function buildWeek7StatisticalPlay(game, play) {
       script.kind = 'punt';
       script.kindGroup = 'kick';
       script.units = units;
-      script.punter = generatedId(off, 'P');
-      script.longSnapper = generatedId(off, 'LS');
+      script.punter = specialTeamsPlayer(game, off, 'P', 'P');
+      script.longSnapper = specialTeamsPlayer(game, off, 'LS', 'LS');
       script.returner = undefined;
       script.downed = true;
       script.land = Number.isFinite(play.field?.after?.los) ? play.field.after.los : field.los + field.dir * 40;
@@ -281,9 +323,9 @@ export function buildWeek7StatisticalPlay(game, play) {
       script.kind = 'fg';
       script.kindGroup = 'kick';
       script.units = units;
-      script.kicker = generatedId(off, 'K');
-      script.holder = generatedId(off, 'H');
-      script.snapper = generatedId(off, 'LS');
+      script.kicker = specialTeamsPlayer(game, off, 'PK', 'K');
+      script.holder = specialTeamsPlayer(game, off, 'H', 'H');
+      script.snapper = specialTeamsPlayer(game, off, 'LS', 'LS');
       script.good = o.field_goal_result === 'made';
       script.miss = blocked ? 'short' : 'wide right';
       script.distance = state.yardline_100 + 17;

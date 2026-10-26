@@ -36,11 +36,21 @@ assert.ok(adapted.record.stats.player.some((stat) => rosterById.get(stat.player_
   'the pinned game allocates statistics to at least one depth-chart backup');
 
 const OFFENSE = new Set(['QB', 'RB', 'TE', 'WR1', 'WR2', 'WR3', 'LT', 'LG', 'C', 'RG', 'RT']);
-let plays = 0, offenseBodies = 0, offenseNumbered = 0;
+let plays = 0, offenseBodies = 0, offenseNumbered = 0, defenseBodies = 0, specialTeamsBodies = 0;
 for (const drive of adapted.drives) {
   for (const ip of drive.plays) {
     const replay = simulateWeek7StatisticalPlay(game, ip.source);
     for (const [side, slots] of Object.entries(replay.script.lineup)) {
+      if (side === replay.script.def) {
+        const defenders = Object.values(slots);
+        assert.equal(new Set(defenders).size, 11, `LP play ${ip.source.sequence} has 11 distinct defenders`);
+        for (const pid of defenders) {
+          const body = game.players[pid];
+          assert.ok(body, `defender ${pid} resolves to a frozen roster player`);
+          assert.notEqual(body.jersey, '?', `defender ${body.name} has a jersey number`);
+          defenseBodies++;
+        }
+      }
       for (const [slot, ref] of Object.entries(slots)) {
         if (!OFFENSE.has(slot)) continue;
         const body = game.players[ref];
@@ -48,9 +58,18 @@ for (const drive of adapted.drives) {
         if (body && body.jersey !== '?') offenseNumbered++;
       }
     }
+    for (const players of Object.values(replay.script.units ?? {})) {
+      for (const pid of players) {
+        const body = game.players[pid];
+        assert.ok(body, `special-teams player ${pid} resolves to a frozen roster player`);
+        assert.notEqual(body.jersey, '?', `special-teams player ${body.name} has a jersey number`);
+        specialTeamsBodies++;
+      }
+    }
     plays++;
   }
 }
 assert.equal(plays, adapted.sourcePlayCount, 'every play in the pinned full-depth game replays');
 assert.equal(offenseNumbered, offenseBodies, `every offensive body on the field has a jersey number (${offenseNumbered}/${offenseBodies})`);
-console.log(`PASS: all ${plays} pinned plays replay; ${offenseNumbered}/${offenseBodies} offensive bodies have jersey numbers; backup stats resolve`);
+assert.equal(defenseBodies, plays * 11);
+console.log(`PASS: all ${plays} pinned plays replay; ${offenseNumbered}/${offenseBodies} offensive and ${defenseBodies}/${defenseBodies} defensive bodies have jersey numbers; ${specialTeamsBodies} special-teams slots resolve; backup stats resolve`);

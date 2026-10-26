@@ -276,7 +276,7 @@ function renderRoster() {
     return `<div class="rrow"><span class="pos">${esc(slot)}</span><span>${esc(player?.name ?? 'Unknown')}</span><span class="jersey">${esc(jersey)}</span><span class="pos">${generic ? 'Template' : 'LP roster'}</span><span class="starter-tag ${player?.starter ? 'is-starter' : ''}">${esc(status)}</span></div>`;
   }).join('');
   const jerseyWeek = snapshot?.jersey_week;
-  $('players').innerHTML = `<div class="rgroup">Frozen full depth chart · ${roster.length} role rows / ${uniquePlayers} players</div><p class="note">Jersey numbers and starter/backup flags come from the frozen week ${esc(jerseyWeek ?? '—')} snapshot. Players can have more than one depth-chart role.</p><div class="rgroup">Pregame roster</div>${depthRows}<div class="rgroup">Current replay lineup · ${Object.keys(lineup).length} slots</div>${lineupRows}<p class="note">Player ratings are not supplied by the LP snapshot. “Template” slots are generic visualization bodies; the 3D defense still uses generic bodies because its alignment is not mapped.</p>`;
+  $('players').innerHTML = `<div class="rgroup">Frozen full depth chart · ${roster.length} role rows / ${uniquePlayers} players</div><p class="note">Jersey numbers and starter/backup flags come from the frozen week ${esc(jerseyWeek ?? '—')} snapshot. Players can have more than one depth-chart role.</p><div class="rgroup">Pregame roster</div>${depthRows}<div class="rgroup">Current replay lineup · ${Object.keys(lineup).length} slots</div>${lineupRows}<p class="note">Player ratings are not supplied by the LP snapshot. Jersey identities use the frozen roster; defensive alignment and movement remain schematic.</p>`;
 }
 
 function pointsByQuarter() {
