@@ -3,6 +3,7 @@ import { FootballAudio } from './audio-director.js';
 import { adaptLpGamePayload, validatePregameSourcePin } from './lp-game-record-adapter.js';
 import { createWeek7StatisticalGame, simulateWeek7StatisticalPlay } from './week7-statistical-model.js';
 import { scoreDelta, scoreMoment, touchdownScore, tweenScore } from './score-animation.js';
+import { mascotOf, spotText } from './spot-label.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -63,6 +64,16 @@ async function verifySnapshot(payload) {
 
 function teamName(side) {
   return physicsGame.identities[side]?.team ?? side;
+}
+
+// Scorebug names are mascots; the possession line uses the spot notation, like KC 15.
+function mascotName(side) {
+  return mascotOf(physicsGame.teams?.[side]?.name ?? teamName(side));
+}
+
+function spotFor(state) {
+  const abbr = (side) => physicsGame.teams?.[side]?.short ?? teamName(side);
+  return spotText(state.yardline_100, abbr(state.offense_team), abbr(state.defense_team));
 }
 
 function sideForTeam(team) {
@@ -162,15 +173,15 @@ function renderScorebug(entry) {
   const state = play.state_before;
   const awaySide = physicsGame.away;
   const homeSide = physicsGame.home;
-  $('away-name').textContent = teamName(awaySide);
-  $('home-name').textContent = teamName(homeSide);
+  $('away-name').textContent = mascotName(awaySide);
+  $('home-name').textContent = mascotName(homeSide);
   $('away-score').textContent = String(state.away_score ?? 0);
   $('home-score').textContent = String(state.home_score ?? 0);
   $('bug-q').textContent = `Q${state.quarter}`;
   $('game-clock').textContent = clock(state.clock_seconds);
   $('down-distance').textContent = state.down == null
-    ? `${teamName(state.offense_team)} possession`
-    : `${ordinal(state.down)} & ${state.yards_to_go ?? '—'} · ${teamName(state.offense_team)} possession`;
+    ? spotFor(state)
+    : `${ordinal(state.down)} & ${state.yards_to_go ?? '—'} · ${spotFor(state)}`;
   $('bug-away').style.setProperty('--team', physicsGame.teams[awaySide].color);
   $('bug-home').style.setProperty('--team', physicsGame.teams[homeSide].color);
   $('bug-away').classList.toggle('poss', state.offense_team === awaySide);
