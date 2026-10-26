@@ -1,18 +1,23 @@
 // Audio cues are driven by the same 120 Hz replay events as the visualisation.
 // Planner is pure so timeline, scrubbing and game-outcome behaviour can be tested.
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+// Browsers cache these subresources by URL without revalidating (the dev server
+// sends no Cache-Control), so a replaced .ogg keeps playing from cache until the
+// URL changes. Bump this string whenever any web/audio/*.ogg bytes change.
+const PACK_VERSION = '2026-10-25-whistle';
+const asset = path => `${path}?v=${PACK_VERSION}`;
 export const FOOTBALL_SOUNDS = Object.freeze({
-  ambience: 'web/audio/stadium-bed.ogg',
-  cheer: 'web/audio/crowd-cheer.ogg',
-  bigCheer: 'web/audio/crowd-big-cheer.ogg',
-  boo: 'web/audio/crowd-murmur.ogg',
-  snap: 'web/audio/snap.ogg',
-  hit1: 'web/audio/pads-1.ogg',
-  hit2: 'web/audio/pads-2.ogg',
-  foot1: 'web/audio/cleat-1.ogg',
-  foot2: 'web/audio/cleat-2.ogg',
-  whistle: 'web/audio/whistle.ogg',
-  click: 'web/audio/ui-select.ogg',
+  ambience: asset('web/audio/stadium-bed.ogg'),
+  cheer: asset('web/audio/crowd-cheer.ogg'),
+  bigCheer: asset('web/audio/crowd-big-cheer.ogg'),
+  boo: asset('web/audio/crowd-murmur.ogg'),
+  snap: asset('web/audio/snap.ogg'),
+  hit1: asset('web/audio/pads-1.ogg'),
+  hit2: asset('web/audio/pads-2.ogg'),
+  foot1: asset('web/audio/cleat-1.ogg'),
+  foot2: asset('web/audio/cleat-2.ogg'),
+  whistle: asset('web/audio/whistle.ogg'),
+  click: asset('web/audio/ui-select.ogg'),
 });
 
 // Synthetic/gamey stand-ins, not recorded football gear: the wood-impact snap and
