@@ -8,3 +8,8 @@ export function touchdownScore(pre, post, play) {
   };
   return { away: hold('away'), home: hold('home') };
 }
+
+// True once the playback clock is past the play's end: the scorebug shows the post-play score from then on.
+export function afterPlayEnd(endT, t) {
+  return endT != null && t > endT;
+}

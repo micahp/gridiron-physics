@@ -1,7 +1,7 @@
 import { simulatePlay } from '../engine/play.js';
 import { nextBallY } from '../engine/game.js';
 import { Renderer } from './render.js';
-import { touchdownScore } from './score-animation.js';
+import { afterPlayEnd, touchdownScore } from './score-animation.js';
 
 const $ = (s) => document.querySelector(s);
 const MPH = 2.23694;
@@ -21,6 +21,7 @@ R.resize();
 
 // ------------------------------------------------------------- simulate
 const recs = new Array(game.plays.length).fill(null);
+let bugAfter = null;
 const simIdx = game.plays.map((p, i) => (p.kind === 'admin' ? -1 : i)).filter((i) => i >= 0);
 {
   let prev = null, done = 0;
@@ -124,7 +125,7 @@ function prevScore(i) {
 function renderBug() {
   const S = game.plays[state.i];
   const rec = recs[state.i];
-  const after = rec.end.t != null && state.t > rec.end.t;
+  const after = afterPlayEnd(rec.end.t, state.t);
   const pre = prevScore(state.i);
   const held = touchdownScore({ away: pre[0], home: pre[1] }, { away: S.score[0], home: S.score[1] }, { outcome: { touchdown: !!S.td } });
   const [as, hs] = after ? [held.away, held.home] : pre;
@@ -524,8 +525,11 @@ function frame(now) {
   lastFrame = renderTags();
   if (!state.scrubbing) $('#scrub').value = String(Math.round(((state.t - rec.t0) / (end - rec.t0)) * 1000));
   $('#play').textContent = state.playing ? '❚❚' : '▶';
+  // Refresh the scorebug whenever the clock crosses the play's end, whatever the speed, scrubbing or pausing.
+  const afterNow = afterPlayEnd(rec.end.t, state.t);
+  if (afterNow !== bugAfter) { bugAfter = afterNow; renderBug(); }
   physT += dt;
-  if (physT > 0.2) { physT = 0; renderPhysics(lastFrame); if (rec.end.t != null && Math.abs(state.t - rec.end.t) < 0.25) renderBug(); }
+  if (physT > 0.2) { physT = 0; renderPhysics(lastFrame); }
   requestAnimationFrame(frame);
 }
 
