@@ -17,11 +17,11 @@ entries and SHA-256 values.
 | `cleat-*.ogg` | Kenney RPG Audio: https://kenney.nl/assets/rpg-audio | CC0; attribution optional |
 | `ui-select.ogg` | Kenney Interface Sounds: https://kenney.nl/assets/interface-sounds | CC0; attribution optional |
 | `stadium-bed.ogg`, `crowd-*.ogg` | Gregor Quendel, *Free Crowd Cheering Sounds*: https://opengameart.org/content/free-crowd-cheering-sounds | **CC BY 4.0. Attribution required**; shortened/resampled/encoded for browser playback |
-| `whistle.ogg` | dklon, *Whistles*: https://opengameart.org/content/whistles | **CC BY 3.0. Attribution required**; shortened/resampled/encoded for browser playback |
+| `whistle.ogg` | **replaced 2026-10-25**: first blast of a user-supplied `REFEREE WHISTLE SOUND EFFECT.mp3` (see the replacement section below) | **Licence not yet verified** — do not redistribute until the source is cleared |
 
 Required credits for shipped builds with the generated assets:
 - **Gregor Quendel**, *Free Crowd Cheering Sounds*, https://opengameart.org/content/free-crowd-cheering-sounds , licensed **CC BY 4.0**, https://creativecommons.org/licenses/by/4.0/ . Modified: edited duration, channel format, sample rate and transcoded to OGG.
-- **dklon**, *Whistles*, https://opengameart.org/content/whistles , licensed **CC BY 3.0**, https://creativecommons.org/licenses/by/3.0/ . Modified: edited duration, sample rate and transcoded to OGG.
+- **dklon**, *Whistles*, https://opengameart.org/content/whistles , licensed **CC BY 3.0**, https://creativecommons.org/licenses/by/3.0/ . **No longer shipped**: `whistle.ogg` was replaced on 2026-10-25 (see below); keep this credit only while the old clip is still in git history.
 - **Kenney.nl**, audio from https://kenney.nl/assets/impact-sounds , https://kenney.nl/assets/rpg-audio and https://kenney.nl/assets/interface-sounds , **CC0 1.0**, https://creativecommons.org/publicdomain/zero/1.0/ .
 
 ## Soundscape architecture
@@ -81,3 +81,27 @@ Because this is a paid sound library, don't commit raw sound files into this
 public repository without verifying license terms for source redistribution.
 EA's Madden approach records actors in real pads and helmets; refer to
 https://www.ea.com/ea-studios/ea-orlando/news/engineering-game-day-sounds-behind-ea-sports .
+
+## 2026-10-25 whistle replacement (referee blast)
+
+`web/audio/whistle.ogg` is now the **first whistle** of a user-supplied file,
+`E:/Users/micah/Downloads/REFEREE WHISTLE SOUND EFFECT.mp3` (4.075 s, 128 kbps
+MP3). The source carries three blasts at 1.234-1.556 s, 2.070-2.400 s and
+2.470-3.070 s; the first was cut at **1.230-1.572 s** (3 ms fade in, 30 ms fade
+out), downmixed to 44.1 kHz mono, peak-normalised to -3 dBFS and encoded to Ogg
+Vorbis q5. Measured on the shipped file: 0.340 s, peak -2.8 dBFS, spectral
+centroid 2.84 kHz, 100% of energy above 2 kHz, one continuous blast with the pea
+rattle visible as amplitude modulation at roughly 26 Hz.
+
+`whistle` is therefore **no longer suspended**: `SUSPENDED_FOLEY` is
+`snap`, `hit1`, `hit2` only, and dead-ball cues play the recorded referee whistle
+again. `snap` and the two Kenney impacts stay suspended under the 2026-10-25 hold.
+
+Two open items:
+- **Licence is unverified.** The MP3 came from a download whose publisher is not
+  recorded here. This repository is public, so confirm the source and its terms
+  before this clip is redistributed. `MANIFEST.json` records
+  `source_pack: "referee-whistle"` and `provenance.referee-whistle` says so.
+- `pipeline/build_week7_audio.py` still regenerates `whistle.ogg` from the
+  opengameart `whistles.zip`. Re-running it reverts this replacement; update or
+  exclude that recipe entry deliberately rather than by accident.

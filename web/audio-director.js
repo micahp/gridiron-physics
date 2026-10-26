@@ -15,10 +15,12 @@ export const FOOTBALL_SOUNDS = Object.freeze({
   click: 'web/audio/ui-select.ogg',
 });
 
-// These are synthetic/gamey stand-ins, not recorded football gear. Keep the
-// files for controlled A/B audition only; never play them during games until
-// we have listened to and approved proper football-specific replacements.
-export const SUSPENDED_FOLEY = new Set(['snap', 'hit1', 'hit2', 'whistle']);
+// Synthetic/gamey stand-ins, not recorded football gear: the wood-impact snap and
+// the two generic Kenney impacts stay out of live playback until we have listened
+// to and approved football-specific replacements. The whistle is no longer here:
+// web/audio/whistle.ogg is now a recorded referee blast (MANIFEST.json lists the
+// source), so dead-ball cues play it again.
+export const SUSPENDED_FOLEY = new Set(['snap', 'hit1', 'hit2']);
 function cue(at, name, gain = 1) { return { at: Math.max(0, at), name, gain }; }
 export function planFootballSound(play, record, homeTeam) {
   if (!play) return [];

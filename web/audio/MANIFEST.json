@@ -4,7 +4,8 @@
     "rpg": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
     "interface": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
     "crowd": "https://opengameart.org/sites/default/files/gregor_quendel_-_free_crowd_cheering_sounds_-_mp3.zip",
-    "whistles": "https://opengameart.org/sites/default/files/whistles.zip"
+    "whistles": "https://opengameart.org/sites/default/files/whistles.zip",
+    "referee-whistle": "user-supplied referee whistle download, licence not yet verified: E:/Users/micah/Downloads/REFEREE WHISTLE SOUND EFFECT.mp3"
   },
   "files": [
     {
@@ -36,11 +37,11 @@
       "bytes": 184211
     },
     {
-      "source_pack": "whistles",
+      "source_pack": "referee-whistle",
       "filename": "whistle.ogg",
-      "from": "whistle_1.wav",
-      "sha256": "5dd670f062acf16a0f3c6f9fa803d02f33bcb577134a8676a9042793b5808f36",
-      "bytes": 5548
+      "from": "E:/Users/micah/Downloads/REFEREE WHISTLE SOUND EFFECT.mp3 · first blast 1.230-1.572 s (onset 1.234, decay from 1.540)",
+      "sha256": "50091cb9739c04c51a3888dc6d27e7cfe29e44b246db12d783149895f0c91bd4",
+      "bytes": 7695
     },
     {
       "source_pack": "impact",

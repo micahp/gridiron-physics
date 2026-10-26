@@ -69,7 +69,11 @@ def build():
         ("crowd-cheer.ogg", "crowd", [r"05.*cheer", r"soft.*cheer"], 13, 2),
         ("crowd-big-cheer.ogg", "crowd", [r"03.*cheer", r"strong.*cheer"], 13, 2),
         ("crowd-murmur.ogg", "crowd", [r"07.*chatter", r"10.*ambien"], 13, 2),
-        ("whistle.ogg", "whistles", [r"whistle.*1", r"whistle"], 1.4, 1),
+        # whistle.ogg is NOT generated here any more: since 2026-10-25 it is the
+        # first blast cut from a user-supplied referee whistle MP3 (see
+        # docs/AUDIO-SOUND-PACK-2026-10-24.md). Keep this entry only if you mean
+        # to revert that replacement.
+        # ("whistle.ogg", "whistles", [r"whistle.*1", r"whistle"], 1.4, 1),
         ("pads-1.ogg", "impact", [r"impactsoft.*1", r"impactsoft", r"impactgeneric", r"impactpunch"], 1.5, 1),
         ("pads-2.ogg", "impact", [r"impactsoft.*2", r"impactpunch", r"impactgeneric", r"impactwood"], 1.5, 1),
         ("snap.ogg", "impact", [r"impactwood.*1", r"impactgeneric.*1", r"impactsoft"], 0.65, 1),
