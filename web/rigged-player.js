@@ -15,8 +15,10 @@
 import * as THREE from './vendor/three.module.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
+import { ensureController } from './rigged-animation-controller.js';
 
-export const POSE = { STANCE: 0, RUN: 1, BLOCK: 2, DOWN: 3, THROW: 4, CATCH: 5, KICK: 6, HOLD: 7, CELEBRATE: 8, BACKPEDAL: 9, WRAP: 10, KNEEL: 11 };
+import { POSE } from './pose-codes.js';
+export { POSE };
 
 const POSE_ANIMATIONS = Object.freeze({
   [POSE.STANCE]: Object.freeze({ clipName: 'Football Stance', loop: false }),
@@ -375,12 +377,23 @@ function rotWorldComposed(bone, rotations, k) {
   bone.quaternion.slerp(_q, k);
 }
 
-export function animateRigged(root, pose, speed, dt, carrying) {
+export function animateRigged(root, pose, speed, dt, carrying, playbackTime = null, cues = null) {
   if (neutralMode) return; // Test 1: leave the imported bind pose untouched
   const u = root.userData;
   const b = u.bones;
   if (!b.hip && !b.thighL) return;
-  if (updateRiggedAnimation(root, pose, speed, dt, carrying)) return;
+  // With a mixer, the controller owns the body: it advances on playback time,
+  // anchors throw/catch clips to the recorded ball and arbitrates pose changes.
+  // Procedural posing below stays the fallback when no clip covers the pose.
+  if (u.animation?.mixer) {
+    const controller = ensureController(root);
+    if (controller) {
+      // null is a real value here: it means "this play has no anchored clips"
+      if (controller.cuesRaw !== (cues ?? null)) controller.setCues(cues);
+      const time = playbackTime ?? (u.animTime = (u.animTime ?? 0) + dt);
+      if (controller.tick({ time, pose, speed, carrying })) return;
+    }
+  }
   u.phase += dt * (2.2 + speed * 0.9);
   const swing = Math.min(0.95, speed * 0.11);
   let lean = Math.min(0.38, speed * 0.04);

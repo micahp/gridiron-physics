@@ -4,6 +4,7 @@
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, setNeutralMode, stablePhase } from './rigged-player.js';
+import { deriveCues } from './rigged-animation-controller.js';
 import { kitsForGame } from './football-kits.js';
 import { loadStadium, placeStadium, STADIUM_SCALE } from './stadium.js';
 
@@ -493,6 +494,10 @@ export class Renderer {
   /** Draw interpolated frame state. */
   draw(rec, t, dt) {
     if (!rec) return;
+    if (rec !== this.cueRec) {
+      this.cueRec = rec;
+      this.cuesById = deriveCues(rec);
+    }
     const fi = Math.max(0, Math.min(rec.frames.length - 1.001, (t - rec.t0) * rec.hz));
     const k0 = Math.floor(fi), a = fi - k0;
     const f0 = rec.frames[k0], f1 = rec.frames[Math.min(rec.frames.length - 1, k0 + 1)];
@@ -509,7 +514,9 @@ export class Renderer {
       while (dh > Math.PI) dh -= 2 * Math.PI;
       while (dh < -Math.PI) dh += 2 * Math.PI;
       o.rotation.y = -(h0 + dh * a);
-      if (o.userData.rigged) animateRigged(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
+      if (o.userData.rigged) {
+        animateRigged(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, t, this.cuesById?.get(rec.roster[i].id) || null);
+      }
       else animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
     }
     this.lastPlayerUpdateMs = performance.now() - playerUpdateStart;

@@ -70,6 +70,32 @@ function makeViewer(){
           clipTime:renderer.players.get(p.id)?.userData.animation?.activeAction?.time??null,
         }))};
     };
+    // Deterministic stepping for animation tests: pick a play, place playback at
+    // an exact second, and read which clip is on each body plus how far through
+    // its own clip that body is.
+    window.__gridironChoose=(i)=>{choose(i);};
+    window.__gridironDrawAt=(seconds)=>{
+      if(!current)return null;
+      playSeconds=seconds;
+      renderer.draw(current.rec,current.rec.t0+playSeconds,0.033);
+      return playSeconds;
+    };
+    window.__gridironAnimationState=()=>{
+      if(!current?.rec)return null;
+      return current.rec.roster.map(p=>{
+        const c=renderer.players.get(p.id)?.userData.controller;
+        const action=c?.action;
+        return {id:p.id,clip:c?.current??null,
+          phase:action?(action.time/(action.getClip().duration||1)):null,
+          handToBall:(()=>{
+            const hand=renderer.players.get(p.id)?.userData.bones?.handR;
+            if(!hand)return null;
+            hand.updateWorldMatrix(true,false);renderer.ball.updateWorldMatrix(true,false);
+            const a=hand.matrixWorld.elements,b=renderer.ball.matrixWorld.elements;
+            return Math.hypot(a[12]-b[12],a[13]-b[13],a[14]-b[14]);
+          })()};
+      });
+    };
   }
   renderer.setCamera('broadcast');renderer.resize();
   window.addEventListener('resize',()=>renderer.resize());
