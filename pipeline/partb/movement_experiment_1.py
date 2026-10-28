@@ -1,4 +1,9 @@
-"""Part B movement experiment 1, under docs/research/PART-B-MOVEMENT-EVALUATION-PROTOCOL-2026-10-28.md. Read only.
+"""STATUS: NOT RUN. This script is not a validation run and must not be executed as one.
+Its 2023 frame-alignment check assumed continuous frame IDs, which the 2023 field definitions contradict (protocol
+amendment 2 in docs/research/PART-B-MOVEMENT-EVALUATION-PROTOCOL-2026-10-28.md). The 2023 cohort is development data
+(amendment 1). Any future use requires correction and a new written decision.
+
+Part B movement experiment 1, under docs/research/PART-B-MOVEMENT-EVALUATION-PROTOCOL-2026-10-28.md. Read only.
 
 Order (fixed in the protocol): calibration on 2022 Weeks 1 to 3 (fits one scalar k for the damped constant-acceleration
 predictor); development check on 2022 Weeks 4 to 5; validation on the 2023 train split, Weeks 1 to 7, with k frozen.

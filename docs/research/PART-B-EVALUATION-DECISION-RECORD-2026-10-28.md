@@ -133,3 +133,49 @@ Code anchors in the physics repository, from the audit (`PART-B-EXISTING-MOVEMEN
   status; final movement acceptance (not available).
 - **Not to be claimed:** that the kinematic baselines transfer to the physics controller, or that any controller improves
   football behaviour. The 2022 cornerback 0.5 s regression under constant acceleration stays in the record.
+
+## 8. Round 2 decisions (2026-10-28, after the review of 321396c and the handoff)
+
+1. **Part B is secondary.** Hermes2 continues its historical movement and autonomous-player research independently. It must
+   not delay the event simulator's team splits, playbook integration, or statistical QB and player decision models.
+2. **The 2026 holdout is exposure-uncertain.** It is not certified untouched. Any agent that touched 2026 data must record the
+   exact file, fields, timestamps and values accessed in this section. Exposed information may not be used for model
+   selection, tuning, or any decision. All further 2026 access is prohibited for these research tasks.
+3. **Gate 3 stays open.** The 15 failing 2022 team-seasons and the unresolved 2024 Tampa Bay plays are not waived, and no
+   unrelated work waits on them. Disputed labels keep their provenance (PBP, FTN, participation, and which of them agree).
+   Disputed plays are excluded from any analysis that requires verified formation agreement.
+4. **Inventory and extraction code may be committed** if it reads only permitted historical data, has reproducibility tests,
+   and contains no 2026 holdout values. Each agent commits only its own files, from its own worktree.
+
+Note on item 2: the question to answer is what was exposed and whether it influenced a decision. It is not whether the
+holdout is finally compromised. Those are separate questions, and the record answers the first.
+
+### 8a. Exposure record: this agent
+
+Exact timestamps are not recoverable from the tool history. The entries below are in session order, with the earliest first.
+
+| # | file (path as read) | what was shown | values shown | used in a decision? |
+|---|---|---|---|---|
+| 1 | `web/data/game.json` in the simulator repository (2026 regular-season game, event 401872995, dated 2026-10-16) | header, team names, score and record, drive-result counts, first play text | event, date, venue, team identifiers, DEN score 17 and record 4-2, 25 drives with counts (13 punts, 3 field goals, 3 touchdowns, 2 end-of-half, 2 interceptions, 1 fumble, 1 missed field goal), 203 plays, first play "W.Lutz kicks 63 yards from DEN 35 to SEA 2", first drive "8 plays, 20 yards, 5:01" ending in a punt | No. The game was excluded from every comparison. |
+| 2 | the same file, in an earlier check | a final-score line recorded in a prior-context summary | "final SEA 17 to DEN 14" | No. This conflicts with DEN 17 above. It has not been re-checked, because re-reading would be a further 2026 access. The conflict is recorded here and not resolved. |
+| 3 | simulator repository, names only (grep -l) | none printed | file names including `docs/fixtures/pregame/game-kc-sea-seed8-blocked.json`, `web/data/game.json` | No. Contents were read by grep. |
+| 4 | `data/raw/stats_player_week_2026.csv` and `data/raw/ftn_charting_2023.csv`, names only (grep -l) | none printed | none | No. Contents were read by grep. |
+| 5 | `data/playbooks/research-2026-10-27-rev3/BUILD-REPORT.md` and `build_manifest.json` | key names, the 2022 to 2024 shotgun table and its header, the non-reconciling 2022 to 2024 list | 2022 to 2024 rows only. The files contain 2026 rows that were not printed. | No. The file contents were read by the tools. |
+| 6 | `data/playbooks/research-2026-10-28-gate1-reproduction` inputs: committed `NE-2025.json` and `CHI-2025.json` | nothing printed beyond hashes and the names of the removed keys | none printed. The files contain `pregame_2026_comparison` and `source.pbp_2026_pre_game`, which were loaded and then removed before hashing. | No. Gate 1 uses 2025 content only. |
+| 7 | file and folder listings: `data/raw`, `bdb2026-prediction`, 2026 research directories | names only | none | No. |
+
+Nothing in rows 1 to 7 was used for scoring, selection, fitting, tuning, or a stated conclusion. Row 2 is the open one, and
+the record keeps it open.
+
+### 8b. Hermes2
+
+Hermes2 has not yet itemised its exposures. Its own report describes a mixed-season build report opened before 2026
+aggregates were recognised, and a broad search that surfaced overtime excerpts. Its exact list is still required. Its
+report says the excluded values were not repeated. Until the list arrives, its exposure is recorded as uncharacterised.
+
+### 8c. Status
+
+- Exposure record for this agent: complete to the extent the tool history allows, with one unresolved conflict (row 2).
+- Exposure record for hermes2: pending.
+- 2026 holdout: exposure-uncertain. Not certified untouched.
+- No 2026 access is authorised for any research task. No exposed value is used for selection.
