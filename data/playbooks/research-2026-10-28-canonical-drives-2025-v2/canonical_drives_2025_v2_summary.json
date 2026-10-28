@@ -1,0 +1,725 @@
+{
+ "by_end_class": {
+  "blocked_punt": {
+   "drives": 7,
+   "plays_per_drive_mean": 5.571,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 118.0,
+   "scoring_rate": 0.0,
+   "small_sample": true
+  },
+  "end_of_game": {
+   "drives": 216,
+   "plays_per_drive_mean": 3.907,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 80.5,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  },
+  "end_of_half": {
+   "drives": 170,
+   "plays_per_drive_mean": 2.006,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 15.0,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  },
+  "field_goal_made": {
+   "drives": 931,
+   "plays_per_drive_mean": 8.832,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 3,
+   "possession_seconds_median": 234.0,
+   "scoring_rate": 1.0,
+   "small_sample": false
+  },
+  "field_goal_missed": {
+   "drives": 153,
+   "plays_per_drive_mean": 7.98,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 193.0,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  },
+  "fumble_lost": {
+   "drives": 199,
+   "plays_per_drive_mean": 4.538,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 100.0,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  },
+  "interception": {
+   "drives": 349,
+   "plays_per_drive_mean": 4.983,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 92.0,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  },
+  "punt": {
+   "drives": 1896,
+   "plays_per_drive_mean": 5.169,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 118.0,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  },
+  "safety_allowed": {
+   "drives": 11,
+   "plays_per_drive_mean": 1.909,
+   "points_against_per_drive": 2,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 14.0,
+   "scoring_rate": 0.0,
+   "small_sample": true
+  },
+  "touchdown_allowed": {
+   "drives": 65,
+   "plays_per_drive_mean": 4.431,
+   "points_against_per_drive": 6.923,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 96.0,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  },
+  "touchdown_scored": {
+   "drives": 1323,
+   "plays_per_drive_mean": 7.82,
+   "points_against_per_drive": 0.003,
+   "points_for_per_drive": 6.953,
+   "possession_seconds_median": 218.0,
+   "scoring_rate": 1.0,
+   "small_sample": false
+  },
+  "turnover_on_downs": {
+   "drives": 362,
+   "plays_per_drive_mean": 7.483,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 0,
+   "possession_seconds_median": 170.0,
+   "scoring_rate": 0.0,
+   "small_sample": false
+  }
+ },
+ "by_quarter": {
+  "1": {
+   "drives": 1319,
+   "plays_per_drive_mean": 7.009,
+   "points_against_per_drive": 0.121,
+   "points_for_per_drive": 2.371,
+   "possession_seconds_median": 183.0,
+   "scoring_rate": 0.4458,
+   "small_sample": false
+  },
+  "2": {
+   "drives": 1487,
+   "plays_per_drive_mean": 5.877,
+   "points_against_per_drive": 0.081,
+   "points_for_per_drive": 1.917,
+   "possession_seconds_median": 108.0,
+   "scoring_rate": 0.3806,
+   "small_sample": false
+  },
+  "3": {
+   "drives": 1357,
+   "plays_per_drive_mean": 6.863,
+   "points_against_per_drive": 0.077,
+   "points_for_per_drive": 2.423,
+   "possession_seconds_median": 180.0,
+   "scoring_rate": 0.437,
+   "small_sample": false
+  },
+  "4": {
+   "drives": 1488,
+   "plays_per_drive_mean": 6.028,
+   "points_against_per_drive": 0.061,
+   "points_for_per_drive": 1.774,
+   "possession_seconds_median": 116.0,
+   "scoring_rate": 0.3286,
+   "small_sample": false
+  },
+  "OT": {
+   "drives": 31,
+   "plays_per_drive_mean": 6.71,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 2.806,
+   "possession_seconds_median": 188.0,
+   "scoring_rate": 0.5806,
+   "small_sample": false
+  }
+ },
+ "by_score_diff_at_start": {
+  "+1 to +7": {
+   "drives": 1127,
+   "plays_per_drive_mean": 6.191,
+   "points_against_per_drive": 0.055,
+   "points_for_per_drive": 2.097,
+   "possession_seconds_median": 142.0,
+   "scoring_rate": 0.3966,
+   "small_sample": false
+  },
+  "+8 or more": {
+   "drives": 909,
+   "plays_per_drive_mean": 5.854,
+   "points_against_per_drive": 0.072,
+   "points_for_per_drive": 2.044,
+   "possession_seconds_median": 134.0,
+   "scoring_rate": 0.3861,
+   "small_sample": false
+  },
+  "-7 to -1": {
+   "drives": 1439,
+   "plays_per_drive_mean": 6.609,
+   "points_against_per_drive": 0.105,
+   "points_for_per_drive": 2.233,
+   "possession_seconds_median": 144.0,
+   "scoring_rate": 0.4204,
+   "small_sample": false
+  },
+  "-8 or less": {
+   "drives": 1184,
+   "plays_per_drive_mean": 6.616,
+   "points_against_per_drive": 0.085,
+   "points_for_per_drive": 1.929,
+   "possession_seconds_median": 132.0,
+   "scoring_rate": 0.3429,
+   "small_sample": false
+  },
+  "tied": {
+   "drives": 1023,
+   "plays_per_drive_mean": 6.678,
+   "points_against_per_drive": 0.095,
+   "points_for_per_drive": 2.223,
+   "possession_seconds_median": 164.0,
+   "scoring_rate": 0.435,
+   "small_sample": false
+  }
+ },
+ "by_start_field": {
+  "opp 19-0": {
+   "drives": 72,
+   "plays_per_drive_mean": 3.167,
+   "points_against_per_drive": 0.097,
+   "points_for_per_drive": 4.986,
+   "possession_seconds_median": 57.0,
+   "scoring_rate": 0.8194,
+   "small_sample": false
+  },
+  "opp 49-20": {
+   "drives": 489,
+   "plays_per_drive_mean": 5.104,
+   "points_against_per_drive": 0.029,
+   "points_for_per_drive": 3.123,
+   "possession_seconds_median": 121.0,
+   "scoring_rate": 0.6299,
+   "small_sample": false
+  },
+  "own 0-19": {
+   "drives": 1496,
+   "plays_per_drive_mean": 6.848,
+   "points_against_per_drive": 0.107,
+   "points_for_per_drive": 1.606,
+   "possession_seconds_median": 148.0,
+   "scoring_rate": 0.2934,
+   "small_sample": false
+  },
+  "own 20-49": {
+   "drives": 3623,
+   "plays_per_drive_mean": 6.487,
+   "points_against_per_drive": 0.081,
+   "points_for_per_drive": 2.124,
+   "possession_seconds_median": 147.0,
+   "scoring_rate": 0.3991,
+   "small_sample": false
+  },
+  "unknown": {
+   "drives": 2,
+   "plays_per_drive_mean": 1,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 3,
+   "possession_seconds_median": 3.5,
+   "scoring_rate": 1.0,
+   "small_sample": true
+  }
+ },
+ "by_team": {
+  "ARI": {
+   "drives": 170,
+   "plays_per_drive_mean": 6.888,
+   "points_against_per_drive": 0.124,
+   "points_for_per_drive": 1.994,
+   "possession_seconds_median": 150.0,
+   "scoring_rate": 0.3706,
+   "small_sample": false
+  },
+  "ATL": {
+   "drives": 181,
+   "plays_per_drive_mean": 6.381,
+   "points_against_per_drive": 0.116,
+   "points_for_per_drive": 1.912,
+   "possession_seconds_median": 146.0,
+   "scoring_rate": 0.3757,
+   "small_sample": false
+  },
+  "BAL": {
+   "drives": 178,
+   "plays_per_drive_mean": 5.972,
+   "points_against_per_drive": 0.039,
+   "points_for_per_drive": 2.303,
+   "possession_seconds_median": 132.0,
+   "scoring_rate": 0.427,
+   "small_sample": false
+  },
+  "BUF": {
+   "drives": 174,
+   "plays_per_drive_mean": 6.672,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 2.644,
+   "possession_seconds_median": 175.0,
+   "scoring_rate": 0.4483,
+   "small_sample": false
+  },
+  "CAR": {
+   "drives": 164,
+   "plays_per_drive_mean": 6.713,
+   "points_against_per_drive": 0.085,
+   "points_for_per_drive": 1.811,
+   "possession_seconds_median": 152.5,
+   "scoring_rate": 0.3476,
+   "small_sample": false
+  },
+  "CHI": {
+   "drives": 183,
+   "plays_per_drive_mean": 6.601,
+   "points_against_per_drive": 0.038,
+   "points_for_per_drive": 2.333,
+   "possession_seconds_median": 161.0,
+   "scoring_rate": 0.4372,
+   "small_sample": false
+  },
+  "CIN": {
+   "drives": 179,
+   "plays_per_drive_mean": 6.453,
+   "points_against_per_drive": 0.363,
+   "points_for_per_drive": 2.235,
+   "possession_seconds_median": 144.0,
+   "scoring_rate": 0.4022,
+   "small_sample": false
+  },
+  "CLE": {
+   "drives": 194,
+   "plays_per_drive_mean": 5.948,
+   "points_against_per_drive": 0.119,
+   "points_for_per_drive": 1.294,
+   "possession_seconds_median": 128.0,
+   "scoring_rate": 0.2577,
+   "small_sample": false
+  },
+  "DAL": {
+   "drives": 176,
+   "plays_per_drive_mean": 6.852,
+   "points_against_per_drive": 0.011,
+   "points_for_per_drive": 2.574,
+   "possession_seconds_median": 155.5,
+   "scoring_rate": 0.483,
+   "small_sample": false
+  },
+  "DEN": {
+   "drives": 188,
+   "plays_per_drive_mean": 6.41,
+   "points_against_per_drive": 0,
+   "points_for_per_drive": 2.059,
+   "possession_seconds_median": 134.5,
+   "scoring_rate": 0.3777,
+   "small_sample": false
+  },
+  "DET": {
+   "drives": 187,
+   "plays_per_drive_mean": 6.171,
+   "points_against_per_drive": 0.011,
+   "points_for_per_drive": 2.524,
+   "possession_seconds_median": 139.0,
+   "scoring_rate": 0.4439,
+   "small_sample": false
+  },
+  "GB": {
+   "drives": 165,
+   "plays_per_drive_mean": 6.636,
+   "points_against_per_drive": 0.012,
+   "points_for_per_drive": 2.37,
+   "possession_seconds_median": 155.0,
+   "scoring_rate": 0.4364,
+   "small_sample": false
+  },
+  "HOU": {
+   "drives": 190,
+   "plays_per_drive_mean": 6.405,
+   "points_against_per_drive": 0.037,
+   "points_for_per_drive": 1.995,
+   "possession_seconds_median": 144.0,
+   "scoring_rate": 0.4316,
+   "small_sample": false
+  },
+  "IND": {
+   "drives": 172,
+   "plays_per_drive_mean": 6.424,
+   "points_against_per_drive": 0.087,
+   "points_for_per_drive": 2.669,
+   "possession_seconds_median": 139.0,
+   "scoring_rate": 0.5,
+   "small_sample": false
+  },
+  "JAX": {
+   "drives": 189,
+   "plays_per_drive_mean": 6.296,
+   "points_against_per_drive": 0.069,
+   "points_for_per_drive": 2.354,
+   "possession_seconds_median": 137.0,
+   "scoring_rate": 0.4286,
+   "small_sample": false
+  },
+  "KC": {
+   "drives": 169,
+   "plays_per_drive_mean": 6.852,
+   "points_against_per_drive": 0.065,
+   "points_for_per_drive": 2.142,
+   "possession_seconds_median": 156.0,
+   "scoring_rate": 0.4201,
+   "small_sample": false
+  },
+  "LA": {
+   "drives": 181,
+   "plays_per_drive_mean": 6.431,
+   "points_against_per_drive": 0.155,
+   "points_for_per_drive": 2.785,
+   "possession_seconds_median": 154.0,
+   "scoring_rate": 0.4696,
+   "small_sample": false
+  },
+  "LAC": {
+   "drives": 174,
+   "plays_per_drive_mean": 6.879,
+   "points_against_per_drive": 0.121,
+   "points_for_per_drive": 2.103,
+   "possession_seconds_median": 164.5,
+   "scoring_rate": 0.4253,
+   "small_sample": false
+  },
+  "LV": {
+   "drives": 181,
+   "plays_per_drive_mean": 5.812,
+   "points_against_per_drive": 0.127,
+   "points_for_per_drive": 1.32,
+   "possession_seconds_median": 127.0,
+   "scoring_rate": 0.2597,
+   "small_sample": false
+  },
+  "MIA": {
+   "drives": 174,
+   "plays_per_drive_mean": 6,
+   "points_against_per_drive": 0.08,
+   "points_for_per_drive": 1.943,
+   "possession_seconds_median": 137.5,
+   "scoring_rate": 0.3678,
+   "small_sample": false
+  },
+  "MIN": {
+   "drives": 180,
+   "plays_per_drive_mean": 5.878,
+   "points_against_per_drive": 0.156,
+   "points_for_per_drive": 1.833,
+   "possession_seconds_median": 128.5,
+   "scoring_rate": 0.3667,
+   "small_sample": false
+  },
+  "NE": {
+   "drives": 174,
+   "plays_per_drive_mean": 6.494,
+   "points_against_per_drive": 0.08,
+   "points_for_per_drive": 2.603,
+   "possession_seconds_median": 161.5,
+   "scoring_rate": 0.4598,
+   "small_sample": false
+  },
+  "NO": {
+   "drives": 176,
+   "plays_per_drive_mean": 6.693,
+   "points_against_per_drive": 0.091,
+   "points_for_per_drive": 1.619,
+   "possession_seconds_median": 125.5,
+   "scoring_rate": 0.3295,
+   "small_sample": false
+  },
+  "NYG": {
+   "drives": 170,
+   "plays_per_drive_mean": 6.906,
+   "points_against_per_drive": 0.118,
+   "points_for_per_drive": 2.159,
+   "possession_seconds_median": 160.0,
+   "scoring_rate": 0.3882,
+   "small_sample": false
+  },
+  "NYJ": {
+   "drives": 180,
+   "plays_per_drive_mean": 6.211,
+   "points_against_per_drive": 0.039,
+   "points_for_per_drive": 1.5,
+   "possession_seconds_median": 138.5,
+   "scoring_rate": 0.3,
+   "small_sample": false
+  },
+  "PHI": {
+   "drives": 178,
+   "plays_per_drive_mean": 6.247,
+   "points_against_per_drive": 0.011,
+   "points_for_per_drive": 2.017,
+   "possession_seconds_median": 135.0,
+   "scoring_rate": 0.3539,
+   "small_sample": false
+  },
+  "PIT": {
+   "drives": 176,
+   "plays_per_drive_mean": 6.153,
+   "points_against_per_drive": 0.051,
+   "points_for_per_drive": 2.125,
+   "possession_seconds_median": 130.0,
+   "scoring_rate": 0.392,
+   "small_sample": false
+  },
+  "SEA": {
+   "drives": 185,
+   "plays_per_drive_mean": 6.043,
+   "points_against_per_drive": 0.07,
+   "points_for_per_drive": 2.341,
+   "possession_seconds_median": 141.0,
+   "scoring_rate": 0.4595,
+   "small_sample": false
+  },
+  "SF": {
+   "drives": 169,
+   "plays_per_drive_mean": 6.911,
+   "points_against_per_drive": 0.089,
+   "points_for_per_drive": 2.544,
+   "possession_seconds_median": 155.0,
+   "scoring_rate": 0.4793,
+   "small_sample": false
+  },
+  "TB": {
+   "drives": 179,
+   "plays_per_drive_mean": 6.587,
+   "points_against_per_drive": 0.117,
+   "points_for_per_drive": 2.034,
+   "possession_seconds_median": 141.0,
+   "scoring_rate": 0.3966,
+   "small_sample": false
+  },
+  "TEN": {
+   "drives": 180,
+   "plays_per_drive_mean": 6.211,
+   "points_against_per_drive": 0.156,
+   "points_for_per_drive": 1.45,
+   "possession_seconds_median": 133.5,
+   "scoring_rate": 0.3,
+   "small_sample": false
+  },
+  "WAS": {
+   "drives": 166,
+   "plays_per_drive_mean": 6.524,
+   "points_against_per_drive": 0.042,
+   "points_for_per_drive": 2.054,
+   "possession_seconds_median": 153.0,
+   "scoring_rate": 0.3735,
+   "small_sample": false
+  }
+ },
+ "continuity_matches_v1": {
+  "clock_increase_within_drive": true,
+  "down_progression_explained": true,
+  "down_progression_unexplained": true,
+  "field_position_explained": true,
+  "field_position_unexplained": true,
+  "pairs_checked": true,
+  "pairs_skipped_non_scrimmage_between": true,
+  "pairs_skipped_scoring_or_two_point": true
+ },
+ "continuity_unexplained_evidence": {
+  "clock | timeout_text": 1,
+  "down_progression | fumble_kept_by_offense": 2,
+  "field_position | fumble_kept_by_offense": 53,
+  "field_position | penalty_text_not_flagged": 1,
+  "field_position | reversal_text": 1,
+  "field_position | timeout_text": 3
+ },
+ "continuity_v1": {
+  "clock_increase_within_drive": 1,
+  "down_progression_explained": 759,
+  "down_progression_unexplained": 2,
+  "field_position_explained": 2191,
+  "field_position_unexplained": 58,
+  "pairs_checked": 27242,
+  "pairs_skipped_non_scrimmage_between": 68,
+  "pairs_skipped_scoring_or_two_point": 128
+ },
+ "continuity_v2": {
+  "clock_increase_within_drive": 1,
+  "down_progression_explained": 759,
+  "down_progression_unexplained": 2,
+  "field_position_explained": 2191,
+  "field_position_unexplained": 58,
+  "pairs_checked": 27242,
+  "pairs_skipped_non_scrimmage_between": 68,
+  "pairs_skipped_scoring_or_two_point": 128
+ },
+ "crosscheck_counts": {
+  "agree": 5703,
+  "fixed_result_is_next_possession": 14,
+  "nflverse_id_spans_next_drive": 5
+ },
+ "end_class_counts_all": {
+  "blocked_punt": 7,
+  "end_of_game": 217,
+  "end_of_half": 182,
+  "field_goal_made": 931,
+  "field_goal_missed": 153,
+  "fumble_lost": 199,
+  "interception": 349,
+  "kickoff_fumble_lost": 14,
+  "onside_kick_lost": 5,
+  "punt": 1896,
+  "safety_allowed": 12,
+  "touchdown_allowed": 66,
+  "touchdown_scored": 1329,
+  "turnover_on_downs": 362
+ },
+ "end_class_counts_offensive": {
+  "blocked_punt": 7,
+  "end_of_game": 216,
+  "end_of_half": 170,
+  "field_goal_made": 931,
+  "field_goal_missed": 153,
+  "fumble_lost": 199,
+  "interception": 349,
+  "punt": 1896,
+  "safety_allowed": 11,
+  "touchdown_allowed": 65,
+  "touchdown_scored": 1323,
+  "turnover_on_downs": 362
+ },
+ "end_time_basis_counts": {
+  "game_end_row": 263,
+  "half_end_row": 272,
+  "next_drive_first_row": 5187
+ },
+ "games": 272,
+ "kept_drives": 5722,
+ "negative_elapsed_drives": 0,
+ "non_offensive_drives": 40,
+ "offensive_drives": 5682,
+ "plays_per_drive": {
+  "mean": 6.419,
+  "median": 6,
+  "n": 5682,
+  "p10": 3,
+  "p90": 11
+ },
+ "points_against_per_drive": {
+  "mean": 0.084,
+  "median": 0,
+  "n": 5682,
+  "p10": 0,
+  "p90": 0
+ },
+ "points_for_per_drive": {
+  "mean": 2.111,
+  "median": 0,
+  "n": 5682,
+  "p10": 0,
+  "p90": 7
+ },
+ "points_tie_out_to_official": {
+  "examples": [],
+  "match": 544,
+  "mismatch": 0
+ },
+ "scoring_rate": 0.3967,
+ "season": 2025,
+ "timing_offensive": {
+  "kickoff_to_end_seconds": {
+   "mean": 173.311,
+   "median": 145.0,
+   "n": 5682,
+   "p10": 42.0,
+   "p90": 341.0
+  },
+  "possession_seconds": {
+   "mean": 170.619,
+   "median": 142.0,
+   "n": 5682,
+   "p10": 40.0,
+   "p90": 337.0
+  },
+  "v1_seconds_first_row_to_last_row": {
+   "mean": 169.548,
+   "median": 139.0,
+   "n": 5642,
+   "p10": 39.0,
+   "p90": 339.0
+  }
+ },
+ "transition_crosscheck_counts": {
+  "agree": 5719,
+  "disagree": 1,
+  "nflverse_id_spans_next_drive": 2
+ },
+ "transition_disagreements": {
+  "touchdown_scored | INTERCEPTION": 1
+ },
+ "turnover_rate": 0.1602,
+ "v1_to_v2_changes": {
+  "drives_end_class_changed": 2384,
+  "drives_points_against_changed": 74,
+  "drives_points_for_changed": 0
+ },
+ "v1_to_v2_end_class": {
+  "end_of_half_or_game -> end_of_game": 215,
+  "end_of_half_or_game -> end_of_half": 170,
+  "end_of_half_or_game -> safety_allowed": 8,
+  "end_of_half_or_game -> touchdown_allowed": 1,
+  "field_goal_made -> field_goal_made": 931,
+  "field_goal_missed -> field_goal_missed": 153,
+  "field_goal_missed -> touchdown_allowed": 3,
+  "no_offensive_play -> end_of_game": 1,
+  "no_offensive_play -> end_of_half": 12,
+  "no_offensive_play -> kickoff_fumble_lost": 14,
+  "no_offensive_play -> onside_kick_lost": 5,
+  "no_offensive_play -> safety_allowed": 1,
+  "no_offensive_play -> touchdown_allowed": 1,
+  "other -> safety_allowed": 3,
+  "other -> touchdown_allowed": 1,
+  "punt -> blocked_punt": 7,
+  "punt -> punt": 1896,
+  "punt -> touchdown_allowed": 15,
+  "touchdown -> touchdown_scored": 1329,
+  "turnover -> end_of_game": 1,
+  "turnover -> fumble_lost": 199,
+  "turnover -> interception": 349,
+  "turnover -> touchdown_allowed": 45,
+  "turnover -> turnover_on_downs": 4,
+  "turnover_on_downs -> turnover_on_downs": 358
+ },
+ "yards_run_pass_per_drive": {
+  "mean": 31.372,
+  "median": 25.0,
+  "n": 5682,
+  "p10": 0,
+  "p90": 71.0
+ }
+}
