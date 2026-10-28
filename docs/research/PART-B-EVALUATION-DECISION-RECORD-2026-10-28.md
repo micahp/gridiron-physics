@@ -157,7 +157,7 @@ Exact timestamps are not recoverable from the tool history. The entries below ar
 | # | file (path as read) | what was shown | values shown | used in a decision? |
 |---|---|---|---|---|
 | 1 | `web/data/game.json` in the simulator repository (2026 regular-season game, event 401872995, dated 2026-10-16) | header, team names, score and record, drive-result counts, first play text | event, date, venue, team identifiers, DEN score 17 and record 4-2, 25 drives with counts (13 punts, 3 field goals, 3 touchdowns, 2 end-of-half, 2 interceptions, 1 fumble, 1 missed field goal), 203 plays, first play "W.Lutz kicks 63 yards from DEN 35 to SEA 2", first drive "8 plays, 20 yards, 5:01" ending in a punt | No. The game was excluded from every comparison. |
-| 2 | the same file, in an earlier check | a final-score line recorded in a prior-context summary | "final SEA 17 to DEN 14" | No. This conflicts with DEN 17 above. It has not been re-checked, because re-reading would be a further 2026 access. The conflict is recorded here and not resolved. |
+| 2 | the same file, in an earlier check | a final-score line recorded in a prior-context summary | "final SEA 17 to DEN 14" | No. **Resolved 2026-10-28:** the user confirmed the final was SEA 14, DEN 17 in overtime. The prior-context entry was wrong. The DEN 17 shown in row 1 agrees with the confirmed final. Source of resolution: the user's statement, not a further read of the file. |
 | 3 | simulator repository, names only (grep -l) | none printed | file names including `docs/fixtures/pregame/game-kc-sea-seed8-blocked.json`, `web/data/game.json` | No. Contents were read by grep. |
 | 4 | `data/raw/stats_player_week_2026.csv` and `data/raw/ftn_charting_2023.csv`, names only (grep -l) | none printed | none | No. Contents were read by grep. |
 | 5 | `data/playbooks/research-2026-10-27-rev3/BUILD-REPORT.md` and `build_manifest.json` | key names, the 2022 to 2024 shotgun table and its header, the non-reconciling 2022 to 2024 list | 2022 to 2024 rows only. The files contain 2026 rows that were not printed. | No. The file contents were read by the tools. |
@@ -175,7 +175,7 @@ report says the excluded values were not repeated. Until the list arrives, its e
 
 ### 8c. Status
 
-- Exposure record for this agent: complete to the extent the tool history allows, with one unresolved conflict (row 2).
+- Exposure record for this agent: complete to the extent the tool history allows. The row 2 conflict is resolved by the user's confirmation (SEA 14, DEN 17, overtime). The final score is now known from that statement, and it is not to be used for selection.
 - Exposure record for hermes2: pending.
 - 2026 holdout: exposure-uncertain. Not certified untouched.
 - No 2026 access is authorised for any research task. No exposed value is used for selection.

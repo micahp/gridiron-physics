@@ -152,8 +152,8 @@ The full itemised record is in `docs/research/PART-B-EVALUATION-DECISION-RECORD-
 
 - **This agent.** A 2026 simulator game file (`web/data/game.json`, SEA at DEN, 2026-10-16) was read. The output showed scores
   (DEN 17), records, drive-result counts (25 drives) and a play's text. An earlier report said only the header was read; that
-  was incomplete and is corrected. An earlier summary recorded a different final (SEA 17, DEN 14). The conflict is open and
-  has not been checked, because checking would be a further 2026 access.
+  was incomplete and is corrected. An earlier summary recorded a different final (SEA 17, DEN 14). **Resolved:** the user
+  confirmed the final was SEA 14, DEN 17 in overtime, so the earlier summary was wrong.
 - Name-only searches and some content-reading greps touched 2026 files (`data/raw/stats_player_week_2026.csv`, the 2026 pre-game
   fixture, mixed-season build files). Rows are recorded in section 8a.
 - Gate 1 loaded the 2026 pre-game blocks of two committed files, removed them before hashing, and printed none.
