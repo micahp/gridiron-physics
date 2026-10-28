@@ -82,7 +82,7 @@ The game changes no share by more than 0.03 points. DEN at LAC is reported as a 
 1. QB kneels (1,852) and QB spikes (317) are real snaps with no class yet. They are not run or pass plays, so they sit outside the ordinary sample. Proposed classes: `qb_kneel` and `qb_spike`, outside ordinary play selection, kept in the history.
 2. Special-teams events that are not run or pass: kickoffs (12,098), field goals (4,772), extra points (5,365), and punts that are not fakes (9,158). Proposed: a separate special-teams history, not feeding any profile yet.
 3. No-play rows (19,983) are penalty or no-play events. Proposed: keep in history, outside profiles.
-4. Administrative rows (6,075, blank play type, such as period ends and two-minute warnings) are not plays and stay out of the history.
+4. Administrative rows (period ends, game delays, timeouts, warnings, replay notes) are not plays. They are kept in the event history as administrative events (`EVENT-HISTORY-2026-10-27.md`) and are excluded from every profile.
 5. Kick and punt direction (left, middle, right) is not in the play-by-play. The descriptions name a kicker, a distance and a landing spot, not a direction. Left, middle and right cannot be classified from this source. A source is needed.
 6. Receiver motion is not in any source. FTN `is_motion` is a play-level flag only.
 

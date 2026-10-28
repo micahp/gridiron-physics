@@ -60,5 +60,5 @@ Observation for the aborted plays: Miami had 7 aborted run plays in 2025, and it
 
 - The "called off" interpretation is removed. The 53 unknown-handling run plays are `aborted_unknown_handling`.
 - The 368 fumbled-snap run and pass plays are `fumbled_snap`.
-- The 10 dropped kicking operations are `dropped_kicking_operation`, replacing "broken_kick."
+- The 10 kicking-formation aborts are first labelled `dropped_kicking_operation` in rev5. rev7 splits them: 2 are `direct_snap_fumble` and 8 are `aborted_kicking_operation` (see `REV7-IMPACT-2026-10-28.md`).
 - Excluding these plays from the designed concept catalog does not change any source field. The rushing and passing totals in section 3 come from the source play-by-play, not from the profiles. The per-play profile records do not yet carry the rush attempt, pass attempt, sack and fumble flags, so the event history needs them added before any drive or possession accounting. That is in the taxonomy design.

@@ -69,10 +69,14 @@ class EventClass(unittest.TestCase):
                                                  down='4')),
                          ('special_teams_run_pass', 'field_goal', 'unknown'))
 
-    def test_aborted_field_goal_is_a_dropped_kicking_operation(self):
+    def test_aborted_field_goal_is_an_aborted_kicking_operation(self):
         self.assertEqual(b.event_class(self.play('(Field Goal formation) 16-J.Bailey Aborted. 48-B.Ferguson FUMBLES.',
                                                  down='4', aborted_play='1')),
-                         ('special_teams_run_pass', 'field_goal', 'dropped_kicking_operation'))
+                         ('special_teams_run_pass', 'field_goal', 'aborted_kicking_operation'))
+
+    def test_direct_snap_fumble_is_separated_from_other_aborted_kicks(self):
+        self.assertEqual(b.event_class(self.play('(2:55) (Punt formation) Direct snap to 31-N.Niemann. 31-N.Niemann FUMBLES (Aborted) at LAC 40.', down='4', aborted_play='1')),
+                         ('special_teams_run_pass', 'punt', 'direct_snap_fumble'))
 
     def test_source_text_stating_a_fake_is_a_designed_fake(self):
         self.assertEqual(b.event_class(self.play('(Punt formation) fake punt, 37-T.Thomas left end for 6 yards.',
@@ -118,6 +122,23 @@ class PlayRecordKeepsMotion(unittest.TestCase):
         rec = b.compact_research_play(pbp, None, 2025, 'observed_2025')
         self.assertEqual(rec['charting']['is_motion'], 'TRUE')
         self.assertEqual(rec['charting']['availability'], 'observed')
+
+
+class PlayRecordKeepsEventFields(unittest.TestCase):
+    def test_event_history_carries_flags_drive_and_score(self):
+        pbp = {'game_id': '2025_01_TEN_DEN', 'old_game_id': '2025090708', 'play_id': '306', 'season': '2025',
+               'season_type': 'REG', 'posteam': 'DEN', 'defteam': 'TEN', 'play_type': 'pass', 'down': '1',
+               'ydstogo': '10', 'desc': 'x', 'drive': '4', 'qtr': '2', 'time': '08:12', 'posteam_score': '7',
+               'pass_attempt': '1', 'rush_attempt': '0', 'sack': '', 'fumble': '0', 'touchdown': '1',
+               'penalty': '', 'aborted_play': '0'}
+        rec = b.compact_research_play(pbp, None, 2025, 'observed_2025')
+        eh = rec['event_history']
+        self.assertEqual(eh['drive'], '4')
+        self.assertEqual(eh['pass_attempt'], '1')
+        self.assertEqual(eh['rush_attempt'], '0')
+        self.assertIsNone(eh['sack'])
+        self.assertEqual(eh['posteam_score'], '7')
+        self.assertIsNone(eh['posteam_score_post'])
 
 
 if __name__ == '__main__':

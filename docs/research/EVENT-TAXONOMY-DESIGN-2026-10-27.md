@@ -27,11 +27,11 @@ A play may appear in layers 2 to 4 with different labels. It appears once in lay
 | Field goal | `play_type` = field_goal | 4,772 | Field goal attempt and result | Kick decision | Made, missed, blocked |
 | Extra point | `play_type` = extra_point | 5,365 | Extra point attempt and result | Kick decision | Made, missed, blocked |
 | Two-point conversion | `two_point_attempt` = 1 (run or pass) | 550 | Conversion attempt and result | Conversion decision (separate) | Success or failure, as recorded |
-| Run or pass from kicking formation | Description with punt or field-goal formation, run or pass play type | 94 | Attributed as recorded | Special-teams decision, intent only where source text states it | Dropped kicking operation or unknown |
+| Run or pass from kicking formation | Description with punt or field-goal formation, run or pass play type | 94 | Attributed as recorded | Special-teams decision, intent only where source text states it | Direct snap fumble (2), aborted kicking operation (8), or unknown |
 | Aborted snap | `aborted_play` = 1, text "FUMBLES (Aborted)" | 368 run or pass (plus 7 no-play) | Per source | None (intended play unknown) | Fumbled snap |
 | Aborted, handling unknown | `aborted_play` = 1, other text | 53 run (plus 2 no-play) | Per source | None | Unknown handling |
 | Penalty or no-play | `play_type` = no_play, penalty flags | 19,983 | Penalty yards, down and distance effects | None | Penalty |
-| Administrative marker | Blank `play_type`: period ends, two-minute warnings, game start and end, timeouts | 6,075 | None | None | None |
+| Administrative marker | Period ends, game delays, timeouts, two-minute warnings, game start and end, replay and clock notes (blank play type, or timeout text on a no-play row) | 14,933 | None | None | None |
 
 Kick direction (left, middle, right) for kickoffs and punts is not in any source. The descriptions name the kicker, the distance and the landing spot only. Until a source is found, these events are recorded without direction.
 

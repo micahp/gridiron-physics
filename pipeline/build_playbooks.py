@@ -155,6 +155,7 @@ PUNT_FORMATION = "(punt formation)"
 FIELD_GOAL_FORMATION = "(field goal formation)"
 FAKE_TEXT = re.compile(r"\bfake")
 SNAP_FUMBLE_TEXT = re.compile(r"fumbles \(aborted\)")
+DIRECT_SNAP_TEXT = re.compile(r"direct snap to ")
 EVENT_CLASSES = {"scrimmage", "special_teams_run_pass", "two_point_conversion", "fumbled_snap",
                  "aborted_unknown_handling", "other_scrimmage"}
 
@@ -163,7 +164,7 @@ def event_class(r):
     """Event class of one run or pass snap: (snap_type, formation_origin, execution_type).
 
     One class per play, so a play sits in one denominator at most. The class says what the snap was, not what was
-    intended. execution_type is designed_fake only when the source text says so, dropped_kicking_operation when the source flags
+    intended. execution_type is designed_fake only when the source text says so, aborted_kicking_operation when the source flags
     the snap as aborted, and unknown otherwise. An intended play is never inferred.
     """
     desc = (r.get("desc") or "").lower()
@@ -178,8 +179,10 @@ def event_class(r):
         raise ValueError(f"punt formation play described as a punt: {r.get('game_id')} {r.get('play_id')}")
     aborted = clean_int(r.get("aborted_play")) == 1
     if origin:
-        if aborted:
-            execution = "dropped_kicking_operation"
+        if aborted and DIRECT_SNAP_TEXT.search(desc) and SNAP_FUMBLE_TEXT.search(desc):
+            execution = "direct_snap_fumble"
+        elif aborted:
+            execution = "aborted_kicking_operation"
         elif FAKE_TEXT.search(desc):
             execution = "designed_fake"
         else:
@@ -409,6 +412,15 @@ def compact_play(pbp, participation, season, provenance):
     }
 
 
+EVENT_HISTORY_FIELDS = (
+    "drive", "qtr", "time", "quarter_seconds_remaining", "half_seconds_remaining", "game_seconds_remaining",
+    "posteam", "defteam", "posteam_score", "defteam_score", "posteam_score_post", "defteam_score_post",
+    "play_type", "play_type_nfl", "rush_attempt", "pass_attempt", "sack", "qb_scramble", "qb_kneel", "qb_spike",
+    "fumble", "fumble_lost", "interception", "touchdown", "safety", "penalty", "penalty_team",
+    "two_point_attempt", "two_point_conv_result", "aborted_play", "first_down", "yards_gained",
+)
+
+
 def compact_research_play(pbp, participation, season, provenance):
     """Research output that makes absent participation fields explicit."""
     result = compact_play(pbp, participation, season, provenance)
@@ -425,6 +437,8 @@ def compact_research_play(pbp, participation, season, provenance):
         "availability": "observed" if participation else "missing",
         **{field: (participation or {}).get(field) for field in participant_fields},
     }
+    # Source fields as recorded. A blank source value is null, never zero.
+    result["event_history"] = {field: (pbp.get(field) or None) for field in EVENT_HISTORY_FIELDS}
     ftn = pbp.get("_ftn") or {}
     result["charting"] = {
         "availability": "observed" if ftn else "missing",
@@ -443,7 +457,7 @@ def snap_kind(item):
 def special_teams_block(snaps, punts, field_goals):
     """Run or pass snaps from punt or field-goal formation, by execution evidence, with the kicks for context.
 
-    Origin is recorded from the formation text. Execution is designed_fake only with source text, dropped_kicking_operation when
+    Origin is recorded from the formation text. Execution is designed_fake only with source text, aborted_kicking_operation when
     the source flags the snap as aborted, and unknown otherwise. Every play is kept; none is deleted.
     """
     special = [x for x in snaps if snap_kind(x) == "special_teams_run_pass"]
