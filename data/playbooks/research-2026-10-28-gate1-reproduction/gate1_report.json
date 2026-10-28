@@ -1,0 +1,40 @@
+{
+ "excluded_2026_keys": [
+  "pregame_2026_comparison"
+ ],
+ "excluded_source_keys": [
+  "pbp_2026_pre_game"
+ ],
+ "inputs": {
+  "participation_2025": {
+   "path": "/root/gridiron-playbooks-research/data/raw/pbp_participation_2025.csv",
+   "sha256": "59069adfee7b0f464befba8a5e8be331e523633cc6a7ab403d37bcbcdfbe66ac"
+  },
+  "pbp_2025": {
+   "path": "/root/gridiron-playbooks-research/data/raw/pbp_2025.csv.gz",
+   "sha256": "2f135887790a013fd004e609e37096bb4816d5cc80b9f19122e1bad478961978"
+  }
+ },
+ "teams": {
+  "CHI": {
+   "committed_bytes_compared": 7143594,
+   "committed_file": "/root/gridiron-playbooks-research/data/playbooks/CHI-2025.json",
+   "committed_sha256_raw": "d4e589b0bf45ad319ece0d4b5b0a85eea78dc0edd25328cbaa23e6b911e81039",
+   "compared_sha256_committed_minus_2026": "5209dd85c8bddafb3b187080b2a3cf5c8602130b26b4441ebbf5c67599bdbebf",
+   "compared_sha256_rebuilt_minus_2026": "5209dd85c8bddafb3b187080b2a3cf5c8602130b26b4441ebbf5c67599bdbebf",
+   "identical": true,
+   "rebuilt_bytes_compared": 7143594,
+   "rebuilt_file": "/root/gridiron-playbooks-research/data/playbooks/research-2026-10-28-gate1-reproduction/CHI-2025.2025-only.json"
+  },
+  "NE": {
+   "committed_bytes_compared": 6654008,
+   "committed_file": "/root/gridiron-playbooks-research/data/playbooks/NE-2025.json",
+   "committed_sha256_raw": "8a95fe75a4b0c9d3fce5b92649115387d9fcbe5d218a6dad828d96b28f206c19",
+   "compared_sha256_committed_minus_2026": "908084b4f46b502b52b573fab8ad1a9e753d70c9b0b2abc4a7bb509e7b48857c",
+   "compared_sha256_rebuilt_minus_2026": "908084b4f46b502b52b573fab8ad1a9e753d70c9b0b2abc4a7bb509e7b48857c",
+   "identical": true,
+   "rebuilt_bytes_compared": 6654008,
+   "rebuilt_file": "/root/gridiron-playbooks-research/data/playbooks/research-2026-10-28-gate1-reproduction/NE-2025.2025-only.json"
+  }
+ }
+}
