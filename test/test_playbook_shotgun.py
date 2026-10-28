@@ -69,10 +69,10 @@ class EventClass(unittest.TestCase):
                                                  down='4')),
                          ('special_teams_run_pass', 'field_goal', 'unknown'))
 
-    def test_aborted_field_goal_is_a_broken_kick(self):
+    def test_aborted_field_goal_is_a_dropped_kicking_operation(self):
         self.assertEqual(b.event_class(self.play('(Field Goal formation) 16-J.Bailey Aborted. 48-B.Ferguson FUMBLES.',
                                                  down='4', aborted_play='1')),
-                         ('special_teams_run_pass', 'field_goal', 'broken_kick'))
+                         ('special_teams_run_pass', 'field_goal', 'dropped_kicking_operation'))
 
     def test_source_text_stating_a_fake_is_a_designed_fake(self):
         self.assertEqual(b.event_class(self.play('(Punt formation) fake punt, 37-T.Thomas left end for 6 yards.',
@@ -89,14 +89,14 @@ class EventClass(unittest.TestCase):
                                                  down='', two_point_attempt='1')),
                          ('two_point_conversion', None, None))
 
-    def test_aborted_snap_is_a_snap_fumble(self):
+    def test_fumbled_snap_is_labelled_from_its_text(self):
         self.assertEqual(b.event_class(self.play('(:51) 1-T.Tagovailoa FUMBLES (Aborted) at MIA 28.', aborted_play='1')),
-                         ('aborted_snap', None, None))
+                         ('fumbled_snap', None, None))
 
-    def test_aborted_play_is_a_play_the_player_called_off(self):
+    def test_aborted_without_snap_fumble_text_is_unknown_handling(self):
         self.assertEqual(b.event_class(self.play('(:39) (no huddle, shotgun) 6-b.mayfield aborted. 60-p.elflein fumbles.',
                                                  aborted_play='1')),
-                         ('aborted_play', None, None))
+                         ('aborted_unknown_handling', None, None))
 
     def test_value_for_routes_the_new_fields(self):
         row = self.play('(Field Goal formation) 13-C.Bojorquez pass.', down='4')
@@ -107,6 +107,17 @@ class EventClass(unittest.TestCase):
     def test_a_real_punt_described_as_one_fails_loudly(self):
         with self.assertRaises(ValueError):
             b.event_class(self.play('(Punt formation) 6-J.Gillan punts 45 yards.', down='4'))
+
+
+class PlayRecordKeepsMotion(unittest.TestCase):
+    def test_is_motion_is_kept_in_the_play_record(self):
+        pbp = {'game_id': '2025_01_TEN_DEN', 'old_game_id': '2025090708', 'play_id': '306', 'season': '2025',
+               'season_type': 'REG', 'posteam': 'DEN', 'defteam': 'TEN', 'play_type': 'pass', 'down': '1',
+               'ydstogo': '10', 'desc': 'x', '_ftn': {'is_motion': 'TRUE', 'qb_location': 'S'},
+               '_ftn_game_charted': True}
+        rec = b.compact_research_play(pbp, None, 2025, 'observed_2025')
+        self.assertEqual(rec['charting']['is_motion'], 'TRUE')
+        self.assertEqual(rec['charting']['availability'], 'observed')
 
 
 if __name__ == '__main__':

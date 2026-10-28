@@ -5,6 +5,7 @@ team play calls. Every aggregate bucket retains its source play IDs.
 """
 import argparse
 import csv
+import functools
 import gc
 import gzip
 import hashlib
@@ -26,6 +27,7 @@ PBP_FILES = {
 }
 
 
+@functools.lru_cache(maxsize=None)
 def sha256(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -153,15 +155,15 @@ PUNT_FORMATION = "(punt formation)"
 FIELD_GOAL_FORMATION = "(field goal formation)"
 FAKE_TEXT = re.compile(r"\bfake")
 SNAP_FUMBLE_TEXT = re.compile(r"fumbles \(aborted\)")
-EVENT_CLASSES = {"scrimmage", "special_teams_run_pass", "two_point_conversion", "aborted_snap", "aborted_play",
-                 "other_scrimmage"}
+EVENT_CLASSES = {"scrimmage", "special_teams_run_pass", "two_point_conversion", "fumbled_snap",
+                 "aborted_unknown_handling", "other_scrimmage"}
 
 
 def event_class(r):
     """Event class of one run or pass snap: (snap_type, formation_origin, execution_type).
 
     One class per play, so a play sits in one denominator at most. The class says what the snap was, not what was
-    intended. execution_type is designed_fake only when the source text says so, broken_kick when the source flags
+    intended. execution_type is designed_fake only when the source text says so, dropped_kicking_operation when the source flags
     the snap as aborted, and unknown otherwise. An intended play is never inferred.
     """
     desc = (r.get("desc") or "").lower()
@@ -177,18 +179,19 @@ def event_class(r):
     aborted = clean_int(r.get("aborted_play")) == 1
     if origin:
         if aborted:
-            execution = "broken_kick"
+            execution = "dropped_kicking_operation"
         elif FAKE_TEXT.search(desc):
             execution = "designed_fake"
         else:
             execution = "unknown"
         return "special_teams_run_pass", origin, execution
     if aborted:
-        # An aborted snap: the ball was fumbled on the snap. An aborted play: the player called the play off.
-        # Both are real events. Neither has a known intended play, so neither enters the designed concept catalog.
+        # The source flag only says the description contains "aborted". The text decides the handling. A snap
+        # fumble is labelled from its text. Anything else is unknown handling; no handoff or backward pass is inferred.
+        # Neither enters the designed concept catalog, and both stay in the play history and in game totals.
         if SNAP_FUMBLE_TEXT.search(desc):
-            return "aborted_snap", None, None
-        return "aborted_play", None, None
+            return "fumbled_snap", None, None
+        return "aborted_unknown_handling", None, None
     if clean_int(r.get("down")) in (1, 2, 3, 4):
         return "scrimmage", None, None
     return "other_scrimmage", None, None
@@ -440,7 +443,7 @@ def snap_kind(item):
 def special_teams_block(snaps, punts, field_goals):
     """Run or pass snaps from punt or field-goal formation, by execution evidence, with the kicks for context.
 
-    Origin is recorded from the formation text. Execution is designed_fake only with source text, broken_kick when
+    Origin is recorded from the formation text. Execution is designed_fake only with source text, dropped_kicking_operation when
     the source flags the snap as aborted, and unknown otherwise. Every play is kept; none is deleted.
     """
     special = [x for x in snaps if snap_kind(x) == "special_teams_run_pass"]
@@ -481,17 +484,17 @@ def two_point_block(snaps):
 
 
 def aborted_block(snaps):
-    """Aborted snaps (fumbled on the snap) and aborted plays (called off). The intended play is unknown, so both are
-    excluded from the designed concept catalog. Both stay in the play history and in game and drive totals."""
-    snap_rows = [x for x in snaps if snap_kind(x) == "aborted_snap"]
-    play_rows = [x for x in snaps if snap_kind(x) == "aborted_play"]
+    """Fumbled snaps and unknown-handling aborted plays. Intended play is unknown, so both are excluded from the
+    designed concept catalog. Both stay in the play history and in game and drive totals."""
+    snap_rows = [x for x in snaps if snap_kind(x) == "fumbled_snap"]
+    unknown_rows = [x for x in snaps if snap_kind(x) == "aborted_unknown_handling"]
     return {
-        "aborted_snaps": len(snap_rows),
-        "aborted_plays": len(play_rows),
-        "aborted_snap_source_ids": [source_id(x["pbp"]) for x in snap_rows],
-        "aborted_play_source_ids": [source_id(x["pbp"]) for x in play_rows],
-        "claim_limit": "The intended play is unknown. Excluded from the designed concept catalog; kept in the play "
-                       "history and in game and drive totals.",
+        "fumbled_snaps": len(snap_rows),
+        "aborted_unknown_handling": len(unknown_rows),
+        "fumbled_snap_source_ids": [source_id(x["pbp"]) for x in snap_rows],
+        "aborted_unknown_handling_source_ids": [source_id(x["pbp"]) for x in unknown_rows],
+        "claim_limit": "Handling is recorded from source text only. The intended play is unknown. Excluded from the "
+                       "designed concept catalog; kept in the play history and in game and drive totals.",
     }
 
 
@@ -812,21 +815,16 @@ def research_source_spec(season, kind, path):
     return spec
 
 
-def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_path,
-                               part_path, ftn_path, max_week=None):
+def build_research_team_season(season, team, team_rows, post_rows, part_idx, ftn_idx, pbp_path,
+                               part_path, ftn_path, max_week=None, record_cache=None):
     provenance = research_provenance(season)
     offense, defense = [], []
     missing = {"offense": [], "defense": []}
     ftn_missing = {"offense": [], "defense": []}
     ftn_games = {key[0] for key in ftn_idx}
-    selected_pbp = []
-    for row in pbp_rows:
-        if clean_int(row.get("season")) != season or row.get("season_type") != "REG":
-            continue
-        week = clean_int(row.get("week"))
-        if max_week is not None and (week is None or week > max_week):
-            continue
-        selected_pbp.append(row)
+    # team_rows holds this team's regular-season rows for the season, in file order (built once per season).
+    selected_pbp = team_rows
+    for row in team_rows:
         if not is_scrimmage(row):
             continue
         key = (row.get("old_game_id") or row.get("game_id") or "", play_id(row.get("play_id")))
@@ -858,10 +856,18 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
     punts_defense = sum(1 for r in selected_pbp if r.get("defteam") == team and r.get("play_type") == "punt")
     fg_offense = sum(1 for r in selected_pbp if r.get("posteam") == team and r.get("play_type") == "field_goal")
     fg_defense = sum(1 for r in selected_pbp if r.get("defteam") == team and r.get("play_type") == "field_goal")
-    offense_plays = [compact_research_play(x["pbp"], x["participation"], season, provenance) for x in offense]
-    defense_plays = [compact_research_play(x["pbp"], x["participation"], season, provenance) for x in defense]
+    def compact(x):
+        key = (x["pbp"].get("game_id"), play_id(x["pbp"].get("play_id")))
+        if record_cache is not None and key in record_cache:
+            return record_cache[key]
+        record = compact_research_play(x["pbp"], x["participation"], season, provenance)
+        if record_cache is not None:
+            record_cache[key] = record
+        return record
+
+    offense_plays = [compact(x) for x in offense]
+    defense_plays = [compact(x) for x in defense]
     regular_rows = [r for r in selected_pbp if r.get("posteam") == team or r.get("defteam") == team]
-    post_rows = [r for r in pbp_rows if clean_int(r.get("season")) == season and r.get("season_type") == "POST" and (r.get("posteam") == team or r.get("defteam") == team)]
     ftn_game_ids = {r.get("nflverse_game_id") for r in ftn_idx.values()}
     selected_game_ids = {r.get("game_id") for r in selected_pbp if team in (r.get("posteam"), r.get("defteam"))}
     ftn_game_count = len(selected_game_ids & ftn_game_ids)
@@ -951,7 +957,11 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
             "synthetic_variation": {"enabled": False, "purpose": "explicit integration demo only"},
         },
     }
-    errors = validate_research_distributions(result)
+    checked = {
+        key: ({k: v for k, v in value.items() if k != "observed_plays"} if key in ("offense", "defense") else value)
+        for key, value in result.items()
+    }
+    errors = validate_research_distributions(checked)
     if len(offense_plays) != len(offense) or len(defense_plays) != len(defense):
         errors.append("eligible play count does not equal emitted observed play records")
     for action, catalog in result["offense"]["play_candidates"].items():
@@ -1018,10 +1028,28 @@ def build_research(output_dir):
         ftn_game_ids = {r.get("nflverse_game_id") for r in ftn_idx.values()}
         season_ftn_game_counts[season] = len(selected_games & ftn_game_ids)
         season_ftn_missing_games[season] = sorted(selected_games - ftn_game_ids)
+        team_rows_index = defaultdict(list)
+        post_rows_index = defaultdict(list)
+        for r in pbp_rows:
+            if clean_int(r.get("season")) != season:
+                continue
+            if r.get("season_type") == "POST":
+                for team_name in {r.get("posteam"), r.get("defteam")}:
+                    if team_name:
+                        post_rows_index[team_name].append(r)
+            elif r.get("season_type") == "REG":
+                week = clean_int(r.get("week"))
+                if max_week is not None and (week is None or week > max_week):
+                    continue
+                for team_name in {r.get("posteam"), r.get("defteam")}:
+                    if team_name:
+                        team_rows_index[team_name].append(r)
+        record_cache = {}
         for team in RESEARCH_TEAM_NAMES:
             result = build_research_team_season(
-                season, team, pbp_rows, part_idx, ftn_idx, pbp_path, part_path,
-                ftn_path, max_week=max_week,
+                season, team, team_rows_index.get(team, []), post_rows_index.get(team, []),
+                part_idx, ftn_idx, pbp_path, part_path, ftn_path, max_week=max_week,
+                record_cache=record_cache,
             )
             dest = os.path.join(output_dir, f"{team}-{season}.json")
             temp = dest + ".tmp"
