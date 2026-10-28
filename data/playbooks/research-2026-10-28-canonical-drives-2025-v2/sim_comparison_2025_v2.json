@@ -1,0 +1,129 @@
+{
+ "caveat": "Descriptive only. The simulator draws drives from an E1 pool built on 2022-2025 data, and its records are marked valid_full_game False. Sample sizes are in each entry.",
+ "observed_end_share": {
+  "end_of_half_or_game": {
+   "n": 386,
+   "share": 0.0679
+  },
+  "field_goal": {
+   "n": 1084,
+   "share": 0.1908
+  },
+  "punt": {
+   "n": 1903,
+   "share": 0.3349
+  },
+  "safety": {
+   "n": 11,
+   "share": 0.0019
+  },
+  "touchdown": {
+   "n": 1323,
+   "share": 0.2328
+  },
+  "touchdown_allowed": {
+   "n": 65,
+   "share": 0.0114
+  },
+  "turnover": {
+   "n": 548,
+   "share": 0.0964
+  },
+  "turnover_on_downs": {
+   "n": 362,
+   "share": 0.0637
+  }
+ },
+ "observed_offensive_drives": 5682,
+ "observed_plays_per_drive": {
+  "mean": 6.419,
+  "n": 5682
+ },
+ "observed_possession_seconds": {
+  "mean": 170.6,
+  "median": 142.0,
+  "n": 5682
+ },
+ "sim_drives_with_terminal": 121,
+ "sim_end_share": {
+  "end_of_half_or_game": {
+   "n": 8,
+   "share": 0.0661
+  },
+  "field_goal": {
+   "n": 23,
+   "share": 0.1901
+  },
+  "punt": {
+   "n": 49,
+   "share": 0.405
+  },
+  "safety": {
+   "n": 1,
+   "share": 0.0083
+  },
+  "touchdown": {
+   "n": 22,
+   "share": 0.1818
+  },
+  "turnover": {
+   "n": 11,
+   "share": 0.0909
+  },
+  "turnover_on_downs": {
+   "n": 7,
+   "share": 0.0579
+  }
+ },
+ "sim_plays_per_drive": {
+  "mean": 6.033,
+  "n": 121
+ },
+ "sim_possession_seconds": {
+  "mean": 147.7,
+  "median": 108,
+  "n": 121
+ },
+ "simulations": [
+  {
+   "complete_game": true,
+   "drives": 24,
+   "file": "audit-current-seed1-a785-record.json",
+   "seed": 1,
+   "simulation_id": "e2-e1-empirical-v0-seed1",
+   "valid_full_game": false
+  },
+  {
+   "complete_game": false,
+   "drives": 30,
+   "file": "reconciliation/seed-009-baseline.envelope.json",
+   "seed": 9,
+   "simulation_id": "e2-e1-empirical-v0-seed9",
+   "valid_full_game": false
+  },
+  {
+   "complete_game": false,
+   "drives": 24,
+   "file": "reconciliation/seed-011-baseline.envelope.json",
+   "seed": 11,
+   "simulation_id": "e2-e1-empirical-v0-seed11",
+   "valid_full_game": false
+  },
+  {
+   "complete_game": false,
+   "drives": 21,
+   "file": "reconciliation/seed-101-baseline.envelope.json",
+   "seed": 101,
+   "simulation_id": "e2-e1-empirical-v0-seed101",
+   "valid_full_game": false
+  },
+  {
+   "complete_game": false,
+   "drives": 22,
+   "file": "reconciliation/seed-176-baseline.envelope.json",
+   "seed": 176,
+   "simulation_id": "e2-e1-empirical-v0-seed176",
+   "valid_full_game": false
+  }
+ ]
+}
