@@ -701,6 +701,7 @@ RESEARCH_PBP_FILES = {
 }
 RESEARCH_FTN_FILES = {year: f"ftn_charting_{year}.csv" for year in range(2022, 2027)}
 RESEARCH_PART_FILES = {year: f"pbp_participation_{year}.csv" for year in range(2022, 2026)}
+RESEARCH_SEASONS = (2022, 2023, 2024, 2025)  # 2026 is the sealed holdout; build_research never reads it
 
 
 def ftn_index(rows, season, max_week=None):
@@ -994,10 +995,11 @@ def build_research(output_dir):
         raise FileNotFoundError(f"pinned input manifest missing: {pin_manifest_path}")
     with open(pin_manifest_path, encoding="utf-8") as f:
         pinned_source_hashes = json.load(f).get("source_hashes") or {}
-    if set(pinned_source_hashes) != {str(year) for year in range(2022, 2027)}:
-        raise ValueError(f"pinned input manifest is missing one or more seasons: {pin_manifest_path}")
-    for season in range(2022, 2027):
-        input_root = PINNED_INPUTS if season == 2026 else RAW
+    missing_pins = [season for season in RESEARCH_SEASONS if str(season) not in pinned_source_hashes]
+    if missing_pins:
+        raise ValueError(f"pinned input manifest is missing seasons {missing_pins}: {pin_manifest_path}")
+    for season in RESEARCH_SEASONS:
+        input_root = RAW
         pbp_path = os.path.join(input_root, RESEARCH_PBP_FILES[season])
         ftn_path = os.path.join(input_root, RESEARCH_FTN_FILES[season])
         part_path = os.path.join(RAW, RESEARCH_PART_FILES[season]) if season in RESEARCH_PART_FILES else None
@@ -1015,7 +1017,7 @@ def build_research(output_dir):
                     f"unpinned or changed {season} {key} source: expected {expected}, got {actual}; "
                     "fetch the exact assets with pipeline/fetch_research_playbook_sources.py"
                 )
-        max_week = 7 if season == 2026 else 18
+        max_week = 18
         season_inputs[season] = (pbp_path, part_path, ftn_path, max_week)
 
     metadata = []
@@ -1103,25 +1105,20 @@ def build_research(output_dir):
         gc.collect()
         print(f"released source rows for {season}", flush=True)
 
-    if season_game_counts.get(2026) != 107:
-        nonreconciling.append((2026, "ALL", {"reason": f"expected 107 REG games through Week 7, got {season_game_counts.get(2026)}"}))
     report_path = os.path.join(output_dir, "BUILD-REPORT.md")
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("# Team-season playbook research build\n\n")
-        f.write("Research-only output from `pipeline/build_playbooks.py --research`; no engine defaults or Week 8 snapshots were changed. The 2026 profiles are labeled **in-season, through Week 7**, frozen, and must not be used to tune tests or described as unseen. Participation inputs are unavailable for 2026 and are represented as missing, not zero.\n\n")
+        f.write("Research-only output from `pipeline/build_playbooks.py --research` for seasons 2022 to 2025. The 2026 season is not read by this build; no engine defaults or Week 8 snapshots were changed.\n\n")
         f.write("## Reproduction\n\n")
-        f.write("From a clean checkout with Python 3, run `python3 pipeline/fetch_research_playbook_sources.py` to verify the vendored 2026 Weeks 1 to 7 PBP and FTN snapshots and download the remaining inputs by URL and SHA-256 from `build_manifest.json`; then run `python3 pipeline/build_playbooks.py --research`. The fetcher and builder both refuse inputs whose SHA-256 differs from the manifest.\n\n")
+        f.write("Raw 2022 to 2025 inputs must match the SHA-256 values pinned in `data/playbooks/research-2026-10-27/build_manifest.json`; run `python3 pipeline/build_playbooks.py --research`. The build refuses any input whose SHA-256 differs from its pin.\n\n")
         f.write("## Aggregate counts\n\n")
-        f.write(f"- Team-season profiles: {team_season_count} (expected 160).\n")
+        f.write(f"- Team-season profiles: {team_season_count} (expected 128).\n")
         f.write(f"- PBP regular-season games by season: {', '.join(f'{s}={n}' for s,n in season_game_counts.items())}.\n")
         f.write(f"- FTN charting games present by season: {', '.join(f'{s}={n}/{season_game_counts[s]}' for s,n in season_ftn_game_counts.items())}.\n")
-        missing_2026 = season_ftn_missing_games.get(2026, [])
-        f.write(f"- 2026 game without an FTN charting row: {', '.join(missing_2026) if missing_2026 else 'none'}.\n")
         f.write(f"- Eligible offense plays: {total_offense:,}; eligible defense plays: {total_defense:,}.\n")
         f.write(f"- Participation joins: {total_participation_joined:,}; missing joins: {total_participation_missing:,}.\n")
         f.write(f"- FTN charting joins: {total_ftn_joined:,}; missing joins: {total_ftn_missing:,}.\n")
-        f.write("- 2026 participation rows: 0; all participation-derived profile fields are explicitly missing.\n")
-        f.write("- 2026 cohort label: in-season, through Week 7; frozen; no test tuning; not an unseen cohort.\n\n")
+        f.write("\n")
         f.write("## Shotgun cross-source gate (2022 to 2024)\n\n")
         f.write("PBP `shotgun=1` was compared on paired eligible offense plays with participation formation categories. Pistol is grouped with shotgun in all years; the 2022 taxonomy additionally groups Empty and Wildcat because those are explicit formation labels in that release.\n\n")
         failures = [x for x in nonreconciling if len(x) == 3 and isinstance(x[2], dict) and x[2].get("absolute_difference") is not None]
@@ -1145,9 +1142,7 @@ def build_research(output_dir):
         f.write("\n## Gate status\n\n")
         f.write("- NE-2025 and CHI-2025 legacy reproduction gate: passed byte-for-byte before this expanded build.\n")
         f.write("- Emitted offense and defense records reconcile to eligible play counts; every distribution reconciles observed + missing to denominator.\n")
-        f.write("- 2026 game-count gate: " + ("passed (107 games).\n" if season_game_counts.get(2026) == 107 else f"FAILED ({season_game_counts.get(2026)} games; expected 107).\n"))
         f.write("- Shotgun cross-source gate: " + ("passed.\n" if not failures else f"has {len(failures)} exceptions listed above.\n"))
-        f.write("- 2026 is frozen and labeled in-season through Week 7; tests must not be tuned on it and it must not be called unseen.\n")
         f.write("- Shotgun exceptions are cross-source label disagreements at exact joined game/play keys, not missing participation joins; each cause is itemized in the manifest with the original source labels and IDs.\n")
         f.write("- This is Part A only; no movement evaluation is included.\n")
     source_hashes = {}
@@ -1166,19 +1161,9 @@ def build_research(output_dir):
                    "builder_sha256": sha256(__file__),
                    "build_report_sha256": sha256(report_path),
                    "reproduction_commands": [
-                       "python3 pipeline/fetch_research_playbook_sources.py",
                        "python3 pipeline/build_playbooks.py --research",
                    ],
-                   "profile_cohort_policy": {
-                       "2026": {
-                           "label": "in-season, through Week 7", "frozen": True,
-                           "test_tuning_allowed": False, "may_be_described_as_unseen": False,
-                       },
-                   },
-                   "vendored_input_files": {
-                       "2026_pbp": "data/playbooks/research-2026-10-27/inputs/pbp_2026_week7.csv.gz",
-                       "2026_ftn_charting": "data/playbooks/research-2026-10-27/inputs/ftn_charting_2026.csv",
-                   },
+                   "seasons": list(RESEARCH_SEASONS),
                    "season_game_counts": season_game_counts,
                    "season_ftn_game_counts": season_ftn_game_counts,
                    "season_ftn_missing_games": season_ftn_missing_games,
