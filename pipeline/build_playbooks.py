@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import re
 from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -149,6 +150,28 @@ def source_id(r):
     }
 
 
+def shotgun_with_source(r, p):
+    """Shotgun value and its source: FTN first, then participation, then the PBP flag.
+
+    The PBP flag is used only in games FTN has charted. A game with no FTN rows at all is a charting gap,
+    so its plays stay null until FTN charts them.
+    """
+    q = (r.get("_ftn") or {}).get("qb_location")
+    if q in ("S", "P"):
+        return True, "ftn"
+    if q == "U":
+        return False, "ftn"
+    value = participation_shotgun_equivalent((p or {}).get("offense_formation"), clean_int(r.get("season")))
+    if value is not None:
+        return value, "participation"
+    if not r.get("_ftn_game_charted"):
+        return None, None
+    flag = clean_int(r.get("shotgun"))
+    if flag is not None:
+        return bool(flag), "pbp_flag"
+    return None, None
+
+
 def value_for(r, p, field):
     ftn = r.get("_ftn") or {}
     if field == "offense_formation":
@@ -167,19 +190,18 @@ def value_for(r, p, field):
         code = defensive_personnel_code((p or {}).get("defense_personnel"))
         return f"personnel_{code}" if code else None
     if field == "shotgun_ftn_first":
-        # FTN charting first (S or P is shotgun, U is under center), then the participation formation.
-        # The PBP flag is kept separately; it disagrees with both sources on the flagged team-seasons.
-        q = (r.get("_ftn") or {}).get("qb_location")
-        if q in ("S", "P"):
-            return True
-        if q == "U":
-            return False
-        formation = (p or {}).get("offense_formation")
-        if formation in ("SHOTGUN", "PISTOL"):
-            return True
-        if formation == "UNDER CENTER":
-            return False
-        return None
+        return shotgun_with_source(r, p)[0]
+    if field == "shotgun_source":
+        return shotgun_with_source(r, p)[1]
+    if field == "snap_type":
+        # nflverse codes these run or pass snaps from a punt formation as scrimmage plays with punt_attempt 0.
+        # They are fake punts. A play whose description says it was a punt is a data error, so fail loudly.
+        desc = (r.get("desc") or "").lower()
+        if "punt formation" not in desc:
+            return "scrimmage"
+        if re.search(r"\bpunts\b", desc):
+            raise ValueError(f"punt formation play described as a punt: {r.get('game_id')} {r.get('play_id')}")
+        return "fake_punt"
     if field in ("shotgun", "no_huddle", "pass_length", "pass_location", "run_location", "run_gap"):
         v = r.get(field)
         if field in ("shotgun", "no_huddle"):
@@ -349,6 +371,7 @@ def compact_play(pbp, participation, season, provenance):
 def compact_research_play(pbp, participation, season, provenance):
     """Research output that makes absent participation fields explicit."""
     result = compact_play(pbp, participation, season, provenance)
+    result["snap_type"] = value_for(pbp, participation, "snap_type")
     participant_fields = (
         "offense_formation", "offense_personnel", "defense_personnel", "defenders_in_box",
         "number_of_pass_rushers", "players_on_play", "offense_players", "defense_players",
@@ -369,7 +392,25 @@ def compact_research_play(pbp, participation, season, provenance):
     return result
 
 
-def observed_candidates(rows, season=2025, provenance="observed_2025"):
+def snap_kind(item):
+    return value_for(item["pbp"], item.get("participation"), "snap_type")
+
+
+def fake_punt_block(snaps, punts):
+    """Fake punts are kept out of ordinary play-selection denominators and reported here, with punt situations."""
+    fake = [x for x in snaps if snap_kind(x) == "fake_punt"]
+    situations = len(fake) + punts
+    return {
+        "fake_punts": len(fake),
+        "punts": punts,
+        "punt_situations": situations,
+        "fake_punt_rate": round(len(fake) / situations, 6) if situations else None,
+        "fake_punt_source_ids": [source_id(x["pbp"]) for x in fake],
+        "claim_limit": "Run or pass snaps from punt formation. A rate over few punt situations is not a team tendency.",
+    }
+
+
+def observed_candidates(rows, season=2025, provenance="observed_2025", shotgun_field="shotgun"):
     """Collapse directly charted formation/action labels into selectable entries."""
     result = {}
     for kind, fields in (("run", ("run_gap", "run_location")), ("pass", ("pass_length", "pass_location"))):
@@ -379,7 +420,7 @@ def observed_candidates(rows, season=2025, provenance="observed_2025"):
             p = x.get("participation") or {}
             pbp = x["pbp"]
             formation = p.get("offense_formation") or None
-            shotgun_value = value_for(pbp, p, "shotgun")
+            shotgun_value = value_for(pbp, p, shotgun_field)
             concept = {"formation": formation, "shotgun": shotgun_value}
             for field in fields:
                 concept[field] = pbp.get(field) or None
@@ -566,6 +607,8 @@ def research_summary(rows, side, provenance):
     result = summarize(rows, side, provenance)
     result["shotgun"] = distribution(rows, "shotgun_ftn_first", provenance=provenance)
     result["shotgun_pbp_flag"] = distribution(rows, "shotgun", provenance=provenance)
+    result["shotgun_source"] = distribution(rows, "shotgun_source", provenance=provenance)
+    result["snap_type"] = distribution(rows, "snap_type", provenance=provenance)
     result["play_action"] = distribution(rows, "play_action", provenance=provenance)
     result["motion"] = distribution(rows, "motion", provenance=provenance)
     result["rpo"] = distribution(rows, "rpo", provenance=provenance)
@@ -674,6 +717,7 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
     offense, defense = [], []
     missing = {"offense": [], "defense": []}
     ftn_missing = {"offense": [], "defense": []}
+    ftn_games = {key[0] for key in ftn_idx}
     selected_pbp = []
     for row in pbp_rows:
         if clean_int(row.get("season")) != season or row.get("season_type") != "REG":
@@ -688,6 +732,7 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
         part = part_idx.get(key) if part_idx is not None else None
         ftn = ftn_idx.get((row.get("game_id") or "", play_id(row.get("play_id"))))
         row["_ftn"] = ftn
+        row["_ftn_game_charted"] = row.get("game_id") in ftn_games
         for side, team_field, target in (("offense", "posteam", offense), ("defense", "defteam", defense)):
             if row.get(team_field) != team:
                 continue
@@ -703,6 +748,10 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
         if len({(x["pbp"].get("game_id"), play_id(x["pbp"].get("play_id"))) for x in rows}) != len(rows):
             raise ValueError(f"duplicate eligible {side} plays for {season} {team}")
 
+    ordinary_offense = [x for x in offense if snap_kind(x) == "scrimmage"]
+    ordinary_defense = [x for x in defense if snap_kind(x) == "scrimmage"]
+    punts_offense = sum(1 for r in selected_pbp if r.get("posteam") == team and r.get("play_type") == "punt")
+    punts_defense = sum(1 for r in selected_pbp if r.get("defteam") == team and r.get("play_type") == "punt")
     offense_plays = [compact_research_play(x["pbp"], x["participation"], season, provenance) for x in offense]
     defense_plays = [compact_research_play(x["pbp"], x["participation"], season, provenance) for x in defense]
     regular_rows = [r for r in selected_pbp if r.get("posteam") == team or r.get("defteam") == team]
@@ -773,11 +822,17 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
             "participation_shotgun_reconciliation": shotgun_check,
         },
         "offense": {
-            "profile": research_summary(offense, "offense", provenance),
+            "profile": research_summary(ordinary_offense, "offense", provenance),
+            "special_teams": fake_punt_block(offense, punts_offense),
             "observed_plays": offense_plays,
-            "play_candidates": observed_candidates(offense, season, provenance),
+            "play_candidates": observed_candidates(ordinary_offense, season, provenance,
+                                                   shotgun_field="shotgun_ftn_first"),
         },
-        "defense": {"profile": research_summary(defense, "defense", provenance), "observed_plays": defense_plays},
+        "defense": {
+            "profile": research_summary(ordinary_defense, "defense", provenance),
+            "special_teams": fake_punt_block(defense, punts_defense),
+            "observed_plays": defense_plays,
+        },
         "playbook_variants": [],
         "provenance_categories": [provenance, "inferred_concept", "synthetic_variation"],
         "sampling_controls": {

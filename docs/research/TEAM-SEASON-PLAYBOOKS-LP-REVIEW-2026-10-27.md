@@ -82,3 +82,21 @@ Effect on the 16 flagged team-seasons. The shotgun share now matches FTN to with
 Where the outputs are. The rev2 profiles are in `/root/lp-snapshots/nfl-team-season-playbooks-2026-10-27-rev2`, outside git. The rev1 profiles are untouched. The rev2 BUILD-REPORT and manifest are committed under `data/playbooks/research-2026-10-27-rev2/`. The unit tests are in `test/test_playbook_shotgun.py`.
 
 Frozen status. rev1 stays as built. rev2 is a new revision whose 2026 shotgun values have a changed definition, so they have not been used for any test.
+
+## Corrections and revision rev3 (2026-10-27)
+
+Rev3 supersedes rev2. The committed rev2 build (`be6bce1`) carries a formation-mapping bug: the 2022 labels SINGLEBACK, I_FORM and JUMBO returned null. Earlier outputs are preserved and nothing was overwritten. The rev3 outputs are in `/root/lp-snapshots/nfl-team-season-playbooks-2026-10-27-rev3` (outside git); its BUILD-REPORT, manifest and null-play file are committed under `data/playbooks/research-2026-10-27-rev3/`.
+
+1. **DAL and PHI, 2026 Week 7 (game `2026_07_DAL_PHI`, played 2026-10-26).** FTN has no rows for this game. This is source publication lag, not a failed join. The pinned FTN 2026 file was pulled at these times (UTC): 2026-10-05 17:01, 2026-10-08 22:52, 2026-10-21 16:35, 2026-10-22 03:12 and 2026-10-27 21:49 (16:49 CDT on 2026-10-27). The game is absent from the latest pull, about a day after it was played. The frozen extraction is unchanged (SHA-256 `96b6055e...`). A fetch at 2026-10-27 21:57 CDT returned the same file, so no versioned refresh exists yet. The 24 to 48 hour lag is consistent with these pulls, but the pulls cannot measure it: each game's first appearance is capped by the next pull, not by FTN's publication time.
+
+2. **Shotgun source tiers.** FTN first, then participation formation, then the PBP shotgun flag, which is used only in games FTN has charted. A game with no FTN rows stays null. Each play records its source in `shotgun_source`. In 2022 to 2025 there are no null shotgun values. In 2026 the 128 nulls are all DAL and PHI plays from the source-lag game. The null explainer reconciles to the profile counts with 0 mismatches.
+
+3. **Fake punts (`snap_type = fake_punt`).** 83 run or pass snaps from punt formation, 2022 to 2026. They are kept as special-teams plays and excluded from ordinary play-selection denominators and from the candidate catalogues. Each profile reports them in a `special_teams` block with the punt count and the punt-situation denominator. Totals: 83 fake punts and 9,241 punts on each side. Frequency and outcomes are in `FAKE-PUNT-FREQUENCY-2026-10-27.md`.
+
+4. **Formation coverage, kept separate from fake punts.** Ordinary run or pass plays with no participation formation label, 2022 to 2025: 87 runs and 75 passes (162 in total). 2026 has no participation data, so every 2026 play lacks a formation label. The 135 runs and 126 passes cited earlier were the null subset of rev2, which included 2026 plays, so they are not the coverage figure.
+
+5. **Candidate consistency.** The observed candidate catalogues in the research profile now use the same shotgun value as the profile (FTN first, then participation, then PBP in charted games) and exclude fake punts. The builder's reconciliation check passes for every team-season. The legacy 2025 path is unchanged.
+
+Verification of rev3 against rev2: observed plays are identical for all 160 profiles and both sides. On each side, the ordinary denominator falls by exactly the fake-punt count recorded for that team-season. Team-seasons without fake punts are unchanged apart from the new keys.
+
+Part B readiness: see `PART-B-READINESS-2026-10-27.md`. Part B is not ready.
