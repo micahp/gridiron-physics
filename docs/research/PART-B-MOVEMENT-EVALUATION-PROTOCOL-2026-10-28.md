@@ -124,4 +124,12 @@ Steps 1 to 3 are run once, in this order, from the frozen code. The code path an
 
 ## Amendment log
 
-- 2026-10-28: protocol frozen with this commit. No amendments.
+- 2026-10-28: protocol frozen at commit `f58952a`.
+- 2026-10-28, amendment 1: the 2023 train Weeks 1 to 7 cohort is reclassified from validation to development and
+  exploratory. Hermes2 scored that cohort under its own protocol (file timestamp 02:14, results about 02:31) before this
+  protocol was frozen (02:39). Step 3 of section 8 is therefore no longer a validation step. See
+  `PART-B-EVALUATION-DECISION-RECORD-2026-10-28.md`.
+- 2026-10-28, amendment 2: the 2023 frame-alignment rule in section 3 is corrected. Output `frame_id` values are file-local,
+  not continuous with the input, so output frames are aligned by output order, as the 2023 field definitions require. The
+  rule "first output frame equals origin + 1" is withdrawn. Any run of the alignment check must follow the corrected rule.
+- The results of step 1 (2022 calibration) and step 2 (2022 development check) are not affected by these amendments.
