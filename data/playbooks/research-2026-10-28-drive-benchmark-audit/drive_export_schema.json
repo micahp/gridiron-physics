@@ -1,0 +1,96 @@
+{
+  "schema": "drive-benchmark-export",
+  "version": "1",
+  "status": "research only; not promoted; no pass or fail threshold defined",
+  "reference": {
+    "dataset": "canonical-drives-2025-v2",
+    "drives_csv": "data/playbooks/research-2026-10-28-canonical-drives-2025-v2/canonical_drives_2025_v2.csv",
+    "manifest": "data/playbooks/research-2026-10-28-drive-benchmark-audit/manifest.json",
+    "comparison_population": "drives with offensive = true"
+  },
+  "units": {
+    "clock": "seconds of game clock. Regulation: game_seconds_remaining = (4 - quarter) * 900 + clock_seconds. Overtime is not validated against the simulator.",
+    "yardline_100": "yards from the offense's opponent goal line, 0 to 100. 100 is the offense's own goal line."
+  },
+  "drive_fields": [
+    {"name": "game_id", "type": "string", "nullable": false, "definition": "Game identifier."},
+    {"name": "drive_index", "type": "integer >= 1", "nullable": false, "definition": "1-based position of the drive within its game, in game order. Counts non-offensive segments."},
+    {"name": "team", "type": "string", "nullable": false, "definition": "The drive's possession (offense) team."},
+    {"name": "half", "type": "1 | 2 | \"OT\"", "nullable": false, "definition": "1 = quarters 1 and 2; 2 = quarters 3 and 4; OT = overtime."},
+    {"name": "start_quarter", "type": "integer 1-5", "nullable": true, "definition": "Quarter of the first offensive play. 5 = overtime."},
+    {"name": "offensive", "type": "boolean", "nullable": false, "definition": "True when offense_plays > 0. The comparison population."},
+    {"name": "offense_plays", "type": "integer >= 0", "nullable": false, "definition": "Run, pass (including sacks), qb_kneel, qb_spike, punt and field_goal plays. Kickoffs, extra points, two-point attempts and no-play rows are not counted."},
+    {"name": "scrimmage_plays", "type": "integer >= 0", "nullable": false, "definition": "Run, pass (including sacks), qb_kneel and qb_spike plays."},
+    {"name": "yards_run_pass", "type": "number", "nullable": false, "definition": "Sum of yards gained on run and pass plays. Sacks count as negative pass yards."},
+    {"name": "first_down_gained", "type": "boolean", "nullable": false, "definition": "True when any run or pass play in the drive records a first down."},
+    {"name": "start_yardline_100", "type": "number 0-100", "nullable": true, "definition": "yardline_100 at the first scrimmage play. Null when the drive has none."},
+    {"name": "score_diff_at_start", "type": "integer", "nullable": true, "definition": "Team score minus opponent score immediately before the first offensive play."},
+    {"name": "kickoff_to_end_seconds", "type": "number >= 0", "nullable": true, "definition": "Clock at the drive's first timed row minus the end clock. Includes the kickoff when the drive starts with one."},
+    {"name": "possession_seconds", "type": "number >= 0", "nullable": true, "definition": "Clock at the first offensive play minus the end clock. Excludes the kickoff. Provisional benchmark field."},
+    {"name": "end_clock_basis", "type": "enum", "nullable": false, "values": ["half_end_row", "game_end_row", "next_drive_first_row"], "definition": "How the end clock was taken. The simulator's equivalent is the post-play clock of its last play (basis: post_play_clock_of_last_play)."},
+    {"name": "points_for", "type": "integer >= 0", "nullable": false, "definition": "Points the drive's team scored while the drive was on. Touchdown 6, extra point 1, two-point try 2, field goal 3."},
+    {"name": "points_against", "type": "integer >= 0", "nullable": false, "definition": "Points the opponent scored while the drive was on. Defensive or return touchdown 6, the conversion after it, a defensive two-point try 2, a safety 2."},
+    {"name": "end_class", "type": "enum", "nullable": false, "definition": "How the drive ended. See end_class."},
+    {"name": "end_subtype", "type": "string", "nullable": false, "definition": "Cause within the end class. Empty when the class has no subtype."}
+  ],
+  "end_class": {
+    "touchdown_scored": {"subtypes": ["run", "pass", "kickoff", "punt"], "meaning": "The drive's team scored a touchdown. Subtype is the play type of the scoring row."},
+    "touchdown_allowed": {"subtypes": ["interception_return", "fumble_return", "punt_return", "blocked_punt_return", "field_goal_return", "kickoff_return"], "meaning": "The opponent scored a defensive or return touchdown on this drive. Subtype is the cause of the return."},
+    "safety_allowed": {"subtypes": ["run", "pass", "no_play"], "meaning": "The drive's team gave up a safety. Subtype is the play type of the row."},
+    "field_goal_made": {"subtypes": [], "meaning": "Last offensive play was a made field goal."},
+    "field_goal_missed": {"subtypes": ["missed", "blocked"], "meaning": "Last offensive play was a missed or blocked field goal."},
+    "punt": {"subtypes": ["", "fumble_on_return"], "meaning": "Last offensive play was a punt that was not blocked."},
+    "blocked_punt": {"subtypes": [""], "meaning": "Last offensive play was a blocked punt."},
+    "interception": {"subtypes": ["pass"], "meaning": "The drive's team threw an interception that ended the drive."},
+    "fumble_lost": {"subtypes": ["run", "pass"], "meaning": "The drive's team lost a fumble that ended the drive."},
+    "turnover_on_downs": {"subtypes": [""], "meaning": "The drive ended on downs."},
+    "end_of_half": {"subtypes": ["", "kickoff_return"], "meaning": "The drive ended at the end of the first half, from the transition field."},
+    "end_of_game": {"subtypes": ["", "kickoff_return"], "meaning": "The drive ended at the end of the game, from the transition field."},
+    "kickoff_fumble_lost": {"subtypes": [""], "meaning": "Non-offensive: a kickoff return was fumbled and lost. Not in the offensive comparison."},
+    "onside_kick_lost": {"subtypes": [""], "meaning": "Non-offensive: the kicking team recovered an onside kick. Not in the offensive comparison."},
+    "no_offensive_play": {"subtypes": [""], "meaning": "Non-offensive: a kickoff segment with no scrimmage play and no other end evidence."}
+  },
+  "simulator_terminal_map": {
+    "_status": "Proposed. Confirm on a worked example before use.",
+    "touchdown": "touchdown_scored when points team equals offense team, otherwise touchdown_allowed. The export must also supply the subtype, which the simulator does not record yet.",
+    "field_goal_attempt": "field_goal_made when field_goal_made is true, otherwise field_goal_missed.",
+    "punt": "punt. Blocked punts are not modelled.",
+    "turnover": "interception or fumble_lost, from the last play's event_type. The simulator's terminal does not separate them.",
+    "turnover_on_downs": "turnover_on_downs",
+    "safety": "safety_allowed. The team in the drive gave up the safety. Confirm the convention.",
+    "halftime": "end_of_half",
+    "end_of_regulation": "end_of_game. Confirm that this terminal is the game's last drive."
+  },
+  "segmentation_rules": [
+    "A drive starts at each change of possession and at each regulation half start.",
+    "A kickoff received starts a drive. A kickoff segment with no scrimmage play is a non-offensive drive.",
+    "A touchdown ends the scoring drive. The extra point or two-point attempt stays with that drive.",
+    "After a safety the team that gave it up kicks a free kick, so the team that scored receives the next drive.",
+    "possession_seconds starts at the first offensive play's clock, so the kickoff runoff is excluded."
+  ],
+  "buckets": {
+    "start_field": ["own 0-19 (yardline_100 >= 80)", "own 20-49 (50 <= yardline_100 < 80)", "opp 49-20 (20 <= yardline_100 < 50)", "opp 19-0 (yardline_100 < 20)"],
+    "quarter": ["1", "2", "3", "4", "OT"],
+    "score_diff_at_start": ["-8 or less", "-7 to -1", "tied", "+1 to +7", "+8 or more"],
+    "end_class": "as listed in end_class"
+  },
+  "comparison": {
+    "minimum_n_per_bucket": 30,
+    "metrics": ["offense_plays mean and median", "yards_run_pass mean", "possession_seconds median and mean", "points_for per drive", "points_against per drive", "end_class shares", "scoring rate", "turnover rate (interception, fumble_lost, turnover_on_downs)"],
+    "report": "Each metric with its n. Buckets below the minimum are flagged, not compared.",
+    "pass_fail": "Not defined. Requires a decision."
+  },
+  "reference_values_2025_offensive": {
+    "drives": 5682,
+    "offense_plays_mean": 6.419,
+    "offense_plays_median": 6,
+    "possession_seconds_median": 142,
+    "possession_seconds_mean": 170.6,
+    "kickoff_to_end_seconds_median": 145,
+    "kickoff_to_end_seconds_mean": 173.3,
+    "points_for_mean": 2.111,
+    "points_against_mean": 0.084,
+    "scoring_rate": 0.3967,
+    "turnover_rate": 0.1602
+  }
+}

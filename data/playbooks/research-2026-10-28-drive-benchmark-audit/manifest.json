@@ -1,0 +1,14 @@
+{
+ "immutable_files": {
+  "data/playbooks/research-2026-10-28-canonical-drives-2025-v2/canonical_drives_2025_v2.csv": "3b95e0735ae9a602b1a5f7517a2107b66d638e0d419b9cb243529e918b22448f",
+  "data/playbooks/research-2026-10-28-canonical-drives-2025-v2/canonical_drives_2025_v2_summary.json": "8859d1f1e1482118145873e7547492eaccd8941bb5d71e8dd46b9976acf806a8",
+  "data/playbooks/research-2026-10-28-canonical-drives-2025-v2/continuity_exceptions_2025_v2.csv": "f31e274e4ce1d8fbdcfc2e204f9906ae721146556543ea8abb6ec3a0ebbf4c0c",
+  "data/playbooks/research-2026-10-28-canonical-drives-2025-v2/end_class_disagreements_2025_v2.csv": "2146207358f6d5af9900a2e1542c583bcc966afa5d24a209c8ce388597fe2d5f",
+  "data/playbooks/research-2026-10-28-canonical-drives-2025-v2/sim_comparison_2025_v2.json": "ba1f84e73b180062d505201e80398f3b83a87cbdff402ec36e8d7278e65b1918",
+  "data/playbooks/research-2026-10-28-canonical-drives-2025/canonical_drives_2025.csv": "75a30a8eabfdf11f587be83189e1bd54a12be883e6aaa5ad1af8b67340041451",
+  "data/playbooks/research-2026-10-28-canonical-drives-2025/canonical_drives_2025_summary.json": "24137655c285ae345f5808c45074083de785a6cfd881c4a9750249240961b06a"
+ },
+ "previous_check": {
+  "files_changed_since_last_run": []
+ }
+}
