@@ -166,6 +166,20 @@ def value_for(r, p, field):
         # the actual defensive alignment or coverage shell.
         code = defensive_personnel_code((p or {}).get("defense_personnel"))
         return f"personnel_{code}" if code else None
+    if field == "shotgun_ftn_first":
+        # FTN charting first (S or P is shotgun, U is under center), then the participation formation.
+        # The PBP flag is kept separately; it disagrees with both sources on the flagged team-seasons.
+        q = (r.get("_ftn") or {}).get("qb_location")
+        if q in ("S", "P"):
+            return True
+        if q == "U":
+            return False
+        formation = (p or {}).get("offense_formation")
+        if formation in ("SHOTGUN", "PISTOL"):
+            return True
+        if formation == "UNDER CENTER":
+            return False
+        return None
     if field in ("shotgun", "no_huddle", "pass_length", "pass_location", "run_location", "run_gap"):
         v = r.get(field)
         if field in ("shotgun", "no_huddle"):
@@ -550,6 +564,8 @@ def research_provenance(season):
 
 def research_summary(rows, side, provenance):
     result = summarize(rows, side, provenance)
+    result["shotgun"] = distribution(rows, "shotgun_ftn_first", provenance=provenance)
+    result["shotgun_pbp_flag"] = distribution(rows, "shotgun", provenance=provenance)
     result["play_action"] = distribution(rows, "play_action", provenance=provenance)
     result["motion"] = distribution(rows, "motion", provenance=provenance)
     result["rpo"] = distribution(rows, "rpo", provenance=provenance)
@@ -887,7 +903,7 @@ def build_research(output_dir):
         f.write("# Team-season playbook research build\n\n")
         f.write("Research-only output from `pipeline/build_playbooks.py --research`; no engine defaults or Week 8 snapshots were changed. The 2026 profiles are labeled **in-season, through Week 7**, frozen, and must not be used to tune tests or described as unseen. Participation inputs are unavailable for 2026 and are represented as missing, not zero.\n\n")
         f.write("## Reproduction\n\n")
-        f.write("From a clean checkout with Python 3, run `python3 pipeline/fetch_research_playbook_sources.py` to verify the vendored 2026 Weeks 1–7 PBP and FTN snapshots and download the remaining inputs by URL and SHA-256 from `build_manifest.json`; then run `python3 pipeline/build_playbooks.py --research`. The fetcher and builder both refuse inputs whose SHA-256 differs from the manifest.\n\n")
+        f.write("From a clean checkout with Python 3, run `python3 pipeline/fetch_research_playbook_sources.py` to verify the vendored 2026 Weeks 1 to 7 PBP and FTN snapshots and download the remaining inputs by URL and SHA-256 from `build_manifest.json`; then run `python3 pipeline/build_playbooks.py --research`. The fetcher and builder both refuse inputs whose SHA-256 differs from the manifest.\n\n")
         f.write("## Aggregate counts\n\n")
         f.write(f"- Team-season profiles: {team_season_count} (expected 160).\n")
         f.write(f"- PBP regular-season games by season: {', '.join(f'{s}={n}' for s,n in season_game_counts.items())}.\n")
@@ -899,12 +915,12 @@ def build_research(output_dir):
         f.write(f"- FTN charting joins: {total_ftn_joined:,}; missing joins: {total_ftn_missing:,}.\n")
         f.write("- 2026 participation rows: 0; all participation-derived profile fields are explicitly missing.\n")
         f.write("- 2026 cohort label: in-season, through Week 7; frozen; no test tuning; not an unseen cohort.\n\n")
-        f.write("## Shotgun cross-source gate (2022–2024)\n\n")
+        f.write("## Shotgun cross-source gate (2022 to 2024)\n\n")
         f.write("PBP `shotgun=1` was compared on paired eligible offense plays with participation formation categories. Pistol is grouped with shotgun in all years; the 2022 taxonomy additionally groups Empty and Wildcat because those are explicit formation labels in that release.\n\n")
         failures = [x for x in nonreconciling if len(x) == 3 and isinstance(x[2], dict) and x[2].get("absolute_difference") is not None]
         f.write(f"Nonreconciling team-seasons (>1 percentage point): {len(failures)}.\n\n")
         if failures:
-            f.write("Each exception is an exact-key cross-source classification disagreement. In these 2023–2024 data, PBP marks more of the discrepant plays `shotgun=0` while participation labels their formation SHOTGUN or PISTOL; fewer plays go the other way (`shotgun=1` with a non-shotgun formation). The table gives the two disagreement directions per team-season; the manifest retains each discrepant source row with game/play ID, week, play type, and both labels. These rows are distributed across multiple weeks/games, with no missing participation joins in these seasons. The source labels are preserved; no rows were recoded to force the tolerance.\n\n")
+            f.write("Each exception is an exact-key cross-source classification disagreement. In these 2023 to 2024 data, PBP marks more of the discrepant plays `shotgun=0` while participation labels their formation SHOTGUN or PISTOL; fewer plays go the other way (`shotgun=1` with a non-shotgun formation). The table gives the two disagreement directions per team-season; the manifest retains each discrepant source row with game/play ID, week, play type, and both labels. These rows are distributed across multiple weeks/games, with no missing participation joins in these seasons. The source labels are preserved; no rows were recoded to force the tolerance.\n\n")
             f.write("| Season | Team | Difference (pp) | Paired plays | PBP 0 / participation shotgun | PBP 1 / participation other | Discrepant plays | Games | Weeks |\n|---:|:---:|---:|---:|---:|---:|---:|---:|:---|\n")
             for season, team, check in failures:
                 weeks = ", ".join(str(w) for w in check["disagreement_weeks"])
@@ -916,7 +932,7 @@ def build_research(output_dir):
         f.write("| Season | Team | Games | Offense | Defense | Participation joined / plays | FTN joined / plays | Shotgun difference |\n|---:|:---:|---:|---:|---:|---:|---:|---:|\n")
         for item in metadata:
             chk = item["shotgun_check"]
-            diff = "—" if not chk or chk["absolute_difference"] is None else f"{chk['absolute_difference']*100:.3f} pp"
+            diff = "not run" if not chk or chk["absolute_difference"] is None else f"{chk['absolute_difference']*100:.3f} pp"
             nplays = item["offense_plays"] + item["defense_plays"]
             f.write(f"| {item['season']} | {item['team']} | {item['games']} | {item['offense_plays']} | {item['defense_plays']} | {item['participation_joined']} / {nplays} | {item['ftn_joined']} / {nplays} | {diff} |\n")
         f.write("\n## Gate status\n\n")

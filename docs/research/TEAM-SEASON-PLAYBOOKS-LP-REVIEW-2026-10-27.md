@@ -70,3 +70,15 @@ What this settles. The statement above that the sources "do not establish which 
 What it does not settle. FTN and participation agree almost exactly at team-season level, so they may draw on a common source. The check shows that PBP departs from both. It does not show that FTN and participation are independent of each other.
 
 Consequence for the profiles. The profile's `shotgun` tendency reads the PBP flag. The separate `formation` tendency reads participation's `offense_formation`. For 15 of the 16 team-seasons, the PBP-based shotgun share sits 1.00 to 1.66 points below the FTN and participation shares. Before a simulation uses shotgun share, the profile should either use the participation formation or label the PBP-based figure. This is a recommendation for review, not a change made here.
+
+## Shotgun source fix (rev2)
+
+What changed. The profile's `shotgun` tendency now reads FTN charting `qb_location` first (S or P is shotgun, U is under center), then participation `offense_formation` where FTN is absent or zero. The PBP flag is kept as `shotgun_pbp_flag`. Across all 160 profiles, rev2 equals rev1 outside the two shotgun keys, and rev2's `shotgun_pbp_flag` equals rev1's `shotgun` exactly.
+
+Effect on the 16 flagged team-seasons. The shotgun share now matches FTN to within 0.05 points in 15 of 16. TB 2024 is the exception. Its share follows participation, which sits 1.35 points above FTN on the same plays. The PBP flag sits 0.24 points above FTN there. TB 2024 stays unresolved.
+
+2026. Participation is absent for 2026, so the 2026 shotgun share comes from FTN where it exists. There is no PBP fallback, so plays with neither an FTN row nor a participation row are null, not PBP-based. DAL 2026 has 66 such plays, PHI 2026 has 63, and TB 2024 has 3. A PBP fallback would restore those plays but bring back the flag that disagrees with both sources. This is a design choice for review.
+
+Where the outputs are. The rev2 profiles are in `/root/lp-snapshots/nfl-team-season-playbooks-2026-10-27-rev2`, outside git. The rev1 profiles are untouched. The rev2 BUILD-REPORT and manifest are committed under `data/playbooks/research-2026-10-27-rev2/`. The unit tests are in `test/test_playbook_shotgun.py`.
+
+Frozen status. rev1 stays as built. rev2 is a new revision whose 2026 shotgun values have a changed definition, so they have not been used for any test.
