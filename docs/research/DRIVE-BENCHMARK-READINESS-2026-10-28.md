@@ -28,7 +28,7 @@ Blockers:
 
 | # | criterion | result | evidence |
 |---|---|---|---|
-| 1 | Reference frozen | 8 files hashed. Unchanged across two audit runs. | `manifest.json` |
+| 1 | Reference frozen | 7 files hashed (v1: 2, v2: 5). Unchanged across two audit runs. | `manifest.json` |
 | 2 | Drive construction | 5,722 kept drives, same as v1. 5,682 offensive. No negative elapsed times. | `canonical_drives_2025_v2_summary.json` |
 | 3 | Points tie to official final scores | v2: 544 of 544 team-games. v1: 475 of 544. | v2 summary |
 | 4 | Continuity counts match v1 | Identical on all 8 keys. | `continuity_matches_v1` |
