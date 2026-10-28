@@ -9,6 +9,18 @@ import build_playbooks
 
 
 class PlaybookDataTests(unittest.TestCase):
+    def test_2025_ne_chi_builds_reproduce_committed_bytes(self):
+        raw = os.path.join(ROOT, "data", "raw")
+        pbp_path = os.path.join(raw, build_playbooks.PBP_FILES[2025])
+        participation_path = os.path.join(raw, "pbp_participation_2025.csv")
+        for team in ("NE", "CHI"):
+            with self.subTest(team=team):
+                result = build_playbooks.build_2025(pbp_path, participation_path, team)
+                rebuilt = (json.dumps(result, indent=1, sort_keys=True) + "\n").encode("utf-8")
+                committed_path = os.path.join(ROOT, "data", "playbooks", f"{team}-2025.json")
+                with open(committed_path, "rb") as source:
+                    self.assertEqual(rebuilt, source.read())
+
     def test_legacy_game_id_participation_join(self):
         pbp = {"game_id": "2025_01_DAL_PHI", "old_game_id": "2025090400", "play_id": "40",
                "season": "2025", "season_type": "REG"}

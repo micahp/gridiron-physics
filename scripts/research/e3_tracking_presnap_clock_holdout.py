@@ -452,7 +452,12 @@ def _model_summaries(scored):
             "p99_abs_error_s": _quantile(abs_errors, 0.99),
             "mean_signed_error_s": _mean(errors[name]),
         }
-    per_game = defaultdict(lambda: {name: {"predicted_s": 0.0} for name in MODEL_KEYS} | {"observed_s": 0.0, "plays": 0, "drives": set()})
+    per_game = defaultdict(lambda: {
+        **{name: {"predicted_s": 0.0} for name in MODEL_KEYS},
+        "observed_s": 0.0,
+        "plays": 0,
+        "drives": set(),
+    })
     for row in scored:
         bucket = per_game[str(row["pbp"]["game_id"])]
         bucket["observed_s"] += row["target_s"]
