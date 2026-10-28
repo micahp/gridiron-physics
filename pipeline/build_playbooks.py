@@ -11,7 +11,6 @@ import hashlib
 import json
 import os
 import re
-import re
 from collections import Counter, defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -150,6 +149,51 @@ def source_id(r):
     }
 
 
+PUNT_FORMATION = "(punt formation)"
+FIELD_GOAL_FORMATION = "(field goal formation)"
+FAKE_TEXT = re.compile(r"\bfake")
+SNAP_FUMBLE_TEXT = re.compile(r"fumbles \(aborted\)")
+EVENT_CLASSES = {"scrimmage", "special_teams_run_pass", "two_point_conversion", "aborted_snap", "aborted_play",
+                 "other_scrimmage"}
+
+
+def event_class(r):
+    """Event class of one run or pass snap: (snap_type, formation_origin, execution_type).
+
+    One class per play, so a play sits in one denominator at most. The class says what the snap was, not what was
+    intended. execution_type is designed_fake only when the source text says so, broken_kick when the source flags
+    the snap as aborted, and unknown otherwise. An intended play is never inferred.
+    """
+    desc = (r.get("desc") or "").lower()
+    if clean_int(r.get("two_point_attempt")) == 1 or "two-point conversion attempt" in desc:
+        return "two_point_conversion", None, None
+    origin = None
+    if PUNT_FORMATION in desc:
+        origin = "punt"
+    elif FIELD_GOAL_FORMATION in desc:
+        origin = "field_goal"
+    if origin == "punt" and re.search(r"\bpunts\b", desc):
+        raise ValueError(f"punt formation play described as a punt: {r.get('game_id')} {r.get('play_id')}")
+    aborted = clean_int(r.get("aborted_play")) == 1
+    if origin:
+        if aborted:
+            execution = "broken_kick"
+        elif FAKE_TEXT.search(desc):
+            execution = "designed_fake"
+        else:
+            execution = "unknown"
+        return "special_teams_run_pass", origin, execution
+    if aborted:
+        # An aborted snap: the ball was fumbled on the snap. An aborted play: the player called the play off.
+        # Both are real events. Neither has a known intended play, so neither enters the designed concept catalog.
+        if SNAP_FUMBLE_TEXT.search(desc):
+            return "aborted_snap", None, None
+        return "aborted_play", None, None
+    if clean_int(r.get("down")) in (1, 2, 3, 4):
+        return "scrimmage", None, None
+    return "other_scrimmage", None, None
+
+
 def shotgun_with_source(r, p):
     """Shotgun value and its source: FTN first, then participation, then the PBP flag.
 
@@ -193,15 +237,9 @@ def value_for(r, p, field):
         return shotgun_with_source(r, p)[0]
     if field == "shotgun_source":
         return shotgun_with_source(r, p)[1]
-    if field == "snap_type":
-        # nflverse codes these run or pass snaps from a punt formation as scrimmage plays with punt_attempt 0.
-        # They are fake punts. A play whose description says it was a punt is a data error, so fail loudly.
-        desc = (r.get("desc") or "").lower()
-        if "punt formation" not in desc:
-            return "scrimmage"
-        if re.search(r"\bpunts\b", desc):
-            raise ValueError(f"punt formation play described as a punt: {r.get('game_id')} {r.get('play_id')}")
-        return "fake_punt"
+    if field in ("snap_type", "formation_origin", "execution_type"):
+        snap, origin, execution = event_class(r)
+        return {"snap_type": snap, "formation_origin": origin, "execution_type": execution}[field]
     if field in ("shotgun", "no_huddle", "pass_length", "pass_location", "run_location", "run_gap"):
         v = r.get(field)
         if field in ("shotgun", "no_huddle"):
@@ -371,7 +409,10 @@ def compact_play(pbp, participation, season, provenance):
 def compact_research_play(pbp, participation, season, provenance):
     """Research output that makes absent participation fields explicit."""
     result = compact_play(pbp, participation, season, provenance)
-    result["snap_type"] = value_for(pbp, participation, "snap_type")
+    snap, origin, execution = event_class(pbp)
+    result["snap_type"] = snap
+    result["formation_origin"] = origin
+    result["execution_type"] = execution
     participant_fields = (
         "offense_formation", "offense_personnel", "defense_personnel", "defenders_in_box",
         "number_of_pass_rushers", "players_on_play", "offense_players", "defense_players",
@@ -396,17 +437,78 @@ def snap_kind(item):
     return value_for(item["pbp"], item.get("participation"), "snap_type")
 
 
-def fake_punt_block(snaps, punts):
-    """Fake punts are kept out of ordinary play-selection denominators and reported here, with punt situations."""
-    fake = [x for x in snaps if snap_kind(x) == "fake_punt"]
-    situations = len(fake) + punts
+def special_teams_block(snaps, punts, field_goals):
+    """Run or pass snaps from punt or field-goal formation, by execution evidence, with the kicks for context.
+
+    Origin is recorded from the formation text. Execution is designed_fake only with source text, broken_kick when
+    the source flags the snap as aborted, and unknown otherwise. Every play is kept; none is deleted.
+    """
+    special = [x for x in snaps if snap_kind(x) == "special_teams_run_pass"]
+    counts = Counter()
+    for x in special:
+        origin = value_for(x["pbp"], x.get("participation"), "formation_origin")
+        execution = value_for(x["pbp"], x.get("participation"), "execution_type")
+        counts[f"{origin}|{execution}"] += 1
+    from_punt = sum(v for k, v in counts.items() if k.startswith("punt|"))
+    from_fg = sum(v for k, v in counts.items() if k.startswith("field_goal|"))
+    situations = punts + from_punt
     return {
-        "fake_punts": len(fake),
+        "run_pass_from_punt_formation": from_punt,
+        "run_pass_from_field_goal_formation": from_fg,
+        "execution_counts": dict(sorted(counts.items())),
         "punts": punts,
         "punt_situations": situations,
-        "fake_punt_rate": round(len(fake) / situations, 6) if situations else None,
-        "fake_punt_source_ids": [source_id(x["pbp"]) for x in fake],
-        "claim_limit": "Run or pass snaps from punt formation. A rate over few punt situations is not a team tendency.",
+        "run_pass_from_punt_rate": round(from_punt / situations, 6) if situations else None,
+        "field_goals": field_goals,
+        "field_goal_situations": field_goals + from_fg,
+        "source_ids": [source_id(x["pbp"]) for x in special],
+        "claim_limit": "Run or pass snaps from kicking formations. Intent is recorded only where the source states it. "
+                       "A rate over few situations is not a team tendency.",
+    }
+
+
+def two_point_block(snaps):
+    """Two-point conversion attempts that are run or pass snaps, kept out of ordinary play-selection denominators."""
+    rows = [x for x in snaps if snap_kind(x) == "two_point_conversion"]
+    return {
+        "attempts": len(rows),
+        "action": dict(Counter(x["pbp"].get("play_type") for x in rows)),
+        "result": dict(Counter(x["pbp"].get("two_point_conv_result") or "missing" for x in rows)),
+        "participation_present": sum(1 for x in rows if x.get("participation")),
+        "source_ids": [source_id(x["pbp"]) for x in rows],
+        "claim_limit": "Conversion decisions, reported separately from ordinary first-through-fourth-down play selection.",
+    }
+
+
+def aborted_block(snaps):
+    """Aborted snaps (fumbled on the snap) and aborted plays (called off). The intended play is unknown, so both are
+    excluded from the designed concept catalog. Both stay in the play history and in game and drive totals."""
+    snap_rows = [x for x in snaps if snap_kind(x) == "aborted_snap"]
+    play_rows = [x for x in snaps if snap_kind(x) == "aborted_play"]
+    return {
+        "aborted_snaps": len(snap_rows),
+        "aborted_plays": len(play_rows),
+        "aborted_snap_source_ids": [source_id(x["pbp"]) for x in snap_rows],
+        "aborted_play_source_ids": [source_id(x["pbp"]) for x in play_rows],
+        "claim_limit": "The intended play is unknown. Excluded from the designed concept catalog; kept in the play "
+                       "history and in game and drive totals.",
+    }
+
+
+def formation_coverage(ordinary):
+    """Observed and missing formation labels on ordinary plays, with the games that have missing labels.
+
+    Distributions use observed values only. Missing is counted and never imputed.
+    """
+    per_game = defaultdict(lambda: {"observed": 0, "missing": 0})
+    for x in ordinary:
+        label = ((x.get("participation") or {}).get("offense_formation") or "").strip()
+        per_game[x["pbp"].get("game_id")]["observed" if label else "missing"] += 1
+    return {
+        "observed": sum(v["observed"] for v in per_game.values()),
+        "missing": sum(v["missing"] for v in per_game.values()),
+        "games_with_missing_formation": [{"game_id": g, **v} for g, v in sorted(per_game.items()) if v["missing"]],
+        "claim_limit": "Formation tendencies use observed plays only. A game with missing labels is a coverage gap.",
     }
 
 
@@ -608,7 +710,6 @@ def research_summary(rows, side, provenance):
     result["shotgun"] = distribution(rows, "shotgun_ftn_first", provenance=provenance)
     result["shotgun_pbp_flag"] = distribution(rows, "shotgun", provenance=provenance)
     result["shotgun_source"] = distribution(rows, "shotgun_source", provenance=provenance)
-    result["snap_type"] = distribution(rows, "snap_type", provenance=provenance)
     result["play_action"] = distribution(rows, "play_action", provenance=provenance)
     result["motion"] = distribution(rows, "motion", provenance=provenance)
     result["rpo"] = distribution(rows, "rpo", provenance=provenance)
@@ -750,8 +851,13 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
 
     ordinary_offense = [x for x in offense if snap_kind(x) == "scrimmage"]
     ordinary_defense = [x for x in defense if snap_kind(x) == "scrimmage"]
+    event_counts = Counter(snap_kind(x) for x in offense)
+    if set(event_counts) - EVENT_CLASSES or sum(event_counts.values()) != len(offense):
+        raise ValueError(f"unclassified run or pass snap for {season} {team}: {dict(event_counts)}")
     punts_offense = sum(1 for r in selected_pbp if r.get("posteam") == team and r.get("play_type") == "punt")
     punts_defense = sum(1 for r in selected_pbp if r.get("defteam") == team and r.get("play_type") == "punt")
+    fg_offense = sum(1 for r in selected_pbp if r.get("posteam") == team and r.get("play_type") == "field_goal")
+    fg_defense = sum(1 for r in selected_pbp if r.get("defteam") == team and r.get("play_type") == "field_goal")
     offense_plays = [compact_research_play(x["pbp"], x["participation"], season, provenance) for x in offense]
     defense_plays = [compact_research_play(x["pbp"], x["participation"], season, provenance) for x in defense]
     regular_rows = [r for r in selected_pbp if r.get("posteam") == team or r.get("defteam") == team]
@@ -823,14 +929,18 @@ def build_research_team_season(season, team, pbp_rows, part_idx, ftn_idx, pbp_pa
         },
         "offense": {
             "profile": research_summary(ordinary_offense, "offense", provenance),
-            "special_teams": fake_punt_block(offense, punts_offense),
+            "event_counts": dict(event_counts),
+            "special_teams": special_teams_block(offense, punts_offense, fg_offense),
+            "two_point_conversions": two_point_block(offense),
+            "aborted": aborted_block(offense),
+            "formation_coverage": formation_coverage(ordinary_offense),
             "observed_plays": offense_plays,
             "play_candidates": observed_candidates(ordinary_offense, season, provenance,
                                                    shotgun_field="shotgun_ftn_first"),
         },
         "defense": {
             "profile": research_summary(ordinary_defense, "defense", provenance),
-            "special_teams": fake_punt_block(defense, punts_defense),
+            "special_teams": special_teams_block(defense, punts_defense, fg_defense),
             "observed_plays": defense_plays,
         },
         "playbook_variants": [],
