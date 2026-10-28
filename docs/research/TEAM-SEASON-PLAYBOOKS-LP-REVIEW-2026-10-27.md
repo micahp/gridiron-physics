@@ -44,3 +44,29 @@ The committed builder currently runs this gate only for seasons 2022 to 2024, so
 The profile builder counts 13,179 Weeks 1 to 7 offense pass/run plays with both teams identified. The decision-universe filter requires `down` 1 to 4, nonnegative `ydstogo`, and `yardline_100` in 0 to 99; applying it to the same PBP leaves 13,131. The entire 48-play difference is two-point attempts with blank regulation `down`: 41 pass attempts and 7 run attempts. Their distance and field-position values are valid, so the down requirement alone excludes them. These rows remain valid plays in the broader offense profile and are outside the regulation-down decision universe.
 
 The pinned 2026 PBP input is SHA-256 `30f31f1faf184be5a3014395c6830ed81ac5f60a03790e3e4a849dc020a70396`. The 2026 playbooks remain labeled in-season, through Week 7, frozen; they were not used to tune tests or called unseen.
+
+## Third-source check: FTN charting on the shotgun disagreements
+
+Method. FTN charting `qb_location` was joined to the same plays on nflverse game and play IDs, using the pinned 2023 and 2024 FTN CSVs. `S` and `P` count as shotgun and `U` as under center. Before the check ran, it reproduced the addendum counts exactly: 272 disagreements, 242 PBP-zero, 30 reverse, 82 two-point, and 190 on down 1 to 4.
+
+Row level. FTN agrees with each source as follows.
+
+| Set | Rows | FTN agrees with participation | FTN agrees with PBP | FTN missing |
+|---|---:|---:|---:|---:|
+| PBP-zero, all | 242 | 237 | 3 | 2 |
+| Reverse, all | 30 | 27 | 3 | 0 |
+| PBP-zero, two-point | 82 | 80 | 0 | 2 |
+| PBP-zero, down 1 to 4 | 160 | 157 | 3 | 0 |
+| Reverse, down 1 to 4 | 30 | 27 | 3 | 0 |
+
+On the 190 regulation-down rows, FTN agrees with participation on 184 and with PBP on 6. The pattern holds in 2023 and 2024 separately.
+
+Team-season level. Over all paired plays in each of the 16 team-seasons, the PBP shotgun share sits 1.00 to 1.66 points below the FTN share in 15 of 16. In those 15, the participation share is within 0.10 points of FTN. TB 2024 is the exception: FTN sits 0.24 points below PBP and 1.35 points below participation, and FTN covers 1,025 of 1,081 plays there. This check does not explain TB 2024.
+
+Baseline. Across 67,055 paired plays with FTN in 2023 and 2024, the participation shotgun group agrees with FTN on 99.99%, and the PBP flag agrees on 98.84%.
+
+What this settles. The statement above that the sources "do not establish which label is correct" does not hold for the 190 regulation-down rows. FTN supports participation on 184 of them. The PBP `shotgun` flag is the outlier on these plays.
+
+What it does not settle. FTN and participation agree almost exactly at team-season level, so they may draw on a common source. The check shows that PBP departs from both. It does not show that FTN and participation are independent of each other.
+
+Consequence for the profiles. The profile's `shotgun` tendency reads the PBP flag. The separate `formation` tendency reads participation's `offense_formation`. For 15 of the 16 team-seasons, the PBP-based shotgun share sits 1.00 to 1.66 points below the FTN and participation shares. Before a simulation uses shotgun share, the profile should either use the participation formation or label the PBP-based figure. This is a recommendation for review, not a change made here.
