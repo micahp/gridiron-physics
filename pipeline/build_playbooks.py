@@ -382,9 +382,11 @@ def summarize(rows, side, provenance="observed_2025"):
 
 def compact_play(pbp, participation, season, provenance):
     key_fields = (
-        "week", "posteam", "defteam", "play_type", "down", "ydstogo", "yardline_100", "qtr",
-        "quarter_seconds_remaining", "shotgun", "no_huddle", "run_location", "run_gap", "pass_location",
-        "pass_length", "air_yards", "receiver_player_id", "receiver_player_name", "play_action", "motion",
+        "week", "game_date", "posteam", "defteam", "posteam_score", "defteam_score",
+        "play_type", "down", "ydstogo", "yardline_100", "qtr", "quarter_seconds_remaining",
+        "shotgun", "no_huddle", "run_location", "run_gap", "pass_location",
+        "pass_length", "air_yards", "passer_player_id", "passer_player_name", "rusher_player_id",
+        "rusher_player_name", "receiver_player_id", "receiver_player_name", "play_action", "motion",
         "yards_gained", "complete_pass", "interception", "touchdown", "season_type",
     )
     p_fields = (
@@ -446,6 +448,10 @@ def compact_research_play(pbp, participation, season, provenance):
             "is_no_huddle", "is_motion", "is_play_action", "is_rpo", "is_screen_pass",
             "is_trick_play", "n_blitzers", "n_pass_rushers", "n_defense_box",
         )},
+    }
+    result["pregame_availability"] = {"status": "not_observed_in_play_by_play"}
+    result["advanced_tracking"] = {
+        "ngs_separation": {"value": None, "availability": "no_verified_play_level_join"},
     }
     return result
 
@@ -697,11 +703,35 @@ RESEARCH_TEAM_NAMES = {
 
 RESEARCH_PBP_FILES = {
     2022: "pbp_2022.csv.gz", 2023: "pbp_2023.csv.gz", 2024: "pbp_2024.csv.gz",
-    2025: "pbp_2025.csv.gz", 2026: "pbp_2026_week7.csv.gz",
+    2025: "pbp_2025.csv.gz",
 }
-RESEARCH_FTN_FILES = {year: f"ftn_charting_{year}.csv" for year in range(2022, 2027)}
+RESEARCH_FTN_FILES = {year: f"ftn_charting_{year}.csv" for year in range(2022, 2026)}
 RESEARCH_PART_FILES = {year: f"pbp_participation_{year}.csv" for year in range(2022, 2026)}
-RESEARCH_SEASONS = (2022, 2023, 2024, 2025)  # 2026 is the sealed holdout; build_research never reads it
+RESEARCH_SEASONS = (2022, 2023, 2024, 2025)
+
+# Historical-only pin map, kept separate from the mixed-season manifest.
+RESEARCH_SOURCE_PINS = {
+    2022: {
+        "pbp": {"sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4"},
+        "participation": {"sha256": "37eae0a8c388d0974c6df9a1f9a1d01f09f63a21440d3b03d7f208c1438c51e4"},
+        "ftn_charting": {"sha256": "80e13831525f726cb3befb7eb62aa6ea8bf55d36080fcf09fdddd7c578f3b200"},
+    },
+    2023: {
+        "pbp": {"sha256": "4649804ee0f0a40b41e51ec75a1ce921949d7fab5459213488656b92f78560e8"},
+        "participation": {"sha256": "ad01aeb4045ee19a4f086ff38b52b14c8f427d3401e529c3078a4545921650a9"},
+        "ftn_charting": {"sha256": "6045bbca32c1f61d32d9cf66e7cf6355f583b90c8ac2f5ed155d733ec335e8d7"},
+    },
+    2024: {
+        "pbp": {"sha256": "23370d5d10f8104d80d46a1fc5e61f4f6f5a3263fe96fe2dd629913cfcb08c06"},
+        "participation": {"sha256": "b1f436a98b2a7759eb4ed1181e072a35c2666f9aeb356a49c943d28d6be6b0b9"},
+        "ftn_charting": {"sha256": "6faae8118cc13ce62589210d553733128ed35e558671009b4a7a8fc5c674c2cb"},
+    },
+    2025: {
+        "pbp": {"sha256": "2f135887790a013fd004e609e37096bb4816d5cc80b9f19122e1bad478961978"},
+        "participation": {"sha256": "59069adfee7b0f464befba8a5e8be331e523633cc6a7ab403d37bcbcdfbe66ac"},
+        "ftn_charting": {"sha256": "62a66416043ff08d43303bf5f3af5390e3fe0f29461a1fc6e295a15cac6ea994"},
+    },
+}
 
 
 def ftn_index(rows, season, max_week=None):
@@ -720,7 +750,9 @@ def ftn_index(rows, season, max_week=None):
 
 
 def research_provenance(season):
-    return "observed_2026_pre_game" if season == 2026 else f"observed_{season}"
+    if type(season) is not int or season not in RESEARCH_SEASONS:
+        raise ValueError(f"historical research supports seasons {RESEARCH_SEASONS[0]}-{RESEARCH_SEASONS[-1]} only")
+    return f"observed_{season}"
 
 
 def research_summary(rows, side, provenance):
@@ -832,6 +864,8 @@ def research_source_spec(season, kind, path):
 
 def build_research_team_season(season, team, team_rows, post_rows, part_idx, ftn_idx, pbp_path,
                                part_path, ftn_path, max_week=None, record_cache=None):
+    if type(season) is not int or season not in RESEARCH_SEASONS:
+        raise ValueError(f"historical research supports seasons {RESEARCH_SEASONS[0]}-{RESEARCH_SEASONS[-1]} only")
     provenance = research_provenance(season)
     offense, defense = [], []
     missing = {"offense": [], "defense": []}
@@ -889,6 +923,7 @@ def build_research_team_season(season, team, team_rows, post_rows, part_idx, ftn
     shotgun_check = research_shotgun_check(offense, season) if season in (2022, 2023, 2024) else None
     result = {
         "schema_version": "gridiron.playbook.v1",
+        "historical_profile_version": "gridiron.historical-team-season.v1",
         "team_id": team,
         "team_name": RESEARCH_TEAM_NAMES[team],
         "season": season,
@@ -915,8 +950,10 @@ def build_research_team_season(season, team, team_rows, post_rows, part_idx, ftn
                 "Participation fields are explicitly null where no participation source row is available.",
                 "FTN charting is an independent source; unmatched charting fields remain missing.",
                 "Research profiles are not promoted to engine defaults or used for movement evaluation.",
-                "2026 is labeled in-season through Week 7, is frozen, must not be used to tune tests, and must not be described as unseen.",
                 "Postseason games are excluded from regular-season denominators and listed separately.",
+                "Full-season profiles are descriptive research summaries; prospective priors must apply a game cutoff to per-play history.",
+                "Pregame player availability and timeout counts are not present in these sources and remain unknown.",
+                "NGS separation has no verified play-level join in these sources and is not imputed.",
             ],
         },
         "source": {
@@ -966,6 +1003,13 @@ def build_research_team_season(season, team, team_rows, post_rows, part_idx, ftn
         },
         "playbook_variants": [],
         "provenance_categories": [provenance, "inferred_concept", "synthetic_variation"],
+        "pregame_availability": {
+            "status": "not_observed_in_sources",
+            "requires_cutoff_safe_roster_snapshot": True,
+        },
+        "advanced_tracking": {
+            "ngs_separation": {"value": None, "availability": "no_verified_play_level_join"},
+        },
         "sampling_controls": {
             provenance: {"enabled": False, "purpose": "research build only; not promoted to engine defaults"},
             "inferred_concept": {"enabled": False, "purpose": "classification evidence only"},
@@ -990,14 +1034,9 @@ def build_research_team_season(season, team, team_rows, post_rows, part_idx, ftn
 def build_research(output_dir):
     os.makedirs(output_dir, exist_ok=True)
     season_inputs = {}
-    pin_manifest_path = os.path.join(OUT, "research-2026-10-27", "build_manifest.json")
-    if not os.path.isfile(pin_manifest_path):
-        raise FileNotFoundError(f"pinned input manifest missing: {pin_manifest_path}")
-    with open(pin_manifest_path, encoding="utf-8") as f:
-        pinned_source_hashes = json.load(f).get("source_hashes") or {}
-    missing_pins = [season for season in RESEARCH_SEASONS if str(season) not in pinned_source_hashes]
+    missing_pins = [season for season in RESEARCH_SEASONS if season not in RESEARCH_SOURCE_PINS]
     if missing_pins:
-        raise ValueError(f"pinned input manifest is missing seasons {missing_pins}: {pin_manifest_path}")
+        raise ValueError(f"historical source pin map is missing seasons {missing_pins}")
     for season in RESEARCH_SEASONS:
         input_root = RAW
         pbp_path = os.path.join(input_root, RESEARCH_PBP_FILES[season])
@@ -1006,7 +1045,7 @@ def build_research(output_dir):
         for path in (pbp_path, ftn_path, part_path):
             if path and not os.path.isfile(path):
                 raise FileNotFoundError(f"missing research source {path}")
-        pins = pinned_source_hashes[str(season)]
+        pins = RESEARCH_SOURCE_PINS[season]
         for key, path in (("pbp", pbp_path), ("participation", part_path), ("ftn_charting", ftn_path)):
             if path is None:
                 continue
@@ -1108,9 +1147,9 @@ def build_research(output_dir):
     report_path = os.path.join(output_dir, "BUILD-REPORT.md")
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("# Team-season playbook research build\n\n")
-        f.write("Research-only output from `pipeline/build_playbooks.py --research` for seasons 2022 to 2025. The 2026 season is not read by this build; no engine defaults or Week 8 snapshots were changed.\n\n")
+        f.write("Research-only output from the historical builder for regular seasons 2022 to 2025. No production defaults are changed.\n\n")
         f.write("## Reproduction\n\n")
-        f.write("Raw 2022 to 2025 inputs must match the SHA-256 values pinned in `data/playbooks/research-2026-10-27/build_manifest.json`; run `python3 pipeline/build_playbooks.py --research`. The build refuses any input whose SHA-256 differs from its pin.\n\n")
+        f.write("Each season-specific PBP, participation, and FTN file must match its SHA-256 pin in `pipeline/build_playbooks.py::RESEARCH_SOURCE_PINS`. The build refuses any input whose SHA-256 differs from its pin.\n\n")
         f.write("## Aggregate counts\n\n")
         f.write(f"- Team-season profiles: {team_season_count} (expected 128).\n")
         f.write(f"- PBP regular-season games by season: {', '.join(f'{s}={n}' for s,n in season_game_counts.items())}.\n")
@@ -1161,7 +1200,7 @@ def build_research(output_dir):
                    "builder_sha256": sha256(__file__),
                    "build_report_sha256": sha256(report_path),
                    "reproduction_commands": [
-                       "python3 pipeline/build_playbooks.py --research",
+                       "python3 pipeline/build_historical_playbooks.py --output-dir /absolute/path/outside/repository",
                    ],
                    "seasons": list(RESEARCH_SEASONS),
                    "season_game_counts": season_game_counts,
@@ -1178,38 +1217,14 @@ def build_research(output_dir):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Build prototype or full research team-season playbooks")
-    parser.add_argument("--research", action="store_true", help="build 2022-2025 team-seasons and 2026 Weeks 1-7")
-    parser.add_argument("--output-dir", help="research output directory; defaults to data/playbooks/research-2026-10-27")
+    parser = argparse.ArgumentParser(description="Build historical research team-season playbooks")
+    parser.add_argument("--research", action="store_true", help="build pinned historical team-seasons 2022-2025")
+    parser.add_argument("--output-dir", help="research output directory; defaults to data/playbooks/historical-2022-2025")
     args = parser.parse_args()
     if args.research:
-        build_research(args.output_dir or os.path.join(OUT, "research-2026-10-27"))
+        build_research(args.output_dir or os.path.join(OUT, "historical-2022-2025"))
         return
-    os.makedirs(OUT, exist_ok=True)
-    pbp25 = os.path.join(RAW, PBP_FILES[2025])
-    pbp26 = os.path.join(RAW, PBP_FILES[2026])
-    part25 = os.path.join(RAW, "pbp_participation_2025.csv")
-    for path in (pbp25, pbp26, part25):
-        if not os.path.isfile(path):
-            raise FileNotFoundError(f"missing source {path}; run python3 pipeline/fetch_prototype_data.py")
-    for team in TEAMS:
-        result = build_2025(pbp25, part25, team)
-        result["source"]["pbp_2026_pre_game"] = {
-            "name": "nflverse play_by_play_2026.csv.gz",
-            "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz",
-            "sha256": sha256(pbp26), "usable_weeks": [1, 6],
-            "release_updated_at_utc": "2026-10-22T15:03:00Z",
-            "note": "Only regular-season weeks 1-6 are selected; asset hash pins the pre-kickoff download.",
-        }
-        result["pregame_2026_comparison"] = build_pregame_2026(pbp26, team)
-        path = os.path.join(OUT, f"{team}-2025.json")
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=1, sort_keys=True)
-            f.write("\n")
-        print(f"wrote {path}: offense={result['coverage']['eligible_offense_scrimmage_plays']} "
-              f"defense={result['coverage']['eligible_defense_scrimmage_plays']} "
-              f"participation joins={result['coverage']['offense_participation_joined']}/"
-              f"{result['coverage']['eligible_offense_scrimmage_plays']}")
+    parser.error("use --research to build the pinned historical 2022-2025 profiles")
 
 
 if __name__ == "__main__":
