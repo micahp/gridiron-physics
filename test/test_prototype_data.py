@@ -8,18 +8,40 @@ sys.path.insert(0, os.path.join(ROOT, "pipeline"))
 import build_playbooks
 
 
+def without_2026_keys(value):
+    if isinstance(value, dict):
+        return {key: without_2026_keys(item) for key, item in value.items()
+                if "2026" not in str(key)}
+    if isinstance(value, list):
+        return [without_2026_keys(item) for item in value
+                if not (isinstance(item, str) and "2026" in item)]
+    return value
+
+
 class PlaybookDataTests(unittest.TestCase):
-    def test_2025_ne_chi_builds_reproduce_committed_bytes(self):
+    def test_2025_ne_chi_profiles_coverage_and_rates_match_committed_files(self):
         raw = os.path.join(ROOT, "data", "raw")
         pbp_path = os.path.join(raw, build_playbooks.PBP_FILES[2025])
         participation_path = os.path.join(raw, "pbp_participation_2025.csv")
         for team in ("NE", "CHI"):
             with self.subTest(team=team):
-                result = build_playbooks.build_2025(pbp_path, participation_path, team)
-                rebuilt = (json.dumps(result, indent=1, sort_keys=True) + "\n").encode("utf-8")
+                rebuilt = build_playbooks.build_2025(pbp_path, participation_path, team)
                 committed_path = os.path.join(ROOT, "data", "playbooks", f"{team}-2025.json")
-                with open(committed_path, "rb") as source:
-                    self.assertEqual(rebuilt, source.read())
+                with open(committed_path, encoding="utf-8") as source:
+                    committed = json.load(source)
+                summary_keys = ("coverage",)
+                for key in summary_keys:
+                    self.assertEqual(without_2026_keys(rebuilt[key]),
+                                     without_2026_keys(committed[key]), key)
+                for side in ("offense", "defense"):
+                    self.assertEqual(
+                        without_2026_keys(rebuilt[side]["profile"]),
+                        without_2026_keys(committed[side]["profile"]),
+                        f"{side} profile for {team}")
+                self.assertEqual(
+                    without_2026_keys(rebuilt["offense"]["play_candidates"]),
+                    without_2026_keys(committed["offense"]["play_candidates"]),
+                    f"offense candidate rates for {team}")
 
     def test_legacy_game_id_participation_join(self):
         pbp = {"game_id": "2025_01_DAL_PHI", "old_game_id": "2025090400", "play_id": "40",

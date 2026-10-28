@@ -380,18 +380,15 @@ def summarize(rows, side, provenance="observed_2025"):
     return summary
 
 
-def compact_play(pbp, participation, season, provenance, include_research_context=False):
+def compact_play(pbp, participation, season, provenance):
     key_fields = (
-        "week", "posteam", "defteam", "play_type", "down", "ydstogo", "yardline_100", "qtr",
-        "quarter_seconds_remaining", "shotgun", "no_huddle", "run_location", "run_gap", "pass_location",
-        "pass_length", "air_yards", "receiver_player_id", "receiver_player_name", "play_action", "motion",
+        "week", "game_date", "posteam", "defteam", "posteam_score", "defteam_score",
+        "play_type", "down", "ydstogo", "yardline_100", "qtr", "quarter_seconds_remaining",
+        "shotgun", "no_huddle", "run_location", "run_gap", "pass_location",
+        "pass_length", "air_yards", "passer_player_id", "passer_player_name", "rusher_player_id",
+        "rusher_player_name", "receiver_player_id", "receiver_player_name", "play_action", "motion",
         "yards_gained", "complete_pass", "interception", "touchdown", "season_type",
     )
-    if include_research_context:
-        key_fields += (
-            "game_date", "posteam_score", "defteam_score", "passer_player_id", "passer_player_name",
-            "rusher_player_id", "rusher_player_name",
-        )
     p_fields = (
         "offense_formation", "offense_personnel", "defense_personnel", "defenders_in_box",
         "number_of_pass_rushers", "players_on_play", "offense_players", "defense_players", "n_offense",
@@ -428,7 +425,7 @@ EVENT_HISTORY_FIELDS = (
 
 def compact_research_play(pbp, participation, season, provenance):
     """Research output that makes absent participation fields explicit."""
-    result = compact_play(pbp, participation, season, provenance, include_research_context=True)
+    result = compact_play(pbp, participation, season, provenance)
     snap, origin, execution = event_class(pbp)
     result["snap_type"] = snap
     result["formation_origin"] = origin

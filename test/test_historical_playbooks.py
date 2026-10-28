@@ -34,7 +34,7 @@ def observation(team="NE", side="offense", season=2025, week=3, action="run", pl
 
 
 class HistoricalBuilderBoundaries(unittest.TestCase):
-    def test_research_context_fields_are_opt_in_on_synthetic_2025_play(self):
+    def test_context_fields_are_on_by_default_without_opening_game_files(self):
         pbp = {
             "game_id": "2025_05_NE_BUF", "play_id": "12", "week": "5",
             "game_date": "2025-10-05", "posteam": "NE", "defteam": "BUF",
@@ -44,15 +44,12 @@ class HistoricalBuilderBoundaries(unittest.TestCase):
             "passer_player_name": None, "rusher_player_id": "r1",
             "rusher_player_name": "Runner", "season_type": "REG", "yards_gained": "4",
         }
-        research_only = ("game_date", "posteam_score", "defteam_score", "passer_player_id",
-                         "passer_player_name", "rusher_player_id", "rusher_player_name")
+        context_fields = ("game_date", "posteam_score", "defteam_score", "passer_player_id",
+                          "passer_player_name", "rusher_player_id", "rusher_player_name")
         with mock.patch("builtins.open", side_effect=AssertionError("synthetic test must not open files")):
-            default_record = bp.compact_play(pbp, None, 2025, "observed_2025")
-            research_record = bp.compact_play(
-                pbp, None, 2025, "observed_2025", include_research_context=True)
-        for field in research_only:
-            self.assertNotIn(field, default_record["attributes"])
-            self.assertIn(field, research_record["attributes"])
+            record = bp.compact_play(pbp, None, 2025, "observed_2025")
+        for field in context_fields:
+            self.assertIn(field, record["attributes"])
 
     def test_allowed_seasons_and_source_pins_are_exact(self):
         self.assertEqual(historical.validate_seasons((2024, 2022)), (2022, 2024))
