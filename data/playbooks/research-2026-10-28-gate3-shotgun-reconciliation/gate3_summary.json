@@ -1,0 +1,46 @@
+{
+ "ftn_participation_below_threshold": [
+  "2022 ATL 0.988945",
+  "2022 BAL 0.987317",
+  "2022 CAR 0.989648",
+  "2022 CHI 0.989775",
+  "2022 CLE 0.984475",
+  "2022 GB 0.985451",
+  "2022 JAX 0.989583",
+  "2022 LA 0.985729",
+  "2022 LAC 0.9876",
+  "2022 MIA 0.988821",
+  "2022 NYG 0.989671",
+  "2022 NYJ 0.980916",
+  "2022 SEA 0.988293",
+  "2022 SF 0.9893",
+  "2022 TB 0.988556"
+ ],
+ "old_gate_failing_team_seasons": [
+  "2023 ARI 1.031",
+  "2023 CLE 1.279",
+  "2023 DET 1.346",
+  "2023 NE 1.182",
+  "2023 NYG 1.242",
+  "2023 NYJ 1.336",
+  "2024 CHI 1.605",
+  "2024 DET 1.003",
+  "2024 IND 1.065",
+  "2024 JAX 1.009",
+  "2024 LV 1.045",
+  "2024 NE 1.273",
+  "2024 NO 1.659",
+  "2024 NYG 1.525",
+  "2024 NYJ 1.382",
+  "2024 TB 1.11"
+ ],
+ "old_gate_failures_pp_over_1": 16,
+ "r2_failing_team_seasons": [],
+ "r2_pass_team_seasons": 96,
+ "team_seasons": 96,
+ "thresholds": {
+  "ftn_participation_agreement": 0.99,
+  "old_tolerance_pp": 1.0
+ },
+ "unresolved_play_rows": 564
+}
