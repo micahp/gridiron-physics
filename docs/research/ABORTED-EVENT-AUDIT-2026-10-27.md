@@ -1,5 +1,7 @@
 # Aborted-event audit, regular seasons 2022 to 2026
 
+> **Superseded in part.** The rushing (32) and passing (96) differences in section 3 and the open exceptions in section 4 are explained in `ATTEMPT-DIFFERENCES-2025-2026-10-28.md`: two-point conversions, not spikes or other flags. The passing explanation of 81 plays in this file was wrong.
+
 Status: audit only. rev4 is unchanged. The corrections are listed in section 5 and carried into rev5. Source: nflverse play-by-play for 2022 to 2025 and the pinned 2026 Weeks 1 to 7 file. The full row-level audit is `data/playbooks/research-2026-10-27-aborted-audit/aborted_events_audit.csv`, with every source field and the rule that set each category.
 
 ## 1. What the source says

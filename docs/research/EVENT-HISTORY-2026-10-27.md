@@ -1,5 +1,7 @@
 # Event history: every regular-season play-by-play row, 2022 to 2026
 
+> **Superseded in part.** Section 4's open items on the 32 rushing and 15 passing attempts are resolved: they are two-point conversion runs and passes (96 passing, 32 rushing). See `ATTEMPT-DIFFERENCES-2025-2026-10-28.md`.
+
 Status: built and reconciled. The event history is the chronological layer described in `EVENT-TAXONOMY-DESIGN-2026-10-27.md`. It is kept outside git because it is large. Output: `/root/lp-snapshots/nfl-event-history-2026-10-27/event_history.csv` (207,020 rows) with `event_history_summary.json` alongside. The builder is `pipeline/build_event_history.py`. A small summary is committed under `data/playbooks/research-2026-10-27-event-history/`.
 
 ## 1. Reconciliation

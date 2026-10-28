@@ -21,7 +21,7 @@ A play may appear in layers 2 to 4 with different labels. It appears once in lay
 | Scrimmage pass | `play_type` = pass | 84,649 | Pass attempt, completion, yards | Designed call, observed | Pass result |
 | Sack | `sack` = 1 on a pass play | 1,287 (2025 check) | Sack, sack yards | None (outcome) | Sack |
 | QB kneel | `play_type` = qb_kneel | 1,852 | Rush attempt? (to confirm against official rules) | Clock decision: kneel | Kneel |
-| QB spike | `play_type` = qb_spike | 317 | Pass attempt flag set in source (79 of 96 residual passing differences) | Clock decision: spike | Spike |
+| QB spike | `play_type` = qb_spike | 317 | Pass attempt flag set in source; counted in official attempts | Clock decision: spike | Spike |
 | Kickoff | `play_type` = kickoff | 12,098 | Kickoff, return yards | Kick decision (no direction in source) | Kick result: touchback, returned, out of bounds, downed, fair catch |
 | Punt | `play_type` = punt | 9,241 | Punt, return yards | Punt decision | Punt result: returned, fair catch, downed, blocked, touchback |
 | Field goal | `play_type` = field_goal | 4,772 | Field goal attempt and result | Kick decision | Made, missed, blocked |
@@ -46,7 +46,7 @@ The current per-play profile records carry play type, yards, touchdown and inter
 ## 4. Checks before any simulator use
 
 1. Every event in layer 1 has exactly one event type.
-2. Layer 2 totals reconcile with the official team stats for each team-season: carries, attempts, sacks, yards and touchdowns. The 2025 check so far: sacks exact, carries within 32 league-wide, passing within 15 after known flags. The open exceptions are in `ABORTED-EVENT-AUDIT-2026-10-27.md`.
+2. Layer 2 totals reconcile with the official team stats for each team-season: carries, attempts, sacks, yards and touchdowns. The 2025 check so far: sacks exact, carries within 32 league-wide, passing differences explained by two-point passes. The open exceptions are in `ABORTED-EVENT-AUDIT-2026-10-27.md`.
 3. Layer 3 contains only designed plays with observed labels. Kneels, spikes, kicks, conversions, aborted and unknown-handling plays are excluded from the designed-call denominators, and each exclusion is named.
 4. No layer 4 label is used as evidence of a designed call.
 5. Counts in each layer sum to the event history total for the same season and team.
