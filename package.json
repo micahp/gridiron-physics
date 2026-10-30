@@ -8,7 +8,7 @@
     "data": "python3 pipeline/fetch.py && python3 pipeline/ratings.py && python3 pipeline/build_game.py",
     "build": "python3 pipeline/ratings.py && python3 pipeline/build_game.py",
     "test": "node test/validate.mjs --strict && node test/prototype.mjs && python3 test/test_prototype_data.py && npm run test:autonomous",
-    "test:autonomous": "node test/autonomous-schema.mjs && node test/autonomous-run.mjs && node test/autonomous-pass.mjs && node test/autonomous-formation.mjs && node test/autonomous-contact.mjs && node test/autonomous-rules.mjs && node test/autonomous-acceptance.mjs && node test/autonomous-results.mjs && node scripts/batch-autonomous-runs.mjs",
+    "test:autonomous": "node test/autonomous-schema.mjs && node test/autonomous-run.mjs && node test/autonomous-pass.mjs && node test/autonomous-formation.mjs && node test/autonomous-contact.mjs && node test/autonomous-rules.mjs && node test/autonomous-perception.mjs && node test/autonomous-kneel.mjs && node test/autonomous-acceptance.mjs && node test/autonomous-results.mjs && node scripts/batch-autonomous-runs.mjs",
     "test:autonomous-acceptance": "node test/autonomous-acceptance.mjs",
     "test:autonomous-batch": "node scripts/batch-autonomous-runs.mjs",
     "test:week7": "node test/week7-core.mjs && node test/week7-audit.mjs && node test/week7-audit-mutations.mjs",
