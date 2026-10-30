@@ -860,11 +860,21 @@ export function simulatePlay(game, S, ctx = {}) {
   }
 
   function setupKneel() {
+    const gain = S.gain ?? -1;
+    if (!Number.isFinite(gain) || gain > 0) {
+      throw new RangeError(`QB kneel gain must be finite and nonpositive (got ${S.gain})`);
+    }
+    if (S.td || S.scoring) {
+      throw new RangeError('QB kneel cannot be marked as a touchdown or scoring play');
+    }
     S.kindGroup = 'run';
     setupScrimmage();
     setBlockMuls();
     const qb = st.qb;
-    st.endX = losYd + dir * (S.gain ?? -1);
+    const requestedEndX = losYd + dir * gain;
+    const ownGoalLine = dir > 0 ? 0 : 100;
+    st.kneelSafety = dir > 0 ? requestedEndX < ownGoalLine : requestedEndX > ownGoalLine;
+    st.endX = st.kneelSafety ? ownGoalLine : requestedEndX;
     for (const p of offense()) if (p !== qb) p.mode = 'idle';
     for (const p of defense()) p.mode = 'idle';
     st.onSnap = () => snapTo(qb, 0.1);
@@ -877,11 +887,14 @@ export function simulatePlay(game, S, ctx = {}) {
         qb.downT = W.t;
         qb.p.x = st.endX * YD;
       }
-      if (W.t > 1.2) whistle('kneel');
+      if (W.t > 1.2) whistle(st.kneelSafety ? 'safety' : 'kneel');
     };
   }
 
   function setupSpike() {
+    if (S.td || S.scoring) {
+      throw new RangeError('QB spike cannot be marked as a touchdown or scoring play');
+    }
     S.kindGroup = 'pass';
     setupScrimmage();
     const qb = st.qb;
@@ -893,7 +906,11 @@ export function simulatePlay(game, S, ctx = {}) {
         qb.pose = POSE.THROW;
         Object.assign(W.ball, { state: 'air', holder: null, vx: dir * 1, vy: 0, vz: -9, k: dragK(AERO.spiral) });
         qb.hasBall = false;
-        ev('spike', { by: qb.id });
+        ev('spike', {
+          by: qb.id, pass_attempt: true, forward_pass: true, incomplete: true,
+          yards_gained: 0, passing_yards: 0, receiver_id: null, receiving_yards: 0,
+          first_down: false,
+        });
       }
       if (st.spiked && W.ball.state === 'loose') whistle('spike');
     };

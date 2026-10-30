@@ -5,14 +5,18 @@
 // separation, throwing lanes and pressure; the ball is launched with the real
 // flight model; receivers and defenders contest it from their simulated
 // positions. Nothing here imports the historical play director.
-import { DT, FIELD_W_YD, REC_HZ, YD } from '../constants.js';
+import { BALL_R, DT, FIELD_W_YD, G, REC_HZ, YD } from '../constants.js';
 import { rng } from '../rng.js';
 import { AERO, solveLaunch } from '../ball.js';
 import { Player, POSE, World } from '../world.js';
 import { createInsideZoneRoster } from '../autonomous-run.js';
+import { estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
 
 const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
+const QB_FIELD_OF_VIEW = 220 * Math.PI / 180;
+const DEFENDER_FIELD_OF_VIEW = 190 * Math.PI / 180;
+const QB_REACTION_DELAY_SECONDS = 0.18;
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const unit = (x, y) => {
@@ -162,6 +166,11 @@ export function simulatePassPlay(options = {}) {
   const slotRec = get('O.WR3') ?? get('O.WR2');
   const xRec = get('O.WR1');
   const center = get('O.C');
+  const lastSeenMemory = new ObservationMemory({ reactionDelaySeconds: QB_REACTION_DELAY_SECONDS });
+  const qbObservationTargets = [...new Set([z, slotRec, rb, ...defense].filter(Boolean))];
+  const defenderBallObservations = new Map();
+  qb.ai.gazeHeading = dir > 0 ? 0 : Math.PI;
+  let observedBallPredictions = 0;
   const ballAtSnap = at(0, 0);
   Object.assign(W.ball, { x: ballAtSnap.x, y: ballAtSnap.y, z: 0.15, state: 'held', holder: center, hand: 'chest' });
   center.hasBall = true;
@@ -322,26 +331,6 @@ export function simulatePassPlay(options = {}) {
     if (rand() < rate * DT) W.disengage(e, d);
   }
 
-  function nearestDefenderTo(p) {
-    let best = null, bestD = Infinity;
-    for (const q of defense) {
-      if (q.down) continue;
-      const d = d2(q, p);
-      if (d < bestD) { best = q; bestD = d; }
-    }
-    return { player: best, distance: bestD };
-  }
-
-  function nearestRusherToQb() {
-    let best = null, bestD = Infinity;
-    for (const q of defense) {
-      if (q.down || q.info.group !== 'DL') continue;
-      const d = d2(q, qb);
-      if (d < bestD) { best = q; bestD = d; }
-    }
-    return { player: best, distance: bestD };
-  }
-
   function routeTarget(p) {
     const t = W.t - (throwInfo?.snapT ?? 0);
     if (p === z) {
@@ -367,32 +356,85 @@ export function simulatePassPlay(options = {}) {
   }
 
   // ------------------------------------------------------------ quarterback
+  function updateQbPerception(elapsed) {
+    // Route knowledge sets gaze; field of view and player-body occlusion still gate sensed locations.
+    const lookPoint = elapsed < 1.2 ? at(2.6, side * 17)
+      : elapsed < 1.65 ? at(2.4, side * 15) : at(1.6, side * 3.2);
+    const desiredGaze = Math.atan2(lookPoint.y - qb.p.y, lookPoint.x - qb.p.x);
+    qb.ai.gazeHeading = turnHeadingToward(qb.ai.gazeHeading ?? qb.h, desiredGaze, 5.5 / DECISION_HZ);
+    for (const target of qbObservationTargets) {
+      lastSeenMemory.capture(qb, target, W.players, W.t, {
+        heading: qb.ai.gazeHeading, fieldOfView: QB_FIELD_OF_VIEW, maxDistance: 38 * YD,
+        observerEyeHeight: 1.72, targetEyeHeight: 1.65,
+      });
+    }
+    lastSeenMemory.advance(W.t);
+  }
+
+  function nearestObservedRusher() {
+    return defense.filter((player) => player.info.group === 'DL')
+      .map((player) => ({ player, estimate: lastSeenMemory.estimate(player.id, W.t) }))
+      .filter((item) => item.estimate && !item.estimate.down && item.estimate.confidence > 0.08)
+      .map((item) => ({ ...item, distance: Math.hypot(item.estimate.position.x - qb.p.x,
+        item.estimate.position.y - qb.p.y) }))
+      .sort((a, b) => a.distance - b.distance || a.player.id.localeCompare(b.player.id))[0] ?? null;
+  }
+
+  // Pressure is a coarse contact cue. Exact unseen rusher coordinates stay inside physics.
+  function sensedPressure() {
+    if (qb.engaged || defense.some((player) => !player.down && d2(player, qb) <= qb.r + player.r + 0.35 * YD)) {
+      return { level: 'contact', distance: 0.65 };
+    }
+    if (defense.some((player) => !player.down && d2(player, qb) <= 2.4 * YD)) {
+      return { level: 'nearby', distance: 1.65 };
+    }
+    return { level: 'none', distance: 4.5 };
+  }
+
   function readOptions() {
-    const throwers = [z, slotRec, rb].filter((p) => p && !p.down);
-    return throwers.map((rec) => {
-      const flight = clamp(d2(qb, rec) / (16 * YD), 0.32, 1.25);
-      const aim = { x: rec.p.x + rec.v.x * flight * 0.75, y: rec.p.y + rec.v.y * flight * 0.75 };
-      const nearest = nearestDefenderTo(rec);
-      const separation = nearest.distance / YD;
+    const throwers = [z, slotRec, rb].filter(Boolean);
+    const gaze = qb.ai.gazeHeading;
+    // Read only delayed observations and their confidence/uncertainty, never a target's live position.
+    return throwers.flatMap((rec) => {
+      const receiver = lastSeenMemory.estimate(rec.id, W.t);
+      if (!receiver || receiver.down || receiver.confidence < 0.12) return [];
+      const flight = clamp(Math.hypot(receiver.position.x - qb.p.x, receiver.position.y - qb.p.y) / (16 * YD), 0.32, 1.25);
+      const aim = { x: receiver.position.x + receiver.velocity.x * flight * 0.75,
+        y: receiver.position.y + receiver.velocity.y * flight * 0.75 };
+      const defendersSeen = defense
+        .map((player) => ({ player, estimate: lastSeenMemory.estimate(player.id, W.t) }))
+        .filter((item) => item.estimate && !item.estimate.down && item.estimate.confidence > 0.08)
+        .map((item) => ({ ...item, distance: Math.hypot(item.estimate.position.x - receiver.position.x,
+          item.estimate.position.y - receiver.position.y) }))
+        .sort((a, b) => a.distance - b.distance || a.player.id.localeCompare(b.player.id));
+      const nearest = defendersSeen[0] ?? null;
+      // Unknown coverage is conservative; uncertainty widens each perceived defender's radius.
+      const separation = nearest
+        ? Math.max(0, nearest.distance - receiver.uncertaintyMeters - nearest.estimate.uncertaintyMeters) / YD
+        : 1.2;
       // Defenders sitting on the throwing line are the interception risk.
-      let lane = 0;
+      let lane = nearest ? 0 : 0.45;
       const ux = aim.x - qb.p.x, uy = aim.y - qb.p.y;
       const len = Math.hypot(ux, uy) || 1;
-      for (const q of defense) {
-        if (q.down || q === nearest.player) continue;
-        const rx = q.p.x - qb.p.x, ry = q.p.y - qb.p.y;
+      for (const item of defendersSeen) {
+        if (nearest && item.player === nearest.player) continue;
+        const rx = item.estimate.position.x - qb.p.x, ry = item.estimate.position.y - qb.p.y;
         const along = (rx * ux + ry * uy) / len;
         if (along <= 0.4 || along >= len) continue;
         const perp = Math.abs(rx * uy - ry * ux) / len;
-        if (perp < 1.0 * YD) lane += 1 - perp / (1.0 * YD);
+        const laneRadius = YD + item.estimate.uncertaintyMeters + receiver.uncertaintyMeters;
+        if (perp < laneRadius) lane += (1 - perp / laneRadius) * item.estimate.confidence;
       }
-      const pressure = nearestRusherToQb().distance / YD;
-      const open = clamp((separation - 0.7) / 2.2, 0, 1);
+      const pressure = sensedPressure().distance;
+      const open = clamp((separation - 0.7) / 2.2, 0, 1) * receiver.confidence;
       const utility = open * 1.6 + (1 - clamp(lane / 2.4, 0, 1)) * 0.75
         - clamp(lane * 0.55, 0, 1.35) - clamp((1.6 - pressure) * 0.45, 0, 0.9)
-        - clamp(d2(qb, rec) / (28 * YD), 0, 0.5);
+        - clamp(Math.hypot(receiver.position.x - qb.p.x, receiver.position.y - qb.p.y) / (28 * YD), 0, 0.5)
+        - receiver.uncertaintyMeters / YD * 0.08;
       const readiness = rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
-      return { receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness };
+      return [{ receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness,
+        observationAge: receiver.ageSeconds, observationConfidence: receiver.confidence,
+        observationUncertainty: receiver.uncertaintyMeters, gazeHeading: gaze }];
     }).sort((a, b) => b.utility - a.utility || a.receiver.id.localeCompare(b.receiver.id));
   }
 
@@ -423,6 +465,10 @@ export function simulatePassPlay(options = {}) {
       quarterback_id: qb.id, target_id: best.receiver.id,
       separation_yards: best.separation, lane_risk: best.lane,
       pressure_yards: best.pressure, flight_seconds: best.flight,
+      target_observation_age_seconds: best.observationAge,
+      target_observation_confidence: best.observationConfidence,
+      target_observation_uncertainty_meters: best.observationUncertainty,
+      gaze_heading: best.gazeHeading,
     });
     setIntent(qb, 'throw to the open read', `release to ${best.receiver.slot} with ${best.separation.toFixed(1)} yd separation`);
   }
@@ -430,10 +476,11 @@ export function simulatePassPlay(options = {}) {
   function qbDecision() {
     if (!received || W.ball.holder !== qb) return;
     const elapsed = W.t - (W.ball.receivedAt ?? 0);
+    updateQbPerception(elapsed);
     // A three-step drop from the gun takes about 0.8 s before the first read is live.
     if (elapsed < 0.75) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
     const options = readOptions().filter((o) => elapsed >= o.readyAt);
-    const pressure = nearestRusherToQb().distance / YD;
+    const pressure = sensedPressure().distance;
     if (options.length) {
       const best = options[0];
       if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
@@ -446,14 +493,18 @@ export function simulatePassPlay(options = {}) {
         utility: Number(best.utility.toFixed(3)),
         separation_yards: Number(best.separation.toFixed(2)),
         pressure_yards: Number(pressure.toFixed(2)),
+        target_observation_age_seconds: best.observationAge,
+        target_observation_confidence: best.observationConfidence,
       });
     }
     if (pressure < 1.1 && elapsed < 3.0) {
-      // Escape the nearest rusher rather than standing in a collapsing pocket.
-      const rusher = nearestRusherToQb().player;
-      const away = unit(qb.p.x - rusher.p.x, qb.p.y - rusher.p.y);
+      // Escape from remembered pressure direction; a tactile cue alone does not reveal exact coordinates.
+      const rusher = nearestObservedRusher();
+      const away = rusher ? unit(qb.p.x - rusher.estimate.position.x, qb.p.y - rusher.estimate.position.y)
+        : unit(-dir * 0.25, -side);
       qb.ai.escape = { x: away.x, y: away.y };
-      setIntent(qb, 'scramble away from pressure', `move off ${rusher.slot} and keep the ball alive`);
+      setIntent(qb, 'scramble away from pressure', rusher
+        ? `move away from remembered pressure by ${rusher.player.slot}` : 'use a pressure cue and remembered pocket space');
     } else if (elapsed > 3.0) {
       const target = at(-1.0, side * 22);
       const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
@@ -727,9 +778,29 @@ export function simulatePassPlay(options = {}) {
   }
 
   function closestRusherSide() {
-    const r = nearestRusherToQb().player;
+    const r = nearestObservedRusher();
     if (!r) return 0;
-    return Math.sign(lOf(r) || 1);
+    return Math.sign((r.estimate.position.y - qb.p.y) * dir || 1);
+  }
+
+  function estimateObservedBallLanding(p) {
+    if (!defenderBallObservations.has(p.id)) {
+      defenderBallObservations.set(p.id, new ObservationMemory({ reactionDelaySeconds: 0.14,
+        maxMemorySeconds: 0.9, maxPredictionSeconds: 0.18, confidenceDecaySeconds: 0.45,
+        uncertaintyGrowthMetersPerSecond: 1.5 }));
+    }
+    const memory = defenderBallObservations.get(p.id);
+    const ballObservation = { id: 'ball', p: { x: W.ball.x, y: W.ball.y },
+      v: { x: W.ball.vx, y: W.ball.vy }, z: W.ball.z, vz: W.ball.vz, r: BALL_R };
+    memory.capture(p, ballObservation, W.players, W.t, {
+      heading: p.h, fieldOfView: DEFENDER_FIELD_OF_VIEW, maxDistance: 55 * YD,
+      observerEyeHeight: 1.72, targetEyeHeight: Math.max(0.2, W.ball.z), defaultBlockerHeight: 1.9,
+    });
+    memory.advance(W.t);
+    const estimate = memory.estimate('ball', W.t);
+    if (!estimate || estimate.confidence < 0.12) return null;
+    observedBallPredictions++;
+    return estimateBallLanding(estimate, G);
   }
 
   function carrierBrain(p) {
@@ -790,12 +861,15 @@ export function simulatePassPlay(options = {}) {
       return;
     }
     if (p.info.group === 'DL') { rushPasser(p); return; }
-    if (throwInfo && W.ball.state === 'air') {
-      const b = W.ball;
-      p.dv = seek(p, { x: b.landing?.x ?? b.x, y: b.landing?.y ?? b.y }, 1, 16);
-      p.face = Math.atan2((b.landing?.y ?? b.y) - p.p.y, (b.landing?.x ?? b.x) - p.p.x);
-      setIntent(p, 'break on the thrown ball', 'drive toward the landing spot');
-      return;
+    if (W.ball.state === 'air') {
+      const estimate = estimateObservedBallLanding(p);
+      if (estimate) {
+        p.dv = seek(p, estimate, 1, 16);
+        p.face = Math.atan2(estimate.y - p.p.y, estimate.x - p.p.x);
+        setIntent(p, 'break on the thrown ball',
+          `estimate the landing point from the delayed trajectory (${estimate.uncertaintyMeters.toFixed(2)} m uncertainty)`);
+        return;
+      }
     }
     if (cfg.coverage === 'cover_1') {
       const target = manAssign.get(p.slot);
@@ -995,10 +1069,26 @@ export function simulatePassPlay(options = {}) {
     sack_id: terminal?.reason === 'sack' ? sack?.defender.id ?? null : null,
     interception_id: catches.find((c) => c.team === 'D')?.player_id ?? null,
     blockers, topSpeed,
+    diagnostics: {
+      qb_perception: {
+        body_heading: qb.h, gaze_heading: qb.ai.gazeHeading,
+        reaction_delay_seconds: lastSeenMemory.reactionDelaySeconds,
+        observations: { ...lastSeenMemory.counts },
+        last_seen: [...lastSeenMemory.lastSeen.entries()].map(([player_id, observation]) => ({
+          player_id, age_seconds: Math.max(0, W.t - observation.observedAt),
+        })).sort((a, b) => a.player_id.localeCompare(b.player_id)),
+      },
+      defender_ball_perception: {
+        observers: defenderBallObservations.size,
+        trajectory_estimates: observedBallPredictions,
+        observations: Object.fromEntries([...defenderBallObservations].map(([playerId, memory]) =>
+          [playerId, { ...memory.counts }])),
+      },
+    },
     provenance: {
       execution: 'snap-to-whistle player decisions and ball flight generated by the simulation',
       initial_profiles: 'authored physical archetypes adjusted by declared ratings',
-      allowed_decision_inputs: ['declared formation and play call', 'declared front, coverage and direction', 'player roles, physical profiles, ratings and snap positions', 'current simulated player and ball state'],
+      allowed_decision_inputs: ['declared formation and play call', 'declared front, coverage and direction', 'player roles, physical profiles, ratings and snap positions', 'self state, physical contact cues, and delayed visible player/ball observations with uncertainty'],
       outcome_inputs: [],
     },
   };
