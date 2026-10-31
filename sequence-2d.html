@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>2D Simulation Replay | Gridiron Physics</title>
+  <link rel="stylesheet" href="./web/sequence-2d.css">
+</head>
+<body>
+  <header class="masthead">
+    <strong>GRIDIRON PHYSICS</strong><span class="divider">/</span>
+    <span>2D Simulation Replay</span><a href="./index.html">Original Film Room</a>
+  </header>
+  <main>
+    <div class="heading">
+      <div>
+        <p class="eyebrow">LEGENDARY PICKS RESEARCH</p>
+        <h1>Simulation Replay</h1>
+        <p class="subhead">Explore an actual generated play sequence, seed by seed.</p>
+      </div>
+      <label class="upload">Open run JSON <input id="file" type="file" accept=".json,application/json"></label>
+    </div>
+    <div id="warning" role="alert" class="warning" hidden></div>
+    <section class="scoreboard" aria-label="Simulated game state">
+      <div><p id="home-name">Home</p><p id="home-score" class="score">–</p></div>
+      <div class="center-state"><p id="mode" class="tag">Research simulation</p><h2 id="period-clock">Period and clock unavailable</h2>
+        <p id="ball-state">Ball position unavailable</p></div>
+      <div><p id="away-name">Away</p><p id="away-score" class="score">–</p></div>
+    </section>
+    <div class="content">
+      <aside class="panel log">
+        <h2>Play timeline</h2>
+        <p id="run-identity" class="muted">No run selected</p>
+        <div id="play-list" class="play-list" aria-label="Select a simulated play"></div>
+      </aside>
+      <section class="panel field-panel">
+        <div class="field-header"><div><h2 id="play-heading">Select a play</h2><p id="play-location" class="muted"></p></div>
+        <span class="tag">SCHEMATIC, NOT TRACKING</span></div>
+        <svg id="field" viewBox="0 0 1000 310" role="img" aria-label="Football field showing the source ball spot and schematic yardage transition"></svg>
+        <div class="legend"><span><b class="dot ball"></b> Source ball spot</span>
+        <span><b class="dot blue"></b> Line of scrimmage</span>
+        <span><b class="dot yellow"></b> Line to gain</span>
+        <span><b class="dot purple"></b> Derived yardage transition</span></div>
+        <p class="disclosure">Field is always drawn from the current offense's perspective. Lines show sourced start/end spots, not a player route or physical trajectory. On a possession or period change, no continuous path is invented.</p>
+      </section>
+      <aside class="panel facts">
+        <h2>Source event</h2>
+        <dl>
+          <dt>Event</dt><dd id="event-type">–</dd>
+          <dt>Source play ID</dt><dd id="play-id">–</dd>
+          <dt>Down / distance</dt><dd id="down-distance">–</dd>
+          <dt>Outcome</dt><dd id="outcome">–</dd>
+          <dt>Next state</dt><dd id="after">–</dd>
+          <dt>Game validity</dt><dd id="validity">–</dd>
+        </dl>
+        <details><summary>Original play JSON</summary><pre id="raw-play"></pre></details>
+        <p id="provenance" class="disclosure"></p>
+      </aside>
+    </div>
+    <section class="controls" aria-label="Replay controls">
+      <button id="previous" type="button" aria-label="Previous play">◀ Previous</button>
+      <button id="toggle" type="button" aria-label="Play or pause sequence">Play ▶</button>
+      <button id="next" type="button" aria-label="Next play">Next ▶</button>
+      <label class="seek-label" for="seek">Play <span id="position">0/0</span></label>
+      <input id="seek" type="range" min="0" max="0" value="0" step="1" aria-label="Scrub to play">
+      <label for="speed">Speed</label>
+      <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option>
+        <option value="2">2×</option><option value="4">4×</option></select>
+    </section>
+    <p class="footer-note">A selected SLC single-seed trace from <code>run_slc_game.py</code> works here. A batch summary or box-score archive does not contain enough information for play replay. The bundled E2 example is historical research and is never presented as a prospective run.</p>
+  </main>
+  <script type="module" src="./web/sequence-2d.js"></script>
+</body>
+</html>
