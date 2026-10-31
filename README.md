@@ -68,3 +68,11 @@ This fourth-quarter, 3rd-and-3, down-four scenario reuses the existing Gridiron 
 **Honesty:** All scenario outcomes and probability values are hand-authored illustrative fixtures, not trained Legendary Picks forecasts or a real historical play. The outcome is sampled *before* playback, and the existing physical director steers the players toward it. This is a visualization prototype, not a validated autonomous football model. The roster and physical parameter estimates are adapted from the original reconstructed game.
 
 `node --test test/what-if.mjs` tests the model script, deterministic seeds and normalization. `npm test` still validates the existing reconstruction. No existing Film Room page was replaced.
+
+## Experimental 2D SLC run replay
+
+The isolated research page [sequence-2d.html](sequence-2d.html) displays the ordered events of one generated Legendary Picks game without requiring the Three.js stadium. Start with `npm run serve`, then open `http://localhost:8080/sequence-2d.html`; use **Open run JSON** to load a complete SLC one-seed record from `run_slc_game.py` (the JSON must contain `result.drives[].plays[]`). Gridiron also accepts an exported `record.json` envelope from the Legendary Picks research `export_2d_replay.py` bridge.
+
+The built-in E2 example is explicitly retrospective and has no participant tracking. The view shows source scores, game states and geometric yardage transitions only; it does not infer player motion or promise a valid complete NFL game. Aggregate 10K batch summaries/box scores cannot be replayed without a separately captured one-seed ordered play record.
+
+Run the focused adapter tests with `node --test test/sequence-2d.mjs`. The implementation roadmap, exact LP branch linkage and acceptance gates are in [docs/research/SLC-2D-REPLAY-AGENT-HANDOFF-2026-10-31.md](docs/research/SLC-2D-REPLAY-AGENT-HANDOFF-2026-10-31.md). Neither the original 3D Film Room nor the shared full-game contract has been changed by this research page.
