@@ -245,22 +245,15 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
 .back { display: block; margin: 0 0 10px auto; padding: 6px 12px; border: 1px solid var(--rail); background: var(--rail); color: var(--chalk); font: 600 13px var(--f-display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
 .back:hover { border-color: var(--dim); }
 
-/* Scoring play: the scoring team's bug glows and its score pops while the score tweens to the new total. */
-.bug-team .score { display: inline-block; }
+/* Scoring play: the scoring team's bug glows while its score tweens to the new total. */
 .bug-team.scored { animation: scored-glow 1.4s ease-out 1; }
-.bug-team.scored .score { animation: score-pop 0.6s ease-out 1; }
-@keyframes score-pop {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.35); color: #ffe27a; }
-  100% { transform: scale(1); }
-}
 @keyframes scored-glow {
   0% { box-shadow: 0 0 0 0 rgba(255, 226, 122, 0); }
   30% { box-shadow: 0 0 24px 4px rgba(255, 226, 122, 0.55); }
   100% { box-shadow: 0 0 0 0 rgba(255, 226, 122, 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bug-team.scored, .bug-team.scored .score { animation: none; }
+  .bug-team.scored { animation: none; }
 }
 
 /* Playbook: the 2025 charted offense as play diagrams. */

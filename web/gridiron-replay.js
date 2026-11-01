@@ -21,6 +21,8 @@ const DEFAULTS = {
 };
 const CSS_URL = new URL('./gridiron-replay.css?v=7', import.meta.url).href;
 const TEAM_NAMES = { MIN: 'MIN', DET: 'DET' };
+// Play-time seconds between the ball crossing the goal line and the score changing on a touchdown.
+const SCORE_DELAY_S = 0.8;
 const ESC = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 const MARKUP = `
@@ -726,6 +728,8 @@ class GridironReplay extends HTMLElement {
     this.eventCursor = 0;
     this.audio.setPlay(null, null);
     this.scoreKey = null;
+    this.endZoneAt = null;
+    this.scoredIndex = null;
     this.boxCount = index;
     this.setScoreState(play);
     if (!this.$('#tab-box').hidden) this.renderBox();
@@ -847,11 +851,22 @@ class GridironReplay extends HTMLElement {
         this.renderer.setPaths(this.currentRecord, Math.floor(this.clipSeconds * this.currentRecord.hz));
         this.setTagPositions();
         const atEnd = this.clipSeconds >= this.clipDuration;
-        const scoreKey = `${this.currentIndex}:${atEnd}`;
+        // the ball crossing a goal line (x below 0 or above 100) starts the touchdown clock; the score changes a moment later
+        const ballX = this.renderer.ballPos?.x;
+        if (this.endZoneAt == null && (ballX < 0 || ballX > 100)) this.endZoneAt = time;
+        const scoreEvent = this.currentRecord.events.find((event) => event.type === 'touchdown' || event.type === 'fg_good');
+        let scored;
+        if (!scoreEvent) scored = atEnd;
+        else if (scoreEvent.type === 'fg_good') scored = time >= scoreEvent.t;
+        else scored = (this.endZoneAt != null && time >= this.endZoneAt + SCORE_DELAY_S) || atEnd;
+        // once the score has changed for this play it stays changed, so the animation runs once
+        if (this.scoredIndex === this.currentIndex) scored = true;
+        else if (scored) this.scoredIndex = this.currentIndex;
+        const scoreKey = `${this.currentIndex}:${scored}`;
         if (scoreKey !== this.scoreKey) {
           this.scoreKey = scoreKey;
-          this.boxCount = this.currentIndex + (atEnd ? 1 : 0);
-          this.setScoreState(this.items[this.currentIndex].play, atEnd, { animate: atEnd });
+          this.boxCount = this.currentIndex + (scored ? 1 : 0);
+          this.setScoreState(this.items[this.currentIndex].play, scored, { animate: scored });
           if (!this.$('#tab-box').hidden) this.renderBox();
         }
         this.$('#scrub').value = String(Math.round(1000 * this.clipSeconds / Math.max(0.01, this.clipDuration)));
