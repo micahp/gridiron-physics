@@ -4,6 +4,7 @@ import { adaptLpGamePayload } from './lp-game-record-adapter.js';
 import { prepareSlcPhysicsReplay, selectionForSlcPlay, slcParticipantLine, slcPlayLabel } from './slc-seed-physics-replay.js';
 import { teamLogoUrl } from './team-logo.js';
 import { FootballAudio } from './audio-director.js';
+import { animateScoreBug } from './score-animation.js';
 
 // <gridiron-replay> plays saved LP game records in the 3D engine. A page mounts it and sets
 // attributes; it owns its own DOM and styles, so pages never copy the viewer again.
@@ -137,6 +138,43 @@ function soundPlay(scenario, play) {
 function passTo(play) {
   const pre = play.outcome?.pre_event || {};
   return pre.passer?.player_name && pre.receiver?.player_name ? `${pre.passer.player_name} to ${pre.receiver.player_name}` : '';
+}
+
+const FORM_LABEL = { SHOTGUN: 'Shotgun', 'UNDER CENTER': 'Under center', PISTOL: 'Pistol' };
+const GAP_LABEL = { end: 'End', tackle: 'Tackle', guard: 'Guard' };
+// Diagram geometry in a 160x96 box: line of scrimmage at y=60, offensive line at x=56..104.
+const DIAG_ALIGN = { 'UNDER CENTER': { qb: [80, 68], rb: [80, 84] }, SHOTGUN: { qb: [80, 80], rb: [68, 80] }, PISTOL: { qb: [80, 72], rb: [80, 88] } };
+const DIAG_GAP = { end: { left: 46, right: 114 }, tackle: { left: 62, right: 98 }, guard: { left: 74, right: 86 } };
+const DIAG_ZONE = { left: 44, middle: 80, right: 116 };
+
+function cardLabel(card) {
+  const a = card.attributes;
+  const form = FORM_LABEL[a.formation] || a.formation;
+  return card.action === 'run'
+    ? `${form} · ${GAP_LABEL[a.run_gap]} ${a.run_location}`
+    : `${form} · ${a.pass_length === 'deep' ? 'deep' : 'short'} ${a.pass_location}`;
+}
+
+function playDiagram(card) {
+  const a = card.attributes;
+  const align = DIAG_ALIGN[a.formation] || DIAG_ALIGN['UNDER CENTER'];
+  const line = [56, 68, 80, 92, 104].map((x) => `<circle cx="${x}" cy="60" r="3.2" class="pd-ol"/>`).join('');
+  let back = '';
+  let play;
+  if (card.action === 'run') {
+    const gx = DIAG_GAP[a.run_gap]?.[a.run_location] ?? 80;
+    back = `<circle cx="${align.rb[0]}" cy="${align.rb[1]}" r="3.6" class="pd-rb"/>`;
+    play = `<path d="M${align.rb[0]} ${align.rb[1]} L${gx} 60 L${gx} 26" class="pd-run"/><circle cx="${gx}" cy="26" r="2.6" class="pd-end"/>`;
+  } else {
+    const tx = DIAG_ZONE[a.pass_location] ?? 80;
+    const ty = a.pass_length === 'deep' ? 18 : 40;
+    play = `<path d="M${align.qb[0]} ${align.qb[1]} L${tx} ${ty}" class="pd-pass"/><circle cx="${tx}" cy="${ty}" r="4" class="pd-target"/>`;
+  }
+  return `<svg viewBox="0 0 160 96" role="img" aria-label="${ESC(cardLabel(card))}"><rect width="160" height="96" class="pd-field"/><line x1="6" x2="154" y1="60" y2="60" class="pd-los"/>${line}<circle cx="${align.qb[0]}" cy="${align.qb[1]}" r="3.6" class="pd-qb"/>${back}${play}</svg>`;
+}
+
+function playCard(card) {
+  return `<div class="pcard">${playDiagram(card)}<div class="pc-t">${ESC(cardLabel(card))}</div><div class="pc-n">${card.count} of ${card.denominator} · ${(card.rate * 100).toFixed(1)}%</div></div>`;
 }
 
 function driveResult(drive) {
@@ -282,6 +320,10 @@ class GridironReplay extends HTMLElement {
       this.selectPlay(Number(button.dataset.i), { playClip: true });
       this.setContinuous(this.autoAdvance);
     });
+    this.$('#tab-playbook').addEventListener('click', (event) => {
+      const teamButton = event.target.closest('[data-team]');
+      if (teamButton) { this.bookTeam = teamButton.dataset.team; this.renderPlaybook(); }
+    });
     this.$('#tab-ratings').addEventListener('click', (event) => {
       if (event.target.closest('[data-back]')) { this.clearPlayer(); return; }
       const teamButton = event.target.closest('[data-team]');
@@ -370,21 +412,24 @@ class GridironReplay extends HTMLElement {
     tab.scrollTop = scrollTop;
   }
 
-  setScoreState(play, after = false) {
+  setScoreState(play, after = false, { animate = false } = {}) {
     const state = after ? (play.state_after || play.state_before) : play.state_before;
+    const before = play.state_before;
+    const tween = animate && after;
     const offense = this.model.teamsBySide[state.offense_team];
     const stateRows = [
-      { team: this.away, node: this.$('#bug-away'), score: state.away_score, side: 'away' },
-      { team: this.home, node: this.$('#bug-home'), score: state.home_score, side: 'home' },
+      { team: this.away, node: this.$('#bug-away'), score: state.away_score, from: before.away_score, side: 'away' },
+      { team: this.home, node: this.$('#bug-home'), score: state.home_score, from: before.home_score, side: 'home' },
     ];
     for (const row of stateRows) {
       const info = this.model.game.teams[row.team];
       const right = row.side === 'home';
       const logo = `<img src="${ESC(teamLogoUrl(row.team))}" alt="">`;
       const name = `<span class="abbr">${ESC(TEAM_NAMES[row.team] || row.team)}</span>`;
-      row.node.innerHTML = `${right ? name + logo : logo + name}<span class="rec">SLC</span><span class="score">${Number(row.score || 0)}</span>`;
+      row.node.innerHTML = `${right ? name + logo : logo + name}<span class="rec">SLC</span><span class="score">${Number(tween ? row.from : row.score) || 0}</span>`;
       row.node.style.setProperty('--team', info.color);
       row.node.classList.toggle('poss', offense === row.team);
+      if (tween && row.from !== row.score) animateScoreBug(row.node, row.node.querySelector('.score'), Number(row.from || 0), Number(row.score || 0));
     }
     this.$('#bug-q').textContent = state.quarter > 4 ? 'OT' : `Q${state.quarter}`;
     this.$('#bug-clock').textContent = clock(state.clock_seconds);
@@ -527,21 +572,34 @@ class GridironReplay extends HTMLElement {
       <p class="note">Ratings and physical attributes come from the existing local Gridiron player pipeline. Some combine measurables are estimated as recorded in the source snapshot.</p>`;
   }
 
+  // The team's 2025 charted offense as play diagrams, from data/playbooks/<team>-2025.json.
   renderPlaybook() {
-    const play = this.items[this.currentIndex]?.play;
-    const box = this.$('#tab-playbook');
-    if (!play) { box.innerHTML = '<p class="hint">Pick a play in Drives to see its playbook details.</p>'; return; }
-    const roster = (this.currentRecord?.roster || []).map((entry) => this.model.game.players[entry.id]).filter(Boolean);
-    const row = (label, value) => `<dt>${ESC(label)}</dt><dd>${ESC(value)}</dd>`;
-    box.innerHTML = `<div class="sec">Saved SLC outcome</div><dl class="kv">
-      ${row('Event', play.event_type)}${row('Yards', play.outcome?.yards_gained ?? '—')}
-      ${row('Touchdown', play.outcome?.touchdown ? 'Yes' : 'No')}${row('LP play ID', play.id)}
-      ${row('Recorded offense', this.model.teamsBySide[play.state_before.offense_team])}
-      ${row('Recorded participant', slcParticipantLine(play) || 'Not named by LP')}
-      ${row('Formation', play.outcome?.pre_event?.formation ?? 'not recorded')}${row('Personnel', play.outcome?.pre_event?.personnel ?? 'not recorded')}${row('Coverage', play.outcome?.pre_event?.coverage ?? 'not recorded')}
-      ${row('3D frame rate', `${this.currentRecord?.hz ?? '—'} Hz`)}${row('Frames', this.currentRecord?.frames.length ?? '—')}
-      ${row('Players in reconstructed play', roster.length)}</dl>
-      <p class="note">Gridiron reconstructs motion around the immutable SLC event result. This is not tracking footage or a predictive re-simulation.</p>`;
+    if (!this.away) return;
+    if (!this.books) {
+      this.$('#tab-playbook').innerHTML = '<p class="hint">Loading the 2025 playbooks.</p>';
+      this.loadPlaybooks().catch((error) => this.reportFailure(error));
+      return;
+    }
+    this.bookTeam ??= this.away;
+    const offense = this.books[this.bookTeam].offense;
+    const group = (kind, label) => {
+      const cards = [...offense.play_candidates[kind].candidates].sort((a, b) => b.count - a.count);
+      return `<div class="pgroup">${label} · ${cards.length} combinations</div><div class="pgrid">${cards.map(playCard).join('')}</div>`;
+    };
+    this.$('#tab-playbook').innerHTML = `<div class="roster-t">${[this.away, this.home].map((team) =>
+      `<button data-team="${ESC(team)}" class="${team === this.bookTeam ? 'on' : ''}">${ESC(TEAM_NAMES[team] || team)}</button>`).join('')}</div>
+      <div class="sec">${ESC(TEAM_NAMES[this.bookTeam] || this.bookTeam)} · 2025 charted offense</div>
+      ${group('run', 'Run')}${group('pass', 'Pass')}
+      <p class="note">Diagrams show the alignment and the run gap or pass target, not routes, blocks or coverage. These are tendencies, not play calls.</p>`;
+  }
+
+  async loadPlaybooks() {
+    const teams = [this.away, this.home];
+    const responses = await Promise.all(teams.map((team) => fetch(`data/playbooks/${team}-2025.json`, { cache: 'force-cache' })));
+    for (const response of responses) if (!response.ok) throw new Error(`2025 playbook HTTP ${response.status}`);
+    const books = await Promise.all(responses.map((response) => response.json()));
+    this.books = Object.fromEntries(teams.map((team, index) => [team, books[index]]));
+    this.renderPlaybook();
   }
 
   // Team totals and player lines for the whole saved game, derived from the saved plays.
@@ -556,7 +614,7 @@ class GridironReplay extends HTMLElement {
       map[key] ??= { name, team, att: 0, comp: 0, yds: 0, td: 0 };
       return map[key];
     };
-    for (const { play } of this.items) {
+    for (const { play } of this.items.slice(0, this.boxCount ?? 0)) {
       const team = this.model.teamsBySide[play.state_before.offense_team];
       if (!totals[team]) continue;
       const t = totals[team];
@@ -605,7 +663,7 @@ class GridironReplay extends HTMLElement {
       ${playerTable('Passing', byYards(passing), [['C/ATT', (p) => `${p.comp}/${p.att}`], ['YDS', (p) => p.yds], ['TD', (p) => p.td]])}
       ${playerTable('Rushing', byYards(rushing), [['CAR', (p) => p.att], ['YDS', (p) => p.yds], ['TD', (p) => p.td]])}
       ${playerTable('Receiving', byYards(receiving), [['REC/TGT', (p) => `${p.comp}/${p.att}`], ['YDS', (p) => p.yds], ['TD', (p) => p.td]])}
-      <p class="note">Derived from the saved plays for this game. Passing, rushing and receiving come from the named players on each play. Not an official box score.</p>`;
+      <p class="note">Through play ${this.boxCount ?? 0} of ${this.items.length}. Derived from the saved plays.Passing, rushing and receiving come from the named players on each play. Not an official box score.</p>`;
   }
 
   renderScoreChart() {
@@ -667,7 +725,10 @@ class GridironReplay extends HTMLElement {
     this.clipSeconds = 0;
     this.eventCursor = 0;
     this.audio.setPlay(null, null);
+    this.scoreKey = null;
+    this.boxCount = index;
     this.setScoreState(play);
+    if (!this.$('#tab-box').hidden) this.renderBox();
     this.renderDrives();
     // only scroll the row when the drive list is its own scroller (desktop); on phones the
     // document scrolls, and scrolling it to the row moves the field on every play change
@@ -702,7 +763,7 @@ class GridironReplay extends HTMLElement {
       this.$('#loader').hidden = true;
       this.clipPlaying = playClip || this.continuous;
       this.lastFrame = null;
-      this.renderPlaybook();
+      if (!this.$('#tab-playbook').hidden) this.renderPlaybook();
       this.renderPosition();
     } catch (error) {
       this.currentSelection = null;
@@ -786,7 +847,13 @@ class GridironReplay extends HTMLElement {
         this.renderer.setPaths(this.currentRecord, Math.floor(this.clipSeconds * this.currentRecord.hz));
         this.setTagPositions();
         const atEnd = this.clipSeconds >= this.clipDuration;
-        this.setScoreState(this.items[this.currentIndex].play, atEnd);
+        const scoreKey = `${this.currentIndex}:${atEnd}`;
+        if (scoreKey !== this.scoreKey) {
+          this.scoreKey = scoreKey;
+          this.boxCount = this.currentIndex + (atEnd ? 1 : 0);
+          this.setScoreState(this.items[this.currentIndex].play, atEnd, { animate: atEnd });
+          if (!this.$('#tab-box').hidden) this.renderBox();
+        }
         this.$('#scrub').value = String(Math.round(1000 * this.clipSeconds / Math.max(0.01, this.clipDuration)));
         if (atEnd && this.clipPlaying) {
           this.clipPlaying = false;
