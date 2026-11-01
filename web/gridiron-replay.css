@@ -184,11 +184,15 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
 
 /* phones: the field and transport keep a fixed share of the height; the panel scrolls below them */
 @media (max-width: 900px) {
+  /* as on the original phone page: the whole film room is one document that scrolls */
+  :host { height: auto; overflow: visible; }
   .app {
+    height: auto;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(200px, 32%) auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(280px, 52dvh) auto auto;
     grid-template-areas: 'bug' 'stage' 'tp' 'panel';
   }
+  .tab { flex: none; overflow: visible; }
   .bug { flex-wrap: wrap; padding-block: 6px; }
   .bug-meta { width: 100%; margin: 4px 0 0; text-align: left; font-size: 11px; }
   .transport { padding-block: 4px 6px; gap: 4px; }
@@ -203,7 +207,12 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
   #wp { height: 22px; }
   .cams { top: 8px; right: 8px; }
   .cams button { padding: 4px 7px; font-size: 11px; }
-  .ticker { top: 8px; }
+  /* the ticker sits in the field column, as on the original phone page, not over the canvas */
+  .stage { display: flex; flex-direction: column; min-height: 0; }
+  #view { flex: 1 1 0; min-height: 0; }
+  /* fixed strip: a new line never changes the field's height; the newest line sits at the bottom */
+  .ticker { position: relative; top: auto; left: auto; max-width: 100%; flex-shrink: 0; height: 4.8em; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+  .ticker > div { flex-shrink: 0; }
   .panel { border-left: 0; border-top: 1px solid var(--rail); }
 }
 

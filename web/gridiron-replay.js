@@ -1,4 +1,4 @@
-import { Renderer } from './render.js';
+import { Renderer } from './render.js?v=2';
 import { executeSelectedPlay } from './prototype-execution.js';
 import { adaptLpGamePayload } from './lp-game-record-adapter.js';
 import { prepareSlcPhysicsReplay, selectionForSlcPlay, slcParticipantLine, slcPlayLabel } from './slc-seed-physics-replay.js';
@@ -18,7 +18,7 @@ const DEFAULTS = {
   games: 'docs/fixtures/e2/min-det-realism/games/',
   roster: 'data/teams/min-det-week8-2026-10-28.json',
 };
-const CSS_URL = new URL('./gridiron-replay.css', import.meta.url).href;
+const CSS_URL = new URL('./gridiron-replay.css?v=2', import.meta.url).href;
 const TEAM_NAMES = { MIN: 'MIN', DET: 'DET' };
 const ESC = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
@@ -586,7 +586,10 @@ class GridironReplay extends HTMLElement {
     this.audio.setPlay(null, null);
     this.setScoreState(play);
     this.renderDrives();
-    this.$('.pl.on')?.scrollIntoView({ block: 'nearest' });
+    // only scroll the row when the drive list is its own scroller (desktop); on phones the
+    // document scrolls, and scrolling it to the row moves the field on every play change
+    const drives = this.$('#tab-drives');
+    if (drives.scrollHeight > drives.clientHeight) this.$('.pl.on')?.scrollIntoView({ block: 'nearest' });
     this.setPlayText(play);
     this.renderPosition();
     this.$('#ticker').replaceChildren();

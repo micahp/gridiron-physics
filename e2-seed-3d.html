@@ -10,10 +10,14 @@
 <style>
   html, body { height: 100%; margin: 0; background: #0b1016; overflow: hidden; }
   gridiron-replay { display: block; height: 100vh; height: 100svh; }
+  @media (max-width: 900px) {
+    html, body { height: auto; min-height: 100%; overflow-x: hidden; overflow-y: auto; }
+    gridiron-replay { height: auto; }
+  }
 </style>
 </head>
 <body>
 <gridiron-replay></gridiron-replay>
-<script type="module" src="web/e2-seed-3d.js"></script>
+<script type="module" src="web/e2-seed-3d.js?v=2"></script>
 </body>
 </html>
