@@ -73,18 +73,18 @@ const MARKUP = `
     <aside class="panel" aria-label="Details">
       <nav class="tabs" role="tablist">
         <button role="tab" data-tab="drives" class="on">Drives</button>
-        <button role="tab" data-tab="physics">Physics</button>
-        <button role="tab" data-tab="roster">Ratings</button>
-        <button role="tab" data-tab="player">Player</button>
+        <button role="tab" data-tab="box">Box score</button>
+        <button role="tab" data-tab="playbook">Playbook</button>
+        <button role="tab" data-tab="ratings">Ratings</button>
       </nav>
       <div class="tab" id="tab-drives">
         <div class="filterbar" id="filterbar" role="group" aria-label="Filter plays"></div>
         <p class="note" id="play-count-label"></p>
         <div id="drivelist"></div>
       </div>
-      <div class="tab" id="tab-physics" hidden></div>
-      <div class="tab" id="tab-roster" hidden></div>
-      <div class="tab" id="tab-player" hidden><p class="hint">Click any player on the field, or pick one from Ratings.</p></div>
+      <div class="tab" id="tab-box" hidden></div>
+      <div class="tab" id="tab-playbook" hidden></div>
+      <div class="tab" id="tab-ratings" hidden></div>
     </aside>
   </div>`;
 
@@ -282,13 +282,10 @@ class GridironReplay extends HTMLElement {
       this.selectPlay(Number(button.dataset.i), { playClip: true });
       this.setContinuous(this.autoAdvance);
     });
-    this.$('#tab-roster').addEventListener('click', (event) => {
+    this.$('#tab-ratings').addEventListener('click', (event) => {
+      if (event.target.closest('[data-back]')) { this.clearPlayer(); return; }
       const teamButton = event.target.closest('[data-team]');
       if (teamButton) { this.rosterTeam = teamButton.dataset.team; this.renderRoster(); return; }
-      const playerButton = event.target.closest('[data-pid]');
-      if (playerButton) this.renderPlayer(playerButton.dataset.pid);
-    });
-    this.$('#tab-physics').addEventListener('click', (event) => {
       const playerButton = event.target.closest('[data-pid]');
       if (playerButton) this.renderPlayer(playerButton.dataset.pid);
     });
@@ -478,13 +475,16 @@ class GridironReplay extends HTMLElement {
   showTab(name) {
     this.shadowRoot.querySelectorAll('.tabs button').forEach((button) => button.classList.toggle('on', button.dataset.tab === name));
     this.shadowRoot.querySelectorAll('.tab').forEach((tab) => { tab.hidden = tab.id !== `tab-${name}`; });
-    if (name === 'physics') this.renderPhysics();
+    if (name === 'playbook') this.renderPlaybook();
+    if (name === 'box') this.renderBox();
+    if (name === 'ratings') this.renderRoster();
   }
 
   renderRoster() {
+    if (this.selectedPlayer) { this.$('#tab-ratings').innerHTML = this.playerCard(this.selectedPlayer); return; }
     const roster = this.model.rosterByTeam[this.rosterTeam];
     const groups = [...new Set(roster.map((player) => player.rating_group || player.position))].sort();
-    this.$('#tab-roster').innerHTML = `<div class="roster-t">${[this.away, this.home].map((team) =>
+    this.$('#tab-ratings').innerHTML = `<div class="roster-t">${[this.away, this.home].map((team) =>
       `<button data-team="${ESC(team)}" class="${team === this.rosterTeam ? 'on' : ''}">${ESC(TEAM_NAMES[team] || team)}</button>`).join('')}</div>
       <p class="note">Full local roster snapshot · depth-chart ranks are used for lineup selection. Availability is not verified against gameday inactives.</p>
       ${groups.map((group) => {
@@ -496,15 +496,25 @@ class GridironReplay extends HTMLElement {
   }
 
   renderPlayer(id) {
-    const player = this.model.game.players[id];
-    if (!player) return;
+    if (!this.model.game.players[id]) return;
     this.selectedPlayer = id;
     this.renderer?.select(id);
+    this.showTab('ratings');
+  }
+
+  clearPlayer() {
+    this.selectedPlayer = null;
+    this.renderer?.select(null);
+    this.renderRoster();
+  }
+
+  playerCard(id) {
+    const player = this.model.game.players[id];
     const ratingEntries = Object.entries(player.ratings || {});
     const phys = player.physics || {};
     const heightFeet = Math.floor((player.height_in || 0) / 12);
     const heightInches = (player.height_in || 0) % 12;
-    this.$('#tab-player').innerHTML = `<div class="card-h">${player.headshot_url ? `<img src="${ESC(player.headshot_url)}" alt="">` : '<span></span>'}
+    return `<button class="back" data-back type="button">✕ All players</button><div class="card-h">${player.headshot_url ? `<img src="${ESC(player.headshot_url)}" alt="">` : '<span></span>'}
       <div><h2>${ESC(player.name)}</h2><p>#${ESC(player.jersey)} · ${ESC(player.position)} · ${ESC(player.team_id)} · ${heightFeet}'${heightInches}" · ${ESC(player.weight_lb)} lb</p>
       <p>${ESC(player.status)} · ${ESC(player.depth_chart_position || 'No captured chart role')} · depth ${player.depth_chart_rank ?? '—'}</p></div>
       <div class="big" title="Overall estimate">${player.overall_estimate ?? '—'}</div></div>
@@ -515,23 +525,87 @@ class GridironReplay extends HTMLElement {
       <div class="sec">Ratings</div><div class="attrs">${ratingEntries.map(([key, value]) =>
         `<div class="attr"><div class="top"><span>${ESC(key)}</span><b>${ESC(value)}</b></div><div class="meter"><i style="width:${Number(value)}%"></i></div></div>`).join('')}</div>
       <p class="note">Ratings and physical attributes come from the existing local Gridiron player pipeline. Some combine measurables are estimated as recorded in the source snapshot.</p>`;
-    this.showTab('player');
   }
 
-  renderPhysics() {
+  renderPlaybook() {
     const play = this.items[this.currentIndex]?.play;
-    const box = this.$('#tab-physics');
-    if (!play || !this.currentRecord) return;
-    const roster = this.currentRecord.roster.map((entry) => this.model.game.players[entry.id]).filter(Boolean);
+    const box = this.$('#tab-playbook');
+    if (!play) { box.innerHTML = '<p class="hint">Pick a play in Drives to see its playbook details.</p>'; return; }
+    const roster = (this.currentRecord?.roster || []).map((entry) => this.model.game.players[entry.id]).filter(Boolean);
     const row = (label, value) => `<dt>${ESC(label)}</dt><dd>${ESC(value)}</dd>`;
     box.innerHTML = `<div class="sec">Saved SLC outcome</div><dl class="kv">
       ${row('Event', play.event_type)}${row('Yards', play.outcome?.yards_gained ?? '—')}
       ${row('Touchdown', play.outcome?.touchdown ? 'Yes' : 'No')}${row('LP play ID', play.id)}
       ${row('Recorded offense', this.model.teamsBySide[play.state_before.offense_team])}
       ${row('Recorded participant', slcParticipantLine(play) || 'Not named by LP')}
-      ${row('3D frame rate', `${this.currentRecord.hz} Hz`)}${row('Frames', this.currentRecord.frames.length)}
+      ${row('Formation', play.outcome?.pre_event?.formation ?? 'not recorded')}${row('Personnel', play.outcome?.pre_event?.personnel ?? 'not recorded')}${row('Coverage', play.outcome?.pre_event?.coverage ?? 'not recorded')}
+      ${row('3D frame rate', `${this.currentRecord?.hz ?? '—'} Hz`)}${row('Frames', this.currentRecord?.frames.length ?? '—')}
       ${row('Players in reconstructed play', roster.length)}</dl>
       <p class="note">Gridiron reconstructs motion around the immutable SLC event result. This is not tracking footage or a predictive re-simulation.</p>`;
+  }
+
+  // Team totals and player lines for the whole saved game, derived from the saved plays.
+  renderBox() {
+    const teams = [this.away, this.home];
+    const totals = Object.fromEntries(teams.map((team) => [team, { plays: 0, rushAtt: 0, rushYds: 0, passAtt: 0, passComp: 0, passYds: 0, sacks: 0, turnovers: 0, punts: 0, fgAtt: 0 }]));
+    const passing = {}, rushing = {}, receiving = {};
+    const credit = (map, pre, role, team) => {
+      const name = pre[role]?.player_name;
+      if (!name) return null;
+      const key = `${team}:${name}`;
+      map[key] ??= { name, team, att: 0, comp: 0, yds: 0, td: 0 };
+      return map[key];
+    };
+    for (const { play } of this.items) {
+      const team = this.model.teamsBySide[play.state_before.offense_team];
+      if (!totals[team]) continue;
+      const t = totals[team];
+      const pre = play.outcome?.pre_event || {};
+      const yards = Number(play.outcome?.yards_gained ?? 0);
+      const td = Boolean(play.outcome?.touchdown);
+      const kind = play.event_type;
+      t.plays += 1;
+      if (kind === 'run') {
+        t.rushAtt += 1;
+        t.rushYds += yards;
+        const r = credit(rushing, pre, 'rusher', team);
+        if (r) { r.att += 1; r.yds += yards; if (td) r.td += 1; }
+      } else if (kind === 'sack') {
+        t.sacks += 1;
+      } else if (kind === 'pass_complete' || kind === 'pass_incomplete' || kind === 'interception') {
+        const complete = kind === 'pass_complete';
+        t.passAtt += 1;
+        if (complete) { t.passComp += 1; t.passYds += yards; }
+        if (kind === 'interception') t.turnovers += 1;
+        const p = credit(passing, pre, 'passer', team);
+        if (p) { p.att += 1; if (complete) { p.comp += 1; p.yds += yards; } if (td) p.td += 1; }
+        const target = credit(receiving, pre, 'receiver', team);
+        if (target) { target.att += 1; if (complete) { target.comp += 1; target.yds += yards; } if (td) target.td += 1; }
+      } else if (kind === 'fumble_lost') {
+        t.turnovers += 1;
+      } else if (kind === 'punt') {
+        t.punts += 1;
+      } else if (kind === 'field_goal_attempt') {
+        t.fgAtt += 1;
+      }
+    }
+    const byYards = (map) => Object.values(map).sort((a, b) => b.yds - a.yds || a.name.localeCompare(b.name));
+    const teamRows = [
+      ['Plays', (t) => t.plays],
+      ['Rushes · yards', (t) => `${t.rushAtt} · ${t.rushYds}`],
+      ['Pass comp/att', (t) => `${t.passComp}/${t.passAtt}`],
+      ['Pass yards', (t) => t.passYds],
+      ['Sacks', (t) => t.sacks],
+      ['Turnovers', (t) => t.turnovers],
+      ['Punts', (t) => t.punts],
+      ['Field goal attempts', (t) => t.fgAtt],
+    ];
+    const playerTable = (title, list, columns) => (list.length ? `<div class="sec">${title}</div><table class="stat"><thead><tr><th>Player</th>${columns.map(([label]) => `<th>${label}</th>`).join('')}</tr></thead><tbody>${list.map((p) => `<tr><th>${ESC(p.name)} <small>${ESC(p.team)}</small></th>${columns.map(([, value]) => `<td>${ESC(value(p))}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '');
+    this.$('#tab-box').innerHTML = `<div class="sec">Team totals</div><table class="stat"><thead><tr><th></th>${teams.map((team) => `<th>${ESC(TEAM_NAMES[team] || team)}</th>`).join('')}</tr></thead><tbody>${teamRows.map(([label, value]) => `<tr><th>${label}</th>${teams.map((team) => `<td>${ESC(value(totals[team]))}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      ${playerTable('Passing', byYards(passing), [['C/ATT', (p) => `${p.comp}/${p.att}`], ['YDS', (p) => p.yds], ['TD', (p) => p.td]])}
+      ${playerTable('Rushing', byYards(rushing), [['CAR', (p) => p.att], ['YDS', (p) => p.yds], ['TD', (p) => p.td]])}
+      ${playerTable('Receiving', byYards(receiving), [['REC/TGT', (p) => `${p.comp}/${p.att}`], ['YDS', (p) => p.yds], ['TD', (p) => p.td]])}
+      <p class="note">Derived from the saved plays for this game. Passing, rushing and receiving come from the named players on each play. Not an official box score.</p>`;
   }
 
   renderScoreChart() {
@@ -601,6 +675,7 @@ class GridironReplay extends HTMLElement {
     if (drives.scrollHeight > drives.clientHeight) this.$('.pl.on')?.scrollIntoView({ block: 'nearest' });
     this.setPlayText(play);
     this.renderPosition();
+    if (!this.$('#tab-playbook').hidden) this.renderPlaybook();
     this.$('#ticker').replaceChildren();
     try {
       const selection = selectionForSlcPlay(this.model, item);
@@ -627,7 +702,7 @@ class GridironReplay extends HTMLElement {
       this.$('#loader').hidden = true;
       this.clipPlaying = playClip || this.continuous;
       this.lastFrame = null;
-      this.renderPhysics();
+      this.renderPlaybook();
       this.renderPosition();
     } catch (error) {
       this.currentSelection = null;

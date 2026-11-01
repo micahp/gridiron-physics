@@ -213,7 +213,8 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
   #audio-toggle { order: 11; }
   .autonomous-entry { order: 12; }
   .playtext { font-size: 12px; min-height: 0; }
-  #wp { height: 22px; }
+  /* full chart height on phones, so its label and line do not collide; a gap keeps it off the play text */
+  #wp { height: 46px; margin-top: 6px; }
   .cams { top: 8px; right: 8px; }
   .cams button { padding: 4px 7px; font-size: 11px; }
   /* the ticker sits in the field column, as on the original phone page, not over the canvas */
@@ -235,3 +236,11 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
   .bug-meta { display: none; }
   .panel { border-top: 0; border-left: 1px solid var(--rail); }
 }
+
+/* box score tables and the Ratings view's back button */
+.stat { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+.stat th, .stat td { padding: 5px 4px; border-bottom: 1px solid var(--rail); text-align: right; font-weight: 500; }
+.stat th:first-child { text-align: left; }
+.stat small { color: var(--dim); font-weight: 400; }
+.back { display: block; margin: 0 0 10px auto; padding: 6px 12px; border: 1px solid var(--rail); background: var(--rail); color: var(--chalk); font: 600 13px var(--f-display); letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+.back:hover { border-color: var(--dim); }
