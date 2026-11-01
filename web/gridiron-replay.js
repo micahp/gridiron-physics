@@ -18,7 +18,7 @@ const DEFAULTS = {
   games: 'docs/fixtures/e2/min-det-realism/games/',
   roster: 'data/teams/min-det-week8-2026-10-28.json',
 };
-const CSS_URL = new URL('./gridiron-replay.css?v=2', import.meta.url).href;
+const CSS_URL = new URL('./gridiron-replay.css?v=7', import.meta.url).href;
 const TEAM_NAMES = { MIN: 'MIN', DET: 'DET' };
 const ESC = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
@@ -131,6 +131,12 @@ function soundPlay(scenario, play) {
     defense: scenario.def,
     togo: play.state_before.yards_to_go,
   };
+}
+
+// "Jared Goff to Sam LaPorta" for a pass with both players named; '' otherwise
+function passTo(play) {
+  const pre = play.outcome?.pre_event || {};
+  return pre.passer?.player_name && pre.receiver?.player_name ? `${pre.passer.player_name} to ${pre.receiver.player_name}` : '';
 }
 
 function driveResult(drive) {
@@ -355,12 +361,12 @@ class GridironReplay extends HTMLElement {
           const down = state.down == null ? 'ST' : `${state.down}&${state.yards_to_go}`;
           return `<button class="pl ${index === this.currentIndex ? 'on' : ''}" data-i="${index}">
             <span class="dd">Q${state.quarter} ${ESC(clock(state.clock_seconds))}<br>${ESC(down)}</span>
-            <span class="txt">${ESC(outcomeText(play))}</span>
+            <span class="txt">${ESC(outcomeText(play))}${passTo(play) ? ` · ${ESC(passTo(play))}` : ''}</span>
           </button>`;
         });
       if (!rows.length) return '';
       const scored = drive.terminal === 'touchdown' || drive.terminal === 'field_goal_attempt' && drive.field_goal_made;
-      return `<div class="drive"><div class="drive-h" style="--team:${ESC(sourceTeam?.alt || '#8d9aa8')}"><span>${ESC(team)} · DRIVE ${drive.index} · Q${drive.quarter_start}</span><span class="res ${scored ? 'score' : ''}">${ESC(driveResult(drive))}</span></div>${rows.join('')}</div>`;
+      return `<div class="drive"><div class="drive-h" style="--team:${ESC(sourceTeam?.color || '#8d9aa8')}"><span>${ESC(team)} · DRIVE ${drive.index} · Q${drive.quarter_start}</span><span class="res ${scored ? 'score' : ''}">${ESC(driveResult(drive))}</span></div>${rows.join('')}</div>`;
     }).join('');
     if (!this.visibleItems.length) list.innerHTML = '<p class="note">No saved plays match this filter.</p>';
     this.$('#play-count-label').textContent = `${this.items.length} saved plays · ${this.visibleItems.length} shown`;
@@ -397,9 +403,12 @@ class GridironReplay extends HTMLElement {
     const node = this.$('#playtext');
     node.replaceChildren();
     const heading = document.createElement('b');
-    heading.textContent = `PLAY ${play.sequence} · ${slcPlayLabel(play)}`;
+    heading.textContent = `PLAY ${play.sequence}`;
     const summary = document.createElement('span');
-    summary.textContent = ` ${outcomeText(play)}${slcParticipantLine(play) ? ` · ${slcParticipantLine(play)}` : ''}`;
+    // a pass names both players as "passer to receiver"; other plays keep the shared list
+    const pre = play.outcome?.pre_event || {};
+    const who = pre.passer?.player_name && pre.receiver?.player_name ? `${pre.passer.player_name} to ${pre.receiver.player_name}` : slcParticipantLine(play);
+    summary.textContent = ` ${outcomeText(play)}${who ? ` · ${who}` : ''}`;
     node.append(heading, summary);
     if (selection?.execution_contract?.unsupported?.length) {
       const caveat = document.createElement('span');
@@ -671,7 +680,7 @@ class GridironReplay extends HTMLElement {
   addPhysicsEvent(event) {
     const names = (id) => this.model.game.players[id]?.short || this.model.game.players[id]?.name || id || '';
     const text = {
-      throw: () => `Throw · ${names(event.by)}`,
+      throw: () => `Throw · ${names(event.by)}${event.to ? ` to ${names(event.to)}` : ''}`,
       catch: () => `Catch · ${names(event.by)}`,
       handoff: () => `Handoff · ${names(event.to)}`,
       tackle: () => `Tackle · ${names(event.by)}`,

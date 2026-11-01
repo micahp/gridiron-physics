@@ -193,17 +193,26 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
     grid-template-areas: 'bug' 'stage' 'tp' 'panel';
   }
   .tab { flex: none; overflow: visible; }
-  .bug { flex-wrap: wrap; padding-block: 6px; }
-  .bug-meta { width: 100%; margin: 4px 0 0; text-align: left; font-size: 11px; }
+  /* scorebug stays on one row on phones: both teams share the width, the meta line is dropped */
+  .bug { flex-wrap: nowrap; padding-block: 6px; }
+  .bug-team { flex: 1 1 0; min-width: 0; padding: 4px 8px; gap: 6px; }
+  .bug-team img { width: 22px; height: 22px; }
+  .bug-team .abbr { font-size: 18px; }
+  .bug-team .score { font-size: 24px; }
+  .bug-team .rec { display: none; }
+  .bug-mid { flex: none; padding: 0 8px; }
+  .bug-clock { font-size: 16px; gap: 6px; }
+  .bug-meta { display: none; }
   .transport { padding-block: 4px 6px; gap: 4px; }
   .tp-row { gap: 6px; }
   .tp-row > button { width: 34px; height: 30px; }
+  #audio-toggle { width: auto; white-space: nowrap; }
   /* transport on phones: buttons and speed on row one, scrub on its own row, toggles below */
   #scrub { order: 9; flex: 1 1 100%; }
   .auto { order: 10; }
   #audio-toggle { order: 11; }
   .autonomous-entry { order: 12; }
-  .playtext { font-size: 12px; min-height: 0; max-height: 2.6em; overflow-y: auto; }
+  .playtext { font-size: 12px; min-height: 0; }
   #wp { height: 22px; }
   .cams { top: 8px; right: 8px; }
   .cams button { padding: 4px 7px; font-size: 11px; }
