@@ -231,7 +231,7 @@ function animate(root, pose, speed, dt, carrying) {
 
 // -------------------------------------------------------------- scene
 export class Renderer {
-  constructor(canvas, game, { displayFont }) {
+  constructor(canvas, game, { displayFont, steadyCamera = false }) {
     this.game = game;
     this.canvas = canvas;
     const r = (this.r3 = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
@@ -311,6 +311,7 @@ export class Renderer {
     this.players = new Map();
     this.kits = this.makeKits();
     this.cam = { mode: 'broadcast', focus: new THREE.Vector3(50, 0, W / 2), pos: new THREE.Vector3(50, 30, -40) };
+    this.steadyCamera = steadyCamera;
     this.raycaster = new THREE.Raycaster();
     this.selected = null;
     this.paths = new THREE.Group();
@@ -530,7 +531,7 @@ export class Renderer {
     const c = this.cam;
     const bp = this.ballPos || { x: 50, y: W / 2, z: 0 };
     const sel = this.selected && this.players.get(this.selected);
-    const tgt = sel && c.mode === 'follow' ? new THREE.Vector3(sel.position.x, 1, sel.position.z) : new THREE.Vector3(bp.x, Math.min(bp.z * 0.35, 6), bp.y);
+    const tgt = sel && c.mode === 'follow' ? new THREE.Vector3(sel.position.x, 1, sel.position.z) : new THREE.Vector3(bp.x, this.steadyCamera ? 0 : Math.min(bp.z * 0.35, 6), bp.y);
     const k = 1 - Math.exp(-dt * (c.mode === 'top' ? 2 : 2.8));
     c.focus.lerp(tgt, k);
     if (c.mode === 'free') {
@@ -541,7 +542,7 @@ export class Renderer {
     const f = c.focus;
     const dir = ctx?.dir || 1;
     let pos, fov = 32;
-    if (c.mode === 'broadcast') pos = new THREE.Vector3(f.x - dir * 3, 19 + bp.z * 0.25, W + 31), fov = 30;
+    if (c.mode === 'broadcast') pos = new THREE.Vector3(f.x - dir * 3, this.steadyCamera ? 19 : 19 + bp.z * 0.25, W + 31), fov = 30;
     else if (c.mode === 'all22') pos = new THREE.Vector3(f.x - dir * 52, 44, W / 2 + (f.z - W / 2) * 0.3), fov = 38;
     else if (c.mode === 'sky') pos = new THREE.Vector3(f.x - dir * 15, 9, f.z), fov = 55;
     else if (c.mode === 'follow') pos = new THREE.Vector3(f.x - dir * 9, 5, f.z + 7), fov = 50;
