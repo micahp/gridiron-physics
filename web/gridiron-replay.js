@@ -142,6 +142,11 @@ function passTo(play) {
   return pre.passer?.player_name && pre.receiver?.player_name ? `${pre.passer.player_name} to ${pre.receiver.player_name}` : '';
 }
 
+// the drive row names the ball carrier on a run, and the passer and receiver on a pass
+function whoText(play) {
+  return passTo(play) || play.outcome?.pre_event?.rusher?.player_name || '';
+}
+
 const FORM_LABEL = { SHOTGUN: 'Shotgun', 'UNDER CENTER': 'Under center', PISTOL: 'Pistol' };
 const GAP_LABEL = { end: 'End', tackle: 'Tackle', guard: 'Guard' };
 // Diagram geometry in a 160x96 box: line of scrimmage at y=60, offensive line at x=56..104.
@@ -296,7 +301,7 @@ class GridironReplay extends HTMLElement {
   bindControls() {
     this.$('#prev').addEventListener('click', () => this.stepPlay(-1));
     this.$('#next').addEventListener('click', () => this.stepPlay(1));
-    this.$('#play').addEventListener('click', () => this.setContinuous(!this.continuous));
+    this.$('#play').addEventListener('click', () => this.togglePlay());
     this.$('#scrub').addEventListener('input', (event) => {
       if (!this.currentRecord) return;
       this.clipSeconds = (Number(event.target.value) / 1000) * this.clipDuration;
@@ -369,7 +374,7 @@ class GridironReplay extends HTMLElement {
   handleKey(event) {
     const target = event.composedPath()[0];
     if (target?.matches?.('input, select')) return;
-    if (event.code === 'Space') { event.preventDefault(); this.setContinuous(!this.continuous); }
+    if (event.code === 'Space') { event.preventDefault(); this.togglePlay(); }
     if (event.code === 'ArrowRight') this.stepPlay(1);
     if (event.code === 'ArrowLeft') this.stepPlay(-1);
   }
@@ -402,7 +407,7 @@ class GridironReplay extends HTMLElement {
           const down = state.down == null ? 'ST' : `${state.down}&${state.yards_to_go}`;
           return `<button class="pl ${index === this.currentIndex ? 'on' : ''}" data-i="${index}">
             <span class="dd">Q${state.quarter} ${ESC(clock(state.clock_seconds))}<br>${ESC(down)}</span>
-            <span class="txt">${ESC(outcomeText(play))}${passTo(play) ? ` · ${ESC(passTo(play))}` : ''}</span>
+            <span class="txt">${ESC(outcomeText(play))}${whoText(play) ? ` · ${ESC(whoText(play))}` : ''}</span>
           </button>`;
         });
       if (!rows.length) return '';
@@ -781,14 +786,21 @@ class GridironReplay extends HTMLElement {
     this.renderScoreChart();
   }
 
+  // A clip started from a play row plays without the continuous run, so the button pauses that too.
+  togglePlay() {
+    this.setContinuous(!(this.continuous || this.clipPlaying));
+  }
+
   setContinuous(value) {
     this.continuous = value;
     this.$('#play').textContent = this.continuous ? '❚❚' : '▶';
     this.$('#play').setAttribute('aria-label', this.continuous ? 'Pause game' : 'Play game');
     if (this.continuous && this.currentRecord) {
-      this.clipSeconds = 0;
+      if (this.clipSeconds >= this.clipDuration) this.clipSeconds = 0;
       this.clipPlaying = true;
       this.lastFrame = null;
+    } else {
+      this.clipPlaying = false;
     }
   }
 
