@@ -1,7 +1,7 @@
 {
  "contract": "HPV1 data contract, 2022 to 2025",
  "manifest": {
-  "builder_commit": "87e6c31ffbf32fce5f569edda3b8dfc4dfe417de",
+  "builder_commit": "ad665607363405a6fa34c8e7c16dd0c2879c5b5a",
   "inputs": {
    "pbp_2022.csv.gz": {
     "bytes": 19093961,
