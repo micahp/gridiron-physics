@@ -290,6 +290,22 @@ export function simulatePlay(game, S, ctx = {}) {
     }
   }
 
+  // The formation is the anchor: a lineman blocks the defender lined up in front of him. Only a blocker with no man in
+  // front of him (the center on a four-man front) takes the nearest one left over.
+  const IN_FRONT = { LT: 'LEDGE', LG: 'LDT', RG: 'RDT', RT: 'REDGE', C: 'NB' };
+  function assignInFront(blockers, defenders, skip) {
+    const claimed = new Set();
+    const rest = [];
+    for (const b of blockers) {
+      const man = IN_FRONT[b.slot] ? slotOf(def, IN_FRONT[b.slot]) : null;
+      if (man && defenders.includes(man) && !skip.has(man)) {
+        b.ai.blockOn = man;
+        claimed.add(man);
+      } else rest.push(b);
+    }
+    assignBlocks(rest, defenders.filter((d) => !claimed.has(d)), skip);
+  }
+
   // --------------------------------------------- carrier & tackling
   // Run fits keep their assignment at the handoff; they are not switched to a pursuit of the carrier.
   const TO_PURSUE = new Set(['stance', 'cover_man', 'zone', 'rush', 'kick_cover', 'hold_kick', 'gunner', 'jam', 'punt_rush', 'punt_protect', 'idle', 'route', 'route_target', 'pass_pro', 'run_block', 'escort']);
@@ -616,10 +632,9 @@ export function simulatePlay(game, S, ctx = {}) {
           p.pose = POSE.BLOCK;
           return;
         }
-        // kick-slide to a set point on the rusher's path
-        const u = unit(d.p.x - qb.p.x, d.p.y - qb.p.y);
-        const between = { x: qb.p.x + u.x * Math.min(d2(qb.p, d.p) * 0.55, 4.5), y: qb.p.y + u.y * Math.min(d2(qb.p, d.p) * 0.55, 4.5) };
-        p.dv = seek(p, between, 0.7, 8);
+        // meet the man in front of him where he is going, not a spot on the line from the QB at the snap, so an edge
+        // rusher who arcs wide still runs into his tackle
+        p.dv = seek(p, lead(p, d, 0.9), 0.85, 10);
         p.face = faceTo(p, d.p);
         if (d2(p.p, d.p) < p.r + d.r + 0.3 && !p.engaged && !d.engaged) W.engage(p, d);
         return;
@@ -892,7 +907,7 @@ export function simulatePlay(game, S, ctx = {}) {
     const skipSet = new Set(tackleIds.map((id) => pl(id)));
     const blockers = [...OL.map((s) => slotOf(off, s)), slotOf(off, 'TE')].filter(Boolean);
     if (heavy && slotOf(off, 'WR3')) blockers.push(slotOf(off, 'WR3'));
-    assignBlocks(blockers, front, skipSet);
+    assignInFront(blockers, front, skipSet);
     for (const b of blockers) b.mode = 'run_block';
     for (const s of ['WR1', 'WR2', 'WR3']) {
       const w = slotOf(off, s);
@@ -1086,7 +1101,7 @@ export function simulatePlay(game, S, ctx = {}) {
     const blockers = OL.map((s) => slotOf(off, s)).filter(Boolean);
     const rb = slotOf(off, 'RB');
     if (heavy && slotOf(off, 'TE')) blockers.push(slotOf(off, 'TE'));
-    assignBlocks(blockers, rushers.slice().sort((a, b) => lOfY(b.p.y / YD) - lOfY(a.p.y / YD)), new Set());
+    assignInFront(blockers, rushers, new Set());
     for (const b of blockers) {
       b.mode = 'pass_pro';
       b.ai.setPt = at(-2, lOfY(b.p.y / YD) * 1.1);
