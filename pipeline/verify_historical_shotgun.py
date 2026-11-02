@@ -24,6 +24,13 @@ ALLOWED = (2022, 2023, 2024)
 GATE = os.path.join(os.path.dirname(HERE), "data", "playbooks", "research-2026-10-28-gate3-shotgun-reconciliation",
                     "team_season_sources.csv")
 R1_THRESHOLD = 0.99
+# The one approved source-label correction in rebuild v2: FTN token " S" (leading space) now reads as shotgun, so the
+# label moves from participation to ftn. Any other source difference from rev3 fails the check.
+NAMED_SOURCE_CORRECTIONS = {(2022, "2022_15_DAL_JAX", "4021"): ("participation", "ftn")}
+
+
+def named_correction(season, key, old, new):
+    return NAMED_SOURCE_CORRECTIONS.get((season, key[1], key[2])) == (old, new)
 
 
 def rev3_shotgun(season, rev3_dir):
@@ -103,7 +110,7 @@ def main(argv):
             stats["matched"] += 1
         else:
             stats["hierarchy_mismatch"] += 1
-        q = (ftn or {}).get("qb_location")
+        q = str((ftn or {}).get("qb_location") or "").strip()
         ftn_value = True if q in ("S", "P") else False if q == "U" else None
         part_value = bp.participation_shotgun_equivalent((part or {}).get("offense_formation"), season) if part else None
         if ftn_value is not None and part_value is not None:
@@ -119,7 +126,11 @@ def main(argv):
         stats["rev3"] = {
             "shared": len(shared),
             "value_mismatch": sum(rev3[key][0] != population[key]["shotgun_hierarchy"] for key in shared),
-            "source_mismatch": sum(rev3[key][1] != population[key]["shotgun_source"] for key in shared),
+            "source_mismatch": sum(rev3[key][1] != population[key]["shotgun_source"]
+                                   and not named_correction(season, key, rev3[key][1], population[key]["shotgun_source"])
+                                   for key in shared),
+            "named_source_corrections": sum(named_correction(season, key, rev3[key][1], population[key]["shotgun_source"])
+                                            for key in shared),
             "population_not_in_rev3": len(set(population) - set(rev3)),
             "rev3_not_in_population": len(rev3_not_population),
             "rev3_not_in_population_unclassified": len(rev3_not_population) - sum(rev3_only_pbp.values()),

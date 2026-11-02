@@ -1,0 +1,29 @@
+{
+  "r1_below_gate3": [],
+  "r1_below_new_population": [],
+  "r1_denominators_no_larger_than_gate3": true,
+  "season": 2024,
+  "stats": {
+    "hierarchy_mismatch": 0,
+    "matched": 33204,
+    "outside_population_scrimmage": 266,
+    "population_rows": 33204,
+    "population_rows_not_found": 0,
+    "r1_plays_with_both_values": 32951,
+    "rev3": {
+      "named_source_corrections": 0,
+      "population_not_in_rev3": 0,
+      "rev3_not_in_population": 246,
+      "rev3_not_in_population_by_pbp_class": {
+        "pass, two_point=0, fumble=0": 3,
+        "pass, two_point=1, fumble=0": 99,
+        "run, two_point=0, fumble=1": 108,
+        "run, two_point=1, fumble=0": 36
+      },
+      "rev3_not_in_population_unclassified": 0,
+      "shared": 33204,
+      "source_mismatch": 0,
+      "value_mismatch": 0
+    }
+  }
+}

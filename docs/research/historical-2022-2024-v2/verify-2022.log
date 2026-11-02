@@ -1,0 +1,62 @@
+{
+  "r1_below_gate3": [
+    "ATL",
+    "BAL",
+    "CAR",
+    "CHI",
+    "CLE",
+    "GB",
+    "JAX",
+    "LA",
+    "LAC",
+    "MIA",
+    "NYG",
+    "NYJ",
+    "SEA",
+    "SF",
+    "TB"
+  ],
+  "r1_below_new_population": [
+    "ATL",
+    "BAL",
+    "CAR",
+    "CHI",
+    "CLE",
+    "GB",
+    "JAX",
+    "LA",
+    "LAC",
+    "MIA",
+    "NYG",
+    "NYJ",
+    "SEA",
+    "SF",
+    "TB"
+  ],
+  "r1_denominators_no_larger_than_gate3": true,
+  "season": 2022,
+  "stats": {
+    "hierarchy_mismatch": 0,
+    "matched": 33519,
+    "outside_population_scrimmage": 251,
+    "population_rows": 33519,
+    "population_rows_not_found": 0,
+    "r1_plays_with_both_values": 33407,
+    "rev3": {
+      "named_source_corrections": 1,
+      "population_not_in_rev3": 0,
+      "rev3_not_in_population": 227,
+      "rev3_not_in_population_by_pbp_class": {
+        "pass, two_point=0, fumble=0": 2,
+        "pass, two_point=0, fumble=1": 2,
+        "pass, two_point=1, fumble=0": 88,
+        "run, two_point=0, fumble=1": 105,
+        "run, two_point=1, fumble=0": 30
+      },
+      "rev3_not_in_population_unclassified": 0,
+      "shared": 33519,
+      "source_mismatch": 0,
+      "value_mismatch": 0
+    }
+  }
+}

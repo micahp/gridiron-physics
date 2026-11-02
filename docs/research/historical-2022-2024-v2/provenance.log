@@ -1,0 +1,38 @@
+{
+  "2022": {
+    "by_source": {
+      "ftn": 33410,
+      "participation": 108,
+      "pbp_flag": 1
+    },
+    "disagrees_by_source": {
+      "ftn": 290
+    },
+    "pbp_flag_disagrees": 290,
+    "plays": 33519
+  },
+  "2023": {
+    "by_source": {
+      "ftn": 33644,
+      "pbp_flag": 77
+    },
+    "disagrees_by_source": {
+      "ftn": 290
+    },
+    "pbp_flag_disagrees": 290,
+    "plays": 33721
+  },
+  "2024": {
+    "by_source": {
+      "ftn": 32953,
+      "participation": 239,
+      "pbp_flag": 12
+    },
+    "disagrees_by_source": {
+      "ftn": 260,
+      "participation": 2
+    },
+    "pbp_flag_disagrees": 262,
+    "plays": 33204
+  }
+}

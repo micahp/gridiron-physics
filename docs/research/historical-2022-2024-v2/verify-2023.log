@@ -1,0 +1,30 @@
+{
+  "r1_below_gate3": [],
+  "r1_below_new_population": [],
+  "r1_denominators_no_larger_than_gate3": true,
+  "season": 2023,
+  "stats": {
+    "hierarchy_mismatch": 0,
+    "matched": 33721,
+    "outside_population_scrimmage": 236,
+    "population_rows": 33721,
+    "population_rows_not_found": 0,
+    "r1_plays_with_both_values": 33642,
+    "rev3": {
+      "named_source_corrections": 0,
+      "population_not_in_rev3": 0,
+      "rev3_not_in_population": 213,
+      "rev3_not_in_population_by_pbp_class": {
+        "pass, two_point=0, fumble=1": 1,
+        "pass, two_point=1, fumble=0": 77,
+        "run, two_point=0, fumble=0": 1,
+        "run, two_point=0, fumble=1": 90,
+        "run, two_point=1, fumble=0": 44
+      },
+      "rev3_not_in_population_unclassified": 0,
+      "shared": 33721,
+      "source_mismatch": 0,
+      "value_mismatch": 0
+    }
+  }
+}

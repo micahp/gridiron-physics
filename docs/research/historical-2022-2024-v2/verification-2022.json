@@ -1,0 +1,326 @@
+{
+  "inputs_sha256": {
+    "ftn_charting": "80e13831525f726cb3befb7eb62aa6ea8bf55d36080fcf09fdddd7c578f3b200",
+    "participation": "37eae0a8c388d0974c6df9a1f9a1d01f09f63a21440d3b03d7f208c1438c51e4",
+    "pbp": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4"
+  },
+  "r1_below_gate3": [
+    "ATL",
+    "BAL",
+    "CAR",
+    "CHI",
+    "CLE",
+    "GB",
+    "JAX",
+    "LA",
+    "LAC",
+    "MIA",
+    "NYG",
+    "NYJ",
+    "SEA",
+    "SF",
+    "TB"
+  ],
+  "r1_below_new_population": [
+    "ATL",
+    "BAL",
+    "CAR",
+    "CHI",
+    "CLE",
+    "GB",
+    "JAX",
+    "LA",
+    "LAC",
+    "MIA",
+    "NYG",
+    "NYJ",
+    "SEA",
+    "SF",
+    "TB"
+  ],
+  "r1_denominators_no_larger_than_gate3": true,
+  "r1_threshold": 0.99,
+  "season": 2022,
+  "stats": {
+    "hierarchy_mismatch": 0,
+    "matched": 33519,
+    "outside_population_scrimmage": 251,
+    "population_rows": 33519,
+    "population_rows_not_found": 0,
+    "r1_plays_with_both_values": 33407,
+    "rev3": {
+      "named_source_corrections": 1,
+      "population_not_in_rev3": 0,
+      "rev3_not_in_population": 227,
+      "rev3_not_in_population_by_pbp_class": {
+        "pass, two_point=0, fumble=0": 2,
+        "pass, two_point=0, fumble=1": 2,
+        "pass, two_point=1, fumble=0": 88,
+        "run, two_point=0, fumble=1": 105,
+        "run, two_point=1, fumble=0": 30
+      },
+      "rev3_not_in_population_unclassified": 0,
+      "shared": 33519,
+      "source_mismatch": 0,
+      "value_mismatch": 0
+    }
+  },
+  "teams": {
+    "ARI": {
+      "gate_agree": 1122,
+      "gate_both": 1127,
+      "gate_rate": 0.995563,
+      "new_agree": 1116,
+      "new_both": 1121,
+      "new_rate": 0.99554
+    },
+    "ATL": {
+      "gate_agree": 984,
+      "gate_both": 995,
+      "gate_rate": 0.988945,
+      "new_agree": 979,
+      "new_both": 990,
+      "new_rate": 0.988889
+    },
+    "BAL": {
+      "gate_agree": 1012,
+      "gate_both": 1025,
+      "gate_rate": 0.987317,
+      "new_agree": 1008,
+      "new_both": 1021,
+      "new_rate": 0.987267
+    },
+    "BUF": {
+      "gate_agree": 1007,
+      "gate_both": 1013,
+      "gate_rate": 0.994077,
+      "new_agree": 1002,
+      "new_both": 1008,
+      "new_rate": 0.994048
+    },
+    "CAR": {
+      "gate_agree": 956,
+      "gate_both": 966,
+      "gate_rate": 0.989648,
+      "new_agree": 950,
+      "new_both": 960,
+      "new_rate": 0.989583
+    },
+    "CHI": {
+      "gate_agree": 968,
+      "gate_both": 978,
+      "gate_rate": 0.989775,
+      "new_agree": 959,
+      "new_both": 969,
+      "new_rate": 0.98968
+    },
+    "CIN": {
+      "gate_agree": 1017,
+      "gate_both": 1026,
+      "gate_rate": 0.991228,
+      "new_agree": 1017,
+      "new_both": 1026,
+      "new_rate": 0.991228
+    },
+    "CLE": {
+      "gate_agree": 1078,
+      "gate_both": 1095,
+      "gate_rate": 0.984475,
+      "new_agree": 1076,
+      "new_both": 1093,
+      "new_rate": 0.984446
+    },
+    "DAL": {
+      "gate_agree": 1081,
+      "gate_both": 1090,
+      "gate_rate": 0.991743,
+      "new_agree": 1080,
+      "new_both": 1089,
+      "new_rate": 0.991736
+    },
+    "DEN": {
+      "gate_agree": 1057,
+      "gate_both": 1064,
+      "gate_rate": 0.993421,
+      "new_agree": 1053,
+      "new_both": 1060,
+      "new_rate": 0.993396
+    },
+    "DET": {
+      "gate_agree": 1059,
+      "gate_both": 1068,
+      "gate_rate": 0.991573,
+      "new_agree": 1056,
+      "new_both": 1065,
+      "new_rate": 0.991549
+    },
+    "GB": {
+      "gate_agree": 1016,
+      "gate_both": 1031,
+      "gate_rate": 0.985451,
+      "new_agree": 1013,
+      "new_both": 1028,
+      "new_rate": 0.985409
+    },
+    "HOU": {
+      "gate_agree": 993,
+      "gate_both": 1002,
+      "gate_rate": 0.991018,
+      "new_agree": 991,
+      "new_both": 1000,
+      "new_rate": 0.991
+    },
+    "IND": {
+      "gate_agree": 1091,
+      "gate_both": 1095,
+      "gate_rate": 0.996347,
+      "new_agree": 1087,
+      "new_both": 1091,
+      "new_rate": 0.996334
+    },
+    "JAX": {
+      "gate_agree": 1045,
+      "gate_both": 1056,
+      "gate_rate": 0.989583,
+      "new_agree": 1042,
+      "new_both": 1053,
+      "new_rate": 0.989554
+    },
+    "KC": {
+      "gate_agree": 1069,
+      "gate_both": 1076,
+      "gate_rate": 0.993494,
+      "new_agree": 1066,
+      "new_both": 1073,
+      "new_rate": 0.993476
+    },
+    "LA": {
+      "gate_agree": 967,
+      "gate_both": 981,
+      "gate_rate": 0.985729,
+      "new_agree": 964,
+      "new_both": 978,
+      "new_rate": 0.985685
+    },
+    "LAC": {
+      "gate_agree": 1115,
+      "gate_both": 1129,
+      "gate_rate": 0.9876,
+      "new_agree": 1113,
+      "new_both": 1127,
+      "new_rate": 0.987578
+    },
+    "LV": {
+      "gate_agree": 1033,
+      "gate_both": 1041,
+      "gate_rate": 0.992315,
+      "new_agree": 1031,
+      "new_both": 1039,
+      "new_rate": 0.9923
+    },
+    "MIA": {
+      "gate_agree": 973,
+      "gate_both": 984,
+      "gate_rate": 0.988821,
+      "new_agree": 969,
+      "new_both": 979,
+      "new_rate": 0.989785
+    },
+    "MIN": {
+      "gate_agree": 1093,
+      "gate_both": 1102,
+      "gate_rate": 0.991833,
+      "new_agree": 1091,
+      "new_both": 1100,
+      "new_rate": 0.991818
+    },
+    "NE": {
+      "gate_agree": 975,
+      "gate_both": 981,
+      "gate_rate": 0.993884,
+      "new_agree": 971,
+      "new_both": 977,
+      "new_rate": 0.993859
+    },
+    "NO": {
+      "gate_agree": 996,
+      "gate_both": 1000,
+      "gate_rate": 0.996,
+      "new_agree": 993,
+      "new_both": 996,
+      "new_rate": 0.996988
+    },
+    "NYG": {
+      "gate_agree": 1054,
+      "gate_both": 1065,
+      "gate_rate": 0.989671,
+      "new_agree": 1054,
+      "new_both": 1065,
+      "new_rate": 0.989671
+    },
+    "NYJ": {
+      "gate_agree": 1028,
+      "gate_both": 1048,
+      "gate_rate": 0.980916,
+      "new_agree": 1028,
+      "new_both": 1048,
+      "new_rate": 0.980916
+    },
+    "PHI": {
+      "gate_agree": 1093,
+      "gate_both": 1097,
+      "gate_rate": 0.996354,
+      "new_agree": 1088,
+      "new_both": 1091,
+      "new_rate": 0.99725
+    },
+    "PIT": {
+      "gate_agree": 1080,
+      "gate_both": 1089,
+      "gate_rate": 0.991736,
+      "new_agree": 1077,
+      "new_both": 1086,
+      "new_rate": 0.991713
+    },
+    "SEA": {
+      "gate_agree": 1013,
+      "gate_both": 1025,
+      "gate_rate": 0.988293,
+      "new_agree": 1011,
+      "new_both": 1023,
+      "new_rate": 0.98827
+    },
+    "SF": {
+      "gate_agree": 1017,
+      "gate_both": 1028,
+      "gate_rate": 0.9893,
+      "new_agree": 1014,
+      "new_both": 1025,
+      "new_rate": 0.989268
+    },
+    "TB": {
+      "gate_agree": 1123,
+      "gate_both": 1136,
+      "gate_rate": 0.988556,
+      "new_agree": 1120,
+      "new_both": 1133,
+      "new_rate": 0.988526
+    },
+    "TEN": {
+      "gate_agree": 967,
+      "gate_both": 976,
+      "gate_rate": 0.990779,
+      "new_agree": 964,
+      "new_both": 973,
+      "new_rate": 0.99075
+    },
+    "WAS": {
+      "gate_agree": 1114,
+      "gate_both": 1123,
+      "gate_rate": 0.991986,
+      "new_agree": 1111,
+      "new_both": 1120,
+      "new_rate": 0.991964
+    }
+  }
+}
