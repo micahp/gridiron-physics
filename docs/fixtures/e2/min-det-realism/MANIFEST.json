@@ -1,0 +1,165 @@
+{
+  "schema": "gridiron.lp.slc-seed-library.v1",
+  "contract": {
+    "name": "gridiron.lp-full-game-payload",
+    "version": "1.0.0"
+  },
+  "source": {
+    "repository": "Legendary Picks",
+    "run_id": "research-8b7d5a2e-2026-10-31",
+    "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+    "shortlist_sha256": "66c8801caae024987ca92f0950af4313a6f6efbb16984f58b8b855640ea0fd55"
+  },
+  "fixtures": [
+    {
+      "seed": 3397,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-3397.json",
+      "sha256": "e990b4bb9be1dc22d00111ae74b5c7d7df9944b0b28dd3a053676cf960298893",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-3397.json",
+      "upstream_source_sha256": "b1987e1e0d05a53491ad0ae5ca6eb24abca02d3d3a6b7fcf4030848ef4069aaf"
+    },
+    {
+      "seed": 8597,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-8597.json",
+      "sha256": "47ec7cb919758c64a45c1a0b52c8e3b60229bd485e4c1294470d93de0816e04e",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-8597.json",
+      "upstream_source_sha256": "560cb8658c9b38ac697bed1d4886a043bc48ca57b02e9911eaa4bc8d06bcda9d"
+    },
+    {
+      "seed": 9503,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-9503.json",
+      "sha256": "f9ec73bb6bfa1fd8b5c8f6ebe524cc1201ef44aef5dd08e9553ff148dadcd4a9",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-9503.json",
+      "upstream_source_sha256": "646c82cd0b600a7c238795c0843ee385daf376aa297b4c1f98c50583a0c7c0be"
+    },
+    {
+      "seed": 7752,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-7752.json",
+      "sha256": "dd294c26dcf987d9e299c285fd23515b4c0a0d51eb12a23162be5b31163e00d6",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-7752.json",
+      "upstream_source_sha256": "6996f0fb7efc08119a1a27f474b1d123c2cf63818988db573f86f122bc71f3a9"
+    },
+    {
+      "seed": 7580,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-7580.json",
+      "sha256": "7840bf7fe6d6bb7b7a7cada27dde438e054746645a618faacd9edf3c87b3a282",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-7580.json",
+      "upstream_source_sha256": "de7fcaada1795be8c5d9c12db85b5cba2078ee1bd041de09b580fdff33704007"
+    },
+    {
+      "seed": 1759,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-1759.json",
+      "sha256": "96ff663192b2af5128055c0c77326d91c1b0c1d7a436c4a620ec00a67a483bb7",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-1759.json",
+      "upstream_source_sha256": "4f270f793fca534c8f31abdfbfa11a90b1577e03cfd1a0fb3b992c8c7608146c"
+    },
+    {
+      "seed": 2362,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-2362.json",
+      "sha256": "b43df1e88abb0177a7e293d120ce25127917d443910d8c77820977ed72cecfdc",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-2362.json",
+      "upstream_source_sha256": "c945e4bb40d7c54d810a4422b91ad704e13fbfd3f10a6a6dc80119f84df95858"
+    },
+    {
+      "seed": 7664,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-7664.json",
+      "sha256": "ed0afcd82edfe30daaf29afc3e16daf72b75a5bb78740d02499797c8b4bce7a0",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-7664.json",
+      "upstream_source_sha256": "b1cf51bfd1d1c45e8cbbf4f6c8c47be4187e93d566e670ca9d2a0fe632cd9141"
+    },
+    {
+      "seed": 9163,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-9163.json",
+      "sha256": "a4b8e30287ed5725b2c57a55efdd21fb45216c7a3d552dff66961954f5c72805",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-9163.json",
+      "upstream_source_sha256": "f3aab6f7db79d10a02a8e3071969a34a6113123024bc5abdd9a679e54779a739"
+    },
+    {
+      "seed": 5053,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-5053.json",
+      "sha256": "7ec4907cd11b6ffefa18e2ba5b6af335cbb7a6711b04e1c779d575e8186e54cf",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-5053.json",
+      "upstream_source_sha256": "a477f5be996051f90cf6fa9980fa4aa9dc0c07537533dc33b57ed490f80f6083"
+    },
+    {
+      "seed": 2948,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-2948.json",
+      "sha256": "53ec169314aa4de19acbfa3d131265404ea9e7342475bec28aaf3e8b41fdb42b",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-2948.json",
+      "upstream_source_sha256": "f62f1ea86a568cf7dd89a75f5f44f909a9e1eeb201579fe5373296b489c0106d"
+    },
+    {
+      "seed": 3952,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-3952.json",
+      "sha256": "a2597a2307454d0a7a245b9537f5dea1a74b2f2f3554a9789d46f76ce396f337",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-3952.json",
+      "upstream_source_sha256": "30728b818215eba61abb938a38afc0d68c291dfda8f40ad0bfec2c3a6c7a3c98"
+    },
+    {
+      "seed": 1422,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-1422.json",
+      "sha256": "5fa438531b2be414badad4b06adb72edc206ef1be972e86dfb2ac3fc8a840ce2",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-1422.json",
+      "upstream_source_sha256": "cf3ec0e7dc273f0a413c3867d33d78ca9dfa0c2a4331607c63817561ceca6be4"
+    },
+    {
+      "seed": 4060,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-4060.json",
+      "sha256": "f020b8a52afb22c5858b14dabfbf8c1bc4afcdd45565f98d4c24b3dbd889a122",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-4060.json",
+      "upstream_source_sha256": "d58cddfb7e471b20158017fa5bc647076e0498a25eabd4c4fb8ce7d1b0097dbc"
+    },
+    {
+      "seed": 2403,
+      "file": "docs/fixtures/e2/min-det-realism/games/seed-2403.json",
+      "sha256": "757cb8fda3844063cc168346489863b655fe22cf076902055a617dfd8a3d4e9f",
+      "record_mode": "pregame_full_game",
+      "source_commit": "8b7d5a2ec818d4e53751f5c4baf5a2956b317a7f",
+      "configuration_hash": "d16248b2a97445f51493847e0d0586fe323ce385274ea91e7e697986b005e374",
+      "upstream_source_file": "docs/fixtures/e2/min-det-realism/upstream/seed-2403.json",
+      "upstream_source_sha256": "7efbec7cfa975ea6d6fa837afe93f1dd0eacc6dfdd62891820307414f7d19c14"
+    }
+  ]
+}

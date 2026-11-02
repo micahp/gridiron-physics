@@ -13,6 +13,7 @@ import { playArtMarks, playArtSvg } from './play-art.js';
 //   games     folder holding seed-<id>.json    (default: min-det realism games)
 //   roster    local roster/ratings snapshot    (default: min-det week 8 snapshot)
 //   seed      play one saved seed
+//   simulation  play one LP simulation from /api/gridiron/v1/simulations/<id> (same origin)
 //   playlist  "featured" plays the five featured seeds in order
 //   autoplay  start playing the first clip as soon as it loads
 const DEFAULTS = {
@@ -20,6 +21,7 @@ const DEFAULTS = {
   games: 'docs/fixtures/e2/min-det-realism/games/',
   roster: 'data/teams/min-det-week8-2026-10-28.json',
 };
+const SIMULATION_API = '/api/gridiron/v1/simulations/';
 const CSS_URL = new URL('./gridiron-replay.css?v=7', import.meta.url).href;
 const TEAM_NAMES = { MIN: 'MIN', DET: 'DET' };
 // Play-time seconds between the ball crossing the goal line and the score changing on a touchdown.
@@ -279,6 +281,7 @@ class GridironReplay extends HTMLElement {
       games: attr('games', DEFAULTS.games),
       roster: attr('roster', DEFAULTS.roster),
       seed: this.getAttribute('seed'),
+      simulation: this.getAttribute('simulation'),
       playlist: this.getAttribute('playlist'),
       autoplay: this.hasAttribute('autoplay'),
     };
@@ -287,6 +290,11 @@ class GridironReplay extends HTMLElement {
   async init() {
     try {
       this.options = this.readOptions();
+      if (this.options.simulation) {
+        this.queue = [this.options.simulation];
+        await this.loadSeed(0, this.options.autoplay);
+        return;
+      }
       const response = await fetch(this.options.manifest, { cache: 'no-store' });
       if (!response.ok) throw new Error(`marketing seed list HTTP ${response.status}`);
       const manifest = await response.json();
@@ -972,10 +980,13 @@ class GridironReplay extends HTMLElement {
     this.currentSelection = null;
     this.clipPlaying = false;
     this.clearTags();
-    const response = await fetch(`${this.options.games}seed-${encodeURIComponent(seed)}.json`, { cache: 'no-store' });
+    const simulation = Boolean(this.options.simulation);
+    const payloadUrl = simulation ? `${SIMULATION_API}${encodeURIComponent(seed)}` : `${this.options.games}seed-${encodeURIComponent(seed)}.json`;
+    const response = await fetch(payloadUrl, { cache: 'no-store' });
     if (!response.ok) throw new Error(`seed ${seed} payload HTTP ${response.status}`);
     const sourcePayload = await response.json();
-    if (Number(sourcePayload.record?.seed) !== Number(seed)) throw new Error(`seed identity mismatch for ${seed}`);
+    const sameSource = simulation ? sourcePayload.record?.simulation_id === seed : Number(sourcePayload.record?.seed) === Number(seed);
+    if (!sameSource) throw new Error(`seed identity mismatch for ${seed}`);
     const adapted = adaptLpGamePayload(sourcePayload, { requireCompleteRegulation: true });
     this.payload = { ...sourcePayload, record: adapted.record };
     const teamResponse = await fetch(this.options.roster, { cache: 'force-cache' });
