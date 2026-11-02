@@ -1,7 +1,8 @@
 # Historical 2022 to 2024 playbooks: milestone report, 2026-11-02
 
 Status: historical development only. Not a final acceptance. No 2026 data was used for fitting, tuning, selection or
-evaluation. No SLC default changed. Nothing was deployed. Nothing was pushed.
+evaluation. No SLC default changed. Nothing was deployed. The research and SLC commits were pushed to their branches as
+fast-forwards. The removal of the 2026 CSV from `main` is still pending (section 8).
 
 ## Outcome
 
@@ -10,11 +11,12 @@ evaluation. No SLC default changed. Nothing was deployed. Nothing was pushed.
 - **R2 v2 (D1): pass for 2022, 2023 and 2024 on its own terms.** Exact agreement on the ordinary population, zero
   unexplained additions, and a complete two-way exclusion ledger.
 - **Revised Gate 3: not passed.** Fifteen 2022 team-seasons still fail R1, and TB 2024 stays open on R3.
-- **Retention (D3): partly done.** The build is in an immutable, root-only local archive with a tested restore. No
-  off-box copy exists, because no durable target has been named.
+- **Retention (D3): done on this machine.** The owner named this machine as the storage target on 2026-11-02. The build is
+  in an immutable, root-only local archive with a tested restore. There is no off-box copy.
 - **C/D/E priors: ready for M3** as the simulation framing describes them (run gap, pass depth, pass location). They do
   not read the shotgun field. 2022 shotgun-dependent features are not approved.
-- **Blockers:** two owner decisions on 2026 rows (below), and a durable storage target.
+- **Open:** the 2026-labelled rev3 CSV is still on `origin/main`. The owner approved its removal, but the push to `main` was
+  refused by the permission check (section 8).
 
 ## 1. R2 v2 status and exclusions
 
@@ -78,7 +80,7 @@ plays; 3464 and 3990 (BAL) are PBP and participation disagreements with no FTN v
   `8d57a5d`, consumer pin commit `6559cd23`, source pins for 2022 to 2024, and the storage settings.
 - **Restore:** `RESTORE.md` and `pipeline/restore_check_historical.sh`. Last run: pass (114 files, every checksum, 8 consumer
   tests).
-- **Not done:** an off-box copy. The owner must name a durable, access-controlled target before this counts as retention.
+- **Storage target:** this machine, named by the owner on 2026-11-02. There is no off-box copy.
 - **Ratio:** the 1.8 GB build directory compresses to 70 MB. Only the archive is kept; the build directory stays on disk because
   the consumer pins read it directly.
 
@@ -119,19 +121,19 @@ Measured facts first, then what is missing.
 
 ## 8. Decisions and blockers for the owner
 
-1. **Holdout record row 17 (2026 rows on `origin/main`).** The rev3 CSV, `data/playbooks/research-2026-10-27-rev3/shotgun_null_plays.csv`
-   (128 rows labelled 2026), is tracked on `origin/main` through commit `1c35f83`. Removing it from `main` needs your approval.
-   The same commit is also reachable from the research branch, so that branch still carries the file.
-2. **Holdout record row 16 (quarantined copies).** Keep or delete `/root/gridiron-playbook-builds/quarantine/` (directory 0700,
-   files 0400): the rev2 CSV (139 rows labelled 2026) and the pre-rewrite bundle that contains it.
-3. **Durable storage target (D3).** Name it. Until then the archive is a single local copy.
-4. **Push authorization.** Local commits are listed below and are not pushed. The history rewrite of
-   `research/nfl-team-season-playbooks-2026-10-27` already happened under your earlier instruction. Any further rewrite needs
-   new authorization.
+1. **Holdout record row 17 (2026 rows on `origin/main`).** The owner approved removing the rev3 CSV,
+   `data/playbooks/research-2026-10-27-rev3/shotgun_null_plays.csv` (128 rows labelled 2026), from `main`. The push to `main`
+   was refused by the permission check, twice, so `origin/main` (`42f0c3b`) still tracks the file. The research branch also
+   still carries it, and removing it there was not approved. Removing the tip does not remove the file from history.
+2. **Holdout record row 16 (quarantined copies).** Owner decision: no quarantine is needed. The local copies stay in
+   `/root/gridiron-playbook-builds/quarantine/` and are not pushed. Nothing was moved or deleted.
+3. **Storage target (D3).** Owner decision: this machine. The archive is a single local copy with no off-box copy.
+4. **Push.** The owner approved pushing the local commits. Pushed as fast-forwards with no force-push: research branch
+   `c63c8e9..2e8d34f` and `slc-v1` `0f4e163a..4c1aad05`. Any history rewrite needs new authorization.
 5. **Gate 3.** The 15 R1 team-seasons and TB 2024 remain open. Any new R1 rule must be a new versioned document, and none has
    been written.
 
-## 9. Commits (local; not pushed)
+## 9. Commits (pushed to their branches)
 
 Research branch `research/nfl-team-season-playbooks-2026-10-27`:
 
@@ -151,4 +153,4 @@ SLC repo `slc-v1`:
 ## Scope check
 
 - 2026 data: not read for fitting, tuning, selection or evaluation. The holdout record logs counts and key paths only.
-- No SLC default changed. No deployment. No push. No force-push in this step.
+- No SLC default changed. No deployment. No force-push in this step.

@@ -30,8 +30,8 @@ Not in the archive:
 `/root/gridiron-playbook-archives/` on this box. The directory is mode 0700 and owned by root. The archive and the manifest
 are mode 0400 and have the immutable attribute (`chattr +i`).
 
-**No off-box copy exists.** No durable, access-controlled target has been named, so the archive is a single local copy. Name
-a target before treating this as retention. A copy step is not part of this procedure yet.
+**Storage target: this machine.** The owner named it on 2026-11-02. The archive is a single copy on this machine's root disk,
+which had 5.2 GB free after the archive was written. **There is no off-box copy.** A copy step is not part of this procedure.
 
 ## Restore steps
 
