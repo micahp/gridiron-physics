@@ -195,15 +195,15 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
 .attr .est .top span::after { content: ' est.'; color: var(--dim); font-size: 10px; }
 
 @media (max-width: 900px) {
-  /* Keep the field on screen: the app owns one viewport and the detail panel
-     scrolls inside its own strip. Before this the body scrolled, so every
-     scroll to the controls (and the timeline's own scroll-into-view on load)
-     carried the play view off the top of the phone. */
-  html, body { height: 100dvh; overflow: hidden; overscroll-behavior: none; }
+  /* On phones the whole film room is one document: the field, playback
+     controls, tabs, and selected tab content move together while scrolling. */
+  html, body { height: auto; min-height: 100%; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: auto; }
+  body { min-height: 100dvh; }
   .app {
-    height: 100dvh;
+    height: auto;
+    min-height: 100dvh;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto 55vh auto 1fr;
+    grid-template-rows: auto minmax(280px, 52dvh) auto auto;
     grid-template-areas: 'bug' 'stage' 'tp' 'panel';
   }
   .stage { display: flex; flex-direction: column; min-height: 0; }
@@ -216,16 +216,19 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
   /* One scrollable row of cameras; two wrapped rows would eat the field. */
   .cams { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; gap: 4px; }
   .cams button { flex: 0 0 auto; padding: 5px 9px; font-size: 11px; }
-  .transport { padding-block: 6px; gap: 5px; }
+  .transport { padding-block: 4px 5px; gap: 3px; }
   .transport .auto { display: none; }
   .tp-row { gap: 5px; }
-  .tp-row button { width: 34px; height: 32px; }
-  #scrub { flex: 1 1 100%; order: 9; }
-  #speed { order: 4; }
+  .tp-row button { width: 32px; height: 30px; }
+  #scrub { flex: 1 1 70px; order: 4; }
+  #speed { order: 5; }
   #audio-toggle { order: 5; }
-  .playtext { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; font-size: 11px; }
-  .panel { border-left: 0; border-top: 1px solid var(--rail); padding-left: env(safe-area-inset-left, 0px); overflow-y: auto; overscroll-behavior: contain; }
-  .tab { max-height: none; }
+  .playtext { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; min-height: 0; font-size: 11px; }
+  #wp { height: 24px; }
+  .panel { display: block; border-left: 0; border-top: 1px solid var(--rail); padding-left: env(safe-area-inset-left, 0px); min-height: 0; overflow: visible; }
+  .tabs { position: static; }
+  .tab { display: block; flex: none; min-height: 0; max-height: none; overflow: visible; }
+  .filterbar { position: static; }
   .bug { flex-wrap: wrap; padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .bug-meta { width: 100%; text-align: left; margin: 4px 0 0; }
   .bug-team { padding: 4px 8px; gap: 6px; }
@@ -240,21 +243,22 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
   .cams { left: 16px; right: 16px; top: auto; bottom: 10px; justify-content: flex-start; }
   .ticker { font-size: 13px; }
 }
-/* Landscape phones: the field needs the height, so the detail panel moves
-   beside it and the transport rides underneath. */
+/* Keep the same document scroll in short landscape phone viewports. */
 @media (max-width: 900px) and (max-height: 520px) {
   .app {
-    grid-template-columns: minmax(0, 1fr) minmax(230px, 36%);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'bug bug' 'stage panel' 'tp tp';
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(250px, 64dvh) auto auto;
+    grid-template-areas: 'bug' 'stage' 'tp' 'panel';
   }
   .bug { padding-block: 4px; }
   .bug-team img { width: 22px; height: 22px; }
   .bug-team .score { font-size: 22px; }
   .bug-clock { font-size: 16px; }
   .bug-meta { display: none; }
-  .panel { border-top: 0; border-left: 1px solid var(--rail); padding-bottom: 10px;
-    overflow-y: auto; overscroll-behavior: contain; }
+  .panel { display: block; border-top: 1px solid var(--rail); border-left: 0; padding-bottom: 10px;
+    overflow: visible; }
+  .tabs { position: static; }
+  .tab { display: block; flex: none; min-height: 0; overflow: visible; }
   .setup { padding: 6px 10px; gap: 5px; }
   .setup select, .setup input { padding: 4px 6px; font-size: 12px; }
   .setup button { padding: 4px 10px; font-size: 12px; }
@@ -266,9 +270,9 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
   .tp { padding-block: 2px; }
 }
 
-/* Very short portrait screens: give the field a little more height. */
+/* Keep a usable field height on short portrait phones while the document scrolls. */
 @media (max-width: 900px) and (max-height: 640px) and (orientation: portrait) {
-  .app { grid-template-rows: auto 50vh auto 1fr; }
+  .app { grid-template-rows: auto minmax(250px, 48dvh) auto auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
