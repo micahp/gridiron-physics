@@ -63,6 +63,28 @@ Each flag is labelled `brain` (the player moved against his assignment) or `phys
 
 ESPN play ids and nflverse play ids join exactly (`espn_id = event_id + play_id`).
 
+## Team data (data/teams)
+
+The replay and the matchup tools read team rosters and rating snapshots from `data/teams/*.json`. These files are generated locally and are not committed. Rebuild the league file with:
+
+```bash
+python3 pipeline/build_team_data.py
+```
+
+The script downloads six nflverse inputs into `data/raw/nflverse/` (ignored by Git) and checks each one's SHA-256 against the value recorded in the previous build. It then:
+
+- builds the roster data for every team with 2026 week-7 regular-season rows (28 teams; BUF, JAX, LAC and WAS have none), and
+- builds the rating data with `pipeline/ratings.py`, calibrated on the active players.
+
+It writes `data/teams/league-ratings-2026-week7.rebuilt.json`. It never overwrites `league-ratings-2026-week7.json`; review the rebuilt file, then rename it if you want it to replace the old one.
+
+What the rebuild does not reproduce:
+
+- The depth-chart join (`depth_chart_*` fields), official inactives, and the post-processing that set some roster statuses. The previous league file has them; the rebuild does not, because that step is not in this repository.
+- `data/teams/min-det-week8-2026-10-28.json`. It is pinned by SHA-256 (`f533594d…`) because the seed simulations were run against it. Keep the pinned copy; this script does not produce it.
+
+Checked against the previous league file: ratings and physical profiles match for all 2,277 players present in both. Overall estimates differ for 61 players, 15 availability labels differ, and two practice-squad players are added. The nflverse file `stats_player_week_2026.csv.gz` has changed since the previous build; its SHA-256 is recorded in the output.
+
 ## Research referenced
 
 - Samozino P., Rabita G., Dorel S., et al. (2016). A simple method for measuring power, force, velocity properties, and mechanical effectiveness in sprint running. *Scand J Med Sci Sports* 26(6):648–658.
