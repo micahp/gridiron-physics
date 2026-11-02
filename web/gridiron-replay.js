@@ -5,6 +5,7 @@ import { prepareSlcPhysicsReplay, selectionForSlcPlay, slcParticipantLine, slcPl
 import { teamLogoUrl } from './team-logo.js';
 import { FootballAudio } from './audio-director.js';
 import { animateScoreBug } from './score-animation.js';
+import { playArtMarks, playArtSvg } from './play-art.js';
 
 // <gridiron-replay> plays saved LP game records in the 3D engine. A page mounts it and sets
 // attributes; it owns its own DOM and styles, so pages never copy the viewer again.
@@ -67,7 +68,6 @@ const MARKUP = `
         </select>
         <label class="auto"><input type="checkbox" id="auto" checked> Auto-advance</label>
         <button id="audio-toggle" type="button" aria-pressed="false">Sound off</button>
-        <a class="autonomous-entry" href="autonomous.html">Inside Zone Lab ↗</a>
       </div>
       <p class="playtext" id="playtext"></p>
       <canvas id="wp" height="46" aria-label="Win probability by play"></canvas>
@@ -192,6 +192,24 @@ function driveResult(drive) {
   return drive.terminal.replaceAll('_', ' ');
 }
 
+const COVERAGE_LABEL = { '2_MAN': '2-man', COVER_0: 'Cover 0', COVER_1: 'Cover 1', COVER_2: 'Cover 2', COVER_3: 'Cover 3', COVER_4: 'Cover 4', COVER_6: 'Cover 6', COVER_9: 'Cover 9', COMBO: 'Combo', PREVENT: 'Prevent' };
+
+// The offense's call in words, from the replay's selection and the saved play's pre-snap labels.
+function offenseCall(scenario, pre, source) {
+  const form = FORM_LABEL[pre.formation] || (pre.formation ? pre.formation.toLowerCase() : 'formation not charted');
+  const personnel = pre.personnel ? `${pre.personnel} personnel` : '';
+  const action = scenario.kindGroup === 'run'
+    ? `Run ${GAP_LABEL[scenario.gap] || 'middle'} ${scenario.loc}`
+    : `Pass ${scenario.air >= 15 ? 'deep' : 'short'} ${scenario.loc}${passTo(source) ? ` · ${passTo(source)}` : ''}`;
+  return [form, personnel, action].filter(Boolean).join(' · ');
+}
+
+// The defense's call in words: its coverage as charted, against the offense's personnel.
+function defenseCall(pre) {
+  const coverage = pre.coverage ? (COVERAGE_LABEL[pre.coverage] || String(pre.coverage).replaceAll('_', ' ').toLowerCase()) : 'coverage not charted';
+  return pre.personnel ? `${coverage} · vs ${pre.personnel} personnel` : coverage;
+}
+
 class GridironReplay extends HTMLElement {
   constructor() {
     super();
@@ -215,6 +233,7 @@ class GridironReplay extends HTMLElement {
     this.autoAdvance = true;
     this.eventCursor = 0;
     this.activeFilter = 'all';
+    this.playOverlay = false;
     this.rosterTeam = null;
     this.selectedPlayer = null;
     this.home = null;
@@ -328,8 +347,14 @@ class GridironReplay extends HTMLElement {
       this.setContinuous(this.autoAdvance);
     });
     this.$('#tab-playbook').addEventListener('click', (event) => {
+      if (event.target.closest('[data-overlay]')) {
+        this.playOverlay = !this.playOverlay;
+        this.renderPlaybook();
+        this.updatePlayArt();
+        return;
+      }
       const teamButton = event.target.closest('[data-team]');
-      if (teamButton) { this.bookTeam = teamButton.dataset.team; this.renderPlaybook(); }
+      if (teamButton) { this.bookTeam = teamButton.dataset.team; this.renderPlaybook(); this.updatePlayArt(); }
     });
     this.$('#tab-ratings').addEventListener('click', (event) => {
       if (event.target.closest('[data-back]')) { this.clearPlayer(); return; }
@@ -433,7 +458,7 @@ class GridironReplay extends HTMLElement {
       const right = row.side === 'home';
       const logo = `<img src="${ESC(teamLogoUrl(row.team))}" alt="">`;
       const name = `<span class="abbr">${ESC(TEAM_NAMES[row.team] || row.team)}</span>`;
-      row.node.innerHTML = `${right ? name + logo : logo + name}<span class="rec">SLC</span><span class="score">${Number(tween ? row.from : row.score) || 0}</span>`;
+      row.node.innerHTML = `${right ? name + logo : logo + name}<span class="score">${Number(tween ? row.from : row.score) || 0}</span>`;
       row.node.style.setProperty('--team', info.color);
       row.node.classList.toggle('poss', offense === row.team);
       if (tween && row.from !== row.score) animateScoreBug(row.node, row.node.querySelector('.score'), Number(row.from || 0), Number(row.score || 0));
@@ -445,7 +470,7 @@ class GridironReplay extends HTMLElement {
 
   updateMeta() {
     const record = this.payload.record;
-    this.$('#bug-meta').innerHTML = `SLC seed ${record.seed} · ${this.queueIndex + 1}/${this.queue.length}<br>Saved outcomes preserved`;
+    this.$('#bug-meta').innerHTML = `Seed ${record.seed} · ${this.queueIndex + 1}/${this.queue.length}<br>Saved outcomes preserved`;
   }
 
   setPlayText(play, selection = null, error = null) {
@@ -595,9 +620,42 @@ class GridironReplay extends HTMLElement {
     };
     this.$('#tab-playbook').innerHTML = `<div class="roster-t">${[this.away, this.home].map((team) =>
       `<button data-team="${ESC(team)}" class="${team === this.bookTeam ? 'on' : ''}">${ESC(TEAM_NAMES[team] || team)}</button>`).join('')}</div>
+      ${this.currentPlayHtml(this.bookTeam)}
       <div class="sec">${ESC(TEAM_NAMES[this.bookTeam] || this.bookTeam)} · 2025 charted offense</div>
       ${group('run', 'Run')}${group('pass', 'Pass')}
       <p class="note">Diagrams show the alignment and the run gap or pass target, not routes, blocks or coverage. These are tendencies, not play calls.</p>`;
+  }
+
+  // The called play as the playbook's team saw it: its offense's call, or its defense's coverage. The art is built from
+  // the assignments the engine set up at the snap, so it shows the call and not where the play ended.
+  currentPlayHtml(team) {
+    const sel = this.currentSelection, rec = this.currentRecord, item = this.items[this.currentIndex];
+    if (!sel || !rec || !item) return '<div class="curplay"><p class="hint">No play loaded yet.</p></div>';
+    if (sel.play.kindGroup === 'kick') return '<div class="curplay"><p class="hint">Special teams: this play has no play art.</p></div>';
+    const source = item.play;
+    const pre = source.outcome?.pre_event || {};
+    const onOffense = team === sel.play.off;
+    const legend = onOffense
+      ? 'Routes in colour, with arrows. Yellow bars mark the defender each lineman blocks.'
+      : 'Shaded zones, sized and coloured by zone size: blue deep, cream underneath, teal flat. A line ends in an X on the zone, receiver, or landmark he holds. Red arrows are rushers.';
+    return `<section class="curplay" aria-label="Current play">
+      <div class="cp-head"><b>${ESC(TEAM_NAMES[team] || team)} ${onOffense ? 'offense' : 'defense'}</b><span>PLAY ${ESC(source.sequence)} · ${ESC(outcomeText(source))}</span></div>
+      <div class="cp-art">${playArtSvg(rec, sel, team, { togo: source.state_before?.yards_to_go })}</div>
+      <p class="cp-call">${ESC(onOffense ? offenseCall(sel.play, pre, source) : defenseCall(pre))}</p>
+      <div class="cp-tools"><button type="button" data-overlay aria-pressed="${this.playOverlay}" class="${this.playOverlay ? 'on' : ''}">${this.playOverlay ? 'Hide' : 'Show'} play on the field</button><span class="note">${ESC(legend)}</span></div>
+    </section>`;
+  }
+
+  // The overlay on the field: the team the playbook shows, on its side of the called play, while the button is on.
+  updatePlayArt() {
+    if (!this.renderer?.setPlayArt) return;
+    const sel = this.currentSelection, rec = this.currentRecord;
+    const team = this.bookTeam ?? this.away;
+    if (!this.playOverlay || !sel || !rec || !team || sel.play.kindGroup === 'kick') {
+      this.renderer.setPlayArt(null);
+      return;
+    }
+    this.renderer.setPlayArt(playArtMarks(rec, team));
   }
 
   async loadPlaybooks() {
@@ -728,6 +786,7 @@ class GridironReplay extends HTMLElement {
     const play = item.play;
     this.currentRecord = null;
     this.currentSelection = null;
+    this.updatePlayArt();
     this.clipPlaying = false;
     this.clipSeconds = 0;
     this.eventCursor = 0;
@@ -754,6 +813,7 @@ class GridironReplay extends HTMLElement {
       if (!result.record?.frames?.length) throw new Error('Gridiron Physics returned no 3D frames for this play');
       this.currentSelection = selection;
       this.currentRecord = result.record;
+      this.updatePlayArt();
       this.clipDuration = (this.currentRecord.frames.length - 1) / this.currentRecord.hz;
       const roster = this.currentRecord.roster.map((entry) => ({ id: entry.id, team: entry.team, slot: entry.slot }));
       this.renderer.setRoster(roster);

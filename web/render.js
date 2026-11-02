@@ -456,6 +456,77 @@ export class Renderer {
     }
   }
 
+  // Play art over the field: marks from web/play-art.js, in yards, each in its own colour. null clears it.
+  setPlayArt(marks) {
+    if (!this.art) this.scene.add((this.art = new THREE.Group()));
+    for (const c of this.art.children) {
+      c.geometry?.dispose();
+      c.material?.dispose();
+    }
+    this.art.clear();
+    if (!marks) return;
+    const H = 0.12;
+    const P = (p, h = H) => new THREE.Vector3(p.x, h, p.y);
+    const paint = (color, opacity = 0.95) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
+    const bar = (a, b, color, radius = 0.1) => {
+      const mesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.LineCurve3(P(a), P(b)), 1, radius, 6, false), paint(color));
+      this.art.add(mesh);
+    };
+    const arrow = (from, to, color) => {
+      const dir = new THREE.Vector3(to.x - from.x, 0, to.y - from.y);
+      if (dir.lengthSq() === 0) return;
+      dir.normalize();
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 12), paint(color));
+      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+      cone.position.set(to.x, H, to.y).addScaledVector(dir, -0.4);
+      this.art.add(cone);
+    };
+    const cross = (p, color) => {
+      const s = 0.9;
+      for (const [a, b] of [[[-s, -s], [s, s]], [[s, -s], [-s, s]]]) {
+        bar({ x: p.x + a[0], y: p.y + a[1] }, { x: p.x + b[0], y: p.y + b[1] }, color, 0.2);
+      }
+    };
+    for (const m of marks) {
+      if (m.kind === 'route') {
+        const pts = m.points.map((p) => P(p));
+        const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+        this.art.add(new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(8, pts.length * 10), 0.22, 6, false), paint(m.color)));
+        arrow(m.points.at(-2), m.points.at(-1), m.color);
+      } else if (m.kind === 'zone') {
+        const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: m.color, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }));
+        disc.rotation.x = -Math.PI / 2;
+        disc.scale.set(m.rx, m.ry, 1);
+        disc.position.set(m.at.x, 0.06, m.at.y);
+        this.art.add(disc);
+        const edge = Array.from({ length: 49 }, (_, k) => {
+          const t = (k / 48) * Math.PI * 2;
+          return new THREE.Vector3(m.at.x + m.rx * Math.cos(t), 0.08, m.at.y + m.ry * Math.sin(t));
+        });
+        this.art.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(edge), new THREE.LineBasicMaterial({ color: m.color, transparent: true, opacity: 1 })));
+        bar(m.from, m.at, m.color, 0.13);
+        cross(m.at, m.color);
+      } else if (m.kind === 'block') {
+        bar(m.from, m.to, m.color, 0.12);
+        const dx = m.to.x - m.from.x, dz = m.to.y - m.from.y;
+        const len = Math.hypot(dx, dz) || 1;
+        const tBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 0.25), paint(m.color));
+        tBar.rotation.y = Math.atan2(-dx / len, -dz / len);
+        tBar.position.set(m.to.x, H, m.to.y);
+        this.art.add(tBar);
+      } else if (m.kind === 'rush') {
+        bar(m.from, m.to, m.color, 0.12);
+        arrow(m.from, m.to, m.color);
+        const sq = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 1), paint(m.color));
+        sq.position.set(m.from.x, H, m.from.y);
+        this.art.add(sq);
+      } else {
+        bar(m.from, m.to, m.color, 0.13);
+        cross(m.to, m.color);
+      }
+    }
+  }
+
   /** Draw interpolated frame state. */
   draw(rec, t, dt) {
     if (!rec) return;

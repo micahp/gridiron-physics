@@ -270,3 +270,14 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
 .pd-end, .pd-target { fill: var(--firstdown); }
 .pc-t { font: 600 13px var(--f-display); letter-spacing: 0.03em; text-transform: uppercase; }
 .pc-n { font: 11px var(--f-data); color: var(--dim); }
+
+/* Current play above the playbook: the card's play art, its call, and the button that lays it over the field. */
+.curplay { background: var(--rail); padding: 10px; margin: 6px 0 4px; min-width: 0; }
+.cp-head { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; font: 600 13px var(--f-display); letter-spacing: 0.04em; text-transform: uppercase; }
+.cp-head span { color: var(--dim); font-weight: 500; }
+.cp-art svg { width: 100%; height: auto; display: block; margin: 8px 0; }
+.cp-call { margin: 0 0 8px; font: 13px var(--f-data); }
+.cp-tools { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.cp-tools button { background: transparent; color: var(--chalk); border: 1px solid var(--dim); padding: 5px 10px; font: 600 12px var(--f-display); letter-spacing: 0.04em; text-transform: uppercase; }
+.cp-tools button.on { background: var(--chalk); color: #0b1016; border-color: var(--chalk); }
+.cp-tools .note { margin: 0; }
