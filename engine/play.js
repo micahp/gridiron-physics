@@ -1581,6 +1581,16 @@ export function simulatePlay(game, S, ctx = {}) {
 
   // recording
   const roster = W.players.map((p) => ({ id: p.id, team: p.team, slot: p.slot }));
+  // The call as it was set up, for the play art: routes and run lanes, zones, man and block pairings, and the landmarks
+  // run defenders fit to. Read-only; nothing here changes how the play runs.
+  const assignments = W.players.map((p) => ({
+    mode: p.mode,
+    route: (p.ai.path ?? p.ai.runPath)?.map((q) => ({ x: q.x / YD, y: q.y / YD })) ?? null,
+    zone: p.ai.zonePt ? { x: p.ai.zonePt.x / YD, y: p.ai.zonePt.y / YD, r: 4.5 + (p.R?.ZCV ?? 50) / 25 } : null,
+    man: p.ai.man ? W.players.indexOf(p.ai.man) : null,
+    block: p.ai.blockOn ? W.players.indexOf(p.ai.blockOn) : null,
+    landmark: p.ai.landmark ? { x: p.ai.landmark.x / YD, y: p.ai.landmark.y / YD } : null,
+  }));
   const NP = W.players.length;
   const STRIDE = NP * 6 + 6;
   const frames = [];
@@ -1808,7 +1818,7 @@ export function simulatePlay(game, S, ctx = {}) {
   const b = W.ball;
   const top = W.players.reduce((m, p) => (p.topSpeed > m.v ? { v: p.topSpeed, id: p.id } : m), { v: 0, id: null });
   return {
-    id: S.id, authority: physics ? 'physics' : 'statistical_replay', roster, stride: STRIDE, frames, t0: -PRE, hz: REC_HZ, events: W.events,
+    id: S.id, authority: physics ? 'physics' : 'statistical_replay', roster, assignments, stride: STRIDE, frames, t0: -PRE, hz: REC_HZ, events: W.events,
     end: { x: st.spot ? st.spot.x : b.x / YD, y: st.spot ? st.spot.y : b.y / YD, reason: st.whistle, t: st.deadT },
     expectEndX: st.endX ?? null,
     biggestHit: W.biggestHit, topSpeed: top, throwSpeed: st.throwSpeed ?? null,
