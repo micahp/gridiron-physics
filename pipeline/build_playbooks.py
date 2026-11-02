@@ -206,7 +206,7 @@ def shotgun_with_source(r, p):
     The PBP flag is used only in games FTN has charted. A game with no FTN rows at all is a charting gap,
     so its plays stay null until FTN charts them.
     """
-    q = (r.get("_ftn") or {}).get("qb_location")
+    q = str((r.get("_ftn") or {}).get("qb_location") or "").strip()
     if q in ("S", "P"):
         return True, "ftn"
     if q == "U":
@@ -833,7 +833,7 @@ def research_shotgun_check(offense, season):
     return {
         "paired_plays": len(paired), "pbp_share": round(pbp_share, 6),
         "participation_share": round(part_share, 6),
-        "absolute_difference": round(abs(pbp_share - part_share), 6),
+        "absolute_difference": abs(pbp_share - part_share),
         "source_disagreement_count": len(disagreements),
         "pbp_0_participation_shotgun_count": len(p0_part_shotgun),
         "pbp_1_participation_other_formation_count": len(p1_part_other),
