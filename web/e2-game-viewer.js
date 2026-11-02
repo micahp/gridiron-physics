@@ -9,6 +9,8 @@ import {
 } from './e2-matchup-index.js';
 
 const MANIFEST_URL = 'docs/fixtures/e2/MANIFEST.json';
+const SEED_LIBRARY_MANIFEST_URL = 'docs/fixtures/e2/min-det-realism/MANIFEST.json';
+const MARKETING_SEEDS_URL = 'docs/fixtures/e2/min-det-realism/marketing-seeds.json';
 const FIXTURE_DIR = 'docs/fixtures/e2/';
 const $ = (selector) => document.querySelector(selector);
 const status = $('#record-status');
@@ -17,6 +19,15 @@ const validationPanel = $('#validation');
 const viewerContent = $('#viewer-content');
 let adapted;
 let activeMatchupLabel = null;
+let gameSequence = [];
+let playbackTicker = null;
+let activeGlobalPlayIndex = 0;
+let activeDriveIndex = -1;
+let selectActiveDrivePlay = null;
+let playlistSeeds = [];
+let playlistIndex = 0;
+let playlistQuery = null;
+let autoPlaylist = false;
 
 function el(tag, text, className) {
   const node = document.createElement(tag);
@@ -35,6 +46,69 @@ function shown(value) {
 function formatClock(seconds) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
+
+function updatePlaybackPosition() {
+  const gameLabel = playlistSeeds.length ? `Game ${playlistIndex + 1} of ${playlistSeeds.length} · ` : '';
+  $('#playback-position').textContent = `${gameLabel}Play ${activeGlobalPlayIndex + 1} of ${gameSequence.length}`;
+  $('#playback-play').textContent = playbackTicker ? '❚❚ Pause' : '▶ Play game';
+}
+
+function stopPlayback() {
+  if (playbackTicker !== null) globalThis.clearInterval(playbackTicker);
+  playbackTicker = null;
+  updatePlaybackPosition();
+}
+
+function advancePlaylist() {
+  if (!autoPlaylist || playlistIndex + 1 >= playlistSeeds.length) return;
+  const nextIndex = playlistIndex + 1;
+  $('#playback-position').textContent = `Game ${playlistIndex + 1} complete · loading game ${nextIndex + 1} of ${playlistSeeds.length}`;
+  $('#playback-play').disabled = true;
+  globalThis.setTimeout(() => {
+    if (globalThis.window?.location) {
+      globalThis.window.location.href = `e2-game-viewer.html?playlist=${encodeURIComponent(playlistQuery)}&playlistIndex=${nextIndex}&autoplay=1`;
+    }
+  }, 1400);
+}
+
+function startPlayback() {
+  if (!gameSequence.length || playbackTicker !== null) return;
+  if (activeGlobalPlayIndex >= gameSequence.length - 1) showGamePlay(0);
+  const interval = Number($('#playback-speed').value) || 800;
+  playbackTicker = globalThis.setInterval(() => {
+    const nextIndex = activeGlobalPlayIndex + 1;
+    if (nextIndex >= gameSequence.length) {
+      stopPlayback();
+      advancePlaylist();
+      return;
+    }
+    showGamePlay(nextIndex);
+    if (nextIndex === gameSequence.length - 1) {
+      stopPlayback();
+      advancePlaylist();
+    }
+  }, interval);
+  updatePlaybackPosition();
+}
+
+$('#playback-play').addEventListener('click', () => {
+  if (playbackTicker !== null) stopPlayback();
+  else startPlayback();
+});
+$('#playback-prev').addEventListener('click', () => {
+  stopPlayback();
+  showGamePlay(Math.max(0, activeGlobalPlayIndex - 1));
+});
+$('#playback-next').addEventListener('click', () => {
+  stopPlayback();
+  showGamePlay(Math.min(gameSequence.length - 1, activeGlobalPlayIndex + 1));
+});
+$('#playback-speed').addEventListener('change', () => {
+  if (playbackTicker !== null) {
+    stopPlayback();
+    startPlayback();
+  }
+});
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -140,10 +214,31 @@ function renderPlay(playEntry, drive) {
   ]);
   $('#play-json').textContent = JSON.stringify({ outcome: play.outcome, participants: play.participants,
     decision: play.decision, sampling: play.sampling, field: play.field }, null, 2);
+  const before = play.state_before ?? {};
+  const after = play.state_after ?? before;
+  const yardline = Number(after.yardline_100);
+  const yardsToGo = Number(after.yards_to_go);
+  if (Number.isFinite(yardline)) {
+    $('#ball-marker').style.left = `${Math.max(0, Math.min(100, 100 - yardline))}%`;
+    if (Number.isFinite(yardsToGo)) {
+      $('#first-down-marker').style.left = `${Math.max(0, Math.min(100, 100 - yardline + yardsToGo))}%`;
+    }
+  }
+  const offense = before.offense_team ?? '—';
+  const identity = adapted.record.team_identity?.[offense]?.team ?? offense;
+  const event = String(play.event_type ?? 'play').replaceAll('_', ' ');
+  const yards = play.outcome?.yards_gained ?? '—';
+  $('#play-event-summary').textContent = `Q${before.quarter ?? '—'} ${formatClock(before.clock_seconds ?? 0)} · ${identity} · ${before.down ?? '—'} & ${before.yards_to_go ?? '—'} · ${event} (${yards} yd) · score ${after.home_score ?? '—'}–${after.away_score ?? '—'}`;
+  if (after.home_score !== undefined) $('#score-a').textContent = String(after.home_score);
+  if (after.away_score !== undefined) $('#score-b').textContent = String(after.away_score);
+  const sequenceIndex = gameSequence.findIndex((item) => item.entry.sourceId === playEntry.sourceId);
+  if (sequenceIndex >= 0) activeGlobalPlayIndex = sequenceIndex;
+  updatePlaybackPosition();
 }
 
-function renderDrive(driveIndex) {
+function renderDrive(driveIndex, selectedPlayOffset = 0) {
   const drive = adapted.drives[driveIndex];
+  activeDriveIndex = driveIndex;
   const driveSelect = $('#drive-select');
   const playSelect = $('#play-select');
   const list = $('#play-list');
@@ -167,21 +262,37 @@ function renderDrive(driveIndex) {
     button.type = 'button';
     button.title = `${entry.source.event_type} · ${entry.sourceId}`;
     button.addEventListener('click', () => {
-      playSelect.value = String(offset);
-      renderPlay(entry, drive);
-      for (const other of list.querySelectorAll('button')) other.setAttribute('aria-current', String(other === button));
+      stopPlayback();
+      choosePlay(offset);
     });
     item.append(button);
     list.append(item);
   }
-  const choosePlay = () => {
-    const offset = Number(playSelect.value);
+  const choosePlay = (offset) => {
+    playSelect.value = String(offset);
     const entry = drive.plays[offset];
     renderPlay(entry, drive);
     [...list.querySelectorAll('button')].forEach((button, index) => button.setAttribute('aria-current', String(index === offset)));
   };
-  playSelect.onchange = choosePlay;
-  choosePlay();
+  selectActiveDrivePlay = choosePlay;
+  playSelect.onchange = () => {
+    stopPlayback();
+    choosePlay(Number(playSelect.value));
+  };
+  choosePlay(selectedPlayOffset);
+}
+
+function showGamePlay(globalIndex) {
+  if (!gameSequence.length) return;
+  const index = Math.max(0, Math.min(gameSequence.length - 1, globalIndex));
+  const selection = gameSequence[index];
+  activeGlobalPlayIndex = index;
+  $('#drive-select').value = String(selection.driveOffset);
+  if (activeDriveIndex !== selection.driveOffset) {
+    renderDrive(selection.driveOffset, selection.playOffset);
+  } else {
+    selectActiveDrivePlay(selection.playOffset);
+  }
 }
 
 function showError(error) {
@@ -196,9 +307,43 @@ async function loadFixture() {
     const manifestResponse = await fetch(MANIFEST_URL);
     if (!manifestResponse.ok) throw new Error(`manifest HTTP ${manifestResponse.status}`);
     const baseManifest = await manifestResponse.json();
-    const requestedMatchup = new URLSearchParams(globalThis.window?.location?.search ?? '').get('matchup');
+    const query = new URLSearchParams(globalThis.window?.location?.search ?? '');
+    const requestedMatchup = query.get('matchup');
+    const requestedSeed = query.get('seed');
+    const requestedPlaylist = query.get('playlist');
+    const autoplay = query.get('autoplay') === '1';
+    if (requestedMatchup && (requestedSeed || requestedPlaylist)) throw new Error('choose either a matchup or a marketing seed');
+    if (requestedSeed && requestedPlaylist) throw new Error('choose one seed or the featured playlist');
     let manifest = baseManifest;
     let matchupRow = null;
+    if (requestedSeed || requestedPlaylist) {
+      const seedManifestResponse = await fetch(SEED_LIBRARY_MANIFEST_URL, { cache: 'no-store' });
+      if (!seedManifestResponse.ok) throw new Error(`SLC seed manifest HTTP ${seedManifestResponse.status}`);
+      manifest = await seedManifestResponse.json();
+      let selectedSeed = requestedSeed;
+      if (requestedPlaylist) {
+        playlistQuery = requestedPlaylist;
+        const shortlistResponse = await fetch(MARKETING_SEEDS_URL, { cache: 'no-store' });
+        if (!shortlistResponse.ok) throw new Error(`SLC marketing seed list HTTP ${shortlistResponse.status}`);
+        const shortlist = await shortlistResponse.json();
+        playlistSeeds = requestedPlaylist === 'featured'
+          ? shortlist.seeds.filter((item) => item.selection !== 'additional_realistic_scenario').slice(0, 5).map((item) => String(item.seed))
+          : requestedPlaylist.split(',').map((item) => item.trim()).filter(Boolean);
+        if (!playlistSeeds.length) throw new Error('featured seed playlist is empty');
+        playlistIndex = Number(query.get('playlistIndex') ?? 0);
+        if (!Number.isInteger(playlistIndex) || playlistIndex < 0 || playlistIndex >= playlistSeeds.length) {
+          throw new Error('featured seed playlist position is invalid');
+        }
+        selectedSeed = playlistSeeds[playlistIndex];
+        autoPlaylist = autoplay;
+      }
+      const seedEntry = manifest.fixtures.find((item) => String(item.seed) === selectedSeed);
+      if (!seedEntry) throw new Error(`SLC seed manifest has no seed ${selectedSeed}`);
+      manifest.fixtures = [seedEntry];
+      activeMatchupLabel = `MIN–DET · SLC seed ${selectedSeed}`;
+      const banner = $('.retrospective-banner');
+      if (banner) banner.textContent = 'HYPOTHETICAL SLC GAME · LP EVENTS PRESERVED · NOT A REAL RESULT';
+    }
     if (requestedMatchup) {
       const indexResponse = await fetch(MATCHUP_INDEX_URL, { cache: 'no-store' });
       if (!indexResponse.ok) throw new Error(`LP matchup index HTTP ${indexResponse.status}`);
@@ -242,6 +387,9 @@ async function loadFixture() {
         throw new Error('pinned LP source payload SHA-256 mismatch');
       }
       upstream = JSON.parse(new TextDecoder().decode(upstreamBytes));
+      if (!upstream.record && upstream.result && typeof upstream.result === 'object') {
+        upstream = { record: upstream.result };
+      }
       if (canonicalJson(upstream.record) !== canonicalJson(payload.record)) {
         throw new Error('Gridiron transport record differs from the pinned LP source record');
       }
@@ -261,7 +409,7 @@ async function loadFixture() {
         || (payload.source.payload_path && lpSource.payload_file && payload.source.payload_path !== lpSource.payload_file)) {
       throw new Error('LP producer revision or source path does not match its matchup index');
     }
-    if (!requestedMatchup) {
+    if (!requestedMatchup && !requestedSeed && !requestedPlaylist) {
       const conversionSource = lpSource.conversion_source_script_sha256;
       if (lpSource.conversion_source_script_commit !== lpSource.base_commit
           || !/^[a-f0-9]{64}$/i.test(conversionSource ?? '')) {
@@ -281,9 +429,16 @@ async function loadFixture() {
       await renderE3Comparison(auditPayload);
     } else {
       $('#e3-comparison').hidden = true;
-      const sides = matchupRow.score_sides ?? matchupRow.team_labels ?? matchupRow.teams ?? {};
-      const a = sides.A ?? sides.a ?? matchupRow.team_a ?? matchupRow.teamA;
-      const b = sides.B ?? sides.b ?? matchupRow.team_b ?? matchupRow.teamB;
+      const isSeedRecord = Boolean(requestedSeed || requestedPlaylist);
+      const sides = isSeedRecord
+        ? (payload.record.team_identity ?? {})
+        : (matchupRow.score_sides ?? matchupRow.team_labels ?? matchupRow.teams ?? {});
+      const a = isSeedRecord
+        ? (sides.A?.team ?? payload.record.teams?.home)
+        : (sides.A ?? sides.a ?? matchupRow.team_a ?? matchupRow.teamA);
+      const b = isSeedRecord
+        ? (sides.B?.team ?? payload.record.teams?.away)
+        : (sides.B ?? sides.b ?? matchupRow.team_b ?? matchupRow.teamB);
       const label = (value) => typeof value === 'object' ? value.name ?? value.abbr ?? value.code : value;
       if (a) $('#team-a-label').textContent = label(a);
       if (b) $('#team-b-label').textContent = label(b);
@@ -300,8 +455,17 @@ async function loadFixture() {
       option.value = String(offset);
       driveSelect.append(option);
     }
-    driveSelect.addEventListener('change', () => renderDrive(Number(driveSelect.value)));
+    gameSequence = adapted.drives.flatMap((drive, driveOffset) => drive.plays.map((entry, playOffset) => ({
+      driveOffset, playOffset, entry,
+    })));
+    activeGlobalPlayIndex = 0;
+    driveSelect.addEventListener('change', () => {
+      stopPlayback();
+      renderDrive(Number(driveSelect.value));
+    });
     renderDrive(0);
+    updatePlaybackPosition();
+    if (autoplay) startPlayback();
   } catch (error) {
     showError(error);
   }

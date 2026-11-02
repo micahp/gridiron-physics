@@ -12,6 +12,7 @@
     <header class="hero">
       <p class="eyebrow">Gridiron Physics · E2 research viewer</p>
       <p><a class="index-link" href="e2-matchups.html">← All generated matchups</a></p>
+      <p><a class="index-link" href="e2-seed-library.html">MIN–DET SLC marketing seed library</a></p>
       <h1>Full game record</h1>
       <p id="mode-label" class="mode-label">Loading pinned LP record…</p>
       <p id="record-status" class="record-status" role="status">Loading</p>
@@ -56,7 +57,7 @@
     <div id="viewer-content" hidden>
     <section class="scoreboard" aria-label="Final score">
       <div><span id="team-a-label">Team A</span><strong id="score-a">—</strong></div>
-      <div class="score-separator">FINAL</div>
+      <div class="score-separator">SCORE</div>
       <div><span id="team-b-label">Team B</span><strong id="score-b">—</strong></div>
       <p id="game-state" class="score-note"></p>
     </section>
@@ -74,6 +75,24 @@
     </section>
 
     <section class="card navigation">
+      <div class="playback-controls" aria-label="Game playback">
+        <button id="playback-prev" type="button" aria-label="Previous play">◀ Previous</button>
+        <button id="playback-play" class="primary-button" type="button">▶ Play game</button>
+        <button id="playback-next" type="button" aria-label="Next play">Next ▶</button>
+        <label>Speed<select id="playback-speed" aria-label="Playback speed">
+          <option value="1200">0.75×</option><option value="800" selected>1×</option><option value="400">2×</option><option value="200">4×</option>
+        </select></label>
+        <span id="playback-position" class="record-status" role="status"></span>
+      </div>
+      <div class="field-replay" aria-label="Recorded field position during playback">
+        <div class="field-track">
+          <div id="first-down-marker" class="first-down-marker" title="Line to gain"></div>
+          <div id="ball-marker" class="ball-marker" title="Recorded ball position"></div>
+        </div>
+        <div class="field-labels" aria-hidden="true"><span>OWN GOAL</span><span>25</span><span>50</span><span>25</span><span>OPPONENT GOAL</span></div>
+        <p id="play-event-summary" class="play-event-summary" aria-live="polite"></p>
+        <p class="muted">Marker shows recorded yardline and line to gain. Player trajectories are not in this source.</p>
+      </div>
       <div class="selectors">
         <label>Drive<select id="drive-select"></select></label>
         <label>Play<select id="play-select"></select></label>

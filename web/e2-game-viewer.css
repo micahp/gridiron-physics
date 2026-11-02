@@ -17,6 +17,19 @@ body { margin: 0; background: radial-gradient(ellipse at top, #21313e, #101820 7
 .index-link { color: var(--accent); font-weight: 600; text-decoration: none; }
 .index-link:hover, .index-link:focus-visible { text-decoration: underline; }
 button, select { font: inherit; color: inherit; }
+.primary-button, .replay-button, .playback-controls button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; padding: 9px 14px; border: 1px solid #c89536; border-radius: 7px; background: #f4bd50; color: #17212a; font-weight: 750; text-decoration: none; cursor: pointer; }
+.primary-button:hover, .replay-button:hover, .playback-controls button:hover { background: #ffd374; }
+.playback-controls button:not(.primary-button) { border-color: var(--line); background: #101820; color: #e8edf2; }
+.playback-controls button:disabled { opacity: .55; cursor: default; }
+.playback-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-bottom: 16px; }
+.playback-controls label { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.playback-controls select { width: auto; min-width: 92px; }
+.field-replay { padding: 16px; margin: 14px 0 18px; border: 1px solid var(--line); border-radius: 8px; background: #0d151c; }
+.field-track { position: relative; height: 58px; overflow: hidden; border: 2px solid #d4e0cc; border-radius: 5px; background: repeating-linear-gradient(90deg, #23613b 0, #23613b calc(10% - 1px), #dce8d533 calc(10% - 1px), #dce8d533 10%); }
+.first-down-marker { position: absolute; z-index: 1; top: 0; bottom: 0; left: 0; width: 3px; background: #f7d45b; transition: left .35s ease; }
+.ball-marker { position: absolute; z-index: 2; top: 18px; left: 0; width: 18px; height: 18px; border: 2px solid #fff; border-radius: 50%; background: #f4bd50; box-shadow: 0 0 9px #000b; transform: translateX(-50%); transition: left .45s ease; }
+.field-labels { display: flex; justify-content: space-between; padding-top: 6px; color: var(--muted); font: .68rem "IBM Plex Mono", monospace; }
+.play-event-summary { min-height: 1.5em; margin: 12px 0 4px; color: #f4bd50; font-weight: 700; }
 .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; }
 .hero { padding: 8px 0 20px; }
 .eyebrow, .mode-label { color: var(--accent); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
