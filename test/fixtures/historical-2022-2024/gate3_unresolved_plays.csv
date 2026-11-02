@@ -1,0 +1,565 @@
+season,team,game_id,play_id,reason,pbp_shotgun,participation_shotgun,ftn_shotgun
+2022,NYJ,2022_01_BAL_NYJ,2200,ftn vs participation,False,False,True
+2022,CLE,2022_01_CLE_CAR,213,ftn vs participation,True,True,False
+2022,CLE,2022_01_CLE_CAR,2832,ftn vs participation,True,False,True
+2022,CLE,2022_01_CLE_CAR,4150,ftn vs participation,True,True,False
+2022,SEA,2022_01_DEN_SEA,1217,ftn vs participation,False,False,True
+2022,GB,2022_01_GB_MIN,573,ftn vs participation,True,True,False
+2022,GB,2022_01_GB_MIN,941,ftn vs participation,False,False,True
+2022,MIN,2022_01_GB_MIN,1207,ftn vs participation,False,False,True
+2022,GB,2022_01_GB_MIN,2036,ftn vs participation,False,False,True
+2022,GB,2022_01_GB_MIN,3270,ftn vs participation,False,False,True
+2022,IND,2022_01_IND_HOU,3712,ftn vs participation,False,False,True
+2022,JAX,2022_01_JAX_WAS,2529,"pbp vs participation, no FTN value",False,True,
+2022,WAS,2022_01_JAX_WAS,3622,"pbp vs participation, no FTN value",False,True,
+2022,WAS,2022_01_JAX_WAS,4257,"pbp vs participation, no FTN value",False,True,
+2022,ARI,2022_01_KC_ARI,3295,"pbp vs participation, no FTN value",False,True,
+2022,ARI,2022_01_KC_ARI,3720,"pbp vs participation, no FTN value",False,True,
+2022,LAC,2022_01_LV_LAC,1925,ftn vs participation,False,False,True
+2022,LAC,2022_01_LV_LAC,2543,ftn vs participation,True,True,False
+2022,LV,2022_01_LV_LAC,3263,"pbp vs participation, no FTN value",False,True,
+2022,NO,2022_01_NO_ATL,2114,ftn vs participation,True,True,False
+2022,ATL,2022_01_NO_ATL,2353,ftn vs participation,True,True,False
+2022,NO,2022_01_NO_ATL,3238,"pbp vs participation, no FTN value",False,True,
+2022,NO,2022_01_NO_ATL,3696,"pbp vs participation, no FTN value",False,True,
+2022,NYG,2022_01_NYG_TEN,2049,"pbp vs participation, no FTN value",False,True,
+2022,NYG,2022_01_NYG_TEN,3624,"pbp vs participation, no FTN value",False,True,
+2022,PIT,2022_01_PIT_CIN,1105,ftn vs participation,True,True,False
+2022,CIN,2022_01_PIT_CIN,1565,ftn vs participation,False,False,True
+2022,CIN,2022_01_PIT_CIN,2382,"pbp vs participation, no FTN value",False,True,
+2022,PIT,2022_01_PIT_CIN,2414,ftn vs participation,False,False,True
+2022,SF,2022_01_SF_CHI,1493,ftn vs participation,False,True,False
+2022,CHI,2022_01_SF_CHI,1907,ftn vs participation,False,False,True
+2022,LV,2022_02_ARI_LV,141,ftn vs participation,True,True,False
+2022,LV,2022_02_ARI_LV,455,ftn vs participation,False,False,True
+2022,LV,2022_02_ARI_LV,713,ftn vs participation,False,False,True
+2022,ARI,2022_02_ARI_LV,2980,ftn vs participation,False,False,True
+2022,ARI,2022_02_ARI_LV,3394,"pbp vs participation, no FTN value",False,True,
+2022,ARI,2022_02_ARI_LV,4125,"pbp vs participation, no FTN value",False,True,
+2022,ATL,2022_02_ATL_LA,122,ftn vs participation,False,False,True
+2022,ATL,2022_02_ATL_LA,283,ftn vs participation,False,False,True
+2022,ATL,2022_02_ATL_LA,3267,"pbp vs participation, no FTN value",False,True,
+2022,LA,2022_02_ATL_LA,3597,hierarchy falls back to PBP flag,False,,
+2022,GB,2022_02_CHI_GB,814,ftn vs participation,True,True,False
+2022,GB,2022_02_CHI_GB,3099,ftn vs participation,False,False,True
+2022,DAL,2022_02_CIN_DAL,309,ftn vs participation,False,True,False
+2022,CIN,2022_02_CIN_DAL,3547,"pbp vs participation, no FTN value",False,True,
+2022,BAL,2022_02_MIA_BAL,515,ftn vs participation,False,True,False
+2022,MIA,2022_02_MIA_BAL,1233,ftn vs participation,False,True,False
+2022,BAL,2022_02_MIA_BAL,2756,ftn vs participation,False,False,True
+2022,BAL,2022_02_MIA_BAL,3113,ftn vs participation,True,True,False
+2022,MIA,2022_02_MIA_BAL,3207,ftn vs participation,False,False,True
+2022,MIA,2022_02_MIA_BAL,3523,ftn vs participation,False,False,True
+2022,MIN,2022_02_MIN_PHI,2171,ftn vs participation,False,False,True
+2022,MIN,2022_02_MIN_PHI,2247,ftn vs participation,False,False,True
+2022,PIT,2022_02_NE_PIT,2970,"pbp vs participation, no FTN value",False,True,
+2022,CLE,2022_02_NYJ_CLE,451,ftn vs participation,True,True,False
+2022,CLE,2022_02_NYJ_CLE,1072,ftn vs participation,False,False,True
+2022,NYJ,2022_02_NYJ_CLE,2390,ftn vs participation,False,False,True
+2022,TB,2022_02_TB_NO,2572,ftn vs participation,False,False,True
+2022,WAS,2022_02_WAS_DET,2635,ftn vs participation,False,True,False
+2022,WAS,2022_02_WAS_DET,2681,"pbp vs participation, no FTN value",False,True,
+2022,WAS,2022_02_WAS_DET,3158,"pbp vs participation, no FTN value",False,True,
+2022,BAL,2022_03_BAL_NE,2142,ftn vs participation,True,True,False
+2022,NE,2022_03_BAL_NE,2293,ftn vs participation,False,False,True
+2022,NE,2022_03_BAL_NE,2601,ftn vs participation,False,False,True
+2022,NE,2022_03_BAL_NE,2965,"pbp vs participation, no FTN value",False,True,
+2022,MIA,2022_03_BUF_MIA,1246,ftn vs participation,False,False,True
+2022,MIA,2022_03_BUF_MIA,3114,ftn vs participation,False,False,True
+2022,NYG,2022_03_DAL_NYG,376,ftn vs participation,False,False,True
+2022,GB,2022_03_GB_TB,965,ftn vs participation,False,False,True
+2022,TB,2022_03_GB_TB,3913,"pbp vs participation, no FTN value",False,True,
+2022,HOU,2022_03_HOU_CHI,948,ftn vs participation,False,False,True
+2022,HOU,2022_03_HOU_CHI,2673,hierarchy falls back to PBP flag,False,,
+2022,HOU,2022_03_HOU_CHI,2792,ftn vs participation,True,True,False
+2022,CHI,2022_03_HOU_CHI,3662,ftn vs participation,False,False,True
+2022,JAX,2022_03_JAX_LAC,2961,"pbp vs participation, no FTN value",False,True,
+2022,IND,2022_03_KC_IND,1091,ftn vs participation,True,True,False
+2022,KC,2022_03_KC_IND,1567,ftn vs participation,False,True,False
+2022,KC,2022_03_KC_IND,1704,"pbp vs participation, no FTN value",False,True,
+2022,KC,2022_03_KC_IND,2996,hierarchy falls back to PBP flag,False,,
+2022,LV,2022_03_LV_TEN,620,ftn vs participation,False,True,False
+2022,LV,2022_03_LV_TEN,3842,"pbp vs participation, no FTN value",False,True,
+2022,CAR,2022_03_NO_CAR,1202,ftn vs participation,False,False,True
+2022,CAR,2022_03_NO_CAR,3207,"pbp vs participation, no FTN value",False,True,
+2022,WAS,2022_03_PHI_WAS,1130,ftn vs participation,False,False,True
+2022,WAS,2022_03_PHI_WAS,4172,"pbp vs participation, no FTN value",False,True,
+2022,DEN,2022_03_SF_DEN,3634,"pbp vs participation, no FTN value",False,True,
+2022,BAL,2022_04_BUF_BAL,1369,ftn vs participation,False,False,True
+2022,BAL,2022_04_BUF_BAL,3462,ftn vs participation,False,False,True
+2022,NYG,2022_04_CHI_NYG,3205,ftn vs participation,False,False,True
+2022,DEN,2022_04_DEN_LV,1159,ftn vs participation,True,True,False
+2022,DEN,2022_04_DEN_LV,2238,ftn vs participation,False,True,False
+2022,JAX,2022_04_JAX_PHI,567,ftn vs participation,False,False,True
+2022,JAX,2022_04_JAX_PHI,962,ftn vs participation,False,False,True
+2022,JAX,2022_04_JAX_PHI,2452,ftn vs participation,False,False,True
+2022,PHI,2022_04_JAX_PHI,3218,"pbp vs participation, no FTN value",False,True,
+2022,KC,2022_04_KC_TB,1310,ftn vs participation,True,True,False
+2022,HOU,2022_04_LAC_HOU,338,ftn vs participation,True,True,False
+2022,LAC,2022_04_LAC_HOU,786,ftn vs participation,False,False,True
+2022,LAC,2022_04_LAC_HOU,2429,ftn vs participation,True,True,False
+2022,HOU,2022_04_LAC_HOU,2723,ftn vs participation,False,False,True
+2022,CIN,2022_04_MIA_CIN,904,ftn vs participation,True,True,False
+2022,CIN,2022_04_MIA_CIN,1010,ftn vs participation,True,True,False
+2022,CIN,2022_04_MIA_CIN,2233,ftn vs participation,False,False,True
+2022,MIN,2022_04_MIN_NO,2848,hierarchy falls back to PBP flag,False,,
+2022,NE,2022_04_NE_GB,171,ftn vs participation,False,False,True
+2022,GB,2022_04_NE_GB,2010,ftn vs participation,False,False,True
+2022,GB,2022_04_NE_GB,3910,ftn vs participation,False,False,True
+2022,NYJ,2022_04_NYJ_PIT,462,ftn vs participation,False,False,True
+2022,NYJ,2022_04_NYJ_PIT,488,ftn vs participation,False,True,False
+2022,NYJ,2022_04_NYJ_PIT,685,ftn vs participation,False,False,True
+2022,NYJ,2022_04_NYJ_PIT,1831,ftn vs participation,False,False,True
+2022,NYJ,2022_04_NYJ_PIT,2756,ftn vs participation,False,False,True
+2022,NYJ,2022_04_NYJ_PIT,4013,ftn vs participation,False,True,False
+2022,DET,2022_04_SEA_DET,2695,"pbp vs participation, no FTN value",False,True,
+2022,SEA,2022_04_SEA_DET,3078,ftn vs participation,True,True,False
+2022,DET,2022_04_SEA_DET,3227,ftn vs participation,False,False,True
+2022,DET,2022_04_SEA_DET,3263,"pbp vs participation, no FTN value",False,True,
+2022,TEN,2022_04_TEN_IND,1851,ftn vs participation,False,False,True
+2022,WAS,2022_04_WAS_DAL,2227,ftn vs participation,False,False,True
+2022,ATL,2022_05_ATL_TB,2160,ftn vs participation,True,True,False
+2022,TB,2022_05_ATL_TB,2688,"pbp vs participation, no FTN value",False,True,
+2022,CHI,2022_05_CHI_MIN,1432,ftn vs participation,True,True,False
+2022,MIN,2022_05_CHI_MIN,3606,ftn vs participation,False,True,False
+2022,MIN,2022_05_CHI_MIN,3635,"pbp vs participation, no FTN value",False,True,
+2022,BAL,2022_05_CIN_BAL,3791,ftn vs participation,True,True,False
+2022,DAL,2022_05_DAL_LA,140,"pbp vs participation, no FTN value",False,True,
+2022,JAX,2022_05_HOU_JAX,1249,ftn vs participation,True,True,False
+2022,CLE,2022_05_LAC_CLE,125,ftn vs participation,False,True,False
+2022,CLE,2022_05_LAC_CLE,470,ftn vs participation,False,False,True
+2022,LAC,2022_05_LAC_CLE,2725,ftn vs participation,False,False,True
+2022,KC,2022_05_LV_KC,3490,"pbp vs participation, no FTN value",False,True,
+2022,LV,2022_05_LV_KC,3704,"pbp vs participation, no FTN value",False,True,
+2022,NYJ,2022_05_MIA_NYJ,598,ftn vs participation,False,False,True
+2022,MIA,2022_05_MIA_NYJ,2013,ftn vs participation,False,True,False
+2022,NYJ,2022_05_MIA_NYJ,3083,ftn vs participation,False,False,True
+2022,ARI,2022_05_PHI_ARI,1943,hierarchy falls back to PBP flag,False,,
+2022,BUF,2022_05_PIT_BUF,117,ftn vs participation,True,True,False
+2022,PIT,2022_05_PIT_BUF,365,ftn vs participation,True,True,False
+2022,BUF,2022_05_PIT_BUF,1178,ftn vs participation,False,False,True
+2022,CAR,2022_05_SF_CAR,2336,"pbp vs participation, no FTN value",False,True,
+2022,WAS,2022_05_TEN_WAS,3447,ftn vs participation,False,False,True
+2022,SEA,2022_06_ARI_SEA,2525,ftn vs participation,True,True,False
+2022,SEA,2022_06_ARI_SEA,3099,ftn vs participation,True,True,False
+2022,NYG,2022_06_BAL_NYG,2457,ftn vs participation,False,True,False
+2022,KC,2022_06_BUF_KC,3641,ftn vs participation,True,True,False
+2022,BUF,2022_06_BUF_KC,3706,ftn vs participation,False,False,True
+2022,CAR,2022_06_CAR_LA,55,ftn vs participation,False,False,True
+2022,LA,2022_06_CAR_LA,2193,ftn vs participation,False,False,True
+2022,NO,2022_06_CIN_NO,3186,ftn vs participation,False,True,False
+2022,CIN,2022_06_CIN_NO,3809,"pbp vs participation, no FTN value",False,True,
+2022,PHI,2022_06_DAL_PHI,3339,"pbp vs participation, no FTN value",False,True,
+2022,IND,2022_06_JAX_IND,2771,"pbp vs participation, no FTN value",False,True,
+2022,JAX,2022_06_JAX_IND,2828,ftn vs participation,False,False,True
+2022,JAX,2022_06_JAX_IND,3818,"pbp vs participation, no FTN value",False,True,
+2022,IND,2022_06_JAX_IND,4147,"pbp vs participation, no FTN value",False,True,
+2022,MIA,2022_06_MIN_MIA,2202,hierarchy falls back to PBP flag,False,,
+2022,MIN,2022_06_MIN_MIA,3672,"pbp vs participation, no FTN value",False,True,
+2022,MIA,2022_06_MIN_MIA,4065,"pbp vs participation, no FTN value",False,True,
+2022,CLE,2022_06_NE_CLE,3769,"pbp vs participation, no FTN value",False,True,
+2022,NYJ,2022_06_NYJ_GB,2161,ftn vs participation,False,False,True
+2022,NYJ,2022_06_NYJ_GB,2958,ftn vs participation,False,False,True
+2022,GB,2022_06_NYJ_GB,3257,ftn vs participation,False,False,True
+2022,NYJ,2022_06_NYJ_GB,3570,ftn vs participation,False,True,False
+2022,SF,2022_06_SF_ATL,965,ftn vs participation,True,True,False
+2022,SF,2022_06_SF_ATL,2601,ftn vs participation,False,False,True
+2022,SF,2022_06_SF_ATL,2689,ftn vs participation,False,False,True
+2022,TB,2022_06_TB_PIT,1103,ftn vs participation,True,True,False
+2022,TB,2022_06_TB_PIT,3839,"pbp vs participation, no FTN value",False,True,
+2022,WAS,2022_06_WAS_CHI,3195,"pbp vs participation, no FTN value",False,True,
+2022,BAL,2022_07_CLE_BAL,2665,ftn vs participation,False,True,False
+2022,HOU,2022_07_HOU_LV,950,ftn vs participation,False,False,True
+2022,TEN,2022_07_IND_TEN,758,ftn vs participation,False,False,True
+2022,TEN,2022_07_IND_TEN,782,ftn vs participation,True,True,False
+2022,IND,2022_07_IND_TEN,1006,ftn vs participation,False,False,True
+2022,SF,2022_07_KC_SF,410,ftn vs participation,False,False,True
+2022,SF,2022_07_KC_SF,2486,ftn vs participation,False,False,True
+2022,ARI,2022_07_NO_ARI,1811,"pbp vs participation, no FTN value",False,True,
+2022,JAX,2022_07_NYG_JAX,486,"pbp vs participation, no FTN value",False,True,
+2022,NYJ,2022_07_NYJ_DEN,3540,ftn vs participation,False,False,True
+2022,PIT,2022_07_PIT_MIA,1400,ftn vs participation,True,True,False
+2022,PIT,2022_07_PIT_MIA,3570,ftn vs participation,True,True,False
+2022,TB,2022_07_TB_CAR,2042,ftn vs participation,False,False,True
+2022,TB,2022_07_TB_CAR,2121,ftn vs participation,False,False,True
+2022,TB,2022_07_TB_CAR,2326,ftn vs participation,False,False,True
+2022,TB,2022_07_TB_CAR,2348,ftn vs participation,False,False,True
+2022,ARI,2022_08_ARI_MIN,3151,"pbp vs participation, no FTN value",False,True,
+2022,TB,2022_08_BAL_TB,779,ftn vs participation,False,True,False
+2022,TB,2022_08_BAL_TB,4313,"pbp vs participation, no FTN value",False,True,
+2022,CAR,2022_08_CAR_ATL,2303,ftn vs participation,True,True,False
+2022,CAR,2022_08_CAR_ATL,2935,"pbp vs participation, no FTN value",False,True,
+2022,CAR,2022_08_CAR_ATL,4282,ftn vs participation,False,False,True
+2022,DAL,2022_08_CHI_DAL,1399,ftn vs participation,False,False,True
+2022,CHI,2022_08_CHI_DAL,2634,"pbp vs participation, no FTN value",False,True,
+2022,CHI,2022_08_CHI_DAL,3044,ftn vs participation,False,False,True
+2022,CHI,2022_08_CHI_DAL,3387,"pbp vs participation, no FTN value",False,True,
+2022,CLE,2022_08_CIN_CLE,1353,ftn vs participation,True,True,False
+2022,CLE,2022_08_CIN_CLE,2140,ftn vs participation,False,False,True
+2022,CIN,2022_08_CIN_CLE,2341,ftn vs participation,True,True,False
+2022,CLE,2022_08_CIN_CLE,2536,ftn vs participation,False,False,True
+2022,CLE,2022_08_CIN_CLE,3111,ftn vs participation,False,False,True
+2022,GB,2022_08_GB_BUF,1919,ftn vs participation,True,True,False
+2022,LV,2022_08_LV_NO,850,ftn vs participation,False,False,True
+2022,SEA,2022_08_NYG_SEA,113,ftn vs participation,True,True,False
+2022,SEA,2022_08_NYG_SEA,647,ftn vs participation,True,True,False
+2022,SEA,2022_08_NYG_SEA,3629,ftn vs participation,True,True,False
+2022,PIT,2022_08_PIT_PHI,2558,hierarchy falls back to PBP flag,False,,
+2022,LA,2022_08_SF_LA,695,ftn vs participation,False,False,True
+2022,LA,2022_08_SF_LA,1068,ftn vs participation,False,False,True
+2022,SF,2022_08_SF_LA,2707,ftn vs participation,True,True,False
+2022,LA,2022_08_SF_LA,2760,ftn vs participation,False,False,True
+2022,LA,2022_08_SF_LA,2786,ftn vs participation,False,False,True
+2022,LA,2022_08_SF_LA,2843,ftn vs participation,False,False,True
+2022,SF,2022_08_SF_LA,3215,ftn vs participation,True,True,False
+2022,WAS,2022_08_WAS_IND,1198,ftn vs participation,True,True,False
+2022,BUF,2022_09_BUF_NYJ,378,ftn vs participation,False,False,True
+2022,CIN,2022_09_CAR_CIN,2548,ftn vs participation,False,False,True
+2022,CIN,2022_09_CAR_CIN,2680,ftn vs participation,False,False,True
+2022,GB,2022_09_GB_DET,534,ftn vs participation,False,False,True
+2022,GB,2022_09_GB_DET,2485,"pbp vs participation, no FTN value",False,True,
+2022,ATL,2022_09_LAC_ATL,387,ftn vs participation,False,False,True
+2022,LA,2022_09_LA_TB,979,ftn vs participation,False,False,True
+2022,LV,2022_09_LV_JAX,520,ftn vs participation,False,False,True
+2022,LV,2022_09_LV_JAX,1641,ftn vs participation,False,False,True
+2022,CHI,2022_09_MIA_CHI,556,ftn vs participation,False,True,False
+2022,CHI,2022_09_MIA_CHI,1294,ftn vs participation,False,False,True
+2022,MIN,2022_09_MIN_WAS,961,ftn vs participation,False,False,True
+2022,MIN,2022_09_MIN_WAS,2965,ftn vs participation,False,False,True
+2022,ARI,2022_09_SEA_ARI,1120,ftn vs participation,False,True,False
+2022,ARI,2022_09_SEA_ARI,1739,ftn vs participation,True,True,False
+2022,KC,2022_09_TEN_KC,692,ftn vs participation,False,False,True
+2022,KC,2022_09_TEN_KC,3090,ftn vs participation,True,True,False
+2022,KC,2022_09_TEN_KC,3689,"pbp vs participation, no FTN value",False,True,
+2022,LA,2022_10_ARI_LA,1257,ftn vs participation,False,False,True
+2022,CAR,2022_10_ATL_CAR,2936,ftn vs participation,True,True,False
+2022,CLE,2022_10_CLE_MIA,113,ftn vs participation,True,True,False
+2022,MIA,2022_10_CLE_MIA,2076,ftn vs participation,False,False,True
+2022,CLE,2022_10_CLE_MIA,2298,ftn vs participation,False,False,True
+2022,MIA,2022_10_CLE_MIA,2580,ftn vs participation,False,False,True
+2022,MIA,2022_10_CLE_MIA,3266,ftn vs participation,True,True,False
+2022,NYG,2022_10_HOU_NYG,3009,ftn vs participation,True,True,False
+2022,IND,2022_10_IND_LV,2763,"pbp vs participation, no FTN value",False,True,
+2022,IND,2022_10_IND_LV,3508,"pbp vs participation, no FTN value",False,True,
+2022,KC,2022_10_JAX_KC,3732,ftn vs participation,False,False,True
+2022,LAC,2022_10_LAC_SF,216,ftn vs participation,False,False,True
+2022,SF,2022_10_LAC_SF,3702,ftn vs participation,True,True,False
+2022,BUF,2022_10_MIN_BUF,724,ftn vs participation,False,False,True
+2022,PIT,2022_10_NO_PIT,1720,ftn vs participation,False,False,True
+2022,SEA,2022_10_SEA_TB,509,ftn vs participation,False,False,True
+2022,SEA,2022_10_SEA_TB,3122,"pbp vs participation, no FTN value",False,True,
+2022,WAS,2022_10_WAS_PHI,1491,ftn vs participation,True,True,False
+2022,WAS,2022_10_WAS_PHI,1856,ftn vs participation,True,True,False
+2022,CAR,2022_11_CAR_BAL,560,ftn vs participation,False,False,True
+2022,PIT,2022_11_CIN_PIT,3282,ftn vs participation,False,False,True
+2022,BUF,2022_11_CLE_BUF,2693,"pbp vs participation, no FTN value",False,True,
+2022,DAL,2022_11_DAL_MIN,1065,ftn vs participation,False,False,True
+2022,DAL,2022_11_DAL_MIN,1107,ftn vs participation,True,True,False
+2022,DAL,2022_11_DAL_MIN,2198,ftn vs participation,False,False,True
+2022,NYG,2022_11_DET_NYG,4048,"pbp vs participation, no FTN value",False,True,
+2022,LAC,2022_11_KC_LAC,708,ftn vs participation,False,False,True
+2022,LAC,2022_11_KC_LAC,3318,ftn vs participation,True,True,False
+2022,LA,2022_11_LA_NO,1357,ftn vs participation,False,False,True
+2022,PHI,2022_11_PHI_IND,1310,ftn vs participation,True,True,False
+2022,IND,2022_11_PHI_IND,1926,ftn vs participation,False,False,True
+2022,GB,2022_11_TEN_GB,2531,"pbp vs participation, no FTN value",False,True,
+2022,HOU,2022_11_WAS_HOU,738,ftn vs participation,False,False,True
+2022,ATL,2022_12_ATL_WAS,1026,ftn vs participation,False,False,True
+2022,ATL,2022_12_ATL_WAS,1082,ftn vs participation,True,True,False
+2022,WAS,2022_12_ATL_WAS,2219,ftn vs participation,True,True,False
+2022,ATL,2022_12_ATL_WAS,3332,ftn vs participation,True,True,False
+2022,BAL,2022_12_BAL_JAX,1029,ftn vs participation,True,True,False
+2022,BAL,2022_12_BAL_JAX,1263,ftn vs participation,True,True,False
+2022,BAL,2022_12_BAL_JAX,3724,"pbp vs participation, no FTN value",False,True,
+2022,JAX,2022_12_BAL_JAX,4081,"pbp vs participation, no FTN value",False,True,
+2022,CHI,2022_12_CHI_NYJ,681,ftn vs participation,False,False,True
+2022,NYJ,2022_12_CHI_NYJ,1171,hierarchy falls back to PBP flag,False,,
+2022,CHI,2022_12_CHI_NYJ,2375,ftn vs participation,False,False,True
+2022,CHI,2022_12_CHI_NYJ,2977,ftn vs participation,True,True,False
+2022,CAR,2022_12_DEN_CAR,2238,ftn vs participation,True,True,False
+2022,HOU,2022_12_HOU_MIA,2720,"pbp vs participation, no FTN value",False,True,
+2022,LAC,2022_12_LAC_ARI,3961,"pbp vs participation, no FTN value",False,True,
+2022,SEA,2022_12_LV_SEA,4387,ftn vs participation,True,True,False
+2022,NO,2022_12_NO_SF,3094,ftn vs participation,False,False,True
+2022,NYG,2022_12_NYG_DAL,300,ftn vs participation,True,True,False
+2022,PIT,2022_12_PIT_IND,2944,ftn vs participation,False,False,True
+2022,PIT,2022_12_PIT_IND,3083,ftn vs participation,False,False,True
+2022,PIT,2022_12_PIT_IND,3239,"pbp vs participation, no FTN value",False,True,
+2022,NE,2022_13_BUF_NE,1937,ftn vs participation,True,True,False
+2022,NE,2022_13_BUF_NE,2505,ftn vs participation,False,False,True
+2022,CLE,2022_13_CLE_HOU,328,ftn vs participation,False,False,True
+2022,HOU,2022_13_CLE_HOU,1716,ftn vs participation,False,False,True
+2022,HOU,2022_13_CLE_HOU,2840,ftn vs participation,False,False,True
+2022,HOU,2022_13_CLE_HOU,3858,"pbp vs participation, no FTN value",False,True,
+2022,BAL,2022_13_DEN_BAL,3225,ftn vs participation,False,True,False
+2022,GB,2022_13_GB_CHI,1424,ftn vs participation,False,False,True
+2022,IND,2022_13_IND_DAL,2841,"pbp vs participation, no FTN value",False,True,
+2022,DAL,2022_13_IND_DAL,3244,"pbp vs participation, no FTN value",False,True,
+2022,DET,2022_13_JAX_DET,732,ftn vs participation,False,False,True
+2022,DET,2022_13_JAX_DET,1140,ftn vs participation,False,False,True
+2022,DET,2022_13_JAX_DET,1429,ftn vs participation,False,False,True
+2022,DET,2022_13_JAX_DET,1784,ftn vs participation,False,False,True
+2022,DET,2022_13_JAX_DET,2203,ftn vs participation,False,False,True
+2022,JAX,2022_13_JAX_DET,2896,"pbp vs participation, no FTN value",False,True,
+2022,KC,2022_13_KC_CIN,2411,ftn vs participation,True,True,False
+2022,LAC,2022_13_LAC_LV,219,hierarchy falls back to PBP flag,False,,
+2022,LAC,2022_13_LAC_LV,2607,ftn vs participation,False,False,True
+2022,LV,2022_13_LAC_LV,3435,ftn vs participation,False,False,True
+2022,SF,2022_13_MIA_SF,926,ftn vs participation,False,False,True
+2022,SF,2022_13_MIA_SF,1899,ftn vs participation,False,False,True
+2022,NYJ,2022_13_NYJ_MIN,1376,ftn vs participation,False,False,True
+2022,NYJ,2022_13_NYJ_MIN,1860,ftn vs participation,False,False,True
+2022,LA,2022_13_SEA_LA,234,ftn vs participation,True,True,False
+2022,LA,2022_13_SEA_LA,2119,ftn vs participation,False,False,True
+2022,JAX,2022_14_JAX_TEN,2738,ftn vs participation,False,False,True
+2022,JAX,2022_14_JAX_TEN,2901,"pbp vs participation, no FTN value",False,True,
+2022,TEN,2022_14_JAX_TEN,3710,"pbp vs participation, no FTN value",False,True,
+2022,DEN,2022_14_KC_DEN,456,ftn vs participation,False,False,True
+2022,MIA,2022_14_MIA_LAC,3083,ftn vs participation,False,False,True
+2022,ARI,2022_14_NE_ARI,829,ftn vs participation,True,True,False
+2022,NYJ,2022_14_NYJ_BUF,602,ftn vs participation,False,False,True
+2022,NYG,2022_14_PHI_NYG,84,ftn vs participation,True,True,False
+2022,NYG,2022_14_PHI_NYG,109,ftn vs participation,False,False,True
+2022,NYG,2022_14_PHI_NYG,600,ftn vs participation,False,False,True
+2022,NYG,2022_14_PHI_NYG,642,ftn vs participation,False,False,True
+2022,NYG,2022_14_PHI_NYG,1243,hierarchy falls back to PBP flag,False,,
+2022,NYG,2022_14_PHI_NYG,1625,ftn vs participation,False,False,True
+2022,PHI,2022_14_PHI_NYG,3398,ftn vs participation,True,True,False
+2022,PHI,2022_14_PHI_NYG,3582,ftn vs participation,True,True,False
+2022,NYG,2022_14_PHI_NYG,3885,"pbp vs participation, no FTN value",False,True,
+2022,DEN,2022_15_ARI_DEN,2773,ftn vs participation,False,False,True
+2022,ARI,2022_15_ARI_DEN,3655,"pbp vs participation, no FTN value",False,True,
+2022,ATL,2022_15_ATL_NO,3530,ftn vs participation,False,False,True
+2022,NO,2022_15_ATL_NO,3870,ftn vs participation,False,True,False
+2022,CLE,2022_15_BAL_CLE,1523,ftn vs participation,False,False,True
+2022,CLE,2022_15_BAL_CLE,3515,ftn vs participation,False,False,True
+2022,TB,2022_15_CIN_TB,422,ftn vs participation,True,True,False
+2022,TB,2022_15_CIN_TB,719,ftn vs participation,False,False,True
+2022,CIN,2022_15_CIN_TB,1285,ftn vs participation,True,True,False
+2022,TB,2022_15_CIN_TB,1907,hierarchy falls back to PBP flag,False,,
+2022,CIN,2022_15_CIN_TB,2441,"pbp vs participation, no FTN value",False,True,
+2022,CIN,2022_15_CIN_TB,2669,"pbp vs participation, no FTN value",False,True,
+2022,JAX,2022_15_DAL_JAX,397,ftn vs participation,False,False,True
+2022,DAL,2022_15_DAL_JAX,456,ftn vs participation,False,False,True
+2022,DAL,2022_15_DAL_JAX,2246,ftn vs participation,False,False,True
+2022,DET,2022_15_DET_NYJ,168,ftn vs participation,True,True,False
+2022,NYJ,2022_15_DET_NYJ,2620,ftn vs participation,False,True,False
+2022,MIN,2022_15_IND_MIN,786,ftn vs participation,False,False,True
+2022,MIN,2022_15_IND_MIN,4489,"pbp vs participation, no FTN value",False,True,
+2022,MIN,2022_15_IND_MIN,4865,ftn vs participation,False,False,True
+2022,MIN,2022_15_IND_MIN,4921,ftn vs participation,False,False,True
+2022,KC,2022_15_KC_HOU,3140,"pbp vs participation, no FTN value",False,True,
+2022,GB,2022_15_LA_GB,1982,ftn vs participation,False,False,True
+2022,LA,2022_15_LA_GB,2874,ftn vs participation,False,False,True
+2022,GB,2022_15_LA_GB,2940,ftn vs participation,True,True,False
+2022,BUF,2022_15_MIA_BUF,3740,"pbp vs participation, no FTN value",False,True,
+2022,NE,2022_15_NE_LV,2451,ftn vs participation,True,True,False
+2022,NE,2022_15_NE_LV,3564,"pbp vs participation, no FTN value",False,True,
+2022,CAR,2022_15_PIT_CAR,2551,ftn vs participation,False,False,True
+2022,LAC,2022_15_TEN_LAC,837,ftn vs participation,False,False,True
+2022,TEN,2022_15_TEN_LAC,2460,ftn vs participation,False,False,True
+2022,TEN,2022_15_TEN_LAC,2699,ftn vs participation,False,False,True
+2022,ATL,2022_16_ATL_BAL,1012,ftn vs participation,False,True,False
+2022,BAL,2022_16_ATL_BAL,1449,"pbp vs participation, no FTN value",False,True,
+2022,BUF,2022_16_BUF_CHI,2004,"pbp vs participation, no FTN value",False,True,
+2022,CIN,2022_16_CIN_NE,618,"pbp vs participation, no FTN value",False,True,
+2022,NE,2022_16_CIN_NE,3299,"pbp vs participation, no FTN value",False,True,
+2022,DEN,2022_16_DEN_LA,3341,"pbp vs participation, no FTN value",False,True,
+2022,DET,2022_16_DET_CAR,2601,"pbp vs participation, no FTN value",False,True,
+2022,DET,2022_16_DET_CAR,3302,ftn vs participation,True,True,False
+2022,MIA,2022_16_GB_MIA,1173,ftn vs participation,True,True,False
+2022,GB,2022_16_GB_MIA,1318,hierarchy falls back to PBP flag,False,,
+2022,TEN,2022_16_HOU_TEN,66,ftn vs participation,False,True,False
+2022,HOU,2022_16_HOU_TEN,1498,ftn vs participation,True,True,False
+2022,TEN,2022_16_HOU_TEN,2121,ftn vs participation,False,True,False
+2022,TEN,2022_16_HOU_TEN,2361,ftn vs participation,False,False,True
+2022,HOU,2022_16_HOU_TEN,3395,"pbp vs participation, no FTN value",False,True,
+2022,LAC,2022_16_LAC_IND,484,ftn vs participation,False,False,True
+2022,LAC,2022_16_LAC_IND,1160,ftn vs participation,False,False,True
+2022,CLE,2022_16_NO_CLE,850,ftn vs participation,False,False,True
+2022,NYG,2022_16_NYG_MIN,3966,"pbp vs participation, no FTN value",False,True,
+2022,PHI,2022_16_PHI_DAL,770,ftn vs participation,True,True,False
+2022,DAL,2022_16_PHI_DAL,3272,ftn vs participation,False,False,True
+2022,SEA,2022_16_SEA_KC,2767,ftn vs participation,False,False,True
+2022,ARI,2022_16_TB_ARI,350,hierarchy falls back to PBP flag,False,,
+2022,TB,2022_16_TB_ARI,1632,ftn vs participation,False,False,True
+2022,WAS,2022_16_WAS_SF,3537,"pbp vs participation, no FTN value",False,True,
+2022,ARI,2022_17_ARI_ATL,942,ftn vs participation,False,False,True
+2022,ATL,2022_17_ARI_ATL,1445,ftn vs participation,False,True,False
+2022,TB,2022_17_CAR_TB,546,ftn vs participation,False,False,True
+2022,TB,2022_17_CAR_TB,919,ftn vs participation,False,True,False
+2022,CAR,2022_17_CAR_TB,1246,ftn vs participation,False,False,True
+2022,TB,2022_17_CAR_TB,3062,"pbp vs participation, no FTN value",False,True,
+2022,TB,2022_17_CAR_TB,3468,"pbp vs participation, no FTN value",False,True,
+2022,CAR,2022_17_CAR_TB,3497,ftn vs participation,False,False,True
+2022,TB,2022_17_CAR_TB,3649,ftn vs participation,False,False,True
+2022,CHI,2022_17_CHI_DET,177,ftn vs participation,True,True,False
+2022,DET,2022_17_CHI_DET,1687,ftn vs participation,False,False,True
+2022,KC,2022_17_DEN_KC,385,"pbp vs participation, no FTN value",False,True,
+2022,JAX,2022_17_JAX_HOU,2587,ftn vs participation,False,False,True
+2022,LAC,2022_17_LA_LAC,738,ftn vs participation,False,False,True
+2022,LA,2022_17_LA_LAC,2775,ftn vs participation,False,False,True
+2022,NYJ,2022_17_NYJ_SEA,1102,ftn vs participation,True,True,False
+2022,BAL,2022_18_BAL_CIN,1033,ftn vs participation,False,False,True
+2022,BAL,2022_18_BAL_CIN,2778,ftn vs participation,False,False,True
+2022,CIN,2022_18_BAL_CIN,3637,ftn vs participation,False,False,True
+2022,PIT,2022_18_CLE_PIT,3578,"pbp vs participation, no FTN value",False,True,
+2022,DAL,2022_18_DAL_WAS,203,hierarchy falls back to PBP flag,False,,
+2022,DAL,2022_18_DAL_WAS,315,ftn vs participation,False,False,True
+2022,WAS,2022_18_DAL_WAS,3790,ftn vs participation,True,True,False
+2022,HOU,2022_18_HOU_IND,3966,"pbp vs participation, no FTN value",False,True,
+2022,DEN,2022_18_LAC_DEN,307,ftn vs participation,True,True,False
+2022,DEN,2022_18_LAC_DEN,451,ftn vs participation,False,True,False
+2022,LAC,2022_18_LAC_DEN,1377,ftn vs participation,False,False,True
+2022,LAC,2022_18_LAC_DEN,3619,"pbp vs participation, no FTN value",False,True,
+2022,DEN,2022_18_LAC_DEN,4017,ftn vs participation,False,False,True
+2022,SEA,2022_18_LA_SEA,55,ftn vs participation,False,False,True
+2022,LA,2022_18_LA_SEA,86,ftn vs participation,False,False,True
+2022,SEA,2022_18_LA_SEA,1003,ftn vs participation,True,True,False
+2022,BUF,2022_18_NE_BUF,2569,ftn vs participation,False,False,True
+2022,NE,2022_18_NE_BUF,3087,"pbp vs participation, no FTN value",False,True,
+2022,NYG,2022_18_NYG_PHI,1432,ftn vs participation,False,False,True
+2022,NYG,2022_18_NYG_PHI,3503,"pbp vs participation, no FTN value",False,True,
+2022,NYJ,2022_18_NYJ_MIA,2565,ftn vs participation,False,False,True
+2022,JAX,2022_18_TEN_JAX,186,ftn vs participation,True,True,False
+2022,JAX,2022_18_TEN_JAX,1417,ftn vs participation,False,False,True
+2022,JAX,2022_18_TEN_JAX,2527,ftn vs participation,True,True,False
+2022,TEN,2022_18_TEN_JAX,2611,ftn vs participation,False,False,True
+2023,WAS,2023_01_ARI_WAS,220,hierarchy falls back to PBP flag,True,,
+2023,WAS,2023_01_ARI_WAS,699,hierarchy falls back to PBP flag,True,,
+2023,CIN,2023_01_CIN_CLE,1874,hierarchy falls back to PBP flag,True,,
+2023,CLE,2023_01_CIN_CLE,3434,hierarchy falls back to PBP flag,False,,
+2023,CLE,2023_01_CIN_CLE,3483,hierarchy falls back to PBP flag,False,,
+2023,CLE,2023_01_CIN_CLE,3746,hierarchy falls back to PBP flag,False,,
+2023,CHI,2023_01_GB_CHI,3036,hierarchy falls back to PBP flag,False,,
+2023,CHI,2023_01_GB_CHI,4249,hierarchy falls back to PBP flag,False,,
+2023,BAL,2023_01_HOU_BAL,2608,hierarchy falls back to PBP flag,False,,
+2023,JAX,2023_01_JAX_IND,1551,hierarchy falls back to PBP flag,False,,
+2023,SEA,2023_01_LA_SEA,280,hierarchy falls back to PBP flag,False,,
+2023,PHI,2023_01_PHI_NE,246,hierarchy falls back to PBP flag,True,,
+2023,PHI,2023_01_PHI_NE,1066,hierarchy falls back to PBP flag,True,,
+2023,NE,2023_01_PHI_NE,4146,hierarchy falls back to PBP flag,False,,
+2023,SF,2023_01_SF_PIT,2109,hierarchy falls back to PBP flag,True,,
+2023,PIT,2023_01_SF_PIT,3472,hierarchy falls back to PBP flag,True,,
+2023,PIT,2023_01_SF_PIT,3722,hierarchy falls back to PBP flag,True,,
+2023,PIT,2023_01_SF_PIT,4295,hierarchy falls back to PBP flag,True,,
+2023,MIN,2023_01_TB_MIN,791,hierarchy falls back to PBP flag,True,,
+2023,TB,2023_01_TB_MIN,866,hierarchy falls back to PBP flag,True,,
+2023,TEN,2023_01_TEN_NO,228,hierarchy falls back to PBP flag,True,,
+2023,CIN,2023_02_BAL_CIN,2748,hierarchy falls back to PBP flag,True,,
+2023,CIN,2023_02_BAL_CIN,2770,hierarchy falls back to PBP flag,True,,
+2023,CHI,2023_02_CHI_TB,951,hierarchy falls back to PBP flag,True,,
+2023,TB,2023_02_CHI_TB,1944,hierarchy falls back to PBP flag,False,,
+2023,CHI,2023_02_CHI_TB,2171,hierarchy falls back to PBP flag,True,,
+2023,TB,2023_02_CHI_TB,2321,hierarchy falls back to PBP flag,True,,
+2023,TB,2023_02_CHI_TB,3591,hierarchy falls back to PBP flag,False,,
+2023,GB,2023_02_GB_ATL,1662,hierarchy falls back to PBP flag,True,,
+2023,TEN,2023_02_LAC_TEN,1786,hierarchy falls back to PBP flag,False,,
+2023,MIA,2023_02_MIA_NE,4529,hierarchy falls back to PBP flag,False,,
+2023,CAR,2023_02_NO_CAR,4252,hierarchy falls back to PBP flag,True,,
+2023,WAS,2023_02_WAS_DEN,1854,hierarchy falls back to PBP flag,False,,
+2023,JAX,2023_03_HOU_JAX,1539,ftn vs participation,False,True,False
+2023,JAX,2023_03_HOU_JAX,1478,ftn vs participation,True,False,True
+2023,IND,2023_03_IND_BAL,3556,hierarchy falls back to PBP flag,True,,
+2023,PIT,2023_03_PIT_LV,100,hierarchy falls back to PBP flag,False,,
+2023,ARI,2023_04_ARI_SF,1757,hierarchy falls back to PBP flag,False,,
+2023,BAL,2023_04_BAL_CLE,4139,hierarchy falls back to PBP flag,True,,
+2023,CAR,2023_04_MIN_CAR,3384,hierarchy falls back to PBP flag,True,,
+2023,DAL,2023_04_NE_DAL,1252,hierarchy falls back to PBP flag,False,,
+2023,HOU,2023_04_PIT_HOU,1711,hierarchy falls back to PBP flag,True,,
+2023,SEA,2023_04_SEA_NYG,2787,hierarchy falls back to PBP flag,True,,
+2023,ARI,2023_05_CIN_ARI,1227,hierarchy falls back to PBP flag,False,,
+2023,MIN,2023_05_KC_MIN,1610,hierarchy falls back to PBP flag,False,,
+2023,NO,2023_05_NO_NE,1896,hierarchy falls back to PBP flag,False,,
+2023,ARI,2023_06_ARI_LA,1659,hierarchy falls back to PBP flag,True,,
+2023,MIA,2023_06_CAR_MIA,3085,hierarchy falls back to PBP flag,False,,
+2023,KC,2023_06_DEN_KC,1096,hierarchy falls back to PBP flag,True,,
+2023,DET,2023_06_DET_TB,3926,hierarchy falls back to PBP flag,False,,
+2023,NYG,2023_06_NYG_BUF,661,hierarchy falls back to PBP flag,False,,
+2023,SEA,2023_07_ARI_SEA,1673,hierarchy falls back to PBP flag,False,,
+2023,CLE,2023_07_CLE_IND,1230,hierarchy falls back to PBP flag,True,,
+2023,JAX,2023_07_JAX_NO,2095,hierarchy falls back to PBP flag,False,,
+2023,ATL,2023_08_ATL_TEN,234,hierarchy falls back to PBP flag,True,,
+2023,BAL,2023_08_BAL_ARI,3158,hierarchy falls back to PBP flag,False,,
+2023,BAL,2023_08_BAL_ARI,3226,hierarchy falls back to PBP flag,True,,
+2023,CIN,2023_08_CIN_SF,3518,hierarchy falls back to PBP flag,False,,
+2023,CAR,2023_08_HOU_CAR,2507,hierarchy falls back to PBP flag,True,,
+2023,JAX,2023_08_JAX_PIT,2370,hierarchy falls back to PBP flag,True,,
+2023,IND,2023_09_IND_CAR,1339,hierarchy falls back to PBP flag,True,,
+2023,ATL,2023_09_MIN_ATL,2985,hierarchy falls back to PBP flag,True,,
+2023,DEN,2023_10_DEN_BUF,3931,hierarchy falls back to PBP flag,False,,
+2023,DET,2023_10_DET_LAC,1007,hierarchy falls back to PBP flag,False,,
+2023,GB,2023_10_GB_PIT,3425,hierarchy falls back to PBP flag,True,,
+2023,PIT,2023_10_GB_PIT,3558,hierarchy falls back to PBP flag,False,,
+2023,CAR,2023_11_DAL_CAR,3523,hierarchy falls back to PBP flag,True,,
+2023,MIN,2023_11_MIN_DEN,3277,hierarchy falls back to PBP flag,False,,
+2023,NYJ,2023_11_NYJ_BUF,2005,hierarchy falls back to PBP flag,False,,
+2023,CLE,2023_11_PIT_CLE,3080,hierarchy falls back to PBP flag,True,,
+2023,LA,2023_11_SEA_LA,2123,hierarchy falls back to PBP flag,False,,
+2023,SF,2023_11_TB_SF,3710,hierarchy falls back to PBP flag,False,,
+2023,BAL,2023_12_BAL_LAC,2196,hierarchy falls back to PBP flag,False,,
+2023,BUF,2023_12_BUF_PHI,472,hierarchy falls back to PBP flag,False,,
+2023,GB,2023_12_GB_DET,2599,hierarchy falls back to PBP flag,True,,
+2023,LV,2023_12_KC_LV,2968,ftn vs participation,False,True,False
+2023,LV,2023_12_KC_LV,2908,ftn vs participation,True,False,True
+2023,ARI,2023_12_LA_ARI,2383,hierarchy falls back to PBP flag,False,,
+2023,NYG,2023_12_NE_NYG,3599,hierarchy falls back to PBP flag,True,,
+2023,KC,2023_13_KC_GB,1230,hierarchy falls back to PBP flag,False,,
+2023,WAS,2023_13_MIA_WAS,1544,hierarchy falls back to PBP flag,False,,
+2023,CAR,2023_14_CAR_NO,1533,hierarchy falls back to PBP flag,False,,
+2023,GB,2023_14_GB_NYG,489,hierarchy falls back to PBP flag,True,,
+2023,CLE,2023_14_JAX_CLE,1472,hierarchy falls back to PBP flag,True,,
+2023,MIA,2023_14_TEN_MIA,3267,hierarchy falls back to PBP flag,False,,
+2023,PHI,2023_15_PHI_SEA,398,hierarchy falls back to PBP flag,True,,
+2023,PHI,2023_15_PHI_SEA,604,hierarchy falls back to PBP flag,True,,
+2023,SEA,2023_15_PHI_SEA,2325,hierarchy falls back to PBP flag,True,,
+2023,TB,2023_15_TB_GB,2087,hierarchy falls back to PBP flag,True,,
+2023,TB,2023_15_TB_GB,3308,hierarchy falls back to PBP flag,True,,
+2023,WAS,2023_15_WAS_LA,1935,hierarchy falls back to PBP flag,False,,
+2023,SF,2023_16_BAL_SF,274,hierarchy falls back to PBP flag,True,,
+2023,BAL,2023_16_BAL_SF,1363,hierarchy falls back to PBP flag,True,,
+2023,BAL,2023_16_BAL_SF,2210,hierarchy falls back to PBP flag,True,,
+2023,BUF,2023_16_BUF_LAC,3956,hierarchy falls back to PBP flag,False,,
+2023,TB,2023_16_JAX_TB,3256,hierarchy falls back to PBP flag,False,,
+2023,LV,2023_16_LV_KC,1611,hierarchy falls back to PBP flag,False,,
+2023,DET,2023_17_DET_DAL,1349,hierarchy falls back to PBP flag,False,,
+2023,CLE,2023_17_NYJ_CLE,546,hierarchy falls back to PBP flag,False,,
+2023,CLE,2023_17_NYJ_CLE,3654,ftn vs participation,False,True,False
+2023,NYJ,2023_17_NYJ_CLE,3633,ftn vs participation,True,False,True
+2023,CLE,2023_17_NYJ_CLE,4237,hierarchy falls back to PBP flag,False,,
+2023,TEN,2023_18_JAX_TEN,2132,hierarchy falls back to PBP flag,False,,
+2024,IND,2024_01_HOU_IND,2484,hierarchy falls back to PBP flag,False,,
+2024,MIA,2024_01_JAX_MIA,1611,hierarchy falls back to PBP flag,True,,
+2024,NE,2024_01_NE_CIN,3150,ftn vs participation,False,True,False
+2024,NE,2024_01_NE_CIN,2890,ftn vs participation,True,False,True
+2024,NYJ,2024_01_NYJ_SF,2379,hierarchy falls back to PBP flag,False,,
+2024,TB,2024_01_WAS_TB,3477,hierarchy falls back to PBP flag,False,,
+2024,MIN,2024_02_SF_MIN,205,hierarchy falls back to PBP flag,True,,
+2024,DET,2024_02_TB_DET,1465,hierarchy falls back to PBP flag,False,,
+2024,DEN,2024_03_DEN_TB,719,hierarchy falls back to PBP flag,False,,
+2024,TB,2024_03_DEN_TB,3458,hierarchy falls back to PBP flag,True,,
+2024,TEN,2024_03_GB_TEN,296,hierarchy falls back to PBP flag,False,,
+2024,LA,2024_03_SF_LA,1540,hierarchy falls back to PBP flag,False,,
+2024,IND,2024_05_IND_JAX,154,ftn vs participation,False,True,False
+2024,IND,2024_05_IND_JAX,223,ftn vs participation,True,False,True
+2024,MIA,2024_05_MIA_NE,2028,hierarchy falls back to PBP flag,False,,
+2024,NYG,2024_05_NYG_SEA,4102,hierarchy falls back to PBP flag,False,,
+2024,TB,2024_07_BAL_TB,3464,"pbp vs participation, no FTN value",False,True,
+2024,TB,2024_07_BAL_TB,3990,"pbp vs participation, no FTN value",False,True,
+2024,DET,2024_07_DET_MIN,169,hierarchy falls back to PBP flag,False,,
+2024,LAC,2024_07_LAC_ARI,1052,"pbp vs participation, no FTN value",True,False,
+2024,LAC,2024_07_LAC_ARI,2070,"pbp vs participation, no FTN value",False,True,
+2024,TB,2024_08_ATL_TB,3015,hierarchy falls back to PBP flag,False,,
+2024,LAC,2024_08_NO_LAC,370,hierarchy falls back to PBP flag,False,,
+2024,DAL,2024_09_DAL_ATL,2171,hierarchy falls back to PBP flag,False,,
+2024,ATL,2024_09_DAL_ATL,3196,hierarchy falls back to PBP flag,False,,
+2024,PIT,2024_10_PIT_WAS,717,hierarchy falls back to PBP flag,False,,
+2024,DAL,2024_11_HOU_DAL,463,hierarchy falls back to PBP flag,False,,
+2024,LV,2024_12_DEN_LV,1425,hierarchy falls back to PBP flag,False,,
+2024,KC,2024_12_KC_CAR,1880,hierarchy falls back to PBP flag,True,,
+2024,LAC,2024_13_LAC_ATL,3035,hierarchy falls back to PBP flag,False,,
+2024,ATL,2024_13_LAC_ATL,3729,hierarchy falls back to PBP flag,True,,
+2024,BAL,2024_13_PHI_BAL,2429,hierarchy falls back to PBP flag,True,,
+2024,DEN,2024_17_DEN_CIN,1873,hierarchy falls back to PBP flag,True,,
+2024,KC,2024_17_KC_PIT,3748,hierarchy falls back to PBP flag,True,,
+2024,NYG,2024_18_NYG_PHI,1040,hierarchy falls back to PBP flag,False,,
