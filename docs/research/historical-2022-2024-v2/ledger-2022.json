@@ -1,0 +1,21 @@
+{
+  "by_direction": {
+    "excluded_from_ordinary_and_rev3": 227,
+    "excluded_from_ordinary_gate3_only": 24
+  },
+  "by_reason": {
+    "aborted_unknown_handling": 12,
+    "fumbled_snap": 94,
+    "special_teams_run_pass:field_goal:unknown": 3,
+    "special_teams_run_pass:punt:aborted_kicking_operation": 1,
+    "special_teams_run_pass:punt:direct_snap_fumble": 1,
+    "special_teams_run_pass:punt:unknown": 22,
+    "two_point_conversion": 118
+  },
+  "gate3_eligible": 33770,
+  "ledger_rows": 251,
+  "ordinary_population": 33519,
+  "rev3_profile_plays": 33746,
+  "season": 2022,
+  "unexplained": 0
+}

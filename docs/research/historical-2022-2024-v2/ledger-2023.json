@@ -1,0 +1,21 @@
+{
+  "by_direction": {
+    "excluded_from_ordinary_and_rev3": 213,
+    "excluded_from_ordinary_gate3_only": 23
+  },
+  "by_reason": {
+    "aborted_unknown_handling": 9,
+    "fumbled_snap": 82,
+    "special_teams_run_pass:field_goal:unknown": 1,
+    "special_teams_run_pass:punt:aborted_kicking_operation": 2,
+    "special_teams_run_pass:punt:direct_snap_fumble": 1,
+    "special_teams_run_pass:punt:unknown": 20,
+    "two_point_conversion": 121
+  },
+  "gate3_eligible": 33957,
+  "ledger_rows": 236,
+  "ordinary_population": 33721,
+  "rev3_profile_plays": 33934,
+  "season": 2023,
+  "unexplained": 0
+}
