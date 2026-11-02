@@ -100,7 +100,7 @@ select { background: var(--rail); border: 1px solid var(--rail); padding: 6px; }
 #play { background: var(--chalk); color: var(--night); font-size: 15px; }
 #scrub { flex: 1 1 160px; accent-color: var(--firstdown); min-width: 0; }
 .auto { font-size: 13px; color: var(--dim); display: flex; gap: 6px; align-items: center; }
-#audio-toggle { height: 34px; padding: 0 10px; border: 1px solid var(--rail); background: var(--rail); font: 600 13px var(--f-display); letter-spacing: 0.04em; text-transform: uppercase; }
+#audio-toggle { width: auto; height: 34px; padding: 0 10px; border: 1px solid var(--rail); background: var(--rail); font: 600 13px var(--f-display); letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; flex: none; }
 #audio-toggle:hover { border-color: var(--dim); }
 #audio-toggle[aria-pressed="true"] { background: var(--firstdown); border-color: var(--firstdown); color: var(--night); }
 #audio-toggle:disabled { opacity: 0.6; cursor: progress; }

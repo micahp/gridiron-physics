@@ -476,25 +476,25 @@ export class Renderer {
       const dir = new THREE.Vector3(to.x - from.x, 0, to.y - from.y);
       if (dir.lengthSq() === 0) return;
       dir.normalize();
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 12), paint(color));
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.46, 1.1, 14), paint(color));
       cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-      cone.position.set(to.x, H, to.y).addScaledVector(dir, -0.4);
+      cone.position.set(to.x, H, to.y).addScaledVector(dir, -0.45);
       this.art.add(cone);
     };
     const cross = (p, color) => {
-      const s = 0.9;
+      const s = 0.8;
       for (const [a, b] of [[[-s, -s], [s, s]], [[s, -s], [-s, s]]]) {
-        bar({ x: p.x + a[0], y: p.y + a[1] }, { x: p.x + b[0], y: p.y + b[1] }, color, 0.2);
+        bar({ x: p.x + a[0], y: p.y + a[1] }, { x: p.x + b[0], y: p.y + b[1] }, color, 0.15);
       }
     };
     for (const m of marks) {
       if (m.kind === 'route') {
         const pts = m.points.map((p) => P(p));
         const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
-        this.art.add(new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(8, pts.length * 10), 0.22, 6, false), paint(m.color)));
+        this.art.add(new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(8, pts.length * 10), 0.18, 6, false), paint(m.color)));
         arrow(m.points.at(-2), m.points.at(-1), m.color);
       } else if (m.kind === 'zone') {
-        const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: m.color, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }));
+        const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.MeshBasicMaterial({ color: m.color, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }));
         disc.rotation.x = -Math.PI / 2;
         disc.scale.set(m.rx, m.ry, 1);
         disc.position.set(m.at.x, 0.06, m.at.y);
@@ -503,8 +503,8 @@ export class Renderer {
           const t = (k / 48) * Math.PI * 2;
           return new THREE.Vector3(m.at.x + m.rx * Math.cos(t), 0.08, m.at.y + m.ry * Math.sin(t));
         });
-        this.art.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(edge), new THREE.LineBasicMaterial({ color: m.color, transparent: true, opacity: 1 })));
-        bar(m.from, m.at, m.color, 0.13);
+        this.art.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(edge, true), 96, 0.1, 6, true), paint(m.color, 1)));
+        bar(m.from, m.at, m.color, 0.1);
         cross(m.at, m.color);
       } else if (m.kind === 'block') {
         bar(m.from, m.to, m.color, 0.12);
@@ -521,7 +521,7 @@ export class Renderer {
         sq.position.set(m.from.x, H, m.from.y);
         this.art.add(sq);
       } else {
-        bar(m.from, m.to, m.color, 0.13);
+        bar(m.from, m.to, m.color, 0.11);
         cross(m.to, m.color);
       }
     }

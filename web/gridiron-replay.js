@@ -752,7 +752,7 @@ class GridironReplay extends HTMLElement {
     g.beginPath(); g.moveTo(0, height - 5); g.lineTo(width, height - 5); g.stroke();
     g.fillStyle = token('--dim');
     g.font = '10px "IBM Plex Mono", monospace';
-    g.fillText(`${TEAM_NAMES[this.home] || this.home} points · saved SLC result`, 4, 11);
+    g.fillText(`${TEAM_NAMES[this.home] || this.home} points`, 4, 11);
     g.beginPath();
     this.items.forEach(({ play }, index) => {
       const score = Number(play.state_after?.home_score ?? play.state_before.home_score ?? 0);

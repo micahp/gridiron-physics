@@ -13,8 +13,11 @@ export const PALETTE = {
   rush: '#ff3b30',
   los: '#3d8bff',
   firstDown: '#f5d33a',
-  field: '#101a14',
-  other: '#5b6672',
+  fieldTop: '#15241a',
+  fieldBottom: '#0d1611',
+  line: '#ffffff',
+  other: '#56626d',
+  edge: '#0d1611',
 };
 
 // A zone is drawn at the engine's radius for it, so its size is the zone's size. The colour follows that size: the
@@ -78,12 +81,12 @@ function head(from, to, color) {
   const len = Math.hypot(dx, dy);
   if (len === 0) return '';
   const ux = dx / len, uy = dy / len;
-  const bx = to.x - ux * 3.4, by = to.y - uy * 3.4;
-  return `<polygon points="${f1(to.x)},${f1(to.y)} ${f1(bx - uy * 1.8)},${f1(by + ux * 1.8)} ${f1(bx + uy * 1.8)},${f1(by - ux * 1.8)}" fill="${color}"/>`;
+  const bx = to.x - ux * 4.2, by = to.y - uy * 4.2;
+  return `<polygon points="${f1(to.x)},${f1(to.y)} ${f1(bx - uy * 2.3)},${f1(by + ux * 2.3)} ${f1(bx + uy * 2.3)},${f1(by - ux * 2.3)}" fill="${color}"/>`;
 }
 
 // the X on a target: where a connector ends
-const cross = (p, color) => `<path d="M${f1(p.x - 2.8)} ${f1(p.y - 2.8)}L${f1(p.x + 2.8)} ${f1(p.y + 2.8)}M${f1(p.x + 2.8)} ${f1(p.y - 2.8)}L${f1(p.x - 2.8)} ${f1(p.y + 2.8)}" stroke="${color}" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+const cross = (p, color) => `<path d="M${f1(p.x - 2.4)} ${f1(p.y - 2.4)}L${f1(p.x + 2.4)} ${f1(p.y + 2.4)}M${f1(p.x + 2.4)} ${f1(p.y - 2.4)}L${f1(p.x - 2.4)} ${f1(p.y + 2.4)}" stroke="${color}" stroke-width="1.7" stroke-linecap="round" fill="none"/>`;
 
 // the card's SVG for one team's side of the called play. selection is the replay's selection (line of scrimmage, dir, offense).
 export function playArtSvg(record, selection, teamId, { togo = null } = {}) {
@@ -94,39 +97,42 @@ export function playArtSvg(record, selection, teamId, { togo = null } = {}) {
   };
   const lined = alignment(record);
   const grid = [];
-  for (let d = DEPTH_BOTTOM + 5; d < DEPTH_TOP; d += 5) grid.push(`<line x1="0" x2="${SVG_W}" y1="${f1((DEPTH_TOP - d) * PX)}" y2="${f1((DEPTH_TOP - d) * PX)}" stroke="#ffffff" stroke-opacity="0.07"/>`);
+  for (let d = DEPTH_BOTTOM + 5; d < DEPTH_TOP; d += 5) grid.push(`<line x1="0" x2="${SVG_W}" y1="${f1((DEPTH_TOP - d) * PX)}" y2="${f1((DEPTH_TOP - d) * PX)}"/>`);
   const losY = q({ x: los, y: 0 }).y;
   const fdY = togo == null ? null : q({ x: los + dir * togo, y: 0 }).y;
-  const firstDown = fdY == null ? '' : `<line x1="0" x2="${SVG_W}" y1="${f1(fdY)}" y2="${f1(fdY)}" stroke="${PALETTE.firstDown}" stroke-width="0.8" stroke-dasharray="2 2"/>`;
+  const firstDown = fdY == null ? '' : `<line x1="0" x2="${SVG_W}" y1="${f1(fdY)}" y2="${f1(fdY)}" stroke="${PALETTE.firstDown}" stroke-width="0.7" stroke-dasharray="3 2.5" stroke-opacity="0.75"/>`;
   const dots = lined.map((p, i) => {
     const c = q(p);
-    if (p.team !== teamId) return `<circle cx="${f1(c.x)}" cy="${f1(c.y)}" r="1.5" fill="${PALETTE.other}"/>`;
+    if (p.team !== teamId) return `<circle cx="${f1(c.x)}" cy="${f1(c.y)}" r="1.3" fill="${PALETTE.other}"/>`;
     const color = teamId === off ? (record.assignments?.[i]?.route ? PALETTE.route[0] : '#f2efe6') : PALETTE.zone[i % PALETTE.zone.length];
-    return `<circle cx="${f1(c.x)}" cy="${f1(c.y)}" r="2.6" fill="${color}"/>`;
+    return `<circle cx="${f1(c.x)}" cy="${f1(c.y)}" r="2.5" fill="${color}" stroke="${PALETTE.edge}" stroke-width="0.8"/>`;
   }).join('');
   const shapes = playArtMarks(record, teamId).map((m) => {
     if (m.kind === 'zone') {
       const c = q(m.at);
-      return `<ellipse cx="${f1(c.x)}" cy="${f1(c.y)}" rx="${f1(m.rx * PX)}" ry="${f1(m.ry * PX)}" fill="${m.color}" fill-opacity="0.22" stroke="${m.color}" stroke-width="1"/>`
-        + `<line x1="${f1(q(m.from).x)}" y1="${f1(q(m.from).y)}" x2="${f1(c.x)}" y2="${f1(c.y)}" stroke="${m.color}" stroke-width="1.4"/>${cross(c, m.color)}`;
+      return `<ellipse cx="${f1(c.x)}" cy="${f1(c.y)}" rx="${f1(m.rx * PX)}" ry="${f1(m.ry * PX)}" fill="${m.color}" fill-opacity="0.16" stroke="${m.color}" stroke-width="0.9" stroke-opacity="0.9"/>`
+        + `<line x1="${f1(q(m.from).x)}" y1="${f1(q(m.from).y)}" x2="${f1(c.x)}" y2="${f1(c.y)}" stroke="${m.color}" stroke-width="1" stroke-opacity="0.9"/>${cross(c, m.color)}`;
     }
     if (m.kind === 'route') {
       const pts = m.points.map(q);
-      const line = `<polyline points="${pts.map((c) => `${f1(c.x)},${f1(c.y)}`).join(' ')}" fill="none" stroke="${m.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
-      return line + head(pts.at(-2), pts.at(-1), m.color);
+      const line = `<polyline points="${pts.map((c) => `${f1(c.x)},${f1(c.y)}`).join(' ')}" fill="none" stroke="${m.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      const start = `<circle cx="${f1(pts[0].x)}" cy="${f1(pts[0].y)}" r="1.5" fill="${m.color}"/>`;
+      return start + line + head(pts.at(-2), pts.at(-1), m.color);
     }
     const a = q(m.from), b = q(m.to);
-    const link = `<line x1="${f1(a.x)}" y1="${f1(a.y)}" x2="${f1(b.x)}" y2="${f1(b.y)}" stroke="${m.color}" stroke-width="${m.kind === 'block' ? 2 : 1.4}"/>`;
+    const link = `<line x1="${f1(a.x)}" y1="${f1(a.y)}" x2="${f1(b.x)}" y2="${f1(b.y)}" stroke="${m.color}" stroke-width="${m.kind === 'block' ? 1.5 : 1}" stroke-linecap="round" stroke-opacity="0.92"/>`;
     if (m.kind === 'block') {
       const ux = b.x - a.x, uy = b.y - a.y, len = Math.hypot(ux, uy) || 1;
-      const px = -uy / len * 2.4, py = ux / len * 2.4;
-      return `${link}<line x1="${f1(b.x - px)}" y1="${f1(b.y - py)}" x2="${f1(b.x + px)}" y2="${f1(b.y + py)}" stroke="${m.color}" stroke-width="1.6"/>`;
+      const px = -uy / len * 2.8, py = ux / len * 2.8;
+      return `${link}<line x1="${f1(b.x - px)}" y1="${f1(b.y - py)}" x2="${f1(b.x + px)}" y2="${f1(b.y + py)}" stroke="${m.color}" stroke-width="1.7" stroke-linecap="round"/>`;
     }
-    if (m.kind === 'rush') return `${link}${head(a, b, m.color)}<rect x="${f1(a.x - 1.5)}" y="${f1(a.y - 1.5)}" width="3" height="3" fill="${m.color}"/>`;
+    if (m.kind === 'rush') return `${link}${head(a, b, m.color)}<rect x="${f1(a.x - 1.4)}" y="${f1(a.y - 1.4)}" width="2.8" height="2.8" rx="0.4" fill="${m.color}"/>`;
     return link + cross(b, m.color);
   }).join('');
   return `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" role="img" aria-label="${teamId === off ? 'Offensive' : 'Defensive'} play art">`
-    + `<rect width="${SVG_W}" height="${SVG_H}" fill="${PALETTE.field}"/>${grid.join('')}`
-    + `<line x1="0" x2="${SVG_W}" y1="${f1(losY)}" y2="${f1(losY)}" stroke="${PALETTE.los}" stroke-width="1"/>${firstDown}`
+    + `<defs><linearGradient id="pa-field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${PALETTE.fieldTop}"/><stop offset="1" stop-color="${PALETTE.fieldBottom}"/></linearGradient></defs>`
+    + `<rect width="${SVG_W}" height="${SVG_H}" fill="url(#pa-field)"/>`
+    + `<g stroke="${PALETTE.line}" stroke-opacity="0.07" stroke-width="0.5">${grid.join('')}</g>`
+    + `<line x1="0" x2="${SVG_W}" y1="${f1(losY)}" y2="${f1(losY)}" stroke="${PALETTE.los}" stroke-width="1.2" stroke-opacity="0.95"/>${firstDown}`
     + `${shapes}${dots}</svg>`;
 }
