@@ -2,7 +2,7 @@
 
 Status: historical development only. Not a final acceptance. No 2026 data was used for fitting, tuning, selection or
 evaluation. No SLC default changed. Nothing was deployed. The research and SLC commits were pushed to their branches as
-fast-forwards. The removal of the 2026 CSV from `main` is still pending (section 8).
+fast-forwards. The 2026 CSV was removed from `main` (`096454b`, section 8). The research branch still tracks it.
 
 ## Outcome
 
@@ -15,8 +15,8 @@ fast-forwards. The removal of the 2026 CSV from `main` is still pending (section
   in an immutable, root-only local archive with a tested restore. There is no off-box copy.
 - **C/D/E priors: ready for M3** as the simulation framing describes them (run gap, pass depth, pass location). They do
   not read the shotgun field. 2022 shotgun-dependent features are not approved.
-- **Open:** the 2026-labelled rev3 CSV is still on `origin/main`. The owner approved its removal, but the push to `main` was
-  refused by the permission check (section 8).
+- **Open:** the 2026-labelled rev3 CSV is no longer on `origin/main` (`096454b`, approved by the owner). The research branch
+  still tracks it, and removing it there is not approved (section 8).
 
 ## 1. R2 v2 status and exclusions
 
@@ -99,6 +99,9 @@ Not approved: any 2022 shotgun-dependent feature. HPV1 is not ready (section 7).
 
 Measured facts first, then what is missing.
 
+Update: the personnel normalization, play classes, identity audit, observed-only joint records and join coverage are now
+specified and counted in `HPV1-DATA-CONTRACT-2026-11-02.md`. The owner decisions that remain are in its section 12.
+
 - **Personnel vocabulary changes by season.** 2022 offense personnel strings use the skill-position form (89 distinct
   strings, for example `1 RB, 1 TE, 3 WR`). 2023 and 2024 list every position on the field (281 and 274 distinct strings,
   for example `1 C, 2 G, 1 QB, 1 RB, 2 T, 1 TE, 3 WR`). A season-specific mapping to groupings (such as 11 or 12 personnel) is
@@ -121,10 +124,11 @@ Measured facts first, then what is missing.
 
 ## 8. Decisions and blockers for the owner
 
-1. **Holdout record row 17 (2026 rows on `origin/main`).** The owner approved removing the rev3 CSV,
-   `data/playbooks/research-2026-10-27-rev3/shotgun_null_plays.csv` (128 rows labelled 2026), from `main`. The push to `main`
-   was refused by the permission check, twice, so `origin/main` (`42f0c3b`) still tracks the file. The research branch also
-   still carries it, and removing it there was not approved. Removing the tip does not remove the file from history.
+1. **Holdout record row 17 (2026 rows).** The owner approved removing the rev3 CSV,
+   `data/playbooks/research-2026-10-27-rev3/shotgun_null_plays.csv` (128 rows labelled 2026), from `main`. Done in
+   `096454b` (one file, 129 lines deleted, pushed as `42f0c3b..096454b`). The research branch still carries the file, and
+   removing it there was not approved. The file stays in `main`'s history (`1c35f83`). Removing it from history needs
+   separate authorization.
 2. **Holdout record row 16 (quarantined copies).** Owner decision: no quarantine is needed. The local copies stay in
    `/root/gridiron-playbook-builds/quarantine/` and are not pushed. Nothing was moved or deleted.
 3. **Storage target (D3).** Owner decision: this machine. The archive is a single local copy with no off-box copy.
@@ -149,6 +153,10 @@ SLC repo `slc-v1`:
 - `adbb5b22` Open playbook files in the prior loader with a context manager
 - `6559cd23` Pin the historical prior tests to the v2 build and add the compact prior check
 - `4c1aad05` Log the 2026-11-02 research playbook publication and inspection in the holdout record
+
+`main` (`gridiron-physics`):
+
+- `096454b` Remove the 2026-labelled rev3 shotgun null CSV from the tracked tree
 
 ## Scope check
 
