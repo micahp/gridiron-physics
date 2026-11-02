@@ -42,6 +42,7 @@ const pageErrors = [];
 try {
   const manifest = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2/MANIFEST.json'), 'utf8'));
   const entry = manifest.fixtures[0];
+  const sourceRecord = JSON.parse(await readFile(resolve(root, 'docs/fixtures/e2', entry.upstream_source_file), 'utf8')).record;
   const regression = manifest.regression_fixtures[0];
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -50,8 +51,11 @@ try {
   await page.locator('#viewer-content:not([hidden])').waitFor({ timeout: 15000 });
   assert.equal(await page.locator('#load-error').isHidden(), true);
   assert.equal(await page.locator('#drive-select option').count(), 24);
-  assert.equal(await page.locator('#score-a').innerText(), '14');
-  assert.equal(await page.locator('#score-b').innerText(), '10');
+  assert.equal(await page.locator('#score-a').innerText(), String(sourceRecord.drives[0].plays[0].state_after.home_score));
+  assert.equal(await page.locator('#score-b').innerText(), String(sourceRecord.drives[0].plays[0].state_after.away_score));
+  assert.match(await page.locator('#playback-position').innerText(), /Play 1 of 143/);
+  await page.locator('#playback-next').click();
+  assert.match(await page.locator('#playback-position').innerText(), /Play 2 of 143/);
   await page.locator('#drive-select').selectOption('23');
   assert.match(await page.locator('#drive-summary').innerText(), /Drive 24/);
   const finalDrivePlayCount = await page.locator('#play-select option').count();
@@ -75,6 +79,22 @@ try {
   assert.equal(await page.locator('#e3-drive-table tbody tr').count(), 5);
   assert.equal(await page.locator('#e3-game-table tbody tr').count(), 13);
   await context.close();
+
+  const seedContext = await browser.newContext();
+  const seedPage = await seedContext.newPage();
+  seedPage.on('pageerror', (error) => pageErrors.push(error.message));
+  await seedPage.goto(`http://127.0.0.1:${port}/e2-seed-library.html`);
+  await seedPage.locator('#featured-replay').waitFor();
+  assert.equal(await seedPage.locator('#seed-rows a').count(), 15);
+  assert.match(await seedPage.locator('#seed-rows a').first().innerText(), /Watch in 3D/);
+  assert.equal(await seedPage.locator('#featured-replay').getAttribute('href'), 'e2-seed-3d.html?playlist=featured&autoplay=1');
+  await seedPage.goto(`http://127.0.0.1:${port}/e2-game-viewer.html?playlist=featured&autoplay=1`);
+  await seedPage.locator('#viewer-content:not([hidden])').waitFor({ timeout: 15000 });
+  assert.match(await seedPage.locator('#mode-label').innerText(), /seed 3397/i);
+  assert.match(await seedPage.locator('#playback-position').innerText(), /Game 1 of 5 · Play 1 of/);
+  await seedPage.locator('#playback-play').click();
+  assert.equal(await seedPage.locator('#playback-play').innerText(), '▶ Play game');
+  await seedContext.close();
 
   const oldEnvelope = await readFile(resolve(root, 'docs/fixtures/e2', regression.file), 'utf8');
   const oldRaw = await readFile(resolve(root, 'docs/fixtures/e2', regression.upstream_source_file), 'utf8');
@@ -163,7 +183,7 @@ try {
   assert.equal(pageErrors.length, 0, `browser runtime errors: ${pageErrors.join('; ')}`);
   await indexContext.close();
 
-  console.log('Real Chromium navigation: current pinned E2 record; old 5fc rejected; six-row fallback and fixture-only indexed play navigation pass');
+  console.log('Real Chromium navigation: E2 record, five-game SLC autoplay and per-play controls, old 5fc rejection, fallback, and indexed navigation pass');
   console.log(`Browser runtime errors: ${pageErrors.length}`);
 } finally {
   await browser.close();
