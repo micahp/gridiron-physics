@@ -11,7 +11,7 @@ import { playArtMarks, playArtSvg } from './play-art.js';
 // attributes; it owns its own DOM and styles, so pages never copy the viewer again.
 //   manifest  seed shortlist JSON              (default: min-det realism marketing seeds)
 //   games     folder holding seed-<id>.json    (default: min-det realism games)
-//   roster    local roster/ratings snapshot    (default: min-det week 8 snapshot)
+//   roster    local roster/ratings snapshot    (default: league ratings, week 7)
 //   seed      play one saved seed
 //   simulation  play one LP simulation from /api/gridiron/v1/simulations/<id> (same origin)
 //   playlist  "featured" plays the five featured seeds in order
@@ -19,7 +19,7 @@ import { playArtMarks, playArtSvg } from './play-art.js';
 const DEFAULTS = {
   manifest: 'docs/fixtures/e2/min-det-realism/marketing-seeds.json',
   games: 'docs/fixtures/e2/min-det-realism/games/',
-  roster: 'data/teams/min-det-week8-2026-10-28.json',
+  roster: 'data/teams/league-ratings-2026-week7.json',
 };
 const SIMULATION_API = '/api/gridiron/v1/simulations/';
 const CSS_URL = new URL('./gridiron-replay.css?v=7', import.meta.url).href;
