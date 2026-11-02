@@ -1,0 +1,777 @@
+{
+ "contract": "HPV1 data contract, 2022 to 2025",
+ "manifest": {
+  "builder_commit": "87e6c31ffbf32fce5f569edda3b8dfc4dfe417de",
+  "inputs": {
+   "pbp_2022.csv.gz": {
+    "bytes": 19093961,
+    "sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4"
+   },
+   "pbp_2023.csv.gz": {
+    "bytes": 19169807,
+    "sha256": "4649804ee0f0a40b41e51ec75a1ce921949d7fab5459213488656b92f78560e8"
+   },
+   "pbp_2024.csv.gz": {
+    "bytes": 19362351,
+    "sha256": "23370d5d10f8104d80d46a1fc5e61f4f6f5a3263fe96fe2dd629913cfcb08c06"
+   },
+   "pbp_2025.csv.gz": {
+    "bytes": 19105296,
+    "sha256": "2f135887790a013fd004e609e37096bb4816d5cc80b9f19122e1bad478961978"
+   },
+   "pbp_participation_2022.csv": {
+    "bytes": 22245804,
+    "sha256": "37eae0a8c388d0974c6df9a1f9a1d01f09f63a21440d3b03d7f208c1438c51e4"
+   },
+   "pbp_participation_2023.csv": {
+    "bytes": 49967956,
+    "sha256": "ad01aeb4045ee19a4f086ff38b52b14c8f427d3401e529c3078a4545921650a9"
+   },
+   "pbp_participation_2024.csv": {
+    "bytes": 49688308,
+    "sha256": "b1f436a98b2a7759eb4ed1181e072a35c2666f9aeb356a49c943d28d6be6b0b9"
+   },
+   "pbp_participation_2025.csv": {
+    "bytes": 49094943,
+    "sha256": "59069adfee7b0f464befba8a5e8be331e523633cc6a7ab403d37bcbcdfbe66ac"
+   },
+   "players.csv": {
+    "bytes": 7305662,
+    "sha256": "c5239e1480b397732d004f81c87dbb07565ff6ea4b2a0e6382cbb7ed35f6481e"
+   },
+   "roster_weekly_2025.csv.gz": {
+    "bytes": 708144,
+    "sha256": "f3fbe6bb1b56a0f51c4b6d5793f8bc3b46da2d54c070572144b8771912eeaaec"
+   }
+  }
+ },
+ "seasons": [
+  2022,
+  2023,
+  2024,
+  2025
+ ],
+ "seasons_detail": {
+  "2022": {
+   "classes": {
+    "cross_side_label": 33,
+    "fake_kick": 28,
+    "non_play": 1449,
+    "other:extra_point": 1253,
+    "other:field_goal": 1105,
+    "other:kickoff": 2835,
+    "other:no_play": 4561,
+    "other:punt": 2294,
+    "other:qb_kneel": 442,
+    "other:qb_spike": 63,
+    "participation_only": 716,
+    "scrimmage": 35243,
+    "two_point": 128
+   },
+   "coverage": {
+    "matched": 49434,
+    "participation_columns_absent": [
+     "offense_names",
+     "offense_positions",
+     "offense_numbers"
+    ],
+    "participation_rows": 50150,
+    "participation_unmatched": 716,
+    "pbp_only_run_pass": 0,
+    "pbp_rows": 49434,
+    "pbp_unmatched": 0,
+    "season": 2022
+   },
+   "distance_scrimmage": {
+    "d10_14": 18829,
+    "d15p": 1906,
+    "d1_2": 3413,
+    "d3_4": 2926,
+    "d5_6": 3503,
+    "d7_9": 4666
+   },
+   "down_scrimmage": {
+    "1": 15462,
+    "2": 11775,
+    "3": 7264,
+    "4": 742
+   },
+   "fb_plays_scrimmage": null,
+   "formation_scrimmage": {
+    "2022_EMPTY": 2869,
+    "2022_I_FORM": 2150,
+    "2022_JUMBO": 303,
+    "2022_SINGLEBACK": 8603,
+    "2022_WILDCAT": 249,
+    "PISTOL": 1526,
+    "SHOTGUN": 19540,
+    "UNKNOWN": 3
+   },
+   "identity": {
+    "offense_ids": 387670,
+    "offense_ids_equal_n_offense": 35243,
+    "offense_ids_in_players_csv": 387670,
+    "scrimmage_rows": 35243
+   },
+   "missingness_participation": {
+    "down": {
+     "null": 8546,
+     "rows": 50150
+    },
+    "offense_formation": {
+     "null": 13358,
+     "rows": 50150
+    },
+    "offense_personnel": {
+     "null": 11922,
+     "rows": 50150
+    },
+    "offense_players": {
+     "null": 4292,
+     "rows": 50150
+    },
+    "play_type": {
+     "null": 2165,
+     "rows": 50150
+    },
+    "yardline_100": {
+     "null": 4254,
+     "rows": 50150
+    },
+    "ydstogo": {
+     "null": 716,
+     "rows": 50150
+    }
+   },
+   "package_comparable_scrimmage": {
+    "00": 8,
+    "01": 71,
+    "02": 80,
+    "03": 22,
+    "04": 2,
+    "10": 269,
+    "11": 22185,
+    "12": 7031,
+    "13": 1435,
+    "14": 23,
+    "20": 180,
+    "21": 2886,
+    "22": 992,
+    "23": 44,
+    "30": 1,
+    "31": 9,
+    "32": 3,
+    "40": 2
+   },
+   "package_rb_only_scrimmage": {
+    "00": 8,
+    "01": 71,
+    "02": 80,
+    "03": 22,
+    "04": 2,
+    "10": 269,
+    "11": 22185,
+    "12": 7031,
+    "13": 1435,
+    "14": 23,
+    "20": 180,
+    "21": 2886,
+    "22": 992,
+    "23": 44,
+    "30": 1,
+    "31": 9,
+    "32": 3,
+    "40": 2
+   },
+   "personnel_reason_scrimmage": {
+    "ok": 35243
+   },
+   "personnel_status": {
+    "null": 11922,
+    "parsed": 38228
+   },
+   "players_listed_scrimmage": {
+    "10.0": 1041,
+    "11.0": 22,
+    "4.0": 3,
+    "5.0": 34007,
+    "6.0": 170
+   },
+   "reconciliation": {
+    "def_label_positions_scrimmage": {
+     "DB": 15,
+     "DL": 4,
+     "LB": 14
+    },
+    "def_label_rows": 56,
+    "def_label_rows_by_class": {
+     "cross_side_label": 33,
+     "other:no_play": 5,
+     "other:qb_kneel": 16,
+     "two_point": 2
+    },
+    "joint_equals_scrimmage": true,
+    "joint_total": 35243,
+    "scrimmage_total": 35243,
+    "special_teams_label_positions": {
+     "K": 18,
+     "LS": 42,
+     "P": 42
+    },
+    "special_teams_label_rows": 44,
+    "special_teams_label_rows_by_class": {
+     "fake_kick": 28,
+     "other:no_play": 13,
+     "two_point": 3
+    }
+   },
+   "vocabulary_scrimmage": {
+    "ol_group": 1063,
+    "skill_only": 34180
+   }
+  },
+  "2023": {
+   "classes": {
+    "cross_side_label": 50,
+    "fake_kick": 26,
+    "non_play": 8,
+    "other:extra_point": 1238,
+    "other:field_goal": 1107,
+    "other:kickoff": 2838,
+    "other:no_play": 2496,
+    "other:punt": 2352,
+    "other:qb_kneel": 454,
+    "other:qb_spike": 69,
+    "scrimmage": 35398,
+    "two_point": 132
+   },
+   "coverage": {
+    "matched": 46168,
+    "participation_columns_absent": [],
+    "participation_rows": 46168,
+    "participation_unmatched": 0,
+    "pbp_only_run_pass": 0,
+    "pbp_rows": 49665,
+    "pbp_unmatched": 3497,
+    "season": 2023
+   },
+   "distance_scrimmage": {
+    "d10_14": 18720,
+    "d15p": 1967,
+    "d1_2": 3342,
+    "d3_4": 2984,
+    "d5_6": 3628,
+    "d7_9": 4757
+   },
+   "down_scrimmage": {
+    "1": 15408,
+    "2": 11739,
+    "3": 7449,
+    "4": 802
+   },
+   "fb_plays_scrimmage": 2954,
+   "formation_scrimmage": {
+    "PISTOL": 1401,
+    "SHOTGUN": 24258,
+    "UNDER CENTER": 9658,
+    "UNKNOWN": 81
+   },
+   "identity": {
+    "names_null": 0,
+    "numbers_null": 0,
+    "offense_ids": 389374,
+    "offense_ids_equal_n_offense": 35398,
+    "offense_ids_in_players_csv": 389374,
+    "positions_equal_personnel_tokens": 35398,
+    "scrimmage_rows": 35398
+   },
+   "missingness_participation": {
+    "down": {
+     "null": 4243,
+     "rows": 46168
+    },
+    "offense_formation": {
+     "null": 9209,
+     "rows": 46168
+    },
+    "offense_names": {
+     "null": 0,
+     "rows": 46168
+    },
+    "offense_numbers": {
+     "null": 0,
+     "rows": 46168
+    },
+    "offense_personnel": {
+     "null": 0,
+     "rows": 46168
+    },
+    "offense_players": {
+     "null": 0,
+     "rows": 46168
+    },
+    "offense_positions": {
+     "null": 0,
+     "rows": 46168
+    },
+    "play_type": {
+     "null": 8,
+     "rows": 46168
+    },
+    "yardline_100": {
+     "null": 0,
+     "rows": 46168
+    },
+    "ydstogo": {
+     "null": 0,
+     "rows": 46168
+    }
+   },
+   "package_comparable_scrimmage": {
+    "00": 3,
+    "01": 197,
+    "02": 138,
+    "03": 7,
+    "10": 446,
+    "11": 22710,
+    "12": 7183,
+    "13": 1200,
+    "14": 5,
+    "20": 237,
+    "21": 2660,
+    "22": 543,
+    "23": 53,
+    "30": 8,
+    "31": 8
+   },
+   "package_rb_only_scrimmage": {
+    "00": 11,
+    "01": 405,
+    "02": 161,
+    "03": 8,
+    "10": 634,
+    "11": 24571,
+    "12": 7567,
+    "13": 1227,
+    "14": 5,
+    "20": 49,
+    "21": 597,
+    "22": 136,
+    "23": 25,
+    "31": 2
+   },
+   "personnel_reason_scrimmage": {
+    "ok": 35398
+   },
+   "personnel_status": {
+    "parsed": 46168
+   },
+   "players_listed_scrimmage": {
+    "10": 4,
+    "11": 35394
+   },
+   "reconciliation": {
+    "def_label_positions_scrimmage": {
+     "CB": 2,
+     "DT": 22,
+     "ILB": 17,
+     "OLB": 9
+    },
+    "def_label_rows": 2928,
+    "def_label_rows_by_class": {
+     "cross_side_label": 50,
+     "other:kickoff": 2836,
+     "other:no_play": 6,
+     "other:qb_kneel": 34,
+     "two_point": 2
+    },
+    "joint_equals_scrimmage": true,
+    "joint_total": 35398,
+    "scrimmage_total": 35398,
+    "special_teams_label_positions": {
+     "K": 2381,
+     "LS": 4882,
+     "P": 4902
+    },
+    "special_teams_label_rows": 4883,
+    "special_teams_label_rows_by_class": {
+     "fake_kick": 26,
+     "non_play": 6,
+     "other:extra_point": 1238,
+     "other:field_goal": 1107,
+     "other:kickoff": 2,
+     "other:no_play": 149,
+     "other:punt": 2352,
+     "two_point": 3
+    }
+   },
+   "vocabulary_scrimmage": {
+    "full": 35398
+   }
+  },
+  "2024": {
+   "classes": {
+    "cross_side_label": 62,
+    "fake_kick": 25,
+    "other:extra_point": 1308,
+    "other:field_goal": 1166,
+    "other:kickoff": 2955,
+    "other:no_play": 2809,
+    "other:punt": 2119,
+    "other:qb_kneel": 437,
+    "other:qb_spike": 75,
+    "scrimmage": 34815,
+    "two_point": 148
+   },
+   "coverage": {
+    "matched": 45919,
+    "participation_columns_absent": [],
+    "participation_rows": 45919,
+    "participation_unmatched": 0,
+    "pbp_only_run_pass": 0,
+    "pbp_rows": 49492,
+    "pbp_unmatched": 3573,
+    "season": 2024
+   },
+   "distance_scrimmage": {
+    "d10_14": 18275,
+    "d15p": 2104,
+    "d1_2": 3365,
+    "d3_4": 2983,
+    "d5_6": 3482,
+    "d7_9": 4606
+   },
+   "down_scrimmage": {
+    "1": 15294,
+    "2": 11593,
+    "3": 7141,
+    "4": 787
+   },
+   "fb_plays_scrimmage": 2757,
+   "formation_scrimmage": {
+    "PISTOL": 3268,
+    "SHOTGUN": 21565,
+    "UNDER CENTER": 9967,
+    "UNKNOWN": 15
+   },
+   "identity": {
+    "names_null": 0,
+    "numbers_null": 0,
+    "offense_ids": 382965,
+    "offense_ids_equal_n_offense": 34815,
+    "offense_ids_in_players_csv": 382965,
+    "positions_equal_personnel_tokens": 34815,
+    "scrimmage_rows": 34815
+   },
+   "missingness_participation": {
+    "down": {
+     "null": 4436,
+     "rows": 45919
+    },
+    "offense_formation": {
+     "null": 9237,
+     "rows": 45919
+    },
+    "offense_names": {
+     "null": 0,
+     "rows": 45919
+    },
+    "offense_numbers": {
+     "null": 0,
+     "rows": 45919
+    },
+    "offense_personnel": {
+     "null": 0,
+     "rows": 45919
+    },
+    "offense_players": {
+     "null": 0,
+     "rows": 45919
+    },
+    "offense_positions": {
+     "null": 0,
+     "rows": 45919
+    },
+    "play_type": {
+     "null": 0,
+     "rows": 45919
+    },
+    "yardline_100": {
+     "null": 0,
+     "rows": 45919
+    },
+    "ydstogo": {
+     "null": 0,
+     "rows": 45919
+    }
+   },
+   "package_comparable_scrimmage": {
+    "00": 5,
+    "01": 127,
+    "02": 121,
+    "03": 28,
+    "10": 179,
+    "11": 21859,
+    "12": 8115,
+    "13": 1258,
+    "14": 14,
+    "20": 173,
+    "21": 2221,
+    "22": 667,
+    "23": 35,
+    "30": 1,
+    "31": 9,
+    "32": 3
+   },
+   "package_rb_only_scrimmage": {
+    "00": 16,
+    "01": 469,
+    "02": 139,
+    "03": 40,
+    "10": 301,
+    "11": 23140,
+    "12": 8681,
+    "13": 1269,
+    "14": 14,
+    "20": 41,
+    "21": 605,
+    "22": 86,
+    "23": 12,
+    "31": 2
+   },
+   "personnel_reason_scrimmage": {
+    "ok": 34815
+   },
+   "personnel_status": {
+    "parsed": 45919
+   },
+   "players_listed_scrimmage": {
+    "11": 34815
+   },
+   "reconciliation": {
+    "def_label_positions_scrimmage": {
+     "CB": 5,
+     "DE": 5,
+     "DT": 13,
+     "ILB": 33,
+     "NT": 4,
+     "OLB": 3
+    },
+    "def_label_rows": 3059,
+    "def_label_rows_by_class": {
+     "cross_side_label": 62,
+     "other:kickoff": 2955,
+     "other:no_play": 5,
+     "other:qb_kneel": 36,
+     "two_point": 1
+    },
+    "joint_equals_scrimmage": true,
+    "joint_total": 34815,
+    "scrimmage_total": 34815,
+    "special_teams_label_positions": {
+     "K": 2530,
+     "LS": 4767,
+     "P": 4773
+    },
+    "special_teams_label_rows": 4778,
+    "special_teams_label_rows_by_class": {
+     "fake_kick": 25,
+     "other:extra_point": 1308,
+     "other:field_goal": 1166,
+     "other:no_play": 159,
+     "other:punt": 2119,
+     "two_point": 1
+    }
+   },
+   "vocabulary_scrimmage": {
+    "full": 34815
+   }
+  },
+  "2025": {
+   "classes": {
+    "cross_side_label": 145,
+    "fake_kick": 15,
+    "other:extra_point": 1330,
+    "other:field_goal": 1140,
+    "other:kickoff": 2927,
+    "other:no_play": 2581,
+    "other:punt": 2042,
+    "other:qb_kneel": 452,
+    "other:qb_spike": 80,
+    "scrimmage": 34342,
+    "two_point": 130
+   },
+   "coverage": {
+    "matched": 45184,
+    "participation_columns_absent": [],
+    "participation_rows": 45184,
+    "participation_unmatched": 0,
+    "pbp_only_run_pass": 0,
+    "pbp_rows": 48771,
+    "pbp_unmatched": 3587,
+    "season": 2025
+   },
+   "distance_scrimmage": {
+    "d10_14": 18075,
+    "d15p": 1871,
+    "d1_2": 3367,
+    "d3_4": 3070,
+    "d5_6": 3417,
+    "d7_9": 4542
+   },
+   "down_scrimmage": {
+    "1": 14928,
+    "2": 11385,
+    "3": 7128,
+    "4": 901
+   },
+   "fb_plays_scrimmage": 2950,
+   "formation_scrimmage": {
+    "PISTOL": 1643,
+    "SHOTGUN": 21021,
+    "UNDER CENTER": 11631,
+    "UNKNOWN": 47
+   },
+   "identity": {
+    "names_null": 0,
+    "numbers_null": 0,
+    "offense_ids": 377755,
+    "offense_ids_equal_n_offense": 34342,
+    "offense_ids_in_players_csv": 377755,
+    "positions_equal_personnel_tokens": 34342,
+    "scrimmage_rows": 34342
+   },
+   "missingness_participation": {
+    "down": {
+     "null": 4408,
+     "rows": 45184
+    },
+    "offense_formation": {
+     "null": 9108,
+     "rows": 45184
+    },
+    "offense_names": {
+     "null": 0,
+     "rows": 45184
+    },
+    "offense_numbers": {
+     "null": 0,
+     "rows": 45184
+    },
+    "offense_personnel": {
+     "null": 0,
+     "rows": 45184
+    },
+    "offense_players": {
+     "null": 0,
+     "rows": 45184
+    },
+    "offense_positions": {
+     "null": 0,
+     "rows": 45184
+    },
+    "play_type": {
+     "null": 0,
+     "rows": 45184
+    },
+    "yardline_100": {
+     "null": 0,
+     "rows": 45184
+    },
+    "ydstogo": {
+     "null": 0,
+     "rows": 45184
+    }
+   },
+   "package_comparable_scrimmage": {
+    "00": 1,
+    "01": 117,
+    "02": 85,
+    "03": 26,
+    "04": 3,
+    "10": 284,
+    "11": 20203,
+    "12": 8245,
+    "13": 1801,
+    "14": 7,
+    "20": 239,
+    "21": 2411,
+    "22": 882,
+    "23": 29,
+    "31": 8,
+    "32": 1
+   },
+   "package_rb_only_scrimmage": {
+    "00": 2,
+    "01": 315,
+    "02": 104,
+    "03": 27,
+    "04": 4,
+    "10": 460,
+    "11": 21759,
+    "12": 8996,
+    "13": 1823,
+    "14": 6,
+    "20": 62,
+    "21": 665,
+    "22": 112,
+    "23": 6,
+    "32": 1
+   },
+   "personnel_reason_scrimmage": {
+    "ok": 34342
+   },
+   "personnel_status": {
+    "parsed": 45184
+   },
+   "players_listed_scrimmage": {
+    "10": 8,
+    "11": 34333,
+    "12": 1
+   },
+   "reconciliation": {
+    "def_label_positions_scrimmage": {
+     "CB": 90,
+     "DE": 8,
+     "DT": 26,
+     "MLB": 2,
+     "NT": 20
+    },
+    "def_label_rows": 3106,
+    "def_label_rows_by_class": {
+     "cross_side_label": 145,
+     "other:kickoff": 2924,
+     "other:no_play": 8,
+     "other:qb_kneel": 28,
+     "other:qb_spike": 1
+    },
+    "joint_equals_scrimmage": true,
+    "joint_total": 34342,
+    "scrimmage_total": 34342,
+    "special_teams_label_positions": {
+     "K": 2520,
+     "LS": 4645,
+     "P": 4651
+    },
+    "special_teams_label_rows": 4654,
+    "special_teams_label_rows_by_class": {
+     "fake_kick": 15,
+     "other:extra_point": 1330,
+     "other:field_goal": 1140,
+     "other:kickoff": 1,
+     "other:no_play": 126,
+     "other:punt": 2042
+    }
+   },
+   "roster_coverage_reg_scrimmage": {
+    "matched_to_team_week": 359064,
+    "offense_ids": 359220,
+    "plays": 32657,
+    "plays_with_unmatched_id": 156
+   },
+   "vocabulary_scrimmage": {
+    "full": 34342
+   }
+  }
+ }
+}
