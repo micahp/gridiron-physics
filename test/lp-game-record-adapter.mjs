@@ -41,6 +41,15 @@ assert.equal(adapted.validation.findings.length, 0);
 assert.equal(adapted.footballStateAudit.finding_count, 0, 'the final record passes independent state audit');
 assert.equal(adapted.footballStateAudit.counts.drive_index_mismatch, undefined);
 
+const slcRecordEnvelope = structuredClone(payload);
+slcRecordEnvelope.record.mode = 'pregame_statistical_game';
+const slcAdapted = adaptLpGamePayload(slcRecordEnvelope);
+assert.equal(slcAdapted.record.mode, 'pregame_statistical_game', 'the SLC source mode must remain unchanged');
+assert.match(slcAdapted.displayLabel, /^HYPOTHETICAL SLC GAME/,
+  'SLC records must be labelled as hypothetical event replays');
+assert.equal(slcAdapted.sourcePlayCount, adapted.sourcePlayCount,
+  'SLC record adaptation must preserve every source play');
+
 const regression = manifest.regression_fixtures[0];
 const oldEnvelopeBytes = await readFile(resolve(root, 'docs/fixtures/e2', regression.file));
 assert.equal(createHash('sha256').update(oldEnvelopeBytes).digest('hex'), regression.sha256);

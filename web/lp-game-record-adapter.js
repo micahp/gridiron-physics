@@ -5,6 +5,7 @@ import { auditDriveIndex, auditFootballState } from './lp-game-state-audit.js';
 export const GAME_PAYLOAD_NAME = 'gridiron.lp-full-game-payload';
 export const GAME_PAYLOAD_VERSION = '1.0.0';
 export const GAME_DISPLAY_LABEL = 'RETROSPECTIVE STATISTICAL GAME · NOT A FORECAST · LP OUTCOMES UNCHANGED';
+export const SLC_DISPLAY_LABEL = 'HYPOTHETICAL SLC GAME · NOT A REAL RESULT · LP OUTCOMES UNCHANGED';
 
 const TEAM_KEYS = ['A', 'B'];
 const STATE_KEYS = ['quarter', 'clock_seconds', 'offense_team', 'defense_team', 'down', 'yards_to_go', 'yardline_100',
@@ -125,7 +126,9 @@ function validateLedger(record, findings) {
 function validateRecord(record, { requireCompleteRegulation }) {
   const findings = new Set();
   requireObject(record, 'record');
-  if (record.mode !== 'legal_game_state_first_piece') fail('record.mode is not the supported LP E2 mode');
+  if (!['legal_game_state_first_piece', 'pregame_statistical_game', 'pregame_full_game'].includes(record.mode)) {
+    fail('record.mode is not a supported LP game-record mode');
+  }
   requireInteger(record.seed, 'record.seed', 0, Number.MAX_SAFE_INTEGER);
   requireString(record.simulation_id, 'record.simulation_id');
   requireString(record.status, 'record.status');
@@ -404,10 +407,14 @@ export function adaptLpGamePayload(payload, { requireCompleteRegulation = true }
     })),
   }));
   const audit = auditGridironContractV1Record(record);
+  if (payload.source.event_record_type === 'statistical_slc_simulation') {
+    audit.conforms = false;
+    audit.violations.push('statistical SLC outcomes are not a shared-v1 observed full-game result');
+  }
   return Object.freeze({
     contractName: GAME_PAYLOAD_NAME,
     contractVersion: GAME_PAYLOAD_VERSION,
-    displayLabel: GAME_DISPLAY_LABEL,
+    displayLabel: record.mode === 'legal_game_state_first_piece' ? GAME_DISPLAY_LABEL : SLC_DISPLAY_LABEL,
     source: deepFreeze(structuredClone(payload.source)),
     record,
     drives: deepFreeze(drives),

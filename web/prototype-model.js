@@ -9,7 +9,17 @@ function available(roster) {
 }
 
 function choose(pool, role, used, accepts) {
-  const p = pool.filter((x) => !used.has(x.id) && accepts(x)).sort(nameOrder)[0];
+  const chartOrder = (a, b) => {
+    const rankA = Number.isInteger(a.depth_chart_rank) ? a.depth_chart_rank : null;
+    const rankB = Number.isInteger(b.depth_chart_rank) ? b.depth_chart_rank : null;
+    if (rankA !== null || rankB !== null) {
+      if (rankA === null) return 1;
+      if (rankB === null) return -1;
+      if (rankA !== rankB) return rankA - rankB;
+    }
+    return nameOrder(a, b);
+  };
+  const p = pool.filter((x) => !used.has(x.id) && accepts(x)).sort(chartOrder)[0];
   if (!p) throw new Error(`incompatible or unavailable personnel for role ${role}`);
   used.add(p.id);
   return p.id;
