@@ -1,0 +1,2613 @@
+{
+  "build_report_sha256": "2db16d65b0b0e9bdcfd8f49505672e408ae6ff1efc57e406c32a2d8fb57cdd2f",
+  "builder_sha256": "facd9f51f395206d76572af8d10eeb1617e4b8313e00e9609f282eca8613874d",
+  "nonreconciling_shotgun_team_seasons": [],
+  "reproduction_commands": [
+    "python3 pipeline/build_historical_playbooks.py --output-dir /absolute/path/outside/repository"
+  ],
+  "schema_version": "gridiron.playbook.research-build.v1",
+  "season_ftn_game_counts": {
+    "2022": 271
+  },
+  "season_ftn_missing_games": {
+    "2022": []
+  },
+  "season_game_counts": {
+    "2022": 271
+  },
+  "seasons": [
+    2022
+  ],
+  "source_hashes": {
+    "2022": {
+      "ftn_charting": {
+        "attribution": "FTN Data via nflverse",
+        "license": "CC-BY-SA-4.0",
+        "name": "ftn_charting_2022.csv",
+        "sha256": "80e13831525f726cb3befb7eb62aa6ea8bf55d36080fcf09fdddd7c578f3b200",
+        "url": "https://github.com/nflverse/nflverse-data/releases/download/ftn_charting/ftn_charting_2022.csv"
+      },
+      "participation": {
+        "name": "pbp_participation_2022.csv",
+        "sha256": "37eae0a8c388d0974c6df9a1f9a1d01f09f63a21440d3b03d7f208c1438c51e4",
+        "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp_participation/pbp_participation_2022.csv"
+      },
+      "pbp": {
+        "name": "play_by_play_2022.csv.gz",
+        "sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+        "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.csv.gz"
+      }
+    }
+  },
+  "team_season_count": 32,
+  "team_seasons": [
+    {
+      "defense_plays": 1060,
+      "ftn_joined": 2195,
+      "ftn_missing": 7,
+      "games": 17,
+      "offense_plays": 1142,
+      "output": "ARI-2022.json",
+      "output_sha256": "9f19fade124e1aeb74aee0d93cdb675a8eb8ee7b416089136daf3d6cc876ce4e",
+      "participation_joined": 2202,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.007018,
+        "disagreement_formation_counts": {
+          "EMPTY": 2,
+          "SHOTGUN": 5,
+          "WILDCAT": 1
+        },
+        "disagreement_games": 6,
+        "disagreement_play_type_counts": {
+          "pass": 6,
+          "run": 2
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_KC_ARI",
+            "old_game_id": "2022091110",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3295",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_01_KC_ARI",
+            "old_game_id": "2022091110",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3720",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_02_ARI_LV",
+            "old_game_id": "2022091811",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3394",
+            "play_type": "run",
+            "week": 2
+          },
+          {
+            "game_id": "2022_02_ARI_LV",
+            "old_game_id": "2022091811",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4125",
+            "play_type": "pass",
+            "week": 2
+          },
+          {
+            "game_id": "2022_07_NO_ARI",
+            "old_game_id": "2022102000",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1811",
+            "play_type": "pass",
+            "week": 7
+          },
+          {
+            "game_id": "2022_08_ARI_MIN",
+            "old_game_id": "2022103005",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3151",
+            "play_type": "pass",
+            "week": 8
+          },
+          {
+            "game_id": "2022_09_SEA_ARI",
+            "old_game_id": "2022110608",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1120",
+            "play_type": "run",
+            "week": 9
+          },
+          {
+            "game_id": "2022_15_ARI_DEN",
+            "old_game_id": "2022121805",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3655",
+            "play_type": "pass",
+            "week": 15
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 2,
+          "2": 2,
+          "7": 1,
+          "8": 1,
+          "9": 1,
+          "15": 1
+        },
+        "net_difference_plays": 8,
+        "paired_plays": 1140,
+        "participation_share": 0.910526,
+        "pbp_0_participation_shotgun_count": 8,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.903509,
+        "source_disagreement_count": 8
+      },
+      "team": "ARI"
+    },
+    {
+      "defense_plays": 1075,
+      "ftn_joined": 2067,
+      "ftn_missing": 8,
+      "games": 17,
+      "offense_plays": 1000,
+      "output": "ATL-2022.json",
+      "output_sha256": "4434a313c37b9a78da9d4e9023fb979bb3ba8ee86cf97030675f60a6432b96bb",
+      "participation_joined": 2075,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.003,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "WILDCAT": 2
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 2,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_02_ATL_LA",
+            "old_game_id": "2022091807",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3267",
+            "play_type": "pass",
+            "week": 2
+          },
+          {
+            "game_id": "2022_16_ATL_BAL",
+            "old_game_id": "2022122400",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1012",
+            "play_type": "pass",
+            "week": 16
+          },
+          {
+            "game_id": "2022_17_ARI_ATL",
+            "old_game_id": "2023010100",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1445",
+            "play_type": "run",
+            "week": 17
+          }
+        ],
+        "disagreement_weeks": {
+          "2": 1,
+          "16": 1,
+          "17": 1
+        },
+        "net_difference_plays": 3,
+        "paired_plays": 1000,
+        "participation_share": 0.753,
+        "pbp_0_participation_shotgun_count": 3,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.75,
+        "source_disagreement_count": 3
+      },
+      "team": "ATL"
+    },
+    {
+      "defense_plays": 1039,
+      "ftn_joined": 2064,
+      "ftn_missing": 5,
+      "games": 17,
+      "offense_plays": 1030,
+      "output": "BAL-2022.json",
+      "output_sha256": "cebd507a365c8b47a4a53e64b3ee83d6f9261cb32723e863b28a55228a5f4ec4",
+      "participation_joined": 2069,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.004854,
+        "disagreement_formation_counts": {
+          "EMPTY": 2,
+          "SHOTGUN": 1,
+          "WILDCAT": 2
+        },
+        "disagreement_games": 5,
+        "disagreement_play_type_counts": {
+          "pass": 1,
+          "run": 4
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_02_MIA_BAL",
+            "old_game_id": "2022091800",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "515",
+            "play_type": "run",
+            "week": 2
+          },
+          {
+            "game_id": "2022_07_CLE_BAL",
+            "old_game_id": "2022102300",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2665",
+            "play_type": "run",
+            "week": 7
+          },
+          {
+            "game_id": "2022_12_BAL_JAX",
+            "old_game_id": "2022112702",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3724",
+            "play_type": "pass",
+            "week": 12
+          },
+          {
+            "game_id": "2022_13_DEN_BAL",
+            "old_game_id": "2022120401",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3225",
+            "play_type": "run",
+            "week": 13
+          },
+          {
+            "game_id": "2022_16_ATL_BAL",
+            "old_game_id": "2022122400",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1449",
+            "play_type": "run",
+            "week": 16
+          }
+        ],
+        "disagreement_weeks": {
+          "2": 1,
+          "7": 1,
+          "12": 1,
+          "13": 1,
+          "16": 1
+        },
+        "net_difference_plays": 5,
+        "paired_plays": 1030,
+        "participation_share": 0.894175,
+        "pbp_0_participation_shotgun_count": 5,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.88932,
+        "source_disagreement_count": 5
+      },
+      "team": "BAL"
+    },
+    {
+      "defense_plays": 994,
+      "ftn_joined": 2007,
+      "ftn_missing": 5,
+      "games": 16,
+      "offense_plays": 1018,
+      "output": "BUF-2022.json",
+      "output_sha256": "90cfaa8aac6cf64ab91839d307a6fc4f30a2b01d6bfae27d1eda804c53b08fdf",
+      "participation_joined": 2012,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.002947,
+        "disagreement_formation_counts": {
+          "EMPTY": 2,
+          "SHOTGUN": 1
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 1,
+          "run": 2
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_11_CLE_BUF",
+            "old_game_id": "2022112002",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2693",
+            "play_type": "run",
+            "week": 11
+          },
+          {
+            "game_id": "2022_15_MIA_BUF",
+            "old_game_id": "2022121702",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3740",
+            "play_type": "run",
+            "week": 15
+          },
+          {
+            "game_id": "2022_16_BUF_CHI",
+            "old_game_id": "2022122402",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2004",
+            "play_type": "pass",
+            "week": 16
+          }
+        ],
+        "disagreement_weeks": {
+          "11": 1,
+          "15": 1,
+          "16": 1
+        },
+        "net_difference_plays": 3,
+        "paired_plays": 1018,
+        "participation_share": 0.739686,
+        "pbp_0_participation_shotgun_count": 3,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.736739,
+        "source_disagreement_count": 3
+      },
+      "team": "BUF"
+    },
+    {
+      "defense_plays": 1090,
+      "ftn_joined": 2054,
+      "ftn_missing": 7,
+      "games": 17,
+      "offense_plays": 971,
+      "output": "CAR-2022.json",
+      "output_sha256": "6c0e7532b308f6db129dfb8e2da9a3a02d18818d8ef59d6aa2de07819033f428",
+      "participation_joined": 2061,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.003093,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 3
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "run": 3
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_03_NO_CAR",
+            "old_game_id": "2022092500",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3207",
+            "play_type": "run",
+            "week": 3
+          },
+          {
+            "game_id": "2022_05_SF_CAR",
+            "old_game_id": "2022100910",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2336",
+            "play_type": "run",
+            "week": 5
+          },
+          {
+            "game_id": "2022_08_CAR_ATL",
+            "old_game_id": "2022103001",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2935",
+            "play_type": "run",
+            "week": 8
+          }
+        ],
+        "disagreement_weeks": {
+          "3": 1,
+          "5": 1,
+          "8": 1
+        },
+        "net_difference_plays": 3,
+        "paired_plays": 970,
+        "participation_share": 0.549485,
+        "pbp_0_participation_shotgun_count": 3,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.546392,
+        "source_disagreement_count": 3
+      },
+      "team": "CAR"
+    },
+    {
+      "defense_plays": 1023,
+      "ftn_joined": 1999,
+      "ftn_missing": 9,
+      "games": 17,
+      "offense_plays": 985,
+      "output": "CHI-2022.json",
+      "output_sha256": "f70f10c9b4c4bc0c31ce0d94b2662ebb0f57bebf1c39e7a16052bda3a24d8e85",
+      "participation_joined": 2008,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.003046,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 2,
+          "WILDCAT": 1
+        },
+        "disagreement_games": 2,
+        "disagreement_play_type_counts": {
+          "pass": 2,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_08_CHI_DAL",
+            "old_game_id": "2022103002",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2634",
+            "play_type": "pass",
+            "week": 8
+          },
+          {
+            "game_id": "2022_08_CHI_DAL",
+            "old_game_id": "2022103002",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3387",
+            "play_type": "pass",
+            "week": 8
+          },
+          {
+            "game_id": "2022_09_MIA_CHI",
+            "old_game_id": "2022110601",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "556",
+            "play_type": "run",
+            "week": 9
+          }
+        ],
+        "disagreement_weeks": {
+          "8": 2,
+          "9": 1
+        },
+        "net_difference_plays": 3,
+        "paired_plays": 985,
+        "participation_share": 0.667005,
+        "pbp_0_participation_shotgun_count": 3,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.663959,
+        "source_disagreement_count": 3
+      },
+      "team": "CHI"
+    },
+    {
+      "defense_plays": 987,
+      "ftn_joined": 2013,
+      "ftn_missing": 8,
+      "games": 16,
+      "offense_plays": 1034,
+      "output": "CIN-2022.json",
+      "output_sha256": "b592e44b3096ba64d9bf40e06e925fb12eadc844b6c8282a7ea8b308d928907d",
+      "participation_joined": 2021,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.005808,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "SHOTGUN": 5
+        },
+        "disagreement_games": 5,
+        "disagreement_play_type_counts": {
+          "pass": 5,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_PIT_CIN",
+            "old_game_id": "2022091103",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2382",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_02_CIN_DAL",
+            "old_game_id": "2022091809",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3547",
+            "play_type": "pass",
+            "week": 2
+          },
+          {
+            "game_id": "2022_06_CIN_NO",
+            "old_game_id": "2022101605",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3809",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_15_CIN_TB",
+            "old_game_id": "2022121807",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2441",
+            "play_type": "pass",
+            "week": 15
+          },
+          {
+            "game_id": "2022_15_CIN_TB",
+            "old_game_id": "2022121807",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2669",
+            "play_type": "pass",
+            "week": 15
+          },
+          {
+            "game_id": "2022_16_CIN_NE",
+            "old_game_id": "2022122406",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "618",
+            "play_type": "run",
+            "week": 16
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 1,
+          "2": 1,
+          "6": 1,
+          "15": 2,
+          "16": 1
+        },
+        "net_difference_plays": 6,
+        "paired_plays": 1033,
+        "participation_share": 0.791868,
+        "pbp_0_participation_shotgun_count": 6,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.78606,
+        "source_disagreement_count": 6
+      },
+      "team": "CIN"
+    },
+    {
+      "defense_plays": 1025,
+      "ftn_joined": 2120,
+      "ftn_missing": 4,
+      "games": 17,
+      "offense_plays": 1099,
+      "output": "CLE-2022.json",
+      "output_sha256": "2994424e00a077b9a489e8f1609428b5f7af5bd3c4dab73f1687a0b4ae07fdb7",
+      "participation_joined": 2124,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.00091,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 1,
+          "SINGLEBACK": 1,
+          "WILDCAT": 1
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 2,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_CLE_CAR",
+            "old_game_id": "2022091101",
+            "participation_formation": "SINGLEBACK",
+            "participation_shotgun_mapped": false,
+            "pbp_shotgun": true,
+            "play_id": "2832",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_05_LAC_CLE",
+            "old_game_id": "2022100902",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "125",
+            "play_type": "run",
+            "week": 5
+          },
+          {
+            "game_id": "2022_06_NE_CLE",
+            "old_game_id": "2022101601",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3769",
+            "play_type": "pass",
+            "week": 6
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 1,
+          "5": 1,
+          "6": 1
+        },
+        "net_difference_plays": 1,
+        "paired_plays": 1099,
+        "participation_share": 0.593267,
+        "pbp_0_participation_shotgun_count": 2,
+        "pbp_1_participation_other_formation_count": 1,
+        "pbp_share": 0.592357,
+        "source_disagreement_count": 3
+      },
+      "team": "CLE"
+    },
+    {
+      "defense_plays": 1092,
+      "ftn_joined": 2187,
+      "ftn_missing": 6,
+      "games": 17,
+      "offense_plays": 1101,
+      "output": "DAL-2022.json",
+      "output_sha256": "27bc8bb2b94b48c1d30b55338b52b4ef5a6923033e5b68bc6cdb2c4c2bb4cd80",
+      "participation_joined": 2193,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.002732,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 1,
+          "WILDCAT": 2
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 2,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_02_CIN_DAL",
+            "old_game_id": "2022091809",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "309",
+            "play_type": "pass",
+            "week": 2
+          },
+          {
+            "game_id": "2022_05_DAL_LA",
+            "old_game_id": "2022100912",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "140",
+            "play_type": "run",
+            "week": 5
+          },
+          {
+            "game_id": "2022_13_IND_DAL",
+            "old_game_id": "2022120412",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3244",
+            "play_type": "pass",
+            "week": 13
+          }
+        ],
+        "disagreement_weeks": {
+          "2": 1,
+          "5": 1,
+          "13": 1
+        },
+        "net_difference_plays": 3,
+        "paired_plays": 1098,
+        "participation_share": 0.556466,
+        "pbp_0_participation_shotgun_count": 3,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.553734,
+        "source_disagreement_count": 3
+      },
+      "team": "DAL"
+    },
+    {
+      "defense_plays": 1066,
+      "ftn_joined": 2132,
+      "ftn_missing": 4,
+      "games": 17,
+      "offense_plays": 1070,
+      "output": "DEN-2022.json",
+      "output_sha256": "bfc0684597d77745d1401da7a1168defe5db2689801864849497398e0ab8e004",
+      "participation_joined": 2136,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.003738,
+        "disagreement_formation_counts": {
+          "EMPTY": 2,
+          "SHOTGUN": 1,
+          "WILDCAT": 1
+        },
+        "disagreement_games": 4,
+        "disagreement_play_type_counts": {
+          "pass": 1,
+          "run": 3
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_03_SF_DEN",
+            "old_game_id": "2022092513",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3634",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_04_DEN_LV",
+            "old_game_id": "2022100212",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2238",
+            "play_type": "run",
+            "week": 4
+          },
+          {
+            "game_id": "2022_16_DEN_LA",
+            "old_game_id": "2022122501",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3341",
+            "play_type": "run",
+            "week": 16
+          },
+          {
+            "game_id": "2022_18_LAC_DEN",
+            "old_game_id": "2023010812",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "451",
+            "play_type": "run",
+            "week": 18
+          }
+        ],
+        "disagreement_weeks": {
+          "3": 1,
+          "4": 1,
+          "16": 1,
+          "18": 1
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 1070,
+        "participation_share": 0.661682,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.657944,
+        "source_disagreement_count": 4
+      },
+      "team": "DEN"
+    },
+    {
+      "defense_plays": 1068,
+      "ftn_joined": 2141,
+      "ftn_missing": 8,
+      "games": 17,
+      "offense_plays": 1081,
+      "output": "DET-2022.json",
+      "output_sha256": "ba5bd1ff1f6d0455852e2d32004b3bf46b28cf51b0f48e8040848cc78be17e4e",
+      "participation_joined": 2149,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.002783,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "SHOTGUN": 2
+        },
+        "disagreement_games": 2,
+        "disagreement_play_type_counts": {
+          "pass": 1,
+          "run": 2
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_04_SEA_DET",
+            "old_game_id": "2022100205",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2695",
+            "play_type": "run",
+            "week": 4
+          },
+          {
+            "game_id": "2022_04_SEA_DET",
+            "old_game_id": "2022100205",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3263",
+            "play_type": "pass",
+            "week": 4
+          },
+          {
+            "game_id": "2022_16_DET_CAR",
+            "old_game_id": "2022122401",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2601",
+            "play_type": "run",
+            "week": 16
+          }
+        ],
+        "disagreement_weeks": {
+          "4": 2,
+          "16": 1
+        },
+        "net_difference_plays": 3,
+        "paired_plays": 1078,
+        "participation_share": 0.523191,
+        "pbp_0_participation_shotgun_count": 3,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.520408,
+        "source_disagreement_count": 3
+      },
+      "team": "DET"
+    },
+    {
+      "defense_plays": 978,
+      "ftn_joined": 2011,
+      "ftn_missing": 3,
+      "games": 17,
+      "offense_plays": 1036,
+      "output": "GB-2022.json",
+      "output_sha256": "21fc78fb9a0c5904b7fd512ceb5a4e17ae43d03141f9b0b16267c5fd0d0e8069",
+      "participation_joined": 2014,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.001932,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "SHOTGUN": 1
+        },
+        "disagreement_games": 2,
+        "disagreement_play_type_counts": {
+          "pass": 2
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_09_GB_DET",
+            "old_game_id": "2022110603",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2485",
+            "play_type": "pass",
+            "week": 9
+          },
+          {
+            "game_id": "2022_11_TEN_GB",
+            "old_game_id": "2022111700",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2531",
+            "play_type": "pass",
+            "week": 11
+          }
+        ],
+        "disagreement_weeks": {
+          "9": 1,
+          "11": 1
+        },
+        "net_difference_plays": 2,
+        "paired_plays": 1035,
+        "participation_share": 0.700483,
+        "pbp_0_participation_shotgun_count": 2,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.698551,
+        "source_disagreement_count": 2
+      },
+      "team": "GB"
+    },
+    {
+      "defense_plays": 1114,
+      "ftn_joined": 2118,
+      "ftn_missing": 7,
+      "games": 17,
+      "offense_plays": 1011,
+      "output": "HOU-2022.json",
+      "output_sha256": "139efc98a70e76ae6fd2c2f7fb99852d2b054bd4756bad1ecbac533eb62bbc29",
+      "participation_joined": 2125,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.00396,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 4
+        },
+        "disagreement_games": 4,
+        "disagreement_play_type_counts": {
+          "pass": 3,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_12_HOU_MIA",
+            "old_game_id": "2022112703",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2720",
+            "play_type": "run",
+            "week": 12
+          },
+          {
+            "game_id": "2022_13_CLE_HOU",
+            "old_game_id": "2022120404",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3858",
+            "play_type": "pass",
+            "week": 13
+          },
+          {
+            "game_id": "2022_16_HOU_TEN",
+            "old_game_id": "2022122407",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3395",
+            "play_type": "pass",
+            "week": 16
+          },
+          {
+            "game_id": "2022_18_HOU_IND",
+            "old_game_id": "2023010805",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3966",
+            "play_type": "pass",
+            "week": 18
+          }
+        ],
+        "disagreement_weeks": {
+          "12": 1,
+          "13": 1,
+          "16": 1,
+          "18": 1
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 1010,
+        "participation_share": 0.617822,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.613861,
+        "source_disagreement_count": 4
+      },
+      "team": "HOU"
+    },
+    {
+      "defense_plays": 1081,
+      "ftn_joined": 2170,
+      "ftn_missing": 11,
+      "games": 17,
+      "offense_plays": 1100,
+      "output": "IND-2022.json",
+      "output_sha256": "a5b6464f803c2d364f4bc7077bff54bce9dc3936bd680e25f282bb1eeea2189c",
+      "participation_joined": 2181,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.004545,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 5
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 4,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_06_JAX_IND",
+            "old_game_id": "2022101603",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2771",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_06_JAX_IND",
+            "old_game_id": "2022101603",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4147",
+            "play_type": "run",
+            "week": 6
+          },
+          {
+            "game_id": "2022_10_IND_LV",
+            "old_game_id": "2022111308",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2763",
+            "play_type": "pass",
+            "week": 10
+          },
+          {
+            "game_id": "2022_10_IND_LV",
+            "old_game_id": "2022111308",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3508",
+            "play_type": "pass",
+            "week": 10
+          },
+          {
+            "game_id": "2022_13_IND_DAL",
+            "old_game_id": "2022120412",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2841",
+            "play_type": "pass",
+            "week": 13
+          }
+        ],
+        "disagreement_weeks": {
+          "6": 2,
+          "10": 2,
+          "13": 1
+        },
+        "net_difference_plays": 5,
+        "paired_plays": 1100,
+        "participation_share": 0.761818,
+        "pbp_0_participation_shotgun_count": 5,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.757273,
+        "source_disagreement_count": 5
+      },
+      "team": "IND"
+    },
+    {
+      "defense_plays": 1101,
+      "ftn_joined": 2157,
+      "ftn_missing": 10,
+      "games": 17,
+      "offense_plays": 1066,
+      "output": "JAX-2022.json",
+      "output_sha256": "31434a4889c35a5c2375afcd2c749010526eb1c29fa5af0edbce1e91fd0abd3f",
+      "participation_joined": 2167,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.007505,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 6,
+          "WILDCAT": 2
+        },
+        "disagreement_games": 7,
+        "disagreement_play_type_counts": {
+          "pass": 6,
+          "run": 2
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_JAX_WAS",
+            "old_game_id": "2022091109",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2529",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_03_JAX_LAC",
+            "old_game_id": "2022092509",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2829",
+            "play_type": "run",
+            "week": 3
+          },
+          {
+            "game_id": "2022_03_JAX_LAC",
+            "old_game_id": "2022092509",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2961",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_06_JAX_IND",
+            "old_game_id": "2022101603",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3818",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_07_NYG_JAX",
+            "old_game_id": "2022102304",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "486",
+            "play_type": "run",
+            "week": 7
+          },
+          {
+            "game_id": "2022_12_BAL_JAX",
+            "old_game_id": "2022112702",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4081",
+            "play_type": "pass",
+            "week": 12
+          },
+          {
+            "game_id": "2022_13_JAX_DET",
+            "old_game_id": "2022120403",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2896",
+            "play_type": "pass",
+            "week": 13
+          },
+          {
+            "game_id": "2022_14_JAX_TEN",
+            "old_game_id": "2022121106",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2901",
+            "play_type": "pass",
+            "week": 14
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 1,
+          "3": 2,
+          "6": 1,
+          "7": 1,
+          "12": 1,
+          "13": 1,
+          "14": 1
+        },
+        "net_difference_plays": 8,
+        "paired_plays": 1066,
+        "participation_share": 0.751407,
+        "pbp_0_participation_shotgun_count": 8,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.743902,
+        "source_disagreement_count": 8
+      },
+      "team": "JAX"
+    },
+    {
+      "defense_plays": 1084,
+      "ftn_joined": 2164,
+      "ftn_missing": 5,
+      "games": 17,
+      "offense_plays": 1085,
+      "output": "KC-2022.json",
+      "output_sha256": "8af3090ce75f35127f411984f9f53e21972a1bcb1666faad59938567b2fdc655",
+      "participation_joined": 2169,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.006458,
+        "disagreement_formation_counts": {
+          "EMPTY": 2,
+          "SHOTGUN": 3,
+          "WILDCAT": 2
+        },
+        "disagreement_games": 6,
+        "disagreement_play_type_counts": {
+          "pass": 3,
+          "run": 4
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_03_KC_IND",
+            "old_game_id": "2022092502",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1567",
+            "play_type": "run",
+            "week": 3
+          },
+          {
+            "game_id": "2022_03_KC_IND",
+            "old_game_id": "2022092502",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1704",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_04_KC_TB",
+            "old_game_id": "2022100213",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1652",
+            "play_type": "run",
+            "week": 4
+          },
+          {
+            "game_id": "2022_05_LV_KC",
+            "old_game_id": "2022101000",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3490",
+            "play_type": "pass",
+            "week": 5
+          },
+          {
+            "game_id": "2022_09_TEN_KC",
+            "old_game_id": "2022110610",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3689",
+            "play_type": "run",
+            "week": 9
+          },
+          {
+            "game_id": "2022_15_KC_HOU",
+            "old_game_id": "2022121802",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3140",
+            "play_type": "pass",
+            "week": 15
+          },
+          {
+            "game_id": "2022_17_DEN_KC",
+            "old_game_id": "2023010104",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "385",
+            "play_type": "run",
+            "week": 17
+          }
+        ],
+        "disagreement_weeks": {
+          "3": 2,
+          "4": 1,
+          "5": 1,
+          "9": 1,
+          "15": 1,
+          "17": 1
+        },
+        "net_difference_plays": 7,
+        "paired_plays": 1084,
+        "participation_share": 0.799815,
+        "pbp_0_participation_shotgun_count": 7,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.793358,
+        "source_disagreement_count": 7
+      },
+      "team": "KC"
+    },
+    {
+      "defense_plays": 1038,
+      "ftn_joined": 2023,
+      "ftn_missing": 2,
+      "games": 17,
+      "offense_plays": 987,
+      "output": "LA-2022.json",
+      "output_sha256": "28bfb99b7fa16335365c2b5420659790174250b9560b2376609a7f094fb3fd1f",
+      "participation_joined": 2025,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.0,
+        "disagreement_formation_counts": {},
+        "disagreement_games": 0,
+        "disagreement_play_type_counts": {},
+        "disagreement_source_rows": [],
+        "disagreement_weeks": {},
+        "net_difference_plays": 0,
+        "paired_plays": 984,
+        "participation_share": 0.531504,
+        "pbp_0_participation_shotgun_count": 0,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.531504,
+        "source_disagreement_count": 0
+      },
+      "team": "LA"
+    },
+    {
+      "defense_plays": 994,
+      "ftn_joined": 2128,
+      "ftn_missing": 3,
+      "games": 17,
+      "offense_plays": 1137,
+      "output": "LAC-2022.json",
+      "output_sha256": "692e63b47f9f1c27fb39f9ae3d55edf5559319da7a9f22c37f1e22d6178f8610",
+      "participation_joined": 2131,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.001761,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 2
+        },
+        "disagreement_games": 2,
+        "disagreement_play_type_counts": {
+          "pass": 2
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_12_LAC_ARI",
+            "old_game_id": "2022112707",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3961",
+            "play_type": "pass",
+            "week": 12
+          },
+          {
+            "game_id": "2022_18_LAC_DEN",
+            "old_game_id": "2023010812",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3619",
+            "play_type": "pass",
+            "week": 18
+          }
+        ],
+        "disagreement_weeks": {
+          "12": 1,
+          "18": 1
+        },
+        "net_difference_plays": 2,
+        "paired_plays": 1136,
+        "participation_share": 0.654049,
+        "pbp_0_participation_shotgun_count": 2,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.652289,
+        "source_disagreement_count": 2
+      },
+      "team": "LAC"
+    },
+    {
+      "defense_plays": 1065,
+      "ftn_joined": 2106,
+      "ftn_missing": 7,
+      "games": 17,
+      "offense_plays": 1048,
+      "output": "LV-2022.json",
+      "output_sha256": "d08b6512c8aa882df04305f89dd7eb82e2ad8d0207a7665b40f5e98370c2d796",
+      "participation_joined": 2113,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.00382,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "SHOTGUN": 3
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 3,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_LV_LAC",
+            "old_game_id": "2022091111",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3263",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_03_LV_TEN",
+            "old_game_id": "2022092507",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "620",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_03_LV_TEN",
+            "old_game_id": "2022092507",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3842",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_05_LV_KC",
+            "old_game_id": "2022101000",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3704",
+            "play_type": "run",
+            "week": 5
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 1,
+          "3": 2,
+          "5": 1
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 1047,
+        "participation_share": 0.531996,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.528176,
+        "source_disagreement_count": 4
+      },
+      "team": "LV"
+    },
+    {
+      "defense_plays": 1067,
+      "ftn_joined": 2057,
+      "ftn_missing": 5,
+      "games": 17,
+      "offense_plays": 995,
+      "output": "MIA-2022.json",
+      "output_sha256": "19a33913322cc74d86598d4908861269f4f1d5305e2467d6c1435fa94462177a",
+      "participation_joined": 2062,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.004024,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 1,
+          "WILDCAT": 3
+        },
+        "disagreement_games": 4,
+        "disagreement_play_type_counts": {
+          "pass": 1,
+          "run": 3
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_02_MIA_BAL",
+            "old_game_id": "2022091800",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1233",
+            "play_type": "run",
+            "week": 2
+          },
+          {
+            "game_id": "2022_05_MIA_NYJ",
+            "old_game_id": "2022100907",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2013",
+            "play_type": "run",
+            "week": 5
+          },
+          {
+            "game_id": "2022_06_MIN_MIA",
+            "old_game_id": "2022101604",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4065",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_10_CLE_MIA",
+            "old_game_id": "2022111304",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1425",
+            "play_type": "run",
+            "week": 10
+          }
+        ],
+        "disagreement_weeks": {
+          "2": 1,
+          "5": 1,
+          "6": 1,
+          "10": 1
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 994,
+        "participation_share": 0.665996,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.661972,
+        "source_disagreement_count": 4
+      },
+      "team": "MIA"
+    },
+    {
+      "defense_plays": 1113,
+      "ftn_joined": 2222,
+      "ftn_missing": 5,
+      "games": 17,
+      "offense_plays": 1114,
+      "output": "MIN-2022.json",
+      "output_sha256": "a4f6a1439d14de6f6e61cb00db8e783b89f07aa3db418715aa18778710eca7ba",
+      "participation_joined": 2227,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.003597,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "SHOTGUN": 3
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 3,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_05_CHI_MIN",
+            "old_game_id": "2022100904",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3606",
+            "play_type": "run",
+            "week": 5
+          },
+          {
+            "game_id": "2022_05_CHI_MIN",
+            "old_game_id": "2022100904",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3635",
+            "play_type": "pass",
+            "week": 5
+          },
+          {
+            "game_id": "2022_06_MIN_MIA",
+            "old_game_id": "2022101604",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3672",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_15_IND_MIN",
+            "old_game_id": "2022121700",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4489",
+            "play_type": "pass",
+            "week": 15
+          }
+        ],
+        "disagreement_weeks": {
+          "5": 2,
+          "6": 1,
+          "15": 1
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 1112,
+        "participation_share": 0.53777,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.534173,
+        "source_disagreement_count": 4
+      },
+      "team": "MIN"
+    },
+    {
+      "defense_plays": 1078,
+      "ftn_joined": 2057,
+      "ftn_missing": 7,
+      "games": 17,
+      "offense_plays": 986,
+      "output": "NE-2022.json",
+      "output_sha256": "0a2b5ac5cb270b67c74a711ffffd46051384ba1f3a02f0fd1a7172a7c19f2f96",
+      "participation_joined": 2064,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.005071,
+        "disagreement_formation_counts": {
+          "EMPTY": 3,
+          "SHOTGUN": 1,
+          "WILDCAT": 1
+        },
+        "disagreement_games": 5,
+        "disagreement_play_type_counts": {
+          "pass": 4,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_03_BAL_NE",
+            "old_game_id": "2022092505",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2965",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_09_IND_NE",
+            "old_game_id": "2022110605",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "522",
+            "play_type": "run",
+            "week": 9
+          },
+          {
+            "game_id": "2022_15_NE_LV",
+            "old_game_id": "2022121808",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3564",
+            "play_type": "pass",
+            "week": 15
+          },
+          {
+            "game_id": "2022_16_CIN_NE",
+            "old_game_id": "2022122406",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3299",
+            "play_type": "pass",
+            "week": 16
+          },
+          {
+            "game_id": "2022_18_NE_BUF",
+            "old_game_id": "2023010801",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3087",
+            "play_type": "pass",
+            "week": 18
+          }
+        ],
+        "disagreement_weeks": {
+          "3": 1,
+          "9": 1,
+          "15": 1,
+          "16": 1,
+          "18": 1
+        },
+        "net_difference_plays": 5,
+        "paired_plays": 986,
+        "participation_share": 0.674442,
+        "pbp_0_participation_shotgun_count": 5,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.669371,
+        "source_disagreement_count": 5
+      },
+      "team": "NE"
+    },
+    {
+      "defense_plays": 1070,
+      "ftn_joined": 2065,
+      "ftn_missing": 10,
+      "games": 17,
+      "offense_plays": 1005,
+      "output": "NO-2022.json",
+      "output_sha256": "1e458e9c173d79dda7c35e21772c682af674fa49d4a9cddbfff5744482e6b016",
+      "participation_joined": 2075,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.00398,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "WILDCAT": 3
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 2,
+          "run": 2
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_NO_ATL",
+            "old_game_id": "2022091100",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3238",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_01_NO_ATL",
+            "old_game_id": "2022091100",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3696",
+            "play_type": "run",
+            "week": 1
+          },
+          {
+            "game_id": "2022_06_CIN_NO",
+            "old_game_id": "2022101605",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3186",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_15_ATL_NO",
+            "old_game_id": "2022121809",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3870",
+            "play_type": "run",
+            "week": 15
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 2,
+          "6": 1,
+          "15": 1
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 1005,
+        "participation_share": 0.661692,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.657711,
+        "source_disagreement_count": 4
+      },
+      "team": "NO"
+    },
+    {
+      "defense_plays": 1064,
+      "ftn_joined": 2135,
+      "ftn_missing": 6,
+      "games": 17,
+      "offense_plays": 1077,
+      "output": "NYG-2022.json",
+      "output_sha256": "ec557eec18ec5cd19fd758613171775cdc1584fbdd0949701497bcfe52a19150",
+      "participation_joined": 2141,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.007449,
+        "disagreement_formation_counts": {
+          "PISTOL": 2,
+          "SHOTGUN": 3,
+          "WILDCAT": 3
+        },
+        "disagreement_games": 7,
+        "disagreement_play_type_counts": {
+          "pass": 5,
+          "run": 3
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_NYG_TEN",
+            "old_game_id": "2022091108",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2049",
+            "play_type": "run",
+            "week": 1
+          },
+          {
+            "game_id": "2022_01_NYG_TEN",
+            "old_game_id": "2022091108",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3624",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_02_CAR_NYG",
+            "old_game_id": "2022091805",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "580",
+            "play_type": "run",
+            "week": 2
+          },
+          {
+            "game_id": "2022_06_BAL_NYG",
+            "old_game_id": "2022101606",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2457",
+            "play_type": "run",
+            "week": 6
+          },
+          {
+            "game_id": "2022_11_DET_NYG",
+            "old_game_id": "2022112007",
+            "participation_formation": "PISTOL",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4048",
+            "play_type": "pass",
+            "week": 11
+          },
+          {
+            "game_id": "2022_14_PHI_NYG",
+            "old_game_id": "2022121104",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3885",
+            "play_type": "pass",
+            "week": 14
+          },
+          {
+            "game_id": "2022_16_NYG_MIN",
+            "old_game_id": "2022122405",
+            "participation_formation": "PISTOL",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3966",
+            "play_type": "pass",
+            "week": 16
+          },
+          {
+            "game_id": "2022_18_NYG_PHI",
+            "old_game_id": "2023010809",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3503",
+            "play_type": "pass",
+            "week": 18
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 2,
+          "2": 1,
+          "6": 1,
+          "11": 1,
+          "14": 1,
+          "16": 1,
+          "18": 1
+        },
+        "net_difference_plays": 8,
+        "paired_plays": 1074,
+        "participation_share": 0.650838,
+        "pbp_0_participation_shotgun_count": 8,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.643389,
+        "source_disagreement_count": 8
+      },
+      "team": "NYG"
+    },
+    {
+      "defense_plays": 1078,
+      "ftn_joined": 2141,
+      "ftn_missing": 0,
+      "games": 17,
+      "offense_plays": 1063,
+      "output": "NYJ-2022.json",
+      "output_sha256": "c2b41fcc5bd3e51929d741082b7d4972870a2ff2c1bc960c047aa278a82b8f01",
+      "participation_joined": 2141,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.003774,
+        "disagreement_formation_counts": {
+          "PISTOL": 2,
+          "WILDCAT": 2
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "run": 4
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_04_NYJ_PIT",
+            "old_game_id": "2022100210",
+            "participation_formation": "PISTOL",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "488",
+            "play_type": "run",
+            "week": 4
+          },
+          {
+            "game_id": "2022_04_NYJ_PIT",
+            "old_game_id": "2022100210",
+            "participation_formation": "PISTOL",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4013",
+            "play_type": "run",
+            "week": 4
+          },
+          {
+            "game_id": "2022_06_NYJ_GB",
+            "old_game_id": "2022101602",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3570",
+            "play_type": "run",
+            "week": 6
+          },
+          {
+            "game_id": "2022_15_DET_NYJ",
+            "old_game_id": "2022121804",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2620",
+            "play_type": "run",
+            "week": 15
+          }
+        ],
+        "disagreement_weeks": {
+          "4": 2,
+          "6": 1,
+          "15": 1
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 1060,
+        "participation_share": 0.685849,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.682075,
+        "source_disagreement_count": 4
+      },
+      "team": "NYJ"
+    },
+    {
+      "defense_plays": 1062,
+      "ftn_joined": 2161,
+      "ftn_missing": 6,
+      "games": 17,
+      "offense_plays": 1105,
+      "output": "PHI-2022.json",
+      "output_sha256": "21bb229e09ca9ab87d6e6b6f3f236988222b4f20c00dedaa902ef255868fd00d",
+      "participation_joined": 2167,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.00181,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 2
+        },
+        "disagreement_games": 2,
+        "disagreement_play_type_counts": {
+          "pass": 1,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_04_JAX_PHI",
+            "old_game_id": "2022100209",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3218",
+            "play_type": "pass",
+            "week": 4
+          },
+          {
+            "game_id": "2022_06_DAL_PHI",
+            "old_game_id": "2022101611",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3339",
+            "play_type": "run",
+            "week": 6
+          }
+        ],
+        "disagreement_weeks": {
+          "4": 1,
+          "6": 1
+        },
+        "net_difference_plays": 2,
+        "paired_plays": 1105,
+        "participation_share": 0.903167,
+        "pbp_0_participation_shotgun_count": 2,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.901357,
+        "source_disagreement_count": 2
+      },
+      "team": "PHI"
+    },
+    {
+      "defense_plays": 1008,
+      "ftn_joined": 2106,
+      "ftn_missing": 3,
+      "games": 17,
+      "offense_plays": 1101,
+      "output": "PIT-2022.json",
+      "output_sha256": "75c0c52070857aa1d1b0e732cd9a722a3ff5b9f9ec690e757b8922d47cfffd75",
+      "participation_joined": 2109,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.002727,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 3
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 3
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_02_NE_PIT",
+            "old_game_id": "2022091806",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2970",
+            "play_type": "pass",
+            "week": 2
+          },
+          {
+            "game_id": "2022_12_PIT_IND",
+            "old_game_id": "2022112800",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3239",
+            "play_type": "pass",
+            "week": 12
+          },
+          {
+            "game_id": "2022_18_CLE_PIT",
+            "old_game_id": "2023010810",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3578",
+            "play_type": "pass",
+            "week": 18
+          }
+        ],
+        "disagreement_weeks": {
+          "2": 1,
+          "12": 1,
+          "18": 1
+        },
+        "net_difference_plays": 3,
+        "paired_plays": 1100,
+        "participation_share": 0.680909,
+        "pbp_0_participation_shotgun_count": 3,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.678182,
+        "source_disagreement_count": 3
+      },
+      "team": "PIT"
+    },
+    {
+      "defense_plays": 1017,
+      "ftn_joined": 2044,
+      "ftn_missing": 3,
+      "games": 17,
+      "offense_plays": 1030,
+      "output": "SF-2022.json",
+      "output_sha256": "b25f9aa397a83014580abf11be35988afaf0a0b6fc44e6492ab69f5cf9d0d919",
+      "participation_joined": 2047,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.000971,
+        "disagreement_formation_counts": {
+          "EMPTY": 1
+        },
+        "disagreement_games": 1,
+        "disagreement_play_type_counts": {
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_SF_CHI",
+            "old_game_id": "2022091102",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "1493",
+            "play_type": "run",
+            "week": 1
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 1
+        },
+        "net_difference_plays": 1,
+        "paired_plays": 1030,
+        "participation_share": 0.621359,
+        "pbp_0_participation_shotgun_count": 1,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.620388,
+        "source_disagreement_count": 1
+      },
+      "team": "SF"
+    },
+    {
+      "defense_plays": 1102,
+      "ftn_joined": 2130,
+      "ftn_missing": 5,
+      "games": 17,
+      "offense_plays": 1033,
+      "output": "SEA-2022.json",
+      "output_sha256": "fe6a903d17318848db6121c86830cc1cd2f8d225859e62b3146337e4c2d15f92",
+      "participation_joined": 2135,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.00097,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 1
+        },
+        "disagreement_games": 1,
+        "disagreement_play_type_counts": {
+          "pass": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_10_SEA_TB",
+            "old_game_id": "2022111300",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3122",
+            "play_type": "pass",
+            "week": 10
+          }
+        ],
+        "disagreement_weeks": {
+          "10": 1
+        },
+        "net_difference_plays": 1,
+        "paired_plays": 1031,
+        "participation_share": 0.684772,
+        "pbp_0_participation_shotgun_count": 1,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.683802,
+        "source_disagreement_count": 1
+      },
+      "team": "SEA"
+    },
+    {
+      "defense_plays": 1062,
+      "ftn_joined": 2199,
+      "ftn_missing": 9,
+      "games": 17,
+      "offense_plays": 1146,
+      "output": "TB-2022.json",
+      "output_sha256": "e7d58b8b217da46c938c7f9d3b7f998339b28a3009ea9b1d05c7a5aaa55de1a5",
+      "participation_joined": 2208,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.006987,
+        "disagreement_formation_counts": {
+          "EMPTY": 3,
+          "SHOTGUN": 5
+        },
+        "disagreement_games": 5,
+        "disagreement_play_type_counts": {
+          "pass": 7,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_03_GB_TB",
+            "old_game_id": "2022092512",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3913",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_05_ATL_TB",
+            "old_game_id": "2022100908",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2688",
+            "play_type": "pass",
+            "week": 5
+          },
+          {
+            "game_id": "2022_06_TB_PIT",
+            "old_game_id": "2022101607",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3839",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_08_BAL_TB",
+            "old_game_id": "2022102700",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "779",
+            "play_type": "pass",
+            "week": 8
+          },
+          {
+            "game_id": "2022_08_BAL_TB",
+            "old_game_id": "2022102700",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4313",
+            "play_type": "run",
+            "week": 8
+          },
+          {
+            "game_id": "2022_17_CAR_TB",
+            "old_game_id": "2023010108",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "919",
+            "play_type": "pass",
+            "week": 17
+          },
+          {
+            "game_id": "2022_17_CAR_TB",
+            "old_game_id": "2023010108",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3062",
+            "play_type": "pass",
+            "week": 17
+          },
+          {
+            "game_id": "2022_17_CAR_TB",
+            "old_game_id": "2023010108",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3468",
+            "play_type": "pass",
+            "week": 17
+          }
+        ],
+        "disagreement_weeks": {
+          "3": 1,
+          "5": 1,
+          "6": 1,
+          "8": 2,
+          "17": 3
+        },
+        "net_difference_plays": 8,
+        "paired_plays": 1145,
+        "participation_share": 0.69869,
+        "pbp_0_participation_shotgun_count": 8,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.691703,
+        "source_disagreement_count": 8
+      },
+      "team": "TB"
+    },
+    {
+      "defense_plays": 1092,
+      "ftn_joined": 2067,
+      "ftn_missing": 4,
+      "games": 17,
+      "offense_plays": 979,
+      "output": "TEN-2022.json",
+      "output_sha256": "c87f63c67d6bde1b626c5ffe4c16472993b2158aba75777cb95212faa75a7280",
+      "participation_joined": 2071,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.004086,
+        "disagreement_formation_counts": {
+          "SHOTGUN": 1,
+          "WILDCAT": 3
+        },
+        "disagreement_games": 3,
+        "disagreement_play_type_counts": {
+          "pass": 1,
+          "run": 3
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_05_TEN_WAS",
+            "old_game_id": "2022100909",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2711",
+            "play_type": "run",
+            "week": 5
+          },
+          {
+            "game_id": "2022_14_JAX_TEN",
+            "old_game_id": "2022121106",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3710",
+            "play_type": "pass",
+            "week": 14
+          },
+          {
+            "game_id": "2022_16_HOU_TEN",
+            "old_game_id": "2022122407",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "66",
+            "play_type": "run",
+            "week": 16
+          },
+          {
+            "game_id": "2022_16_HOU_TEN",
+            "old_game_id": "2022122407",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2121",
+            "play_type": "run",
+            "week": 16
+          }
+        ],
+        "disagreement_weeks": {
+          "5": 1,
+          "14": 1,
+          "16": 2
+        },
+        "net_difference_plays": 4,
+        "paired_plays": 979,
+        "participation_share": 0.561798,
+        "pbp_0_participation_shotgun_count": 4,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.557712,
+        "source_disagreement_count": 4
+      },
+      "team": "TEN"
+    },
+    {
+      "defense_plays": 983,
+      "ftn_joined": 2112,
+      "ftn_missing": 6,
+      "games": 17,
+      "offense_plays": 1135,
+      "output": "WAS-2022.json",
+      "output_sha256": "3811c9b1f1cf04b4c8c65f646125fd2be85dc33acd83e2cba56646fd5a8e6f3f",
+      "participation_joined": 2118,
+      "participation_missing": 0,
+      "season": 2022,
+      "shotgun_check": {
+        "absolute_difference": 0.007048,
+        "disagreement_formation_counts": {
+          "EMPTY": 1,
+          "SHOTGUN": 6,
+          "WILDCAT": 1
+        },
+        "disagreement_games": 5,
+        "disagreement_play_type_counts": {
+          "pass": 7,
+          "run": 1
+        },
+        "disagreement_source_rows": [
+          {
+            "game_id": "2022_01_JAX_WAS",
+            "old_game_id": "2022091109",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3622",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_01_JAX_WAS",
+            "old_game_id": "2022091109",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4257",
+            "play_type": "pass",
+            "week": 1
+          },
+          {
+            "game_id": "2022_02_WAS_DET",
+            "old_game_id": "2022091802",
+            "participation_formation": "WILDCAT",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2635",
+            "play_type": "run",
+            "week": 2
+          },
+          {
+            "game_id": "2022_02_WAS_DET",
+            "old_game_id": "2022091802",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "2681",
+            "play_type": "pass",
+            "week": 2
+          },
+          {
+            "game_id": "2022_02_WAS_DET",
+            "old_game_id": "2022091802",
+            "participation_formation": "EMPTY",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3158",
+            "play_type": "pass",
+            "week": 2
+          },
+          {
+            "game_id": "2022_03_PHI_WAS",
+            "old_game_id": "2022092508",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "4172",
+            "play_type": "pass",
+            "week": 3
+          },
+          {
+            "game_id": "2022_06_WAS_CHI",
+            "old_game_id": "2022101300",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3195",
+            "play_type": "pass",
+            "week": 6
+          },
+          {
+            "game_id": "2022_16_WAS_SF",
+            "old_game_id": "2022122408",
+            "participation_formation": "SHOTGUN",
+            "participation_shotgun_mapped": true,
+            "pbp_shotgun": false,
+            "play_id": "3537",
+            "play_type": "pass",
+            "week": 16
+          }
+        ],
+        "disagreement_weeks": {
+          "1": 2,
+          "2": 3,
+          "3": 1,
+          "6": 1,
+          "16": 1
+        },
+        "net_difference_plays": 8,
+        "paired_plays": 1135,
+        "participation_share": 0.726872,
+        "pbp_0_participation_shotgun_count": 8,
+        "pbp_1_participation_other_formation_count": 0,
+        "pbp_share": 0.719824,
+        "source_disagreement_count": 8
+      },
+      "team": "WAS"
+    }
+  ]
+}

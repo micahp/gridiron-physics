@@ -1,0 +1,292 @@
+{
+  "inputs_sha256": {
+    "ftn_charting": "6faae8118cc13ce62589210d553733128ed35e558671009b4a7a8fc5c674c2cb",
+    "participation": "b1f436a98b2a7759eb4ed1181e072a35c2666f9aeb356a49c943d28d6be6b0b9",
+    "pbp": "23370d5d10f8104d80d46a1fc5e61f4f6f5a3263fe96fe2dd629913cfcb08c06"
+  },
+  "r1_below_gate3": [],
+  "r1_below_new_population": [],
+  "r1_denominators_no_larger_than_gate3": true,
+  "r1_threshold": 0.99,
+  "season": 2024,
+  "stats": {
+    "hierarchy_mismatch": 0,
+    "matched": 33204,
+    "outside_population_scrimmage": 266,
+    "population_rows": 33204,
+    "population_rows_not_found": 0,
+    "r1_plays_with_both_values": 32951,
+    "rev3": {
+      "population_not_in_rev3": 0,
+      "rev3_not_in_population": 246,
+      "rev3_not_in_population_by_pbp_class": {
+        "pass, two_point=0, fumble=0": 3,
+        "pass, two_point=1, fumble=0": 99,
+        "run, two_point=0, fumble=1": 108,
+        "run, two_point=1, fumble=0": 36
+      },
+      "rev3_not_in_population_unclassified": 0,
+      "shared": 33204,
+      "source_mismatch": 0,
+      "value_mismatch": 0
+    }
+  },
+  "teams": {
+    "ARI": {
+      "gate_agree": 1002,
+      "gate_both": 1002,
+      "gate_rate": 1.0,
+      "new_agree": 992,
+      "new_both": 992,
+      "new_rate": 1.0
+    },
+    "ATL": {
+      "gate_agree": 1032,
+      "gate_both": 1032,
+      "gate_rate": 1.0,
+      "new_agree": 1021,
+      "new_both": 1021,
+      "new_rate": 1.0
+    },
+    "BAL": {
+      "gate_agree": 995,
+      "gate_both": 995,
+      "gate_rate": 1.0,
+      "new_agree": 989,
+      "new_both": 989,
+      "new_rate": 1.0
+    },
+    "BUF": {
+      "gate_agree": 1005,
+      "gate_both": 1005,
+      "gate_rate": 1.0,
+      "new_agree": 1003,
+      "new_both": 1003,
+      "new_rate": 1.0
+    },
+    "CAR": {
+      "gate_agree": 987,
+      "gate_both": 987,
+      "gate_rate": 1.0,
+      "new_agree": 982,
+      "new_both": 982,
+      "new_rate": 1.0
+    },
+    "CHI": {
+      "gate_agree": 1059,
+      "gate_both": 1059,
+      "gate_rate": 1.0,
+      "new_agree": 1046,
+      "new_both": 1046,
+      "new_rate": 1.0
+    },
+    "CIN": {
+      "gate_agree": 1069,
+      "gate_both": 1069,
+      "gate_rate": 1.0,
+      "new_agree": 1064,
+      "new_both": 1064,
+      "new_rate": 1.0
+    },
+    "CLE": {
+      "gate_agree": 1121,
+      "gate_both": 1121,
+      "gate_rate": 1.0,
+      "new_agree": 1110,
+      "new_both": 1110,
+      "new_rate": 1.0
+    },
+    "DAL": {
+      "gate_agree": 1093,
+      "gate_both": 1093,
+      "gate_rate": 1.0,
+      "new_agree": 1085,
+      "new_both": 1085,
+      "new_rate": 1.0
+    },
+    "DEN": {
+      "gate_agree": 1036,
+      "gate_both": 1036,
+      "gate_rate": 1.0,
+      "new_agree": 1032,
+      "new_both": 1032,
+      "new_rate": 1.0
+    },
+    "DET": {
+      "gate_agree": 1097,
+      "gate_both": 1097,
+      "gate_rate": 1.0,
+      "new_agree": 1095,
+      "new_both": 1095,
+      "new_rate": 1.0
+    },
+    "GB": {
+      "gate_agree": 1022,
+      "gate_both": 1022,
+      "gate_rate": 1.0,
+      "new_agree": 1012,
+      "new_both": 1012,
+      "new_rate": 1.0
+    },
+    "HOU": {
+      "gate_agree": 1045,
+      "gate_both": 1045,
+      "gate_rate": 1.0,
+      "new_agree": 1041,
+      "new_both": 1041,
+      "new_rate": 1.0
+    },
+    "IND": {
+      "gate_agree": 1031,
+      "gate_both": 1033,
+      "gate_rate": 0.998064,
+      "new_agree": 1023,
+      "new_both": 1025,
+      "new_rate": 0.998049
+    },
+    "JAX": {
+      "gate_agree": 991,
+      "gate_both": 991,
+      "gate_rate": 1.0,
+      "new_agree": 981,
+      "new_both": 981,
+      "new_rate": 1.0
+    },
+    "KC": {
+      "gate_agree": 1067,
+      "gate_both": 1067,
+      "gate_rate": 1.0,
+      "new_agree": 1064,
+      "new_both": 1064,
+      "new_rate": 1.0
+    },
+    "LA": {
+      "gate_agree": 1027,
+      "gate_both": 1027,
+      "gate_rate": 1.0,
+      "new_agree": 1021,
+      "new_both": 1021,
+      "new_rate": 1.0
+    },
+    "LAC": {
+      "gate_agree": 953,
+      "gate_both": 953,
+      "gate_rate": 1.0,
+      "new_agree": 946,
+      "new_both": 946,
+      "new_rate": 1.0
+    },
+    "LV": {
+      "gate_agree": 1053,
+      "gate_both": 1053,
+      "gate_rate": 1.0,
+      "new_agree": 1043,
+      "new_both": 1043,
+      "new_rate": 1.0
+    },
+    "MIA": {
+      "gate_agree": 1074,
+      "gate_both": 1074,
+      "gate_rate": 1.0,
+      "new_agree": 1063,
+      "new_both": 1063,
+      "new_rate": 1.0
+    },
+    "MIN": {
+      "gate_agree": 1028,
+      "gate_both": 1028,
+      "gate_rate": 1.0,
+      "new_agree": 1024,
+      "new_both": 1024,
+      "new_rate": 1.0
+    },
+    "NE": {
+      "gate_agree": 1019,
+      "gate_both": 1021,
+      "gate_rate": 0.998041,
+      "new_agree": 1009,
+      "new_both": 1011,
+      "new_rate": 0.998022
+    },
+    "NO": {
+      "gate_agree": 1025,
+      "gate_both": 1025,
+      "gate_rate": 1.0,
+      "new_agree": 1017,
+      "new_both": 1017,
+      "new_rate": 1.0
+    },
+    "NYG": {
+      "gate_agree": 1049,
+      "gate_both": 1049,
+      "gate_rate": 1.0,
+      "new_agree": 1042,
+      "new_both": 1042,
+      "new_rate": 1.0
+    },
+    "NYJ": {
+      "gate_agree": 1013,
+      "gate_both": 1013,
+      "gate_rate": 1.0,
+      "new_agree": 1002,
+      "new_both": 1002,
+      "new_rate": 1.0
+    },
+    "PHI": {
+      "gate_agree": 1093,
+      "gate_both": 1093,
+      "gate_rate": 1.0,
+      "new_agree": 1083,
+      "new_both": 1083,
+      "new_rate": 1.0
+    },
+    "PIT": {
+      "gate_agree": 1065,
+      "gate_both": 1065,
+      "gate_rate": 1.0,
+      "new_agree": 1057,
+      "new_both": 1057,
+      "new_rate": 1.0
+    },
+    "SEA": {
+      "gate_agree": 985,
+      "gate_both": 985,
+      "gate_rate": 1.0,
+      "new_agree": 974,
+      "new_both": 974,
+      "new_rate": 1.0
+    },
+    "SF": {
+      "gate_agree": 1014,
+      "gate_both": 1014,
+      "gate_rate": 1.0,
+      "new_agree": 1010,
+      "new_both": 1010,
+      "new_rate": 1.0
+    },
+    "TB": {
+      "gate_agree": 1025,
+      "gate_both": 1025,
+      "gate_rate": 1.0,
+      "new_agree": 1018,
+      "new_both": 1018,
+      "new_rate": 1.0
+    },
+    "TEN": {
+      "gate_agree": 1028,
+      "gate_both": 1028,
+      "gate_rate": 1.0,
+      "new_agree": 1015,
+      "new_both": 1015,
+      "new_rate": 1.0
+    },
+    "WAS": {
+      "gate_agree": 1091,
+      "gate_both": 1091,
+      "gate_rate": 1.0,
+      "new_agree": 1083,
+      "new_both": 1083,
+      "new_rate": 1.0
+    }
+  }
+}
