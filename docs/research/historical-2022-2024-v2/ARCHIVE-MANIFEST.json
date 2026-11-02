@@ -1,0 +1,58 @@
+{
+ "archive_bytes": 70419160,
+ "archive_file": "/root/gridiron-playbook-archives/historical-2022-2024-v2-9e979e62b0206e2f5ef71cf9d023d6d0c94d828cbeb954b4718e44151243705e.tar.gz",
+ "archive_format": "tar.gz, owner 0:0, sorted names, gzip -n -6, root directory historical-2022-2024-v2",
+ "artifact": "historical-2022-2024-v2",
+ "builder": {
+  "commit": "b907da44a55920ec4d30979a0e008e3b4965e5fe",
+  "file": "pipeline/build_playbooks.py",
+  "sha256": "d92bdd2b22da45084d323b2efacba767e76bd27f34541744d6e4c2256f167fed"
+ },
+ "cde_builder": {
+  "commit": "8d57a5de7511a5e02f40e2c033a5dc4852776be1",
+  "file": "pipeline/build_cde_prior.py"
+ },
+ "cde_prior": {
+  "file": "cde-prior-2022-2024-v2.json",
+  "sha256": "00e3c8b22db60233db7447517409d461ea579ce13d80f3aaca2ab55243852a27"
+ },
+ "consumer_pin_commit": "6559cd238284e25958d174e631a76aa4c0f551ff",
+ "files": 114,
+ "not_in_archive": [
+  "raw PBP, participation and FTN inputs (pinned in source_pins)",
+  "original v1 build at /root/gridiron-playbook-builds/historical-2022-2024 (kept unchanged)",
+  "rev3 comparison profiles"
+ ],
+ "restore": "docs/research/historical-2022-2024-v2/RESTORE.md; pipeline/restore_check_historical.sh",
+ "restore_check": {
+  "consumer_tests": "8 ok",
+  "date": "2026-11-02",
+  "files": 114,
+  "result": "pass"
+ },
+ "sha256sums_txt_sha256": "99513e2feab7ba8dd66573f8a0d4c07c37424eba574f689c4954a70b44ea52d5",
+ "source_pins": {
+  "2022": {
+   "ftn_charting": "80e13831525f726cb3befb7eb62aa6ea8bf55d36080fcf09fdddd7c578f3b200",
+   "participation": "37eae0a8c388d0974c6df9a1f9a1d01f09f63a21440d3b03d7f208c1438c51e4",
+   "pbp": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4"
+  },
+  "2023": {
+   "ftn_charting": "6045bbca32c1f61d32d9cf66e7cf6355f583b90c8ac2f5ed155d733ec335e8d7",
+   "participation": "ad01aeb4045ee19a4f086ff38b52b14c8f427d3401e529c3078a4545921650a9",
+   "pbp": "4649804ee0f0a40b41e51ec75a1ce921949d7fab5459213488656b92f78560e8"
+  },
+  "2024": {
+   "ftn_charting": "6faae8118cc13ce62589210d553733128ed35e558671009b4a7a8fc5c674c2cb",
+   "participation": "b1f436a98b2a7759eb4ed1181e072a35c2666f9aeb356a49c943d28d6be6b0b9",
+   "pbp": "23370d5d10f8104d80d46a1fc5e61f4f6f5a3263fe96fe2dd629913cfcb08c06"
+  }
+ },
+ "storage": {
+  "immutable": "chattr +i on the archive",
+  "location": "/root/gridiron-playbook-archives",
+  "modes": "directory 0700 root, archive 0400 root",
+  "off_box_copy": "none: no durable target has been named"
+ },
+ "version_id": "sha256:9e979e62b0206e2f5ef71cf9d023d6d0c94d828cbeb954b4718e44151243705e"
+}
