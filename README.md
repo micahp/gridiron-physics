@@ -30,7 +30,31 @@ pipeline/build_game.py   ESPN + nflverse charting -> web/data/game.json play scr
 engine/                  physics + director, shared by browser and Node    (docs/PHYSICS.md)
 web/                     three.js renderer and UI
 test/validate.mjs        end-spot and plausibility checks
+scripts/audit-player-movement.mjs   run every play of a game and flag movement that looks wrong
 ```
+
+## Player movement and brains
+
+Every play is 22 bodies. Each one runs a brain (a mode in `engine/play.js`) that picks where he wants to be and how hard to push. The physics moves the body; the brain decides the assignment.
+
+- **Anchors.** Each team's formation is the starting point. Every scrimmage player holds his set point until the snap, so nobody moves before the ball is live.
+- **Pass protection.** Each lineman is paired with the defender in front of him (LT with LEDGE, LG with LDT, RG with RDT, RT with REDGE, and C with NB when a nose is on the line) and drives toward where that defender is going. A blocker with no one in front of him takes the nearest free rusher. Run blocks use the same pairing.
+- **`rush`.** Pass rushers go at the passer. Edge rushers arc around the tackle, and a rusher held by a blocker works around him.
+- **`fit`.** Run defenders key the back after a reaction delay of 0.25 to 0.5 s (set by awareness), go to their landmark, and take an angle on the carrier only when he is within 7 yd or past the line. Linemen hold their gap, linebackers flow to the hole, corners set the edge or fill the cutback, safeties fill the alley.
+- **`zone`.** Safeties, and any defender with no man to cover, sit in their zone and pick up a receiver who enters it. They break on the ball only when it lands in the zone or they are the ball hawk.
+- **`cover_man`.** A defender trails his man with cushion and inside leverage. The map is MLB on the RB, WLB on the TE, the corners on WR1 and WR2, and NB on WR3. Known gap: the cushion shrinks by 2.2 m/s and stops at 1.2 m, so a trailing linebacker is about 1 s from his man's hip whatever the route. When the man is a back who released into the flat, the cushion sits in the passer's pocket, which is how an MLB ends up there.
+- **`pursue` and `tackle_to`.** After a catch or a handoff, defenders go to the carrier's path. This is still a beeline with no reaction delay, and it is a known gap.
+
+How real players move is in [docs/NFL-ROLE-MOVEMENT-REFERENCE-2026-11-01.md](docs/NFL-ROLE-MOVEMENT-REFERENCE-2026-11-01.md): BDB 2022 tracking, weeks 1 to 5 only (weeks 6 to 9 are the reserved holdout), joined to formations and FTN charting. The median peak speed is about 6.4 yd/s for WRs, 5.6 for RBs, 5.5 for safeties, 5.3 for corners, 5.0 for linebackers, 3.9 for DL, 3.6 for QBs, and 3.1 for OL.
+
+To check every play of a game for movement that looks wrong, run:
+
+```bash
+node scripts/audit-player-movement.mjs --record <envelope.json>                 # statistical replay (what the viewer shows)
+node scripts/audit-player-movement.mjs --record <envelope.json> --authority physics
+```
+
+Each flag is labelled `brain` (the player moved against his assignment) or `physics` (the body did something a body does not do, such as a sharp reversal or leaving the field). A flag is a lead to review, not a verdict.
 
 ## Data sources
 
