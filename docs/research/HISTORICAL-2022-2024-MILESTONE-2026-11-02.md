@@ -31,8 +31,9 @@ Ordinary plays matched on value and source: all of them, except one named source
 
 ## 2. Original versus rebuilt artifacts
 
-Source: `historical-2022-2024-v2/v1-v2-comparison.json` (machine-readable) and `classify_v1_v2` output (every profile change
-classed by meaning).
+Sources: `historical-2022-2024-v2/v1-v2-comparison.json` (machine-readable, from `pipeline/compare_historical_builds.py`) and
+`historical-2022-2024-v2/classify-v1-v2.txt` (every profile change classed by meaning, from
+`pipeline/classify_v1_v2_profile_changes.py`).
 
 | Artifact | What changed | Cause | Unexplained |
 |---|---|---|---:|
