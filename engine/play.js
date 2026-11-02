@@ -252,7 +252,6 @@ export function simulatePlay(game, S, ctx = {}) {
         const who = byId.get(pid);
         if (!who) continue;
         who.p = { x: s.x * YD, y: s.y * YD };
-        who.ai.snapP = { ...who.p };
         who.ai.snapV = { x: s.vx * YD, y: s.vy * YD };
       }
     }
@@ -1760,11 +1759,18 @@ export function simulatePlay(game, S, ctx = {}) {
     }
     updateTackle();
     W.step(DT, (p) => {
-      // physics with a tracked snap: the formation is pinned at its snap spot until the ball is snapped,
-      // then each player takes the pre-snap velocity he was tracked at
-      if (physics && ctx.snapState && p.ai.snapP) {
-        if (W.t < 0) { p.p = { ...p.ai.snapP }; p.v = { x: 0, y: 0 }; p.dv = { x: 0, y: 0 }; return; }
-        if (p.ai.snapV) { p.v = p.ai.snapV; p.ai.snapV = null; }
+      // Nobody moves before the snap: a scrimmage play starts from the set, so every player stands on his set point
+      // until the ball is snapped. Kicks keep their own clock.
+      if (W.t < 0 && p.ai.home && S.kindGroup !== 'kick') {
+        p.p = { ...p.ai.home };
+        p.v = { x: 0, y: 0 };
+        p.dv = { x: 0, y: 0 };
+        return;
+      }
+      // physics with a tracked snap: each tracked player takes the pre-snap velocity he was tracked at
+      if (physics && ctx.snapState && p.ai.snapV) {
+        p.v = p.ai.snapV;
+        p.ai.snapV = null;
       }
       if (S.kindGroup === 'kick' && p.mode !== 'carry' && p.mode !== 'post' && p.mode !== 'pursue' && p.mode !== 'tackle_to') {
         if (kickBrain(p)) return;
