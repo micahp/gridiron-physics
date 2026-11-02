@@ -1,0 +1,2197 @@
+{
+  "manifests": {
+    "2022": {
+      "by_pattern": {
+        "/build_report_sha256": 1,
+        "/builder_sha256": 1,
+        "/team_seasons[]/output_sha256": 31,
+        "/team_seasons[]/shotgun_check/absolute_difference": 31
+      },
+      "examples": {
+        "/build_report_sha256": [
+          {
+            "old_new": [
+              "2db16d65b0b0e9bdcfd8f49505672e408ae6ff1efc57e406c32a2d8fb57cdd2f",
+              "b87ec898dba7ac3c215cb57ff236385306923813419275ad529b6d7196dcaafd"
+            ],
+            "path": "/build_report_sha256"
+          }
+        ],
+        "/builder_sha256": [
+          {
+            "old_new": [
+              "facd9f51f395206d76572af8d10eeb1617e4b8313e00e9609f282eca8613874d",
+              "d92bdd2b22da45084d323b2efacba767e76bd27f34541744d6e4c2256f167fed"
+            ],
+            "path": "/builder_sha256"
+          }
+        ],
+        "/team_seasons[]/output_sha256": [
+          {
+            "old_new": [
+              "9f19fade124e1aeb74aee0d93cdb675a8eb8ee7b416089136daf3d6cc876ce4e",
+              "bf63fb4f2249c7d7b9be1225f03dae7aeb5fda8d7b86a8ab23f1707aaa68c195"
+            ],
+            "path": "/team_seasons[0]/output_sha256"
+          },
+          {
+            "old_new": [
+              "4434a313c37b9a78da9d4e9023fb979bb3ba8ee86cf97030675f60a6432b96bb",
+              "53a6b3fa0390dcf05bdcf2176bb88114caff3301079b2834cd7de787feaac31d"
+            ],
+            "path": "/team_seasons[1]/output_sha256"
+          },
+          {
+            "old_new": [
+              "cebd507a365c8b47a4a53e64b3ee83d6f9261cb32723e863b28a55228a5f4ec4",
+              "caffd72abfb5d372046929becf8a0baf4761aabbf71e915079511d206c32a708"
+            ],
+            "path": "/team_seasons[2]/output_sha256"
+          },
+          {
+            "old_new": [
+              "90cfaa8aac6cf64ab91839d307a6fc4f30a2b01d6bfae27d1eda804c53b08fdf",
+              "289c79624677f5adbd9dc1456944b29960dd3ac256a6fe167cc7e0828b079597"
+            ],
+            "path": "/team_seasons[3]/output_sha256"
+          },
+          {
+            "old_new": [
+              "6c0e7532b308f6db129dfb8e2da9a3a02d18818d8ef59d6aa2de07819033f428",
+              "d1395bb75233dd075e0bb21b7797dc84cf7d907d8c90de113a0e9b827243225f"
+            ],
+            "path": "/team_seasons[4]/output_sha256"
+          }
+        ],
+        "/team_seasons[]/shotgun_check/absolute_difference": [
+          {
+            "old_new": [
+              0.007018,
+              0.007017543859649145
+            ],
+            "path": "/team_seasons[0]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.003,
+              0.0030000000000000027
+            ],
+            "path": "/team_seasons[1]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.004854,
+              0.004854368932038833
+            ],
+            "path": "/team_seasons[2]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.002947,
+              0.0029469548133594925
+            ],
+            "path": "/team_seasons[3]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.003093,
+              0.003092783505154739
+            ],
+            "path": "/team_seasons[4]/shotgun_check/absolute_difference"
+          }
+        ]
+      }
+    },
+    "2023": {
+      "by_pattern": {
+        "/build_report_sha256": 1,
+        "/builder_sha256": 1,
+        "/nonreconciling_shotgun_team_seasons[]/absolute_difference": 6,
+        "/team_seasons[]/output_sha256": 32,
+        "/team_seasons[]/shotgun_check/absolute_difference": 32
+      },
+      "examples": {
+        "/build_report_sha256": [
+          {
+            "old_new": [
+              "8e520dba440d838799ef9fc924847223c586673fa5e7983fbc79437498031e97",
+              "fea939c4d5d14e4dd134df2ca4c2dbbcbfe40820231ed6ba795a4f2a6b5d8c25"
+            ],
+            "path": "/build_report_sha256"
+          }
+        ],
+        "/builder_sha256": [
+          {
+            "old_new": [
+              "facd9f51f395206d76572af8d10eeb1617e4b8313e00e9609f282eca8613874d",
+              "d92bdd2b22da45084d323b2efacba767e76bd27f34541744d6e4c2256f167fed"
+            ],
+            "path": "/builder_sha256"
+          }
+        ],
+        "/nonreconciling_shotgun_team_seasons[]/absolute_difference": [
+          {
+            "old_new": [
+              0.010309,
+              0.010309278350515427
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[0]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.012788,
+              0.012787723785166238
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[1]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.013465,
+              0.013464991023339312
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[2]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.011823,
+              0.011822660098522175
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[3]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.012416,
+              0.012416427889207271
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[4]/absolute_difference"
+          }
+        ],
+        "/team_seasons[]/output_sha256": [
+          {
+            "old_new": [
+              "a25b6b42983480d2296c0437831ee43aca74c501c592f1c1bca4025e5c23dd07",
+              "977a115ffa21add620a61a0f7c9ff29278f5b84edec1e73caf031243a6d19ae8"
+            ],
+            "path": "/team_seasons[0]/output_sha256"
+          },
+          {
+            "old_new": [
+              "c2c01ae7e3250bcd063e9a5e13154a0dfa0b0edccce6eaa7f47cad6eb23b13ef",
+              "eacb0fa9ed5821cb6da7841173533ef1327377739dc41bbc382967520a981d27"
+            ],
+            "path": "/team_seasons[1]/output_sha256"
+          },
+          {
+            "old_new": [
+              "016c79273f5f4bbd44286338fdf74161b42574a1c53022195e0db776ff9a511e",
+              "8c134828043a77785c14ab71193cbbd7498539a6abd9b23220dcbf2b69d0e769"
+            ],
+            "path": "/team_seasons[2]/output_sha256"
+          },
+          {
+            "old_new": [
+              "f9a421473a3dc2072308d373c47aa9e2b136ea1d9cedee7653d0700e78213d04",
+              "4c09e590b0e55f0d5eb04f0014cabd5bb5075f96a43f6941384865a6103e33d9"
+            ],
+            "path": "/team_seasons[3]/output_sha256"
+          },
+          {
+            "old_new": [
+              "139e2504f0b4de3e3b2fd7ecbf5afc79462e018136f1a35a983c3809a7c48d0f",
+              "0a68699a8dc6e5c9621242b091ab5a16a777ca3caac732f2374b943600861673"
+            ],
+            "path": "/team_seasons[4]/output_sha256"
+          }
+        ],
+        "/team_seasons[]/shotgun_check/absolute_difference": [
+          {
+            "old_new": [
+              0.010309,
+              0.010309278350515427
+            ],
+            "path": "/team_seasons[0]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.00555,
+              0.005550416281221104
+            ],
+            "path": "/team_seasons[1]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.001892,
+              0.0018921475875118832
+            ],
+            "path": "/team_seasons[2]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.002747,
+              0.0027472527472527375
+            ],
+            "path": "/team_seasons[3]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.003673,
+              0.0036730945821855654
+            ],
+            "path": "/team_seasons[4]/shotgun_check/absolute_difference"
+          }
+        ]
+      }
+    },
+    "2024": {
+      "by_pattern": {
+        "/build_report_sha256": 1,
+        "/builder_sha256": 1,
+        "/nonreconciling_shotgun_team_seasons[]/absolute_difference": 10,
+        "/team_seasons[]/output_sha256": 32,
+        "/team_seasons[]/shotgun_check/absolute_difference": 32
+      },
+      "examples": {
+        "/build_report_sha256": [
+          {
+            "old_new": [
+              "4db54c8b808d384334eab65bdecb073c7d796e6def7f65bfed92cdf3562c385a",
+              "be9cc0671220e00e5085066d9b9dc884e64202388202519051f1b81f8b674f4d"
+            ],
+            "path": "/build_report_sha256"
+          }
+        ],
+        "/builder_sha256": [
+          {
+            "old_new": [
+              "facd9f51f395206d76572af8d10eeb1617e4b8313e00e9609f282eca8613874d",
+              "d92bdd2b22da45084d323b2efacba767e76bd27f34541744d6e4c2256f167fed"
+            ],
+            "path": "/builder_sha256"
+          }
+        ],
+        "/nonreconciling_shotgun_team_seasons[]/absolute_difference": [
+          {
+            "old_new": [
+              0.016053,
+              0.016052880075542952
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[0]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.010027,
+              0.010027347310847756
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[1]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.010649,
+              0.010648596321393922
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[2]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.010091,
+              0.010090817356205761
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[3]/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.010446,
+              0.010446343779677125
+            ],
+            "path": "/nonreconciling_shotgun_team_seasons[4]/absolute_difference"
+          }
+        ],
+        "/team_seasons[]/output_sha256": [
+          {
+            "old_new": [
+              "4fe17c5831bf78dbb1e7c2ea03a107790c677505bad094737bd82934d97d175d",
+              "945443661ff4a6eaabceecb6df5967b08bbf74832811abfddd4a41e37d228d22"
+            ],
+            "path": "/team_seasons[0]/output_sha256"
+          },
+          {
+            "old_new": [
+              "631222f19b0e0bd95db8d7f985122fa608ba0331c78007a24e9defd771a444f2",
+              "b765b12b356ce420d1735404bf4cd052718875598904bc2bd9a14a13ad43a48b"
+            ],
+            "path": "/team_seasons[1]/output_sha256"
+          },
+          {
+            "old_new": [
+              "5aad2b4b7e9e6932800c4d87ba09b5ec9d780c66115af4282a90e74a358e536e",
+              "b9448549c050255ce8a184c113752453c3ec7bf22f9cb90766d6a2732f244fda"
+            ],
+            "path": "/team_seasons[2]/output_sha256"
+          },
+          {
+            "old_new": [
+              "6e944e0ba0ed84aea905534def1fb2aa88bc6879793a2ee1000b9178d738367a",
+              "f77a87387313e74cfb9e64f5fcad0ff0c493f3fcbc89e456acb8e249aee47de3"
+            ],
+            "path": "/team_seasons[3]/output_sha256"
+          },
+          {
+            "old_new": [
+              "f5bc3ccd3ea126428df2f9f0aad3c5a36b4fa499f707ca6c94c2efcdd217ae75",
+              "fdb1ee61a5e6a0dc2e44f6a213164e33e082fdfce7d005ba7b6b3eeb57eb2bbf"
+            ],
+            "path": "/team_seasons[4]/output_sha256"
+          }
+        ],
+        "/team_seasons[]/shotgun_check/absolute_difference": [
+          {
+            "old_new": [
+              0.00679,
+              0.00678952473326877
+            ],
+            "path": "/team_seasons[0]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.003735,
+              0.0037348272642390157
+            ],
+            "path": "/team_seasons[1]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.004817,
+              0.004816955684007751
+            ],
+            "path": "/team_seasons[2]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.002985,
+              0.0029850746268657025
+            ],
+            "path": "/team_seasons[3]/shotgun_check/absolute_difference"
+          },
+          {
+            "old_new": [
+              0.008105,
+              0.008105369807497431
+            ],
+            "path": "/team_seasons[4]/shotgun_check/absolute_difference"
+          }
+        ]
+      }
+    }
+  },
+  "observations": {
+    "2022": {
+      "by_pattern": {},
+      "changed_records": 0,
+      "compared": 67540,
+      "examples": {},
+      "records_new": 67540,
+      "records_old": 67540
+    },
+    "2023": {
+      "by_pattern": {},
+      "changed_records": 0,
+      "compared": 67914,
+      "examples": {},
+      "records_new": 67914,
+      "records_old": 67914
+    },
+    "2024": {
+      "by_pattern": {},
+      "changed_records": 0,
+      "compared": 66940,
+      "examples": {},
+      "records_new": 66940,
+      "records_old": 66940
+    }
+  },
+  "profile_examples": {
+    "2022": {
+      "ARI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007018,
+            0.007017543859649145
+          ],
+          "path": "ARI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "ATL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003,
+            0.0030000000000000027
+          ],
+          "path": "ATL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "BAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004854,
+            0.004854368932038833
+          ],
+          "path": "BAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "BUF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002947,
+            0.0029469548133594925
+          ],
+          "path": "BUF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CAR-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003093,
+            0.003092783505154739
+          ],
+          "path": "CAR-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003046,
+            0.003045685279187804
+          ],
+          "path": "CHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.005808,
+            0.0058083252662148865
+          ],
+          "path": "CIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CLE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00091,
+            0.0009099181073703999
+          ],
+          "path": "CLE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002732,
+            0.002732240437158473
+          ],
+          "path": "DAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/ci95_wilson[]": [
+        {
+          "old_new": [
+            0.9855,
+            0.98673
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/ci95_wilson[0]"
+        },
+        {
+          "old_new": [
+            0.99626,
+            0.99687
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/ci95_wilson[1]"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/count": [
+        {
+          "old_new": [
+            1076,
+            1077
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/count"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/rate": [
+        {
+          "old_new": [
+            0.99262,
+            0.993542
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/rate"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids": [
+        {
+          "old_new": [
+            "length",
+            1076,
+            1077
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/game_id": [
+        {
+          "old_new": [
+            "2022_16_PHI_DAL",
+            "2022_15_DAL_JAX"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[886]/game_id"
+        },
+        {
+          "old_new": [
+            "2022_17_DAL_TEN",
+            "2022_16_PHI_DAL"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[953]/game_id"
+        },
+        {
+          "old_new": [
+            "2022_18_DAL_WAS",
+            "2022_17_DAL_TEN"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[1017]/game_id"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/old_game_id": [
+        {
+          "old_new": [
+            "2022122409",
+            "2022121803"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[886]/old_game_id"
+        },
+        {
+          "old_new": [
+            "2022122900",
+            "2022122409"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[953]/old_game_id"
+        },
+        {
+          "old_new": [
+            "2023010811",
+            "2022122900"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[1017]/old_game_id"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/play_id": [
+        {
+          "old_new": [
+            "4172",
+            "4021"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[883]/play_id"
+        },
+        {
+          "old_new": [
+            "4193",
+            "4172"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[884]/play_id"
+        },
+        {
+          "old_new": [
+            "4238",
+            "4193"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[885]/play_id"
+        },
+        {
+          "old_new": [
+            "55",
+            "4238"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[886]/play_id"
+        },
+        {
+          "old_new": [
+            "76",
+            "55"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[887]/play_id"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/ci95_wilson[]": [
+        {
+          "old_new": [
+            0.00374,
+            0.00313
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/ci95_wilson[0]"
+        },
+        {
+          "old_new": [
+            0.0145,
+            0.01327
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/ci95_wilson[1]"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/count": [
+        {
+          "old_new": [
+            8,
+            7
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/count"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/rate": [
+        {
+          "old_new": [
+            0.00738,
+            0.006458
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/rate"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids": [
+        {
+          "old_new": [
+            "length",
+            8,
+            7
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/game_id": [
+        {
+          "old_new": [
+            "2022_15_DAL_JAX",
+            "2022_17_DAL_TEN"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[3]/game_id"
+        },
+        {
+          "old_new": [
+            "2022_17_DAL_TEN",
+            "2022_18_DAL_WAS"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[4]/game_id"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/old_game_id": [
+        {
+          "old_new": [
+            "2022121803",
+            "2022122900"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[3]/old_game_id"
+        },
+        {
+          "old_new": [
+            "2022122900",
+            "2023010811"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[4]/old_game_id"
+        }
+      ],
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/play_id": [
+        {
+          "old_new": [
+            "4021",
+            "2703"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[3]/play_id"
+        },
+        {
+          "old_new": [
+            "2703",
+            "852"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[4]/play_id"
+        },
+        {
+          "old_new": [
+            "852",
+            "1368"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[5]/play_id"
+        },
+        {
+          "old_new": [
+            "1368",
+            "3983"
+          ],
+          "path": "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[6]/play_id"
+        }
+      ],
+      "DEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003738,
+            0.0037383177570093906
+          ],
+          "path": "DEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DET-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002783,
+            0.002782931354359919
+          ],
+          "path": "DET-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "GB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.001932,
+            0.0019323671497584183
+          ],
+          "path": "GB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "HOU-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00396,
+            0.003960396039603964
+          ],
+          "path": "HOU-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "IND-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004545,
+            0.004545454545454519
+          ],
+          "path": "IND-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "JAX-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007505,
+            0.007504690431519689
+          ],
+          "path": "JAX-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/ci95_wilson[]": [
+        {
+          "old_new": [
+            0.99167,
+            0.99311
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/ci95_wilson[0]"
+        },
+        {
+          "old_new": [
+            0.99903,
+            0.99948
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/ci95_wilson[1]"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/count": [
+        {
+          "old_new": [
+            1052,
+            1053
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/count"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/rate": [
+        {
+          "old_new": [
+            0.997156,
+            0.998104
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/rate"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids": [
+        {
+          "old_new": [
+            "length",
+            1052,
+            1053
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/game_id": [
+        {
+          "old_new": [
+            "2022_16_JAX_NYJ",
+            "2022_15_DAL_JAX"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[882]/game_id"
+        },
+        {
+          "old_new": [
+            "2022_17_JAX_HOU",
+            "2022_16_JAX_NYJ"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[949]/game_id"
+        },
+        {
+          "old_new": [
+            "2022_18_TEN_JAX",
+            "2022_17_JAX_HOU"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[1008]/game_id"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/old_game_id": [
+        {
+          "old_new": [
+            "2022122200",
+            "2022121803"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[882]/old_game_id"
+        },
+        {
+          "old_new": [
+            "2023010103",
+            "2022122200"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[949]/old_game_id"
+        },
+        {
+          "old_new": [
+            "2023010701",
+            "2023010103"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[1008]/old_game_id"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/play_id": [
+        {
+          "old_new": [
+            "4172",
+            "4021"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[879]/play_id"
+        },
+        {
+          "old_new": [
+            "4193",
+            "4172"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[880]/play_id"
+        },
+        {
+          "old_new": [
+            "4238",
+            "4193"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[881]/play_id"
+        },
+        {
+          "old_new": [
+            "57",
+            "4238"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[882]/play_id"
+        },
+        {
+          "old_new": [
+            "78",
+            "57"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[883]/play_id"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/ci95_wilson[]": [
+        {
+          "old_new": [
+            0.00097,
+            0.00052
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/ci95_wilson[0]"
+        },
+        {
+          "old_new": [
+            0.00833,
+            0.00689
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/ci95_wilson[1]"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/count": [
+        {
+          "old_new": [
+            3,
+            2
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/count"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/rate": [
+        {
+          "old_new": [
+            0.002844,
+            0.001896
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/rate"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids": [
+        {
+          "old_new": [
+            "length",
+            3,
+            2
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/game_id": [
+        {
+          "old_new": [
+            "2022_15_DAL_JAX",
+            "2022_16_JAX_NYJ"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[1]/game_id"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/old_game_id": [
+        {
+          "old_new": [
+            "2022121803",
+            "2022122200"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[1]/old_game_id"
+        }
+      ],
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/play_id": [
+        {
+          "old_new": [
+            "4021",
+            "1362"
+          ],
+          "path": "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[1]/play_id"
+        }
+      ],
+      "KC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.006458,
+            0.0064575645756457245
+          ],
+          "path": "KC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LAC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.001761,
+            0.0017605633802816323
+          ],
+          "path": "LAC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LV-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00382,
+            0.00382043935052534
+          ],
+          "path": "LV-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "MIA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004024,
+            0.004024144869215318
+          ],
+          "path": "MIA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "MIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003597,
+            0.003597122302158251
+          ],
+          "path": "MIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.005071,
+            0.005070993914807254
+          ],
+          "path": "NE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NO-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00398,
+            0.003980099502487566
+          ],
+          "path": "NO-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NYG-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007449,
+            0.007448789571694592
+          ],
+          "path": "NYG-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NYJ-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003774,
+            0.0037735849056603765
+          ],
+          "path": "NYJ-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "PHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00181,
+            0.0018099547511312153
+          ],
+          "path": "PHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "PIT-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002727,
+            0.0027272727272726893
+          ],
+          "path": "PIT-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "SEA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00097,
+            0.0009699321047526022
+          ],
+          "path": "SEA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "SF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.000971,
+            0.0009708737864076999
+          ],
+          "path": "SF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "TB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.006987,
+            0.006986899563318771
+          ],
+          "path": "TB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "TEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004086,
+            0.0040858018386108474
+          ],
+          "path": "TEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "WAS-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007048,
+            0.007048458149779724
+          ],
+          "path": "WAS-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ]
+    },
+    "2023": {
+      "ARI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.010309,
+            0.010309278350515427
+          ],
+          "path": "ARI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "ATL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00555,
+            0.005550416281221104
+          ],
+          "path": "ATL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "BAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.001892,
+            0.0018921475875118832
+          ],
+          "path": "BAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "BUF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002747,
+            0.0027472527472527375
+          ],
+          "path": "BUF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CAR-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003673,
+            0.0036730945821855654
+          ],
+          "path": "CAR-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003687,
+            0.0036866359447005337
+          ],
+          "path": "CHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003891,
+            0.0038910505836575737
+          ],
+          "path": "CIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CLE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.012788,
+            0.012787723785166238
+          ],
+          "path": "CLE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004533,
+            0.00453309156844961
+          ],
+          "path": "DAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.005994,
+            0.005994005994006013
+          ],
+          "path": "DEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DET-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.013465,
+            0.013464991023339312
+          ],
+          "path": "DET-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "GB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.001929,
+            0.0019286403085825299
+          ],
+          "path": "GB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "HOU-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.008357,
+            0.008356545961002881
+          ],
+          "path": "HOU-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "IND-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00369,
+            0.0036900369003690647
+          ],
+          "path": "IND-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "JAX-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.008189,
+            0.008189262966333044
+          ],
+          "path": "JAX-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "KC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007605,
+            0.0076045627376425395
+          ],
+          "path": "KC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.009174,
+            0.00917431192660545
+          ],
+          "path": "LA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LAC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.006387,
+            0.006386861313868564
+          ],
+          "path": "LAC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LV-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.001004,
+            0.0010040160642570406
+          ],
+          "path": "LV-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "MIA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007744,
+            0.007744433688286589
+          ],
+          "path": "MIA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "MIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004717,
+            0.004716981132075415
+          ],
+          "path": "MIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.011823,
+            0.011822660098522175
+          ],
+          "path": "NE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NO-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.009083,
+            0.009082652134423275
+          ],
+          "path": "NO-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NYG-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.012416,
+            0.012416427889207271
+          ],
+          "path": "NYG-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NYJ-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.013359,
+            0.013358778625954248
+          ],
+          "path": "NYJ-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "PHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.001818,
+            0.0018181818181818299
+          ],
+          "path": "PHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "PIT-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.001994,
+            0.001994017946161497
+          ],
+          "path": "PIT-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "SEA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004082,
+            0.004081632653061273
+          ],
+          "path": "SEA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "SF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.005035,
+            0.0050352467270896595
+          ],
+          "path": "SF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "TB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.009794,
+            0.009794319294809006
+          ],
+          "path": "TB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "TEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002041,
+            0.0020408163265306367
+          ],
+          "path": "TEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "WAS-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.005687,
+            0.005687203791469253
+          ],
+          "path": "WAS-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ]
+    },
+    "2024": {
+      "ARI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.00679,
+            0.00678952473326877
+          ],
+          "path": "ARI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "ATL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003735,
+            0.0037348272642390157
+          ],
+          "path": "ATL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "BAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004817,
+            0.004816955684007751
+          ],
+          "path": "BAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "BUF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002985,
+            0.0029850746268657025
+          ],
+          "path": "BUF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CAR-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.008105,
+            0.008105369807497431
+          ],
+          "path": "CAR-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.016053,
+            0.016052880075542952
+          ],
+          "path": "CHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.000935,
+            0.00093545369504211
+          ],
+          "path": "CIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "CLE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.009813,
+            0.009812667261373864
+          ],
+          "path": "CLE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.005489,
+            0.005489478499542622
+          ],
+          "path": "DAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.002896,
+            0.0028957528957529455
+          ],
+          "path": "DEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "DET-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.010027,
+            0.010027347310847756
+          ],
+          "path": "DET-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "GB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007828,
+            0.007827788649706457
+          ],
+          "path": "GB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "HOU-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.009569,
+            0.009569377990430561
+          ],
+          "path": "HOU-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "IND-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.010649,
+            0.010648596321393922
+          ],
+          "path": "IND-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "JAX-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.010091,
+            0.010090817356205761
+          ],
+          "path": "JAX-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "KC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007498,
+            0.007497656982193068
+          ],
+          "path": "KC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.005842,
+            0.0058422590068158975
+          ],
+          "path": "LA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LAC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.003012,
+            0.003012048192771122
+          ],
+          "path": "LAC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "LV-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.010446,
+            0.010446343779677125
+          ],
+          "path": "LV-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "MIA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.009311,
+            0.009310986964618295
+          ],
+          "path": "MIA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "MIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.006809,
+            0.006809338521400754
+          ],
+          "path": "MIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.012733,
+            0.012732615083251742
+          ],
+          "path": "NE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NO-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.016585,
+            0.01658536585365855
+          ],
+          "path": "NO-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NYG-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.015253,
+            0.015252621544327938
+          ],
+          "path": "NYG-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "NYJ-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.01382,
+            0.013820335636722691
+          ],
+          "path": "NYJ-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "PHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.006404,
+            0.006404391582799596
+          ],
+          "path": "PHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "PIT-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.008451,
+            0.008450704225352101
+          ],
+          "path": "PIT-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "SEA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.004912,
+            0.004911591355599265
+          ],
+          "path": "SEA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "SF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.008876,
+            0.00887573964497046
+          ],
+          "path": "SF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "TB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.011101,
+            0.011100832562442209
+          ],
+          "path": "TB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "TEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.008755,
+            0.008754863813229541
+          ],
+          "path": "TEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ],
+      "WAS-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": [
+        {
+          "old_new": [
+            0.007333,
+            0.007332722273143966
+          ],
+          "path": "WAS-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference"
+        }
+      ]
+    }
+  },
+  "profile_totals": {
+    "2022": {
+      "by_pattern": {
+        "ARI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "ATL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "BAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "BUF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CAR-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CLE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/ci95_wilson[]": 2,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/count": 1,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/rate": 1,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids": 1,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/game_id": 3,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/old_game_id": 3,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/play_id": 193,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/participation/ci95_wilson[]": 2,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/participation/count": 1,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/participation/rate": 1,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids": 1,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/game_id": 2,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/old_game_id": 2,
+        "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/play_id": 4,
+        "DEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DET-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "GB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "HOU-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "IND-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "JAX-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/ci95_wilson[]": 2,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/count": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/rate": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/game_id": 3,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/old_game_id": 3,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/play_id": 173,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/participation/ci95_wilson[]": 2,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/participation/count": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/participation/rate": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/game_id": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/old_game_id": 1,
+        "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/play_id": 1,
+        "KC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LAC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LV-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "MIA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "MIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NO-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NYG-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NYJ-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "PHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "PIT-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "SEA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "SF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "TB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "TEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "WAS-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+      },
+      "changed_fields": 440,
+      "files": 32
+    },
+    "2023": {
+      "by_pattern": {
+        "ARI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "ATL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "BAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "BUF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CAR-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CLE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DET-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "GB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "HOU-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "IND-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "JAX-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "KC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LAC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LV-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "MIA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "MIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NO-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NYG-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NYJ-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "PHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "PIT-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "SEA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "SF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "TB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "TEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "WAS-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+      },
+      "changed_fields": 32,
+      "files": 32
+    },
+    "2024": {
+      "by_pattern": {
+        "ARI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "ATL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "BAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "BUF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CAR-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "CLE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "DET-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "GB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "HOU-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "IND-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "JAX-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "KC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LAC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "LV-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "MIA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "MIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NO-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NYG-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "NYJ-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "PHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "PIT-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "SEA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "SF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "TB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "TEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+        "WAS-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+      },
+      "changed_fields": 32,
+      "files": 32
+    }
+  },
+  "profiles": {
+    "ARI-2022.json": {
+      "ARI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "ARI-2023.json": {
+      "ARI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "ARI-2024.json": {
+      "ARI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "ATL-2022.json": {
+      "ATL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "ATL-2023.json": {
+      "ATL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "ATL-2024.json": {
+      "ATL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "BAL-2022.json": {
+      "BAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "BAL-2023.json": {
+      "BAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "BAL-2024.json": {
+      "BAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "BUF-2022.json": {
+      "BUF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "BUF-2023.json": {
+      "BUF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "BUF-2024.json": {
+      "BUF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CAR-2022.json": {
+      "CAR-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CAR-2023.json": {
+      "CAR-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CAR-2024.json": {
+      "CAR-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CHI-2022.json": {
+      "CHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CHI-2023.json": {
+      "CHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CHI-2024.json": {
+      "CHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CIN-2022.json": {
+      "CIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CIN-2023.json": {
+      "CIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CIN-2024.json": {
+      "CIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CLE-2022.json": {
+      "CLE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CLE-2023.json": {
+      "CLE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "CLE-2024.json": {
+      "CLE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DAL-2022.json": {
+      "DAL-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/ci95_wilson[]": 2,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/count": 1,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/rate": 1,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids": 1,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/game_id": 3,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/old_game_id": 3,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/ftn/source_ids[]/play_id": 193,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/ci95_wilson[]": 2,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/count": 1,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/rate": 1,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids": 1,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/game_id": 2,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/old_game_id": 2,
+      "DAL-2022.json/defense/profile/shotgun_source/categories/participation/source_ids[]/play_id": 4
+    },
+    "DAL-2023.json": {
+      "DAL-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DAL-2024.json": {
+      "DAL-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DEN-2022.json": {
+      "DEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DEN-2023.json": {
+      "DEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DEN-2024.json": {
+      "DEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DET-2022.json": {
+      "DET-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DET-2023.json": {
+      "DET-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "DET-2024.json": {
+      "DET-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "GB-2022.json": {
+      "GB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "GB-2023.json": {
+      "GB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "GB-2024.json": {
+      "GB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "HOU-2022.json": {
+      "HOU-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "HOU-2023.json": {
+      "HOU-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "HOU-2024.json": {
+      "HOU-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "IND-2022.json": {
+      "IND-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "IND-2023.json": {
+      "IND-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "IND-2024.json": {
+      "IND-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "JAX-2022.json": {
+      "JAX-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/ci95_wilson[]": 2,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/count": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/rate": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/game_id": 3,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/old_game_id": 3,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/ftn/source_ids[]/play_id": 173,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/ci95_wilson[]": 2,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/count": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/rate": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/game_id": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/old_game_id": 1,
+      "JAX-2022.json/offense/profile/shotgun_source/categories/participation/source_ids[]/play_id": 1
+    },
+    "JAX-2023.json": {
+      "JAX-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "JAX-2024.json": {
+      "JAX-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "KC-2022.json": {
+      "KC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "KC-2023.json": {
+      "KC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "KC-2024.json": {
+      "KC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LA-2022.json": {},
+    "LA-2023.json": {
+      "LA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LA-2024.json": {
+      "LA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LAC-2022.json": {
+      "LAC-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LAC-2023.json": {
+      "LAC-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LAC-2024.json": {
+      "LAC-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LV-2022.json": {
+      "LV-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LV-2023.json": {
+      "LV-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "LV-2024.json": {
+      "LV-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "MIA-2022.json": {
+      "MIA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "MIA-2023.json": {
+      "MIA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "MIA-2024.json": {
+      "MIA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "MIN-2022.json": {
+      "MIN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "MIN-2023.json": {
+      "MIN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "MIN-2024.json": {
+      "MIN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NE-2022.json": {
+      "NE-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NE-2023.json": {
+      "NE-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NE-2024.json": {
+      "NE-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NO-2022.json": {
+      "NO-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NO-2023.json": {
+      "NO-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NO-2024.json": {
+      "NO-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NYG-2022.json": {
+      "NYG-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NYG-2023.json": {
+      "NYG-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NYG-2024.json": {
+      "NYG-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NYJ-2022.json": {
+      "NYJ-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NYJ-2023.json": {
+      "NYJ-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "NYJ-2024.json": {
+      "NYJ-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "PHI-2022.json": {
+      "PHI-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "PHI-2023.json": {
+      "PHI-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "PHI-2024.json": {
+      "PHI-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "PIT-2022.json": {
+      "PIT-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "PIT-2023.json": {
+      "PIT-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "PIT-2024.json": {
+      "PIT-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "SEA-2022.json": {
+      "SEA-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "SEA-2023.json": {
+      "SEA-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "SEA-2024.json": {
+      "SEA-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "SF-2022.json": {
+      "SF-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "SF-2023.json": {
+      "SF-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "SF-2024.json": {
+      "SF-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "TB-2022.json": {
+      "TB-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "TB-2023.json": {
+      "TB-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "TB-2024.json": {
+      "TB-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "TEN-2022.json": {
+      "TEN-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "TEN-2023.json": {
+      "TEN-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "TEN-2024.json": {
+      "TEN-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "WAS-2022.json": {
+      "WAS-2022.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "WAS-2023.json": {
+      "WAS-2023.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    },
+    "WAS-2024.json": {
+      "WAS-2024.json/coverage/participation_shotgun_reconciliation/absolute_difference": 1
+    }
+  },
+  "reports": {
+    "2022": {
+      "changed_line_count": 1,
+      "changed_line_numbers": [
+        44
+      ],
+      "new_lines": 69,
+      "old_lines": 69
+    },
+    "2023": {
+      "changed_line_count": 2,
+      "changed_line_numbers": [
+        30,
+        49
+      ],
+      "new_lines": 78,
+      "old_lines": 78
+    },
+    "2024": {
+      "changed_line_count": 6,
+      "changed_line_numbers": [
+        34,
+        46,
+        47,
+        49,
+        65,
+        73
+      ],
+      "new_lines": 82,
+      "old_lines": 82
+    }
+  }
+}
