@@ -1,7 +1,8 @@
 import { simulatePlay } from '../engine/play.js';
 
 /** Execute one selected scenario and preserve the director's support limits. */
-export function executeSelectedPlay(selection) {
+// options.authority: 'statistical_replay' (default) replays the recorded outcome; 'physics' lets the physics decide it.
+export function executeSelectedPlay(selection, options = {}) {
   const base = {
     schema_version: 'gridiron.play_execution.v1',
     selection_id: selection?.selection?.play_id ?? null,
@@ -16,7 +17,7 @@ export function executeSelectedPlay(selection) {
     if (!selection?.play || !selection?.players || !selection?.execution_contract) {
       throw new Error('selection is missing play, player, or support-contract inputs');
     }
-    const record = simulatePlay({ players: selection.players }, selection.play);
+    const record = simulatePlay({ players: selection.players }, selection.play, { authority: options.authority });
     if (!record) {
       return { ...base, failure: { code: 'unsupported_action', message: 'physics director returned no record' } };
     }

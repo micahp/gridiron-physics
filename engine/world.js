@@ -168,6 +168,7 @@ export class World {
     this.t = 0;
     this.ball = { x: 0, y: 0, z: 0.15, vx: 0, vy: 0, vz: 0, state: 'held', holder: null, k: 0, spin: 0, tumble: false, rot: 0 };
     this.engagements = [];
+    this.passThrough = null; // { pair, until }: teammates that do not collide, e.g. a QB and his back at the mesh
     this.wraps = [];
     this.events = [];
     this.biggestHit = null;
@@ -298,6 +299,7 @@ export class World {
       for (let j = i + 1; j < P.length; j++) {
         const b = P[j];
         if (b.down || a.engaged === b) continue;
+        if (this.passThrough && this.t < this.passThrough.until && this.passThrough.pair.includes(a) && this.passThrough.pair.includes(b)) continue;
         const dx = b.p.x - a.p.x, dy = b.p.y - a.p.y;
         const R = a.r + b.r;
         const d2 = dx * dx + dy * dy;
@@ -362,6 +364,8 @@ export class World {
   }
 
   step(dt, brains) {
+    // contact changes speed, so a tackle decision reads the speed a player had going in
+    for (const p of this.players) p.speedIn = p.speed;
     for (const p of this.players) brains(p);
     this.engagementForces();
     this.wrapForces(dt);

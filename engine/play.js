@@ -24,8 +24,15 @@ const unit = (x, y) => {
   return l > 1e-9 ? { x: x / l, y: y / l } : { x: 0, y: 0 };
 };
 const skill = (r) => 0.75 + (0.5 * ((r ?? 60) - 50)) / 50; // 50 -> 0.75, 99 -> 1.24
+// Seconds a defender takes to react to a throw or a run key: 0.25 s at AWR 99, 0.5 s at AWR 30.
+const reactionDelay = (p) => Math.min(0.5, Math.max(0.25, 0.25 + (0.25 * (99 - (p.R.AWR ?? 60))) / 69));
 
+// Two separate things share this engine, selected by ctx.authority:
+//   statistical_replay (default): the recorded outcome decides where the play ends, and the director
+//     forces the stop at the recorded spot. This is the replay of the statistical simulation.
+//   physics: nothing is forced. Contact, speed and the ratings decide where the play ends.
 export function simulatePlay(game, S, ctx = {}) {
+  const physics = (ctx.authority ?? 'statistical_replay') === 'physics';
   const rand = rng(S.id);
   const W = new World(rand);
   const dir = S.dir;
@@ -130,6 +137,32 @@ export function simulatePlay(game, S, ctx = {}) {
     const s = rem <= 0.05 ? p.vmax : Math.min(p.vmax, d / rem + 0.4);
     return { x: (dx / d) * s, y: (dy / d) * s };
   }
+  // A pursuer aims where the carrier will be, not where he is: the point on the carrier's line where a
+  // defender at his top speed arrives at the same moment. PUR sets how fully he takes that angle.
+  function pursuitAim(p, c, bounded = true) {
+    const rx = c.p.x - p.p.x, ry = c.p.y - p.p.y;
+    const vx = c.v.x, vy = c.v.y;
+    const a = vx * vx + vy * vy - p.vmax * p.vmax;
+    const b = 2 * (rx * vx + ry * vy);
+    const cc = rx * rx + ry * ry;
+    let tInt = null;
+    if (Math.abs(a) < 1e-6) {
+      if (b < 0) tInt = -cc / b;
+    } else {
+      const disc = b * b - 4 * a * cc;
+      if (disc >= 0) {
+        const roots = [(-b - Math.sqrt(disc)) / (2 * a), (-b + Math.sqrt(disc)) / (2 * a)].filter((x) => x > 0).sort((x, y) => x - y);
+        tInt = roots[0] ?? null;
+      }
+    }
+    if (tInt == null) return c.p;
+    // the tackle happens at the real end spot, so an angle is only taken when it meets the carrier there
+    const spot = c.ai.path?.[c.ai.path.length - 1];
+    const hit = { x: c.p.x + vx * tInt, y: c.p.y + vy * tInt };
+    if (bounded && !physics && spot && d2(hit, spot) > 3 * YD) return c.p;
+    const angle = Math.min(1, Math.max(0.2, ((p.R.PUR ?? 60) - 30) / 60));
+    return { x: c.p.x + vx * tInt * angle, y: c.p.y + vy * tInt * angle };
+  }
   function lead(p, q, k = 0.9) {
     let t = d2(p.p, q.p) / (p.vmax * k);
     let pt = q.p;
@@ -213,6 +246,16 @@ export function simulatePlay(game, S, ctx = {}) {
     W.ball = { ...W.ball, x: at(0, 0).x, y: at(0, 0).y, z: 0.15, state: 'held', holder: null, hand: 'chest' };
     st.center = C;
     st.qb = pl(OA.QB?.pid);
+    // physics only: start each tracked player where the snap frame had him, at his pre-snap velocity
+    if (physics && ctx.snapState) {
+      for (const [pid, s] of Object.entries(ctx.snapState)) {
+        const who = byId.get(pid);
+        if (!who) continue;
+        who.p = { x: s.x * YD, y: s.y * YD };
+        who.ai.snapP = { ...who.p };
+        who.ai.snapV = { x: s.vx * YD, y: s.vy * YD };
+      }
+    }
     for (const p of W.players) {
       p.ai.home = { ...p.p };
       const isOL = ['LT', 'LG', 'C', 'RG', 'RT'].includes(p.slot);
@@ -249,8 +292,9 @@ export function simulatePlay(game, S, ctx = {}) {
   }
 
   // --------------------------------------------- carrier & tackling
-  const TO_PURSUE = new Set(['stance', 'cover_man', 'zone', 'rush', 'runfit', 'read', 'kick_cover', 'hold_kick', 'gunner', 'jam', 'punt_rush', 'punt_protect', 'idle', 'route', 'route_target', 'pass_pro', 'run_block', 'escort']);
-  const TO_ESCORT = new Set(['route', 'route_target', 'cover_man', 'zone', 'rush', 'read', 'runfit', 'pursue', 'pass_pro', 'tackle_to']);
+  // Run fits keep their assignment at the handoff; they are not switched to a pursuit of the carrier.
+  const TO_PURSUE = new Set(['stance', 'cover_man', 'zone', 'rush', 'kick_cover', 'hold_kick', 'gunner', 'jam', 'punt_rush', 'punt_protect', 'idle', 'route', 'route_target', 'pass_pro', 'run_block', 'escort']);
+  const TO_ESCORT = new Set(['route', 'route_target', 'cover_man', 'zone', 'rush', 'pursue', 'pass_pro', 'tackle_to']);
   function makeCarrier(p, endX, endY, opts = {}) {
     for (const q of W.players) if (q !== p) q.hasBall = false;
     p.hasBall = true;
@@ -313,15 +357,21 @@ export function simulatePlay(game, S, ctx = {}) {
       }
       return;
     }
-    const along = Math.abs((st.endX - c.p.x / YD));
-    const designated = st.tacklers.has(d.id);
-    const lim = designated ? 2.6 : 1.1;
-    const waited = st.waitT > 1.4;
-    if (along <= lim || waited) {
+    const tk = d.R.TAK ?? 50, bt = Math.max(c.R.BTK ?? 50, c.R.ELU ?? 50);
+    let wrapped;
+    if (physics) {
+      // physics: a wrap is a roll, less likely the faster the carrier comes in, moved by TAK against BTK/ELU
+      const speedIn = c.speedIn ?? c.speed;
+      wrapped = rand() < Math.min(0.8, Math.max(0.03, 0.35 - 0.03 * speedIn + (tk - bt) / 200));
+    } else {
+      // replay: a wrap only counts at the recorded spot, or once the tacklers have converged
+      const along = Math.abs(st.endX - c.p.x / YD);
+      wrapped = along <= (st.tacklers.has(d.id) ? 2.6 : 1.1) || st.waitT > 1.4;
+    }
+    if (wrapped) {
       startTackle(d, c);
     } else {
       // broken tackle: both stumble; the defender loses his feet
-      const tk = d.R.TAK ?? 50, bt = Math.max(c.R.BTK ?? 50, c.R.ELU ?? 50);
       c.stumble = 0.18 + 0.1 * rand();
       d.stumble = 0.6;
       d.ai.missUntil = W.t + 1.6;
@@ -336,6 +386,7 @@ export function simulatePlay(game, S, ctx = {}) {
 
   function startTackle(d, c) {
     st.tTackle = W.t;
+    if (physics) st.fallX = c.p.x;
     const w = W.wrap(d, c, { fall: 0.5 });
     st.wrap = w;
     st.tackler = d;
@@ -348,8 +399,8 @@ export function simulatePlay(game, S, ctx = {}) {
     const c = st.carrier;
     const fall = 0.55;
     const el = W.t - st.tTackle;
-    // forward progress: the pile falls toward where the real play was spotted
-    const tx = st.endX * YD;
+    // replay: the pile falls toward the recorded spot; physics: it settles where the wrap happened
+    const tx = physics ? st.fallX : st.endX * YD;
     const rem = fall - el;
     if (rem > 0) {
       const k = Math.min(1, DT / rem);
@@ -403,30 +454,33 @@ export function simulatePlay(game, S, ctx = {}) {
     if (st.tTackle != null) return { x: p.v.x, y: p.v.y };
     while (a.wp < a.path.length - 1 && (d2(p.p, a.path[a.wp]) < 1.2 || (a.path[a.wp].x - p.p.x) * dir * (p.team === off ? 1 : -1) < -0.5)) a.wp++;
     const tgt = a.path[a.wp];
-    let dv = seek(p, tgt, 1, 2.5);
+    // brake at the body's own limit (world.js locomote), so a runner can always make the stop
+    let dv = seek(p, tgt, 1, p.alat * 1.2);
     const atEnd = a.wp === a.path.length - 1;
     const remYd = Math.abs(st.endX - p.p.x / YD);
-    if (atEnd && !a.oob && !a.td) {
-      // near the spot: the play is about to end — wait for the tackle
-      if (remYd < 1.5) {
-        st.waitT += DT;
-        dv = { x: dv.x * 0.25, y: dv.y * 0.25 };
-        // tacklers converge
-        if (st.waitT > 1.4) {
-          let best = null, bd = 1e9;
-          for (const q of W.players) {
-            if (q.team === p.team || q.down) continue;
-            const dd = d2(q.p, p.p);
-            if (dd < bd) { bd = dd; best = q; }
-          }
-          if (best) best.mode = 'tackle_to';
+    if (physics && atEnd && !a.oob && !a.td) {
+      // physics: past the last waypoint the runner keeps his line until contact decides the play
+      dv = seek(p, { x: tgt.x + dir * (p.team === off ? 1 : -1) * 10 * YD, y: tgt.y }, 1, 50);
+    }
+    if (!physics && atEnd && !a.oob && !a.td && remYd < 1.5) {
+      // near the spot: the play is about to end, so wait for the tackle
+      st.waitT += DT;
+      dv = { x: dv.x * 0.25, y: dv.y * 0.25 };
+      // tacklers converge
+      if (st.waitT > 1.4) {
+        let best = null, bd = 1e9;
+        for (const q of W.players) {
+          if (q.team === p.team || q.down) continue;
+          const dd = d2(q.p, p.p);
+          if (dd < bd) { bd = dd; best = q; }
         }
+        if (best) best.mode = 'tackle_to';
       }
     }
     if (a.oob || a.td) dv = seek(p, tgt, 1, 50);
     // evade: lateral push away from defenders in front
     const fdir = unit(dv.x, dv.y);
-    let ex = 0, ey = 0;
+    let ex = 0, ey = 0, threat = false;
     const elu = skill(Math.max(p.R.ELU ?? 50, p.R.AGI ?? 50));
     for (const q of W.players) {
       if (q === p || q.down || st.tacklers.has(q.id)) continue;
@@ -440,8 +494,11 @@ export function simulatePlay(game, S, ctx = {}) {
       const push = mate ? ((2.2 - d) / 2.2) * ahead * 1.6 : ((4.5 - d) / 4.5) * ahead * 2.4 * elu;
       ex += fdir.y * push * sgn(side);
       ey += -fdir.x * push * sgn(side);
+      if (!mate) threat = true;
     }
-    if (remYd > 2 && !a.oob) dv = { x: dv.x + ex, y: dv.y + ey };
+    if ((physics || remYd > 2) && !a.oob) dv = { x: dv.x + ex, y: dv.y + ey };
+    // a runner with a defender in front plants and cuts: he slows while he moves off the angle
+    if (threat && (physics || remYd > 2) && !a.oob) dv = { x: dv.x * 0.7, y: dv.y * 0.7 };
     p.face = null;
     return dv;
   }
@@ -519,6 +576,7 @@ export function simulatePlay(game, S, ctx = {}) {
         if (st.qb && d2(p.p, st.qb.p) < 1.1 && t > 0.25 && W.ball.holder === st.qb) {
           makeCarrier(p, st.endX, st.endY, { path: a.runPath, oob: S.oob, td: S.td });
           ev('handoff', { from: st.qb.id, to: p.id });
+          if (W.passThrough) W.passThrough.until = W.t + 0.6;
           st.qb.mode = 'fake';
           st.qb.ai.fakeTo = at(-6, -sgn(st.gapL || 1) * 4);
         }
@@ -627,40 +685,30 @@ export function simulatePlay(game, S, ctx = {}) {
         p.dv = separate(p, seek(p, aim, 1, 20), 0.9);
         return;
       }
-      case 'runfit': {
+      case 'fit': {
+        // Run fit: the defender keys the back for his reaction time, goes to his landmark, and leaves it for the
+        // ball only when the carrier reaches his area. Until then he is not running at the carrier.
+        const c = st.carrier || st.runGuess;
         if (p.engaged) {
-          const c = st.carrier || st.qb;
-          const u = c ? unit(c.p.x - p.p.x, c.p.y - p.p.y) : unit(-dir, 0);
-          p.dv = { x: u.x * 2.0, y: u.y * 2.0 };
-          p.face = Math.atan2(u.y, u.x);
+          maybeShed(p, 2);
+          if (c) {
+            const u = unit(c.p.x - p.p.x, c.p.y - p.p.y);
+            p.dv = { x: u.x * 1.8, y: u.y * 1.8 };
+          }
           p.pose = POSE.BLOCK;
-          maybeShed(p);
           return;
         }
-        if (st.carrier && t > 0.35) {
-          p.dv = separate(p, seek(p, lead(p, st.carrier), 0.95, 20), 0.8);
-          return;
-        }
-        p.dv = seek(p, p.ai.gapPt, 0.7, 10);
-        return;
-      }
-      case 'read': {
-        // second level: read for ~0.4 s, then flow to the ball
-        if (t < 0.45) {
-          p.dv = seek(p, { x: p.p.x - dir * 0.6, y: p.p.y }, 0.3);
+        if (t < reactionDelay(p)) {
+          p.dv = { x: 0, y: 0 };
           p.face = faceDownfield(p);
           return;
         }
-        if (p.engaged) {
-          const c = st.carrier;
-          const u = c ? unit(c.p.x - p.p.x, c.p.y - p.p.y) : unit(-dir, 0);
-          p.dv = { x: u.x * 1.8, y: u.y * 1.8 };
-          p.pose = POSE.BLOCK;
-          maybeShed(p);
+        // the defense converges once the ball crosses the line or comes within reach of him
+        if (c && (d2(c.p, p.p) < 7 * YD || fOf(c.p) > 0)) {
+          p.dv = separate(p, seek(p, pursuitAim(p, c, false), 0.97, 25), 0.8);
           return;
         }
-        const c = st.carrier;
-        p.dv = c ? separate(p, seek(p, lead(p, c), 0.95, 20), 0.9) : seek(p, at(2, st.gapL ?? 0), 0.7);
+        p.dv = separate(p, seek(p, p.ai.landmark, 0.85, 12), 0.9);
         return;
       }
       case 'pursue': {
@@ -678,9 +726,8 @@ export function simulatePlay(game, S, ctx = {}) {
           p.dv = st.catchPt ? seek(p, st.catchPt, 0.95) : { x: 0, y: 0 };
           return;
         }
-        // Defenders track the carrier, not the preselected endpoint. The end
-        // spot still gates the whistle and final pile when contact occurs.
-        const tgt = c.p;
+        // Pursuit aims where the carrier will be. The end spot still gates the whistle.
+        const tgt = pursuitAim(p, c);
         p.dv = separate(p, seek(p, tgt, p.ai.missUntil > t ? 0.6 : 0.97, 25), 0.8);
         return;
       }
@@ -693,14 +740,14 @@ export function simulatePlay(game, S, ctx = {}) {
         if (!c) return;
         // Keep pressure on the live carrier; tryTackle still gates the
         // whistle at the sampled spot to preserve the recorded gain.
-        p.dv = seek(p, c.p, 1, 30);
+        p.dv = seek(p, pursuitAim(p, c), 1, 30);
         return;
       }
       case 'cover_man': {
         const a = p.ai;
         const r = a.man;
         if (!r) { p.mode = 'zone'; return; }
-        if (W.ball.state === 'air' && st.catchPt && t > st.tThrow + 0.25) {
+        if (W.ball.state === 'air' && st.catchPt && t > st.tThrow + reactionDelay(p)) {
           // break on the throw
           const goal = a.ballHawk ? st.catchPt : { x: st.catchPt.x + (p.p.x - st.catchPt.x) * 0.3, y: st.catchPt.y + (p.p.y - st.catchPt.y) * 0.3 };
           p.dv = a.ballHawk ? arrive(p, goal, st.tCatch + (a.late ?? 0)) : seek(p, goal, 0.95);
@@ -718,13 +765,31 @@ export function simulatePlay(game, S, ctx = {}) {
         return;
       }
       case 'zone': {
+        // Zone: sit in the zone, pick up a receiver who enters it and carry him while he stays in it, and break on the
+        // ball only when it lands in this zone (or he is the hawk). A zone defender does not cross the field for every catch.
         const a = p.ai;
-        if (W.ball.state === 'air' && st.catchPt && t > st.tThrow + 0.35) {
+        const zonePt = a.zonePt || at(12, 0);
+        const zr = 4.5 * YD + ((p.R.ZCV ?? 50) / 25) * YD;
+        const inZone = (q) => d2(q.p, zonePt) < zr;
+        if (W.ball.state === 'air' && st.catchPt && t > st.tThrow + reactionDelay(p)
+            && (a.ballHawk || d2(st.catchPt, zonePt) < zr + 3 * YD)) {
           p.dv = a.ballHawk ? arrive(p, st.catchPt, st.tCatch + (a.late ?? 0)) : seek(p, st.catchPt, 0.9);
           p.face = faceTo(p, ballPt());
           return;
         }
-        p.dv = seek(p, a.zonePt || at(12, 0), 0.8, 6);
+        if (!a.pick || a.pick.down || !inZone(a.pick)) {
+          a.pick = offense().filter((q) => q !== st.qb && !OL.includes(q.slot) && !q.down && inZone(q))
+            .sort((x, y) => d2(x.p, p.p) - d2(y.p, p.p))[0] || null;
+        }
+        if (a.pick) {
+          const r = a.pick;
+          const qb = st.qb ? st.qb.p : zonePt;
+          const goal = { x: r.p.x + (qb.x - r.p.x) * 0.2 + r.v.x * 0.25, y: r.p.y + (qb.y - r.p.y) * 0.2 + r.v.y * 0.25 };
+          p.dv = seek(p, goal, 1, 12);
+          p.face = faceTo(p, r.p);
+          return;
+        }
+        p.dv = seek(p, zonePt, 0.8, 6);
         p.face = st.qb ? faceTo(p, st.qb.p) : faceDownfield(p);
         return;
       }
@@ -777,6 +842,16 @@ export function simulatePlay(game, S, ctx = {}) {
   }
 
   // ------------------------------------------------ scrimmage setups
+  // Where a run defender goes before the ball reaches him: linemen hold their own gap a yard into the backfield,
+  // linebackers flow to the hole, the run-side corner works to the edge, and the far corner and safeties fill the alley.
+  function fitLandmark(q, runSide) {
+    const l = lOfY(q.p.y / YD);
+    if (FRONT.includes(q.slot)) return at(-1.2, l);
+    if (['MLB', 'WLB'].includes(q.slot) || (q.slot === 'NB' && heavy)) return at(3.5, st.gapL * (Math.sign(l) === runSide ? 1 : 0.5));
+    if (['LCB', 'RCB'].includes(q.slot)) return Math.sign(l) === runSide ? at(5, runSide * 16) : at(4, -runSide * 2);
+    return at(Math.min(fOf(q.p), 7), st.gapL * 0.5);
+  }
+
   function setupRun() {
     S.kindGroup = 'run';
     setupScrimmage();
@@ -828,13 +903,15 @@ export function simulatePlay(game, S, ctx = {}) {
         w.ai.blockOn = cb || null;
       }
     }
+    // every run defender holds a landmark for his assignment and leaves it for the ball only when the ball reaches him
+    st.runGuess = carrier;
+    const runSide = Math.sign(st.gapL) || 1; // +1 = offense's left
     for (const q of defense()) {
       if (st.tacklers.has(q.id)) q.mode = 'tackle_to';
-      else if (FRONT.includes(q.slot) || (q.slot === 'NB' && heavy)) {
-        q.mode = 'runfit';
-        q.ai.gapPt = at(-0.5, lOfY(q.p.y / YD) * 0.8);
-      } else if (['MLB', 'WLB'].includes(q.slot)) q.mode = 'read';
-      else q.mode = 'pursue';
+      else {
+        q.mode = 'fit';
+        q.ai.landmark = fitLandmark(q, runSide);
+      }
     }
     if (carrier && carrier !== qb) {
       const rb2 = slotOf(off, 'RB');
@@ -842,7 +919,11 @@ export function simulatePlay(game, S, ctx = {}) {
     }
     st.onSnap = () => {
       snapTo(qb, S.shotgun ? 0.32 : 0.12);
-      if (carrier && carrier !== qb) { qb.mode = 'handoff'; carrier.mode = 'to_mesh'; }
+      if (carrier && carrier !== qb) {
+        qb.mode = 'handoff';
+        carrier.mode = 'to_mesh';
+        W.passThrough = { pair: [qb, carrier], until: Infinity };
+      }
       if (carrier === qb && kind === 'scramble') {
         // dropback, pocket breaks down, QB takes off
         qb.mode = 'qb_drop';
@@ -1668,7 +1749,9 @@ export function simulatePlay(game, S, ctx = {}) {
       // A returner covers ground faster than a run from scrimmage; a generous
       // 0.55*vmax budget lets a long return run out the clock before contact.
       const pace = S.kindGroup === 'kick' ? 0.9 : 0.55;
-      const budget = Math.abs(st.endX - c.ai.startX) * YD / (pace * c.vmax) + 2.5;
+      // replay: the budget runs to the recorded spot; physics: to the goal line the carrier is driving at
+      const goalYd = physics && S.kindGroup !== 'kick' ? ((c.team === off) === (dir > 0) ? 100 : 0) : st.endX;
+      const budget = Math.abs(goalYd - c.ai.startX) * YD / (pace * c.vmax) + 2.5;
       if (W.t - st.carrierSince > budget) {
         const near = W.players.filter((q) => q.team !== c.team && !q.down).sort((a, b) => d2(a.p, c.p) - d2(b.p, c.p))[0];
         if (near && d2(near.p, c.p) < 3) startTackle(near, c);
@@ -1677,6 +1760,12 @@ export function simulatePlay(game, S, ctx = {}) {
     }
     updateTackle();
     W.step(DT, (p) => {
+      // physics with a tracked snap: the formation is pinned at its snap spot until the ball is snapped,
+      // then each player takes the pre-snap velocity he was tracked at
+      if (physics && ctx.snapState && p.ai.snapP) {
+        if (W.t < 0) { p.p = { ...p.ai.snapP }; p.v = { x: 0, y: 0 }; p.dv = { x: 0, y: 0 }; return; }
+        if (p.ai.snapV) { p.v = p.ai.snapV; p.ai.snapV = null; }
+      }
       if (S.kindGroup === 'kick' && p.mode !== 'carry' && p.mode !== 'post' && p.mode !== 'pursue' && p.mode !== 'tackle_to') {
         if (kickBrain(p)) return;
       }
@@ -1698,7 +1787,7 @@ export function simulatePlay(game, S, ctx = {}) {
   const b = W.ball;
   const top = W.players.reduce((m, p) => (p.topSpeed > m.v ? { v: p.topSpeed, id: p.id } : m), { v: 0, id: null });
   return {
-    id: S.id, roster, stride: STRIDE, frames, t0: -PRE, hz: REC_HZ, events: W.events,
+    id: S.id, authority: physics ? 'physics' : 'statistical_replay', roster, stride: STRIDE, frames, t0: -PRE, hz: REC_HZ, events: W.events,
     end: { x: st.spot ? st.spot.x : b.x / YD, y: st.spot ? st.spot.y : b.y / YD, reason: st.whistle, t: st.deadT },
     expectEndX: st.endX ?? null,
     biggestHit: W.biggestHit, topSpeed: top, throwSpeed: st.throwSpeed ?? null,
