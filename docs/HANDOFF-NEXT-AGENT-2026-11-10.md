@@ -153,3 +153,30 @@ Still open: residual slide of about 1 m/s comes from the toe-off blend frames; `
 only runs on locomotion clips); arm swing (0.42 to 0.47 m/s); shoulder twist 41 to 51 deg against a limit of 35;
 blocks and tackles not tracking the opponent. Sprint native speed is 4.87 m/s and `MAX_RATE` 1.6 gives a cadence
 near 6 steps/s, which is too quick; with the foot lock in place the rate cap can probably come down to about 1.3.
+
+## 9. Update, later still on 2026-11-10: arms, twist, kicker, hands on the opponent (build stamp `motion-2026-11-10e`)
+
+All runtime layers in `web/rigged-player.js`, applied after the mixer, each with an `__audit` off switch:
+- `pumpArms` (`noPump`): widens each upper arm's fore-aft swing about its own running average (gain 0.55). Not applied
+  to a ball carrier.
+- `levelShoulders` now also caps shoulders-against-hips twist at 0.5 rad (`SHOULDER_TWIST_MAX`).
+- `reachArms` (`noReach`): for `FB_Block_Pass`, `FB_Block_Run`, `FB_Tackle_Wrap`, `FB_Tackle_Form`, solves both arms toward
+  the contact partner (chest height for blocks, waist for tackles) when he is within 1.5 m. `render.js` now passes the
+  partner's position as `ctx.px` / `ctx.pz`.
+- `lockFeet(..., kick = true)` for `FB_Kick` / `FB_Punt`: pins only a foot that is down and slow relative to the body, so
+  the plant foot holds and the kicking foot swings free. No body drop in kick mode.
+- `boneGuard` / `guardRestore`: every layer undoes its own edit first if the mixer did not rewrite the bone. Use these
+  for any new layer, or it will stack on paused frames and on clips that hold a bone still.
+- Controller: 'Running in place' is a high-knee drill (toes rise 85 cm, natural speed 2.4 m/s), so it was being picked
+  for anyone moving 2 to 3 m/s, including the kicker's approach. It is now skipped when the model has 'Jogging In Place'.
+
+Audit, 8 plays (`docs/MOTION-AUDIT-LIVE-2026-11-10-footlock.md`): 21 flags at the start of the day, now 3, all marginal
+foot-slide against a limit of 0.8 m/s: Sprint 0.87, FB_Walk 1.03, FB_Kick 0.86 (was 2.48). No rocking, twist or
+arm-swing flags left. All unit tests pass; both browser tests pass (run from a temp copy with `channel: 'chrome'` and
+port 8137 replaced by 8141).
+
+Not verified at real speed by a person: the toe-off release, the arm pump and the reaching hands were judged from
+measurements and still frames only. Things to watch for: a hitch at toe-off, elbows bending oddly when a blocker's
+partner is off to one side, hands passing through the partner (bodies overlap in the engine, so the hands can too).
+Still open: residual slide near 1 m/s; `MAX_RATE` 1.6 gives a quick cadence at top speed; blocks and tackles are still
+single clips underneath the reaching arms; soft shadows.

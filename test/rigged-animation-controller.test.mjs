@@ -255,7 +255,8 @@ test('a moving player is not left gliding in a stance or block clip', () => {
   controller.tick({ time: T0, pose: POSE.STANCE, speed: 0 });
   assert.equal(controller.current, 'Football Stance');
   controller.tick({ time: T0 + 0.3, pose: POSE.STANCE, speed: 4.2 });
-  assert.equal(controller.current, 'Running in place');
+  // any real run clip will do; the high-knee 'Running in place' drill is skipped when the model has a jog
+  assert.ok(['Sprint In Place', 'run-in-place', 'Jogging In Place', 'Running in place'].includes(controller.current), controller.current);
   // a new pose code must persist MIN_POSE_HOLD before it takes the body
   controller.tick({ time: T0 + 0.6, pose: POSE.BLOCK, speed: 0.3 });
   controller.tick({ time: T0 + 0.7, pose: POSE.BLOCK, speed: 0.3 });

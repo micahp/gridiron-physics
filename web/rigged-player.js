@@ -448,7 +448,7 @@ function applyRiggedKit(clone, kit, info) {
   });
 }
 
-export const BUILD_ID = 'footlock-2026-11-10d';
+export const BUILD_ID = 'motion-2026-11-10e';
 let loaderPromise = null;
 export function loadRiggedPlayer() {
   if (!loaderPromise) {
@@ -718,7 +718,7 @@ export function bodyLean(state, { vx, vy, yaw, time }) {
 // the foot on the ground slides over the turf ("skating"). This pins the ball of the planted foot to the spot
 // where it touched down and solves the leg (thigh + shin) to reach it, until the clip lifts the foot or the leg
 // runs out of reach; then the foot is picked up and carried through the air back to the clip's pose.
-const FOOT_PLANT_M = 0.03, FOOT_LIFT_M = 0.07, FOOT_RECOVER_M = 0.15;
+const FOOT_PLANT_M = 0.045, FOOT_LIFT_M = 0.07, FOOT_RECOVER_M = 0.15;
 const _fh = new THREE.Vector3(), _fk = new THREE.Vector3(), _fa = new THREE.Vector3(), _ftoe = new THREE.Vector3();
 const _ft = new THREE.Vector3(), _fn = new THREE.Vector3(), _fv1 = new THREE.Vector3(), _fv2 = new THREE.Vector3();
 const _ffq = new THREE.Quaternion(), _fdq = new THREE.Quaternion(), _fpw = new THREE.Quaternion(), _flq = new THREE.Quaternion();
@@ -755,7 +755,7 @@ function solveLeg(root, thigh, shin, foot, target) {
   foot.quaternion.copy(_fpw.invert()).multiply(_ffq);
   foot.updateWorldMatrix(false, true);
 }
-function lockFeet(root, time, active) {
+function lockFeet(root, time, active, kick = false) {
   const u = root.userData, b = u.bones;
   const st = (u.feet ??= { t: time, L: {}, R: {} });
   const dt = time - st.t;
@@ -770,7 +770,7 @@ function lockFeet(root, time, active) {
       if (bone && s?.dirty && bone.quaternion.equals(s.out)) bone.quaternion.copy(s.clip);
       if (s) s.dirty = false;
     }
-    if (reset || !active) { f.on = false; f.w = 0; f.wait = false; f.lift = 0; f.in = 0; f.py = undefined; }
+    if (reset || !active) { f.on = false; f.w = 0; f.wait = false; f.lift = 0; f.in = 0; f.py = undefined; f.pwx = undefined; }
   }
   const step = Math.max(0, Math.min(0.1, dt));
   // the run clips carry the stance foot several centimetres above the turf; st.drop lowers the body by that much
@@ -800,9 +800,15 @@ function lockFeet(root, time, active) {
     const above = (toeClip - st.floor) * YD;                // metres above this clip's stance height
     const lower = toeClip <= lowest + 1e-9;
     // down: at stance height, or the lower foot that has stopped descending; stays down until it clearly lifts
-    const low = f.on
-      ? above < FOOT_LIFT_M || (lower && above < 0.12 && vy < 0.5)
-      : above < FOOT_PLANT_M || (lower && above < 0.10 && Math.abs(vy) < 0.3);
+    // speed of the toe relative to the body: a swinging (kicking) foot is fast, a standing one is not
+    const rel = f.pwx === undefined || step <= 0 ? (f.rel ?? 0)
+      : Math.hypot(_ftoe.x - f.pwx - (root.position.x - st.rx), _ftoe.z - f.pwz - (root.position.z - st.rz)) * YD / step;
+    f.rel = rel; f.nwx = _ftoe.x; f.nwz = _ftoe.z;
+    const low = kick
+      ? (f.on ? above < FOOT_LIFT_M && rel < 6 : above < 0.03 && rel < 2.5 && !st[side === 'L' ? 'R' : 'L'].on)
+      : f.on
+        ? above < FOOT_LIFT_M || (lower && above < 0.12 && vy < 0.5)
+        : above < FOOT_PLANT_M || (lower && above < 0.10 && Math.abs(vy) < 0.45);
     const release = (wait) => {
       f.on = false; f.w = 1; f.wait = wait; f.in = 0;
       f.ox = (f.tx ?? _fa.x) - _fa.x; f.oy = (f.ty ?? _fa.y) - _fa.y; f.oz = (f.tz ?? _fa.z) - _fa.z;
@@ -835,13 +841,103 @@ function lockFeet(root, time, active) {
     keep.thigh.out.copy(thigh.quaternion); keep.shin.out.copy(shin.quaternion); keep.foot.out.copy(foot.quaternion);
     keep.thigh.dirty = keep.shin.dirty = keep.foot.dirty = true;
   }
+  for (const side of ['L', 'R']) { const f = st[side]; f.pwx = f.nwx; f.pwz = f.nwz; }
+  st.rx = root.position.x; st.rz = root.position.z;
+  if (kick) pinnedToe = Infinity;   // the kick clips are authored on the turf: no body drop
   if (pinnedToe < Infinity) st.want = Math.max(0, Math.min(0.2 / YD, pinnedToe - u.toeRest));
   st.drop = drop + ((st.want ?? 0) - drop) * (1 - Math.exp(-step * 12));
+}
+
+// ---------------------------------------------------------------- arms
+//
+// Small state helper: a layer that edits a bone after the mixer must undo its own edit first when the mixer did
+// not rewrite the bone (paused playback, or a clip that holds the bone still), or the edit stacks every frame.
+function boneGuard(store, key) {
+  return (store[key] ??= { clip: new THREE.Quaternion(), out: new THREE.Quaternion(), dirty: false });
+}
+function guardRestore(g, bone) {
+  if (bone && g?.dirty && bone.quaternion.equals(g.out)) bone.quaternion.copy(g.clip);
+  if (g) g.dirty = false;
+}
+const smooth01 = (x) => x * x * (3 - 2 * x);
+
+// The stock run cycles barely move the arms. This widens the fore-aft pump of each upper arm about its own
+// average position, so a runner drives his arms.
+const ARM_PUMP_GAIN = 0.55;
+function pumpArms(root, time, active) {
+  const u = root.userData, b = u.bones;
+  const st = (u.pump ??= { t: time, L: {}, R: {} });
+  const dt = time - st.t; st.t = time;
+  for (const side of ['L', 'R']) guardRestore(st[side].g, b['up' + side]);
+  if (!active || dt < -1e-6 || dt > 0.25) { st.L.m = st.R.m = undefined; if (!active) return; }
+  const step = Math.max(0, Math.min(0.1, dt));
+  root.updateWorldMatrix(true, true);
+  root.getWorldQuaternion(_fpw);
+  const fwd = _fn.set(1, 0, 0).applyQuaternion(_fpw); fwd.y = 0;
+  if (fwd.lengthSq() < 1e-6) return;
+  fwd.normalize();
+  const lat = _fv2.set(0, 1, 0).cross(fwd);                  // horizontal, across the body
+  for (const side of ['L', 'R']) {
+    const up = b['up' + side], hand = b['hand' + side], s = st[side];
+    if (!up?.parent || !hand) continue;
+    const v = wpos(hand, _ft).sub(wpos(up, _fv1));          // shoulder -> hand
+    const hx = v.dot(fwd);
+    s.m = s.m === undefined ? hx : s.m + (hx - s.m) * (1 - Math.exp(-step / 0.35));
+    const d = _fh.crossVectors(lat, v).dot(fwd);             // hand travel along forward per radian about `lat`
+    if (Math.abs(d) < 1e-4) continue;
+    const angle = Math.max(-0.45, Math.min(0.45, ARM_PUMP_GAIN * (hx - s.m) / d));
+    const g = boneGuard(s, 'g');
+    g.clip.copy(up.quaternion);
+    rotateBoneWorld(up, _fdq.setFromAxisAngle(lat, angle));
+    g.out.copy(up.quaternion); g.dirty = true;
+  }
+}
+
+// A blocker's or tackler's hands go to the man he is on: each arm is solved toward the partner's chest (blocks)
+// or waist (tackles), as far as the arm reaches, blended over the clip.
+const REACH_CLIPS = /^FB_(Block_(Pass|Run)|Tackle_(Wrap|Form))$/;
+function reachArms(root, time, clipName, contact) {
+  const u = root.userData, b = u.bones;
+  const st = (u.reach ??= { t: time, w: 0, L: {}, R: {} });
+  const dt = time - st.t; st.t = time;
+  for (const side of ['L', 'R']) for (const key of ['up', 'fore', 'hand']) guardRestore(st[side][key], b[key + side]);
+  if (dt < -1e-6 || dt > 0.25) st.w = 0;
+  const step = Math.max(0, Math.min(0.1, dt));
+  let want = 0;
+  if (contact && contact.px !== undefined && REACH_CLIPS.test(clipName || '') && !globalThis.__audit?.noReach) {
+    const dist = Math.hypot(contact.px - root.position.x, contact.pz - root.position.z) * YD;
+    if (dist > 0.25 && dist < 1.5) {
+      want = 1;
+      st.px = contact.px; st.pz = contact.pz; st.h = /Tackle/.test(clipName) ? 0.95 : 1.28;
+    }
+  }
+  st.w = Math.max(0, Math.min(1, st.w + (want ? step / 0.15 : -step / 0.15)));
+  if (st.w <= 0 || st.px === undefined) return;
+  root.updateWorldMatrix(true, true);
+  // sideways across the line to the partner, so the two hands land on either side of his chest
+  const dx = st.px - root.position.x, dz = st.pz - root.position.z, len = Math.hypot(dx, dz) || 1;
+  const sx = -dz / len, sz = dx / len;
+  const w = smooth01(st.w) * 0.8;
+  for (const [side, sign] of [['L', -1], ['R', 1]]) {
+    const up = b['up' + side], fore = b['fore' + side], hand = b['hand' + side];
+    if (!up?.parent || !fore || !hand) continue;
+    wpos(hand, _fa);
+    // which way is this hand's own side? keep each hand on its side of the partner
+    const own = Math.sign((wpos(up, _fh).x - root.position.x) * sx + (_fh.z - root.position.z) * sz) || sign;
+    // stop a hand's width short of his body centre so the hands sit on the pads, not inside him
+    const tx = st.px - (dx / len) * (0.16 / YD) + sx * own * (0.17 / YD);
+    const tz = st.pz - (dz / len) * (0.16 / YD) + sz * own * (0.17 / YD);
+    _ft.set(_fa.x + (tx - _fa.x) * w, _fa.y + (root.position.y + st.h / YD - _fa.y) * w, _fa.z + (tz - _fa.z) * w);
+    for (const [key, bone] of [['up', up], ['fore', fore], ['hand', hand]]) boneGuard(st[side], key).clip.copy(bone.quaternion);
+    solveLeg(root, up, fore, hand, _ft);
+    for (const [key, bone] of [['up', up], ['fore', fore], ['hand', hand]]) { const g = st[side][key]; g.out.copy(bone.quaternion); g.dirty = true; }
+  }
 }
 
 // The stock run cycles rock the shoulders side to side far more than a runner does (about 13 degrees against
 // 3 to 5). This takes most of that roll out at the chest, measured from the shoulder joints each frame.
 const SHOULDER_LEVEL = 0.65;
+const SHOULDER_TWIST_MAX = 0.5;   // radians (about 29 degrees)
 // Undo last frame's levelling if the mixer left the chest alone (paused, or a clip that holds the chest still).
 // Must run before twistSpine, whose own "already applied" check compares against the value it wrote.
 function unlevelShoulders(root) {
@@ -864,6 +960,14 @@ function levelShoulders(root, active) {
   const angle = Math.max(-0.5, Math.min(0.5, -SHOULDER_LEVEL * _fv1.y / lift));
   st.clip.copy(chest.quaternion);
   rotateBoneWorld(chest, _fdq.setFromAxisAngle(_fn, angle));
+  // and keep the shoulders from winding up too far against the hips
+  if (b.thighL && b.thighR) {
+    wpos(b.upL, _fv1).sub(wpos(b.upR, _fv2)); _fv1.y = 0;
+    wpos(b.thighL, _fh).sub(wpos(b.thighR, _fk)); _fh.y = 0;
+    const turn = Math.atan2(_ft.crossVectors(_fh, _fv1).y, _fh.dot(_fv1));   // shoulders against hips, about vertical
+    const excess = Math.abs(turn) - SHOULDER_TWIST_MAX;
+    if (excess > 0) rotateBoneWorld(chest, _fdq.setFromAxisAngle(_UP, -Math.sign(turn) * excess));
+  }
   st.out.copy(chest.quaternion); st.dirty = true;
 }
 
@@ -895,8 +999,12 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
         unlevelShoulders(root);
         const offset = u.travelYaw?.offset ?? 0;
         if (!globalThis.__audit?.noTwist) twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
-        levelShoulders(root, isLocomotionClip(controller.clipName) && !globalThis.__audit?.noLevel);
-        lockFeet(root, time, isLocomotionClip(controller.clipName) && speed > 0.5 && !globalThis.__audit?.noFootLock);
+        const loco = isLocomotionClip(controller.clipName);
+        const kicking = /^FB_(Kick|Punt)$/.test(controller.clipName || '');
+        levelShoulders(root, loco && !globalThis.__audit?.noLevel);
+        pumpArms(root, time, loco && !carrying && speed > 1.5 && !globalThis.__audit?.noPump);
+        reachArms(root, time, controller.clipName, contact);
+        lockFeet(root, time, ((loco && speed > 0.5) || kicking) && !globalThis.__audit?.noFootLock, kicking);
         return;
       }
     }

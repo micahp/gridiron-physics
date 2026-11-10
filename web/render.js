@@ -704,6 +704,7 @@ export class Renderer {
         // blockers and tacklers square up to the man they are on
         if ((role === 1 || role === 2) && partner >= 0) yaw = Math.atan2(Z[partner] - Z[i], X[partner] - X[i]);
         ctx = { role, partner, back: sp > 0.6 && vx * Math.cos(yaw) + vy * Math.sin(yaw) < -0.35 * sp };
+        if (partner >= 0) { ctx.px = X[partner]; ctx.pz = Z[partner]; }   // where his man is, for the hands
       }
       if (ctx) { ctx.slot = rec.roster[i].slot ?? null; ctx.kind = rec.kindGroup ?? null; }
       // a ball carrier with a defender closing alongside him, for the stiff-arm

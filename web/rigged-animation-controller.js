@@ -531,7 +531,9 @@ export class RiggedAnimationController {
     L.idle = speed < (L.idle ? IDLE_EXIT : IDLE_ENTER) && !!idleName;
     if (L.idle) return { clipName: idleName, rate: 1 };
 
-    const pick = (names) => names.filter((n) => this.clips.has(n))
+    // 'Running in place' is a high-knee drill (feet rise 85 cm): only a fallback for models without a real jog
+    const drill = (n) => n === 'Running in place' && this.clips.has('Jogging In Place');
+    const pick = (names) => names.filter((n) => this.clips.has(n) && !drill(n))
       .map((n) => ({ n, v: this.nativeSpeed(n) }))
       .sort((a, b) => a.v - b.v);
     const ballBack = L.back && carrying ? pick(BALL_BACK_TIERS) : [];
