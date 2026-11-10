@@ -50,7 +50,8 @@ try {
   assert.ok(meta.throwSpeed>0,'physical throw must carry positive ball speed');
   const inspect=[];
   for(const [label,ev,poseCode,clipName] of [
-    ['THROW',eThrow,4,'Quarterback Pass'],['CATCH',eCatch,5,'Goalkeeper Catch'],
+    // a catch is the stock standing catch or one of the authored variants, chosen from where the ball is
+    ['THROW',eThrow,4,'Quarterback Pass'],['CATCH',eCatch,5,['Goalkeeper Catch','FB_Catch_High','FB_Catch_Low','FB_Catch_Run']],
   ]) {
     const snapshots=[];
     for(const shift of [-0.20,-0.10,0,0.05,0.10,0.20,0.35]) {
@@ -60,14 +61,14 @@ try {
         physicsPose:player?.pose,activatedClip:player?.clip,clipTime:player?.clipTime});
     }
     const physics=snapshots.filter(z=>z.physicsPose===poseCode);
-    const activated=physics.filter(z=>z.activatedClip===clipName);
+    const activated=physics.filter(z=>[].concat(clipName).includes(z.activatedClip));
     inspect.push({label,actor:ev.by,physicsFrames:physics.length,correctActivations:activated.length,snapshots});
   }
   console.log('PRECISE_EVENT_ANIMATION_AUDIT',JSON.stringify({chosen,meta,inspect}));
   assert.ok(inspect[0].physicsFrames>0,'QB THROW event never produced recorded THROW pose');
   assert.ok(inspect[1].physicsFrames>0,'receiver CATCH event never produced recorded CATCH pose');
   assert.ok(inspect[0].correctActivations>0,'THROW pose did not select Quarterback Pass clip');
-  assert.ok(inspect[1].correctActivations>0,'CATCH pose did not select Goalkeeper Catch clip');
+  assert.ok(inspect[1].correctActivations>0,'CATCH pose did not select a catch clip (Goalkeeper Catch or an FB_Catch variant)');
 
   const before=await page.evaluate(()=>window.__gridironFrameSnapshot?.());
   await page.waitForTimeout(350);
