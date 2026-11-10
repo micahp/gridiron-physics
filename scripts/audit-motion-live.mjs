@@ -64,8 +64,11 @@ for (let play = 0; play < PLAYS; play++) {
         const prev = prevFeet.get(id);
         let slide = null;
         if (prev && prev.t === s - 1 / 30 + 0 || (prev && Math.abs(prev.t - (s - 1 / 30)) < 1e-6)) {
-          const low = fl.y < fr.y ? ['L', fl, prev.l] : ['R', fr, prev.r];
-          if (low[1].y < 0.07) slide = Math.hypot(low[1].x - low[2].x, low[1].z - low[2].z) * 30;
+          // mid-stance only: a foot counts when it was on the ground on this frame AND the one before, so the
+          // touch-down frame (still arriving from the air) is not mistaken for sliding
+          for (const [now, was] of [[fl, prev.l], [fr, prev.r]]) {
+            if (now.y - o.position.y * YD < 0.07 && was.y - o.position.y * YD < 0.07) slide = Math.max(slide ?? 0, Math.hypot(now.x - was.x, now.z - was.z) * 30);
+          }
         }
         prevFeet.set(id, { t: s, l: fl.clone(), r: fr.clone() });
         out.push({ id, slot: slotOf.get(id), clip: u.controller.current, t: s, roll, twist, pitch, swingL, swingR, spread, elbL, elbR, y: hip.y, slide });

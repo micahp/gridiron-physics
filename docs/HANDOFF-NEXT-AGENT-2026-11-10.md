@@ -128,3 +128,28 @@ tests pass; `week7-core`, `week7-audit`, `football-assertion`, `validate` pass.
 Other docs: `ENGINE-AND-MOTION-AUDIT-2026-11-09.md` (engine audit, replay vs simulation track findings),
 `REFERENCE-VIDEO-FURNACE-VS-GRIDIRON-2026-11-09.md` (what the reference video shows against what we have),
 `HANDOFF-rigged-animation-2026-11-09.md` (older, build details).
+
+## 8. Update, later on 2026-11-10: foot lock, body drop, shoulder levelling (build stamp `footlock-2026-11-10d`)
+
+The page now shows a build stamp bottom-right (`build footlock-2026-11-10d · N clips`). If it is missing, it is not this build.
+
+Done in `web/rigged-player.js` (runtime, no model rebuild):
+- `lockFeet`: pins the ball of the stance foot where it touched down and solves thigh + shin to reach it; releases at
+  toe-off (leg out of reach) and carries the foot through the air back to the clip. Off switch: `__audit.noFootLock`.
+- Body drop: the stock run clips hold the stance toe about 13 cm above the turf (players floated). The body is lowered
+  so the pinned toe sits on the ground.
+- `levelShoulders`: removes 65% of the side-to-side shoulder roll at the chest. Off switch: `__audit.noLevel`.
+  `unlevelShoulders` must run before `twistSpine` (otherwise the twist stacks every frame on clips that hold the chest).
+- Controller bug fixed: after a rewind or replay, `pickLocomotion` held the old gait indefinitely (`time - L.since` was
+  negative), so players jogged in place at sprint speed.
+- Audit foot-slide metric now counts mid-stance only (foot down on this frame and the previous one).
+
+Measured (8 plays, `docs/MOTION-AUDIT-LIVE-2026-11-10-footlock.md`), foot lock off -> on: Sprint 4.59 -> 1.00 m/s,
+Running 6.17 -> 0.91, run-in-place 3.64 -> 0.90, Jog 2.40 -> under 0.8, Backward 2.57 -> under 0.8, Walk 2.28 -> 1.07.
+All shoulder-rocking flags cleared. Frames from the real page: `docs/img/footlock/f000.png` to `f007.png` (30 fps).
+`node scripts/trace-feet.mjs --play 2 --clip Sprint --frames 40 [--shots dir]` prints one player's feet per frame.
+
+Still open: residual slide of about 1 m/s comes from the toe-off blend frames; `FB_Kick` plant foot (2.5 m/s, the lock
+only runs on locomotion clips); arm swing (0.42 to 0.47 m/s); shoulder twist 41 to 51 deg against a limit of 35;
+blocks and tackles not tracking the opponent. Sprint native speed is 4.87 m/s and `MAX_RATE` 1.6 gives a cadence
+near 6 steps/s, which is too quick; with the foot lock in place the rate cap can probably come down to about 1.3.

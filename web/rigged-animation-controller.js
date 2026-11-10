@@ -511,7 +511,7 @@ export class RiggedAnimationController {
   pickLocomotion({ speed, pose, carrying, travel, time = 0 }) {
     const L = this.loco;
     // hold the current gait briefly; only its playback rate follows the speed
-    if (L.clip && L.since !== undefined && time - L.since < GAIT_DWELL && this.clips.has(L.clip)) {
+    if (L.clip && L.since !== undefined && time >= L.since && time - L.since < GAIT_DWELL && this.clips.has(L.clip)) {
       const rate = IDLE_CLIPS.includes(L.clip) ? 1 : clamp(speed / this.nativeSpeed(L.clip), MIN_RATE, MAX_RATE);
       return { clipName: L.clip, rate };
     }
