@@ -50,7 +50,7 @@ try {
   assert.ok(meta.throwSpeed>0,'physical throw must carry positive ball speed');
   const inspect=[];
   for(const [label,ev,poseCode,clipName] of [
-    ['THROW',eThrow,4,'Quarterback Pass'],['CATCH',eCatch,5,'Football Catch 1'],
+    ['THROW',eThrow,4,'Quarterback Pass'],['CATCH',eCatch,5,'Goalkeeper Catch'],
   ]) {
     const snapshots=[];
     for(const shift of [-0.20,-0.10,0,0.05,0.10,0.20,0.35]) {
@@ -67,7 +67,7 @@ try {
   assert.ok(inspect[0].physicsFrames>0,'QB THROW event never produced recorded THROW pose');
   assert.ok(inspect[1].physicsFrames>0,'receiver CATCH event never produced recorded CATCH pose');
   assert.ok(inspect[0].correctActivations>0,'THROW pose did not select Quarterback Pass clip');
-  assert.ok(inspect[1].correctActivations>0,'CATCH pose did not select Football Catch 1 clip');
+  assert.ok(inspect[1].correctActivations>0,'CATCH pose did not select Goalkeeper Catch clip');
 
   const before=await page.evaluate(()=>window.__gridironFrameSnapshot?.());
   await page.waitForTimeout(350);

@@ -15,7 +15,48 @@ if (typeof location !== 'undefined' && new URLSearchParams(location.search).has(
 }
 
 const YD = 0.9144;
+const BODY_SPACING = 0.52; // yards between body centres (shoulders are ~0.63 wide)
 const W = 160 / 3;
+
+// ?shadows= picks how players are grounded:
+//   blob - a soft dark disc under each player, no shadow-map pass
+//   full           - real shadow map; every player mesh is drawn a second time (~870k triangles)
+//   none (default) - nothing; the blob read as fake
+const SHADOW_MODE = (() => {
+  const v = typeof location !== 'undefined' && new URLSearchParams(location.search).get('shadows');
+  return v === 'full' || v === 'blob' ? v : 'none';
+})();
+let blobAssets = null;
+function blobShadow() {
+  if (!blobAssets) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(64, 64, 6, 64, 64, 62);
+    grad.addColorStop(0, 'rgba(0,0,0,0.55)');
+    grad.addColorStop(0.55, 'rgba(0,0,0,0.32)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+    const map = new THREE.CanvasTexture(c);
+    map.colorSpace = THREE.SRGBColorSpace;
+    blobAssets = {
+      geo: new THREE.PlaneGeometry(1.7, 1.7).rotateX(-Math.PI / 2), // metres: bodies are built in metres
+      mat: new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+    };
+  }
+  const m = new THREE.Mesh(blobAssets.geo, blobAssets.mat);
+  m.position.y = 0.03;
+  m.renderOrder = 1;
+  m.name = 'blob-shadow';
+  m.userData.shared = true;
+  return m;
+}
+/** Apply the shadow mode to a freshly built player. */
+function applyPlayerShadows(root) {
+  root.traverse((o) => { if (o.isMesh) o.castShadow = SHADOW_MODE === 'full'; });
+  if (SHADOW_MODE === 'blob') root.add(blobShadow());
+}
 const POSE = { STANCE: 0, RUN: 1, BLOCK: 2, DOWN: 3, THROW: 4, CATCH: 5, KICK: 6, HOLD: 7, CELEBRATE: 8, BACKPEDAL: 9, WRAP: 10, KNEEL: 11 };
 
 // --------------------------------------------------------------- field
@@ -267,7 +308,7 @@ export class Renderer {
     this.displayFont = displayFont;
     const r = (this.r3 = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
     r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-    r.shadowMap.enabled = true;
+    r.shadowMap.enabled = SHADOW_MODE === 'full';
     r.shadowMap.type = THREE.PCFSoftShadowMap;
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.ACESFilmicToneMapping;
@@ -283,7 +324,7 @@ export class Renderer {
     scene.add(new THREE.HemisphereLight('#e8eeff', '#2a3a26', 1.5));
     const sun = new THREE.DirectionalLight('#fff6e6', 1.7);
     sun.position.set(30, 90, 90);
-    sun.castShadow = true;
+    sun.castShadow = SHADOW_MODE === 'full';
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = -40; sun.shadow.camera.right = 40;
     sun.shadow.camera.top = 40; sun.shadow.camera.bottom = -40;
@@ -500,6 +541,7 @@ export class Renderer {
         ? buildRiggedPlayer(this.riggedGltf, info, this.kits[r.team])
         : buildPlayer(info, this.kits[r.team]);
       o.userData.index = i;
+      applyPlayerShadows(o);
       this.players.set(r.id, o);
       this.scene.add(o);
     });
@@ -577,6 +619,7 @@ export class Renderer {
       }
       else animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
     }
+    this.separatePlayers(rec);
     this.lastPlayerUpdateMs = performance.now() - playerUpdateStart;
     const B = n * 6;
     const bx = L(B), by = L(B + 1), bz = L(B + 2) / YD;
@@ -593,6 +636,31 @@ export class Renderer {
       this.trailGeo.attributes.position.needsUpdate = true;
     }
     this.ballPos = { x: bx, y: by, z: bz };
+  }
+
+  /** The recorded physics lets bodies interpenetrate; push drawn bodies apart (view only, stateless). */
+  separatePlayers(rec) {
+    const objs = [];
+    for (const r of rec.roster) { const o = this.players.get(r.id); if (o) objs.push(o); }
+    const D = BODY_SPACING, D2 = D * D;
+    for (let pass = 0; pass < 3; pass++) {
+      let moved = false;
+      for (let i = 0; i < objs.length; i++) {
+        const a = objs[i].position;
+        for (let j = i + 1; j < objs.length; j++) {
+          const b = objs[j].position;
+          const dx = b.x - a.x, dz = b.z - a.z, d2 = dx * dx + dz * dz;
+          if (d2 >= D2) continue;
+          const d = Math.sqrt(d2);
+          // exactly stacked: separate along a fixed axis so paused frames stay stable
+          const nx = d > 1e-4 ? dx / d : 1, nz = d > 1e-4 ? dz / d : 0;
+          const push = (D - d) / 2;
+          a.x -= nx * push; a.z -= nz * push; b.x += nx * push; b.z += nz * push;
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
   }
 
   clearTrail() {

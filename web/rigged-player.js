@@ -26,7 +26,7 @@ const POSE_ANIMATIONS = Object.freeze({
   [POSE.BLOCK]: Object.freeze({ clipName: 'Pushing In Place', loop: true }),
   [POSE.DOWN]: Object.freeze({ clipName: 'Stunned (Knocked Down)', loop: false }),
   [POSE.THROW]: Object.freeze({ clipName: 'Quarterback Pass', loop: false }),
-  [POSE.CATCH]: Object.freeze({ clipName: 'Football Catch 1', loop: false }),
+  [POSE.CATCH]: Object.freeze({ clipName: 'Goalkeeper Catch', loop: false }),
   [POSE.KICK]: Object.freeze({ clipName: 'Goalkeeper Drop Kick', loop: false }),
   [POSE.HOLD]: Object.freeze({ clipName: 'Football Hike', loop: false }),
   [POSE.CELEBRATE]: Object.freeze({ clipName: 'Fist Pump', loop: false }),
@@ -354,12 +354,57 @@ function twistSpine(bones, angle) {
   if (!angle) return;
   for (const bone of [bones.chest, bones.chest2]) {
     if (!bone?.parent) continue;
+    // Idempotent: if the mixer did not rewrite this bone since our last twist (paused
+    // playback), re-twisting would stack every frame and spin the torso.
+    const done = (bone.userData.twistOut ??= new THREE.Quaternion());
+    if (bone.userData.twistApplied && bone.quaternion.equals(done)) continue;
     bone.parent.getWorldQuaternion(_pq);
     _axisRotation.setFromAxisAngle(_UP, angle * 0.5);
     _q.copy(_pq).invert().multiply(_axisRotation).multiply(_pq);
     bone.quaternion.premultiply(_q);
+    done.copy(bone.quaternion);
+    bone.userData.twistApplied = true;
   }
 }
+
+// The retargeted clips hang the arms straight down against the hips (hands meet
+// at the belt line, which reads as hands clasped behind the back). After the
+// mixer has posed the body, push each upper arm out and forward and bend the
+// elbow, for the clips where the arms are just along for the ride.
+const ARM_SKIP = /catch|pass|throw|hike|kick|tackle|restrain|push|victory|fist|getting|stunned|jump|kneel|block|defender|hold/i;
+const ARM_ABDUCT = 0.30;  // radians away from the body
+const ARM_FLEX = 0.45;    // radians forward
+const ARM_ELBOW = -0.7;    // radians of forearm bend
+const _rootQ = new THREE.Quaternion();
+const _axW = new THREE.Vector3();
+function nudgeBone(bone, root, rotations, key) {
+  if (!bone?.parent) return;
+  const out = (bone.userData[key] ??= { q: new THREE.Quaternion(), set: false });
+  if (out.set && bone.quaternion.equals(out.q)) return; // mixer did not rewrite it (paused)
+  root.getWorldQuaternion(_rootQ);
+  bone.parent.getWorldQuaternion(_pq);
+  _worldDelta.identity();
+  for (const { axis, angle } of rotations) {
+    if (!axis) continue;
+    _axW.copy(axis).applyQuaternion(_rootQ);
+    _axisRotation.setFromAxisAngle(_axW, angle);
+    _worldDelta.premultiply(_axisRotation);
+  }
+  _q.copy(_pq).invert().multiply(_worldDelta).multiply(_pq);
+  bone.quaternion.premultiply(_q);
+  out.q.copy(bone.quaternion);
+  out.set = true;
+}
+function relaxArms(root, bones, clipName, scale = 1) {
+  if (!clipName || ARM_SKIP.test(clipName) || globalThis.__noArmFix) return;
+  const c = globalThis.__armCfg || {};
+  const flex = (c.flex ?? ARM_FLEX) * scale, abd = (c.abd ?? ARM_ABDUCT) * scale, elb = (c.elbow ?? ARM_ELBOW) * scale;
+  nudgeBone(bones.upL, root, [{ axis: AX_SIDE, angle: flex }, { axis: AX_FWD, angle: abd * (c.sL ?? -1) }], 'armFixOut');
+  nudgeBone(bones.upR, root, [{ axis: AX_SIDE, angle: flex }, { axis: AX_FWD, angle: abd * (c.sR ?? 1) }], 'armFixOut');
+  nudgeBone(bones.foreL, root, [{ axis: u_hingeAxis(root, 'foreL'), angle: elb }], 'armFixOut');
+  nudgeBone(bones.foreR, root, [{ axis: u_hingeAxis(root, 'foreR'), angle: elb }], 'armFixOut');
+}
+const u_hingeAxis = (root, key) => root.userData.hinge[key];
 
 // Compose world-space deltas first, then express the result relative to the bind
 // pose. A later shoulder axis must not replace an earlier flexion rotation.
@@ -400,6 +445,7 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
       if (controller.cuesRaw !== (cues ?? null)) controller.setCues(cues);
       const time = playbackTime ?? (u.animTime = (u.animTime ?? 0) + dt);
       if (controller.tick({ time, pose, speed, carrying, travel })) {
+        relaxArms(root, b, controller.clipName);
         const offset = u.travelYaw?.offset ?? 0;
         twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
         return;

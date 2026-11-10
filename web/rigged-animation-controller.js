@@ -51,7 +51,8 @@ const LOOPING = new Map([
 // bone whose motion defines the anchor and how to score its extremes.
 const ANCHORED = new Map([
   ['Quarterback Pass', { bone: 'handR', mode: 'forward' }],   // ball release
-  ['Football Catch 1', { bone: 'handR', mode: 'reach' }],      // ball arrival
+  ['Goalkeeper Catch', { bone: 'handR', mode: 'reach' }],      // standing catch, ball arrival (default)
+  ['Football Catch 1', { bone: 'handR', mode: 'reach' }],      // dives/falls; not the default
   ['Football Catch 2', { bone: 'handR', mode: 'reach' }],
   ['Receiver Catch', { bone: 'handR', mode: 'reach' }],
 ]);
@@ -319,6 +320,8 @@ export function ensureController(root) {
   return u.controller;
 }
 
+const KICK_CLIP = 'Goalkeeper Drop Kick';
+const KICK_RATE = 2.3;
 export class RiggedAnimationController {
   constructor(root) {
     this.root = root;
@@ -482,6 +485,9 @@ export class RiggedAnimationController {
     // stride matching: the planted foot must sweep back as fast as the body moves
     if (this.action && loco && this.clipName === loco.clipName) {
       this.action.setEffectiveTimeScale(loco.rate);
+    } else if (this.action && this.clipName === KICK_CLIP) {
+      // the 3.9 s goalkeeper drop-kick wind-up is far slower than a real kick
+      this.action.setEffectiveTimeScale(KICK_RATE);
     } else if (this.action && this.clipName === PUSH_CLIP) {
       this.action.setEffectiveTimeScale(clamp(speed / this.nativeSpeed(PUSH_CLIP), 1, 1.4));
     }

@@ -524,21 +524,21 @@ function animate(now){
     dwell+=dt;
     if(dwell>=(current?POST_CLIP_PAUSE:TEXT_EVENT_SECONDS))advance();
   }
-  if(renderer){renderer.updateCamera(1/60,{dir:currentSelection?.play?.dir??1});renderer.render();}
+  if(renderer){renderer.updateCamera(Math.max(1/60,dt),{dir:currentSelection?.play?.dir??1});renderer.render();}
   requestAnimationFrame(animate);
 }
 async function start(){
   try{
-    const resp=await fetch('./data/teams/week7-six-2026-10-24.json');
+    const resp=await fetch('./data/teams/week7-six-2026-10-24.json',{cache:'no-cache'});
     if(!resp.ok)throw new Error('missing 12-team snapshot. Run python3 pipeline/build_week7_six.py after fetching pinned source files.');
     snapshot=await resp.json();
     const ids=[match.home,match.away];
-    const bs=await Promise.all(ids.map(id=>fetch('./data/playbooks/'+id+'-2025.json')));
+    const bs=await Promise.all(ids.map(id=>fetch('./data/playbooks/'+id+'-2025.json',{cache:'no-cache'})));
     for(const r of bs)if(!r.ok)throw new Error('missing '+r.url+'. Build twelve 2025 team playbook profiles.');
     books=Object.fromEntries((await Promise.all(bs.map(r=>r.json()))).map((v,i)=>[ids[i],v]));
     if(!ids.every(id=>snapshot.teams?.[id]?.roster?.length&&books[id]?.offense?.observed_plays?.length))
       throw new Error('Incomplete matchup roster or observed team playbook');
-    const lr=await fetch('./data/special_teams/2025-league.json');
+    const lr=await fetch('./data/special_teams/2025-league.json',{cache:'no-cache'});
     if(!lr.ok)throw new Error('missing 2025 special-teams tables. Run python3 pipeline/build_special_teams_2025.py.');
     league=await lr.json();
     makeViewer();

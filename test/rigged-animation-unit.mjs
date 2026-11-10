@@ -9,7 +9,7 @@ test('each gameplay pose selects its authored FBX clip and loop policy', () => {
     [POSE.BLOCK, 'Pushing In Place', true],
     [POSE.DOWN, 'Stunned (Knocked Down)', false],
     [POSE.THROW, 'Quarterback Pass', false],
-    [POSE.CATCH, 'Football Catch 1', false],
+    [POSE.CATCH, 'Goalkeeper Catch', false],
     [POSE.KICK, 'Goalkeeper Drop Kick', false],
     [POSE.HOLD, 'Football Hike', false],
     [POSE.CELEBRATE, 'Fist Pump', false],
