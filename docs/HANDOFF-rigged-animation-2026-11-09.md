@@ -66,4 +66,6 @@ The GLB is now rebuilt from the existing animated GLB with Blender 5.2, no FBX f
 - The runtime arm hack (`relaxArms`) is gone; the arms are fixed in the clips.
 - Engine: `rec.aux` (velocity, contact role and partner), `rec.kindGroup`, and `holdPreSnap` (default on). Before the snap, non-kick players no longer run their assignments; run plays shift about 0.1 yd, passes about 1.6 yd.
 
+Default pose: `FB_Idle` (13th authored clip) replaces the stock Standing Idle, whose clasped hands read as hands behind the back. To audit any clip for hands behind the hips, sample it per frame and test both hand bones' forward offset from the hips (see the scan used in this session: forward offset < 0.02 m for both hands). Remaining offenders are `Idle (1)` (unused), the throw wind-up and the hike, where reaching back is the actual motion.
+
 Known gaps: no pass-rush or swim move, no get-up after the fall, no QB drop-back clip with the ball held to the chest, no helmet logos, no replacement model. Hands do not rotate to grip (palms are not oriented by the IK).

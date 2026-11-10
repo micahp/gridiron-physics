@@ -126,12 +126,14 @@ const YD = 0.9144;
 // from the rig (planted-foot velocity relative to the hips), the clip whose
 // speed is closest is chosen, and its playback rate is set to speed / natural
 // speed so the foot stays put on the turf.
-const IDLE_CLIP = 'Standing Idle';
+// The stock Standing Idle clasps the hands at the belt, which reads as hands behind the back from the side
+// or behind. FB_Idle (authored for this rig) is the default; the stock clip stays as a fallback for old GLBs.
+const IDLE_CLIPS = ['FB_Idle', 'Standing Idle'];
 const PUSH_CLIP = 'Pushing In Place';
 const RUN_TIERS = ['Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place'];
 const CARRY_TIERS = ['Running While Holding Something', 'Running in place', 'Sprint In Place'];
 const BACK_TIERS = ['Running Backward in place'];
-const LOCO_CLIPS = new Set([...RUN_TIERS, ...CARRY_TIERS, ...BACK_TIERS, IDLE_CLIP, PUSH_CLIP]);
+const LOCO_CLIPS = new Set([...RUN_TIERS, ...CARRY_TIERS, ...BACK_TIERS, ...IDLE_CLIPS, PUSH_CLIP]);
 // Used only when a clip cannot be measured (no foot bones, e.g. unit-test rigs).
 // Values are what the real rig measures at the default 1.88 m player height.
 const FALLBACK_SPEED = {
@@ -446,7 +448,7 @@ export class RiggedAnimationController {
     const L = this.loco;
     // hold the current gait briefly; only its playback rate follows the speed
     if (L.clip && L.since !== undefined && time - L.since < GAIT_DWELL && this.clips.has(L.clip)) {
-      const rate = L.clip === IDLE_CLIP ? 1 : clamp(speed / this.nativeSpeed(L.clip), MIN_RATE, MAX_RATE);
+      const rate = IDLE_CLIPS.includes(L.clip) ? 1 : clamp(speed / this.nativeSpeed(L.clip), MIN_RATE, MAX_RATE);
       return { clipName: L.clip, rate };
     }
     const chosen = this.chooseGait({ speed, pose, carrying, travel });
@@ -461,8 +463,9 @@ export class RiggedAnimationController {
     // pose code is only a fallback when the player is too slow to tell
     const known = travel !== null && travel !== undefined && speed > 0.8;
     L.back = known ? travel < (L.back ? BACK_EXIT : BACK_ENTER) : pose === POSE.BACKPEDAL;
-    L.idle = speed < (L.idle ? IDLE_EXIT : IDLE_ENTER) && this.clips.has(IDLE_CLIP);
-    if (L.idle) return { clipName: IDLE_CLIP, rate: 1 };
+    const idleName = IDLE_CLIPS.find((n) => this.clips.has(n));
+    L.idle = speed < (L.idle ? IDLE_EXIT : IDLE_ENTER) && !!idleName;
+    if (L.idle) return { clipName: idleName, rate: 1 };
 
     const pick = (names) => names.filter((n) => this.clips.has(n))
       .map((n) => ({ n, v: this.nativeSpeed(n) }))

@@ -326,3 +326,16 @@ test('deriveCues turns a recorded handoff event into give/take cues on the corre
   assert.equal(give.anchorAt, T0 + 1.0);
   assert.ok(give.at < give.anchorAt && take.at < take.anchorAt, 'clips start before the ball changes hands');
 });
+
+test('a standing player defaults to the authored FB_Idle, not the stock clip that clasps the hands', () => {
+  const { controller, clips } = makeLocoController();
+  clips.set('FB_Idle', makeClip('FB_Idle', 2.4));
+  controller.tick({ time: T0, pose: POSE.RUN, speed: 0 });
+  controller.tick({ time: T0 + 0.2, pose: POSE.RUN, speed: 0.05 });
+  assert.equal(controller.current, 'FB_Idle');
+  // and it still falls back on an old GLB that has no authored clips
+  const old = makeLocoController();
+  old.controller.tick({ time: T0, pose: POSE.RUN, speed: 0 });
+  old.controller.tick({ time: T0 + 0.2, pose: POSE.RUN, speed: 0.05 });
+  assert.equal(old.controller.current, 'Standing Idle');
+});

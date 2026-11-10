@@ -110,6 +110,21 @@ export function recolorKitAtlas(data, size, kit) {
   const stripe = new THREE.Color(kit.trim);
   if (Math.abs(stripe.r - jersey.r) + Math.abs(stripe.g - jersey.g) + Math.abs(stripe.b - jersey.b) < 0.25) stripe.set(kit.number);
   const k = size / 1024;
+  // mean fabric brightness, sampled from bare jersey cloth just above each baked number (not the whole
+  // atlas, whose black background would drag it down), so the patch that covers the number is shaded
+  // like the cloth around it instead of a flat, visibly different rectangle
+  const SAMPLE = [[640, 290, 940, 372], [660, 628, 960, 690]];
+  let sumL = 0, nL = 0;
+  for (const [x0, y0, x1, y1] of SAMPLE) {
+    for (let y = Math.floor(y0 * k); y < y1 * k; y++) {
+      for (let x = Math.floor(x0 * k); x < x1 * k; x++) {
+        const i = (y * size + x) * 4;
+        const L = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        if (L > 12 && L < 70) { sumL += L; nL++; }
+      }
+    }
+  }
+  const meanShade = Math.max(0.62, Math.min(1.25, 0.8 + ((nL ? sumL / nL : 28) - 28) / 150));
   for (let i = 0; i < data.length; i += 4) {
     const px = (i / 4) % size, py = Math.floor(i / 4 / size);
     const L = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
@@ -126,7 +141,7 @@ export function recolorKitAtlas(data, size, kit) {
     for (let y = Math.floor(y0 * k); y < y1 * k; y++) {
       for (let x = Math.floor(x0 * k); x < x1 * k; x++) {
         const i = (y * size + x) * 4;
-        data[i] = 255 * jersey.r * 0.8; data[i + 1] = 255 * jersey.g * 0.8; data[i + 2] = 255 * jersey.b * 0.8;
+        data[i] = 255 * jersey.r * meanShade; data[i + 1] = 255 * jersey.g * meanShade; data[i + 2] = 255 * jersey.b * meanShade;
       }
     }
   }
@@ -245,7 +260,7 @@ function attachNumberDecals(clone, bones, info, kit) {
   front.geometry.userData.riggedPlayerOwned = true;
   back.geometry.userData.riggedPlayerOwned = true;
   front.userData.riggedNumberDecal = back.userData.riggedNumberDecal = true;
-  back.position.set(0, 1.38, -0.19);
+  back.position.set(0, 1.36, -0.27);
   back.rotation.y = Math.PI;
   front.renderOrder = back.renderOrder = 2;
   front.castShadow = back.castShadow = false;

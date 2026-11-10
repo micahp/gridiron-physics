@@ -56,6 +56,7 @@ Written 2026-11-09. The two blocks below are deliberately separate: block 1 is o
 - Locomotion: run clips are chosen by real speed and stride-matched to it. Backward running is picked from the actual direction of travel. The arm position is fixed inside the clips (it used to be a runtime bone nudge).
 - Twelve football clips authored in Blender: 3-point, 2-point and QB-ready stances, pass block, run block, tackle wrap, carrier struggle, tackled fall, and handoff give and take (left and right).
 - Clips are chosen from position, play type and contact (replay `aux` channel). All 22 players hold a stance before the snap; blockers face and lean into their partner; handoff clips are timed to the engine's handoff event.
+- Default pose: anyone standing around uses `FB_Idle`, authored so the arms hang at the sides with the hands visible beside the thighs (the stock idle clasped the hands at the belt, which read as hands behind the back). The stock `Fist Pump` and `Kneel` clips had both hands behind the hips and were fixed.
 - Players are kept from drawing through each other, including downed players.
 - Not present: stiff-arm, lean into cuts, get-up after a tackle, pass-rush moves, a QB drop-back with the ball at the chest. Hands do not rotate to grip.
 - Engine: players no longer run assignments before the snap (`holdPreSnap`).

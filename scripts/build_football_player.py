@@ -12,7 +12,7 @@ import football_rig as R
 import football_clips as C
 
 LOCOMOTION = ['Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place', 'Running Backward in place',
-              'running-backward-in-place', 'Standing Idle', 'Idle', 'Breathing Idle']
+              'running-backward-in-place', 'Standing Idle', 'Idle', 'Breathing Idle', 'Fist Pump', 'Kneel']
 ARM_LENGTH = 1.3
 
 

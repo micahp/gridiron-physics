@@ -1,6 +1,6 @@
 {
-  "source": "animated-v1-backup.glb",
-  "output": "animated-v2.glb",
+  "source": "orig-from-git.glb",
+  "output": "football-player-rigged-animated.glb",
   "arm_length_scale": 1.3,
   "stock_clips": [
     "Backpedal Right Turn",
@@ -62,9 +62,15 @@
     "running-backward-in-place",
     "Standing Idle",
     "Idle",
-    "Breathing Idle"
+    "Breathing Idle",
+    "Fist Pump",
+    "Kneel"
   ],
   "authored_clips": {
+    "FB_Idle": {
+      "loop": true,
+      "duration": 3.583
+    },
     "FB_Stance_3pt": {
       "loop": true,
       "duration": 1.792
@@ -114,5 +120,5 @@
       "duration": 0.917
     }
   },
-  "clip_count": 61
+  "clip_count": 62
 }

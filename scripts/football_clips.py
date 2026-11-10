@@ -42,6 +42,22 @@ def pose(*parts):
     return out
 
 
+# --------------------------------------------------------------------- default idle
+def idle():
+    # The default pose for anyone standing around: relaxed wide base, arms hanging at the sides and a
+    # little forward with soft elbows and the hands visible beside the thighs (never clasped, never
+    # behind the back), a slow weight shift and a small head turn so it never reads as frozen.
+    def key(t, sway, reach, turn):
+        return {'t': t, 'hips': (0.0, sway, -0.01), 'spec': pose(
+            torso(5, head=0),
+            {'spine.006': cs(f=0.05, l=turn, u=1.0)},
+            legs(cs(l=0.12 + sway * 2, f=0.03, u=-0.99), cs(l=-0.05, f=-0.03, u=-1.0),
+                 cs(l=-0.12 + sway * 2, f=0.03, u=-0.99), cs(l=0.05, f=-0.03, u=-1.0)),
+            hands_ik(pt(f=0.14 + reach, l=0.29, u=0.80), pt(f=0.14 + reach, l=-0.29, u=0.80), pole_out=1.0, pole_back=0.5),
+        )}
+    return {'loop': True, 'keys': [key(0.0, 0.0, 0.0, 0.0), key(1.2, 0.025, 0.02, 0.10), key(2.4, -0.02, 0.0, -0.06)]}
+
+
 # --------------------------------------------------------------------- stances
 def stance_3pt():
     # Right hand down, left forearm resting on the thigh, weight forward, tail up, head up.
@@ -191,6 +207,7 @@ def handoff_take():
 
 def all_clips():
     clips = {
+        'FB_Idle': idle(),
         'FB_Stance_3pt': stance_3pt(),
         'FB_Stance_2pt': stance_2pt(),
         'FB_QB_Ready': qb_ready(),
