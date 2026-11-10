@@ -207,18 +207,25 @@ function kickOnsets(rec) {
   return (rec._kickOnset = out);
 }
 
-function animate(root, pose, speed, dt, carrying, tk = null) {
+const LEG_LEN = 0.95; // hip to ground, metres
+function animate(root, pose, speed, dt, carrying, tk = null, dist = 0) {
   const u = root.userData;
   const { legs, arms, torso, body } = u;
   if (pose === POSE.KICK && tk !== null && (tk < KICK_START || tk > KICK_END)) pose = POSE.RUN;
-  u.phase += dt * (2.2 + speed * 0.9);
-  const swing = Math.min(0.95, speed * 0.11);
+  // Gait locked to ground: a planted foot must travel back relative to the hip at
+  // exactly the body's speed. With hip swing amplitude A (rad) and leg length LEG,
+  // that is phase advance = distance / (LEG * A), so stride length follows speed
+  // and the feet don't skate. Driven by distance moved, so it stops when paused.
+  const vm = speed * YD;
+  const swing = Math.max(0.18, Math.min(1.0, 0.2 + vm * 0.1)) * Math.min(1, vm / 1.0);
+  if (swing > 0.02) u.phase += Math.min(dist, 1.2) / (LEG_LEN * swing);
   let lean = Math.min(0.38, speed * 0.04);
   let crouch = 0;
   let armF = [Math.sin(u.phase) * swing * 0.8, -Math.sin(u.phase) * swing * 0.8];
   let armOut = 0.12;
   let legA = [Math.sin(u.phase) * swing, -Math.sin(u.phase) * swing];
-  let kneeB = [Math.max(0, -Math.cos(u.phase)) * swing * 1.4, Math.max(0, Math.cos(u.phase)) * swing * 1.4];
+  // knee folds on the forward (recovery) swing, i.e. while that hip angle is increasing
+  let kneeB = [Math.max(0, Math.cos(u.phase)) * swing * 1.5, Math.max(0, -Math.cos(u.phase)) * swing * 1.5];
   let lieT = 0, lift = 0;
   switch (pose) {
     case POSE.STANCE:
@@ -257,12 +264,17 @@ function animate(root, pose, speed, dt, carrying, tk = null) {
     body.rotation.z = 0; body.position.y = 0; u.lie = 0;
     return;
   }
+  // The run cycle is tracked exactly (smoothing would low-pass it and shrink the
+  // stride, making the feet skate); smoothing is kept for pose changes.
+  const cyc = pose === POSE.RUN || pose === POSE.BACKPEDAL;
+  u.direct = Math.max(0, Math.min(1, (u.direct ?? 0) + (cyc ? 1 : -1) * dt / 0.12));
+  const kc = cyc ? Math.max(k, u.direct) : k;
   legs.forEach((l, i) => {
-    l.hip.rotation.z += (legA[i] - l.hip.rotation.z) * k;
-    l.knee.rotation.z += (-kneeB[i] - l.knee.rotation.z) * k;
+    l.hip.rotation.z += (legA[i] - l.hip.rotation.z) * kc;
+    l.knee.rotation.z += (-kneeB[i] - l.knee.rotation.z) * kc;
   });
   arms.forEach((a, i) => {
-    a.sh.rotation.z += (armF[i] - a.sh.rotation.z) * k;
+    a.sh.rotation.z += (armF[i] - a.sh.rotation.z) * kc;
     a.sh.rotation.x = (i ? -1 : 1) * armOut;
     a.el.rotation.z = pose === POSE.CATCH ? 0.2 : 0.5;
   });
@@ -511,7 +523,10 @@ export class Renderer {
       const o = this.players.get(rec.roster[i].id);
       if (!o) continue;
       const b = i * 6;
-      o.position.set(L(b), 0, L(b + 1));
+      const nx = L(b), nz = L(b + 1);
+      const moved = o.userData.seen ? Math.hypot(nx - o.position.x, nz - o.position.z) * YD : 0;
+      o.userData.seen = true;
+      o.position.set(nx, 0, nz);
       let h0 = f0[b + 2], h1 = f1[b + 2];
       let dh = h1 - h0;
       while (dh > Math.PI) dh -= 2 * Math.PI;
@@ -519,7 +534,7 @@ export class Renderer {
       o.rotation.y = -(h0 + dh * a);
       const onset = kickOnsets(rec)[i];
       const tk = onset >= 0 ? (t - rec.t0) - onset / rec.hz : null;
-      animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, tk);
+      animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, tk, moved);
     }
     const B = n * 6;
     const bx = L(B), by = L(B + 1), bz = L(B + 2) / YD;
