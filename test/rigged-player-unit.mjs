@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../web/vendor/three.module.js';
-import { stablePhase, composeBindRelativeQuaternion, splitUniformGeometry } from '../web/rigged-player.js';
+import { stablePhase, composeBindRelativeQuaternion, splitUniformGeometry, recolorKitAtlas, kitAtlasKey } from '../web/rigged-player.js';
 
 function quaternionClose(actual, expected, epsilon = 1e-8) {
   assert.ok(actual.angleTo(expected) < epsilon, `quaternions differ by ${actual.angleTo(expected)} radians`);
@@ -45,4 +45,30 @@ test('uniform triangles split into distinct pants and jersey material groups by 
     { start: 0, count: 3, materialIndex: 0 },
     { start: 3, count: 3, materialIndex: 1 },
   ]);
+});
+
+test('recolorKitAtlas paints jersey, pants and trim regions and covers the baked number', () => {
+  const size = 1024;
+  const data = new Uint8ClampedArray(size * size * 4);
+  const put = (x, y, v) => { const i = (y * size + x) * 4; data[i] = data[i + 1] = data[i + 2] = v; data[i + 3] = 255; };
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) put(x, y, 28);   // dark fabric everywhere
+  put(900, 300, 250);                                                             // white panel pixel on the jersey
+  put(770, 460, 250);                                                             // baked number pixel (front)
+  const kit = { jersey: '#ff0000', pants: '#0000ff', trim: '#ffff00', number: '#ffffff' };
+  recolorKitAtlas(data, size, kit);
+  const at = (x, y) => { const i = (y * size + x) * 4; return [data[i], data[i + 1], data[i + 2]]; };
+  const [jr, jg, jb] = at(800, 250);   // jersey area
+  assert.ok(jr > 150 && jg < 30 && jb < 30, `jersey should be red, got ${at(800, 250)}`);
+  const [pr, pg, pb] = at(100, 600);   // pants area
+  assert.ok(pb > 150 && pr < 30 && pg < 30, `pants should be blue, got ${at(100, 600)}`);
+  const [tr, tg, tb] = at(900, 300);   // white panel takes the trim colour
+  assert.ok(tr > 180 && tg > 180 && tb < 40, `trim should be yellow, got ${at(900, 300)}`);
+  const num = at(770, 460);            // number pixel is now plain jersey, not white
+  assert.ok(num[0] > 100 && num[1] < 30, `baked number should be covered, got ${num}`);
+});
+
+test('kitAtlasKey differs per team colours and is stable', () => {
+  const a = { jersey: '#111', pants: '#222', trim: '#333', number: '#fff' };
+  assert.equal(kitAtlasKey(a), kitAtlasKey({ ...a }));
+  assert.notEqual(kitAtlasKey(a), kitAtlasKey({ ...a, jersey: '#112' }));
 });

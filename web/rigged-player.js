@@ -88,6 +88,73 @@ export function splitUniformGeometry(geometry, threshold = 0.9) {
   return { geometry, pantsIndexCount: pants.length, jerseyIndexCount: jersey.length };
 }
 
+
+// ------------------------------------------------------------ kit atlas
+//
+// ROUPA_Color is a real UV atlas: jersey front/back and sleeves (dark with white
+// side panels), collar and cuff pieces, pants, and four pad blobs, plus a baked
+// "#21" on the front and back. Instead of throwing it away and colouring by height,
+// repaint it per team: dark pixels take the jersey or pants colour (keeping the
+// fabric shading), white pixels take the trim colour, and the baked number is
+// covered (a per-player decal supplies the real one). Cached per kit.
+const ATLAS_PANTS = (x, y) => (x < 600 && y > 240) || (x < 260 && y < 250);
+const ATLAS_NUMBER_BOXES = [[668, 380, 890, 545], [685, 695, 915, 860]]; // baked "21", front and back (1024 atlas)
+const atlasCache = new Map();
+const smooth = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+export function kitAtlasKey(kit) { return [kit.jersey, kit.pants, kit.trim, kit.number].join('|'); }
+
+/** Pure pixel pass, exported for tests. `data` is RGBA over a size x size atlas. */
+export function recolorKitAtlas(data, size, kit) {
+  const jersey = new THREE.Color(kit.jersey), pants = new THREE.Color(kit.pants);
+  const stripe = new THREE.Color(kit.trim);
+  if (Math.abs(stripe.r - jersey.r) + Math.abs(stripe.g - jersey.g) + Math.abs(stripe.b - jersey.b) < 0.25) stripe.set(kit.number);
+  const k = size / 1024;
+  for (let i = 0; i < data.length; i += 4) {
+    const px = (i / 4) % size, py = Math.floor(i / 4 / size);
+    const L = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    const base = ATLAS_PANTS(px / k, py / k) ? pants : jersey;
+    const shade = Math.max(0.62, Math.min(1.25, 0.8 + (L - 28) / 150));
+    const w = smooth(70, 150, L);
+    const lit = L / 235;
+    data[i] = 255 * ((base.r * shade) * (1 - w) + stripe.r * lit * w);
+    data[i + 1] = 255 * ((base.g * shade) * (1 - w) + stripe.g * lit * w);
+    data[i + 2] = 255 * ((base.b * shade) * (1 - w) + stripe.b * lit * w);
+  }
+  // cover the baked number with plain jersey fabric
+  for (const [x0, y0, x1, y1] of ATLAS_NUMBER_BOXES) {
+    for (let y = Math.floor(y0 * k); y < y1 * k; y++) {
+      for (let x = Math.floor(x0 * k); x < x1 * k; x++) {
+        const i = (y * size + x) * 4;
+        data[i] = 255 * jersey.r * 0.8; data[i + 1] = 255 * jersey.g * 0.8; data[i + 2] = 255 * jersey.b * 0.8;
+      }
+    }
+  }
+  return data;
+}
+
+function kitAtlasTexture(sourceMap, kit) {
+  if (typeof document === 'undefined' || !sourceMap?.image) return null;
+  const key = kitAtlasKey(kit);
+  if (atlasCache.has(key)) return atlasCache.get(key);
+  const img = sourceMap.image;
+  const size = Math.min(1024, img.width || 1024);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const g = canvas.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0, size, size);
+  const px = g.getImageData(0, 0, size, size);
+  recolorKitAtlas(px.data, size, kit);
+  g.putImageData(px, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false; // glTF UV convention
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  tex.userData.sharedKitAtlas = true; // shared across players: never disposed per player
+  atlasCache.set(key, tex);
+  return tex;
+}
+
 function fabricMaterial(source, color) {
   const material = source.clone();
   material.map = null; // discard the dark atlas with its baked #21 uniform
@@ -117,6 +184,17 @@ function applyRiggedKit(clone, kit) {
     const uniformIndex = sources.findIndex((material) => String(material.name || '').toUpperCase() === 'ROUPA_MAT');
     if (uniformIndex >= 0) {
       if (sources.length !== 1) throw new Error('Expected the apparel primitive to have its own material group');
+      const atlas = kitAtlasTexture(sources[uniformIndex].map, kit);
+      if (atlas) {
+        const material = sources[uniformIndex].clone();
+        material.map = atlas;
+        material.color.set('#ffffff'); // the atlas already carries the colours
+        material.roughness = 0.78;
+        material.userData.riggedPlayerOwned = true;
+        material.needsUpdate = true;
+        object.material = material;
+        return;
+      }
       const split = splitUniformGeometry(object.geometry.clone());
       split.geometry.userData.riggedPlayerOwned = true;
       object.geometry = split.geometry;
@@ -160,13 +238,14 @@ function attachNumberDecals(clone, bones, info, kit) {
   const material = numberDecal(info, kit);
   const torso = bones.chest || bones.hip;
   if (!material || !torso) return;
-  const front = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.22), material);
-  front.position.set(0, 1.13, 0.198);
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.22), material);
+  // chest height (the body spans y 0.09-1.83); the back number is larger, as on a real jersey
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.18), material);
+  front.position.set(0, 1.36, 0.2);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.27), material);
   front.geometry.userData.riggedPlayerOwned = true;
   back.geometry.userData.riggedPlayerOwned = true;
   front.userData.riggedNumberDecal = back.userData.riggedNumberDecal = true;
-  back.position.set(0, 1.13, -0.176);
+  back.position.set(0, 1.38, -0.19);
   back.rotation.y = Math.PI;
   front.renderOrder = back.renderOrder = 2;
   front.castShadow = back.castShadow = false;
@@ -300,7 +379,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
         for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
           if (!material?.userData?.riggedPlayerOwned) continue;
           materials.add(material);
-          if (material.map?.userData?.riggedPlayerOwned) textures.add(material.map);
+          if (material.map?.userData?.riggedPlayerOwned && !material.map.userData.sharedKitAtlas) textures.add(material.map);
         }
       });
       for (const texture of textures) texture.dispose();
