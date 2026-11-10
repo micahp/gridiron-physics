@@ -42,6 +42,30 @@ def pose(*parts):
     return out
 
 
+# --------------------------------------------------------------------- locomotion
+def walk():
+    # Walk cycle (1.0 s, two steps): heel strike, passing, heel strike on the other leg, passing. Fills the gap
+    # between standing and the jog clip, which at its slowest still shuffles and slides.
+    def keyA(flip):
+        spec = pose(
+            torso(5, head=0),
+            legs(cs(f=0.40, l=0.06, u=-0.91), cs(f=0.22, u=-0.97), cs(f=-0.38, l=-0.06, u=-0.92), cs(f=-0.62, u=-0.78)),
+            hands_ik(pt(f=-0.10, l=0.30, u=0.85), pt(f=0.30, l=-0.30, u=0.88), pole_out=1.0, pole_back=0.4),
+        )
+        return mirror(spec) if flip else spec
+
+    def keyP(flip):
+        spec = pose(
+            torso(5, head=0),
+            legs(cs(f=0.04, l=0.06, u=-1.0), cs(f=-0.02, u=-1.0), cs(f=0.18, l=-0.06, u=-0.98), cs(f=-0.45, u=-0.89)),
+            hands_ik(pt(f=0.10, l=0.30, u=0.83), pt(f=0.10, l=-0.30, u=0.83), pole_out=1.0, pole_back=0.4),
+        )
+        return mirror(spec) if flip else spec
+    return {'loop': True, 'keys': [
+        {'t': 0.0, 'hips': (0, 0, -0.015), 'spec': keyA(False)}, {'t': 0.25, 'hips': (0, 0, 0.0), 'spec': keyP(False)},
+        {'t': 0.5, 'hips': (0, 0, -0.015), 'spec': keyA(True)}, {'t': 0.75, 'hips': (0, 0, 0.0), 'spec': keyP(True)}]}
+
+
 # --------------------------------------------------------------------- default idle
 def idle():
     # The default pose for anyone standing around: relaxed wide base, arms hanging at the sides and a
@@ -272,6 +296,7 @@ def holder():
 def all_clips():
     clips = {
         'FB_Idle': idle(),
+        'FB_Walk': walk(),
         'FB_Kick': kick(),
         'FB_Punt': punt(),
         'FB_Holder': holder(),

@@ -717,6 +717,12 @@ export class Renderer {
         const speed = L(b + 3);
         const offset = travelYawOffset(o, { pose: f0[b + 4], speed, dir, dt });
         o.rotation.y = -(yaw + offset);
+        // velocity (m/s) and where the hips face, for acceleration and turn lean
+        if (ctx) {
+          ctx.vx = vel ? vel.vx : (f1[b] - f0[b]) * rec.hz * YD;
+          ctx.vy = vel ? vel.vy : (f1[b + 1] - f0[b + 1]) * rec.hz * YD;
+          ctx.bodyYaw = yaw + offset;
+        }
         // cosine between the hips and the travel: 1 straight ahead, -1 backwards
         const travel = dir === null ? null : Math.cos(dir - offset);
         animateRigged(o, f0[b + 4], speed, dt, f0[b + 5] > 0.5, t, this.cuesById?.get(rec.roster[i].id) || null, travel, ctx);

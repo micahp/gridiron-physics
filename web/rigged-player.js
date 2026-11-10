@@ -15,7 +15,7 @@
 import * as THREE from './vendor/three.module.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
-import { ensureController } from './rigged-animation-controller.js';
+import { ensureController, isLocomotionClip } from './rigged-animation-controller.js';
 
 import { POSE } from './pose-codes.js';
 export { POSE };
@@ -488,6 +488,41 @@ function rotWorldComposed(bone, rotations, k) {
   bone.quaternion.slerp(_q, k);
 }
 
+// ---------------------------------------------------------------- lean
+//
+// A runner leans into acceleration (the body tips forward to push the ground back) and into a turn (roll
+// toward the inside, by centripetal acceleration), and rocks back when he brakes. The clips are cycles with
+// no sense of that, which is why a player who starts running looked like he was standing straight and
+// sliding. This tips the whole body about the feet from the recorded velocity, whatever clip is playing.
+const G_ACC = 9.81;
+// the run clips already carry their own forward lean, so this is the extra tip from acceleration, not all of it
+const LEAN_MAX_FWD = 0.26, LEAN_MAX_BACK = 0.2, LEAN_MAX_ROLL = 0.28;
+/**
+ * @param state per-player state object, mutated ({ vx, vy, t, pitch, roll })
+ * @param vx, vy world velocity in m/s on the field plane; yaw: where the body faces on that plane; time: playback s
+ * @returns { pitch, roll } radians; pitch > 0 leans forward, roll > 0 leans to the player's left
+ */
+export function bodyLean(state, { vx, vy, yaw, time }) {
+  if (state.t === undefined || time - state.t > 0.5 || time < state.t - 1e-6) {
+    // first sample, a seek or a new play: no history, no lean
+    Object.assign(state, { vx, vy, t: time, pitch: 0, roll: 0 });
+    return { pitch: 0, roll: 0 };
+  }
+  const dt = time - state.t;
+  if (dt < 1 / 120) return { pitch: state.pitch, roll: state.roll };   // paused: hold the pose
+  const ax = (vx - state.vx) / dt, ay = (vy - state.vy) / dt;
+  const fwd = ax * Math.cos(yaw) + ay * Math.sin(yaw);
+  const left = ax * Math.sin(yaw) - ay * Math.cos(yaw);
+  // lateral acceleration of a turn is v * omega; the velocity change already carries it
+  const tp = Math.max(-LEAN_MAX_BACK, Math.min(LEAN_MAX_FWD, Math.atan(fwd / G_ACC) * 0.55));
+  const tr = Math.max(-LEAN_MAX_ROLL, Math.min(LEAN_MAX_ROLL, Math.atan(left / G_ACC) * 0.7));
+  const k = 1 - Math.exp(-dt * 7);
+  state.pitch += (tp - state.pitch) * k;
+  state.roll += (tr - state.roll) * k;
+  Object.assign(state, { vx, vy, t: time });
+  return { pitch: state.pitch, roll: state.roll };
+}
+
 export function animateRigged(root, pose, speed, dt, carrying, playbackTime = null, cues = null, travel = null, contact = null) {
   if (neutralMode) return; // Test 1: leave the imported bind pose untouched
   const u = root.userData;
@@ -503,6 +538,15 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
       if (controller.cuesRaw !== (cues ?? null)) controller.setCues(cues);
       const time = playbackTime ?? (u.animTime = (u.animTime ?? 0) + dt);
       if (controller.tick({ time, pose, speed, carrying, travel, contact })) {
+        // lean into acceleration and turns while he is moving under a locomotion clip; contact and set-piece clips
+        // own their own posture
+        if (contact && contact.vx !== undefined && isLocomotionClip(controller.clipName)) {
+          const L = bodyLean((u.lean ??= {}), { vx: contact.vx, vy: contact.vy, yaw: contact.bodyYaw ?? 0, time });
+          u.body.rotation.z = -L.pitch;
+          u.body.rotation.x = -L.roll;
+        } else if (u.lean) {
+          u.body.rotation.z = 0; u.body.rotation.x = 0; u.lean = null;
+        }
         const offset = u.travelYaw?.offset ?? 0;
         twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
         return;

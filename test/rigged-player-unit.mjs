@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../web/vendor/three.module.js';
-import { stablePhase, composeBindRelativeQuaternion, splitUniformGeometry, recolorKitAtlas, kitAtlasKey, paintJerseyNumber } from '../web/rigged-player.js';
+import { stablePhase, composeBindRelativeQuaternion, splitUniformGeometry, recolorKitAtlas, kitAtlasKey, paintJerseyNumber, bodyLean } from '../web/rigged-player.js';
 
 function quaternionClose(actual, expected, epsilon = 1e-8) {
   assert.ok(actual.angleTo(expected) < epsilon, `quaternions differ by ${actual.angleTo(expected)} radians`);
@@ -90,4 +90,28 @@ test('paintJerseyNumber writes the number once on the front panel and once on th
   paintJerseyNumber(g, 512, undefined, { trim: '#111', number: '#fff' });
   paintJerseyNumber(g, 512, '  ', { trim: '#111', number: '#fff' });
   assert.equal(calls.length, 0);
+});
+
+test('bodyLean: leans forward when accelerating, back when braking, into a turn, and holds still when paused or seeking', () => {
+  const st = {};
+  // heading +x. Prime with a standing sample, then accelerate at 5 m/s^2 for half a second
+  bodyLean(st, { vx: 0, vy: 0, yaw: 0, time: 0 });
+  let L;
+  for (let i = 1; i <= 15; i++) L = bodyLean(st, { vx: 5 * (i / 30), vy: 0, yaw: 0, time: i / 30 });
+  assert.ok(L.pitch > 0.15 && L.pitch <= 0.26 + 1e-9, `forward lean ${L.pitch}`);
+  assert.ok(Math.abs(L.roll) < 0.02, 'straight-line acceleration does not roll');
+  // paused (same time): the pose is held, not decayed or jumped
+  const held = bodyLean(st, { vx: 2.5, vy: 0, yaw: 0, time: 15 / 30 });
+  assert.equal(held.pitch, L.pitch);
+  // brake hard: rocks back
+  for (let i = 16; i <= 40; i++) L = bodyLean(st, { vx: Math.max(0, 2.5 - 8 * ((i - 15) / 30)), vy: 0, yaw: 0, time: i / 30 });
+  assert.ok(L.pitch < 0, `braking should lean back, got ${L.pitch}`);
+  // a turn to the left (heading +x, left = (sin 0, -cos 0) = -y): velocity gains -y while speed stays
+  const t = {};
+  bodyLean(t, { vx: 6, vy: 0, yaw: 0, time: 0 });
+  for (let i = 1; i <= 20; i++) L = bodyLean(t, { vx: 6, vy: -4 * (i / 30), yaw: 0, time: i / 30 });
+  assert.ok(L.roll > 0.15, `leaning into a left turn, got roll ${L.roll}`);
+  // a seek backwards in time or a long gap resets: no stale lean
+  const r = bodyLean(t, { vx: 6, vy: 0, yaw: 0, time: 0.1 });
+  assert.deepEqual(r, { pitch: 0, roll: 0 });
 });

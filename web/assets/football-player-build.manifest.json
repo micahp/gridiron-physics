@@ -71,6 +71,10 @@
       "loop": true,
       "duration": 3.583
     },
+    "FB_Walk": {
+      "loop": true,
+      "duration": 1.0
+    },
     "FB_Kick": {
       "loop": false,
       "duration": 1.25
@@ -132,5 +136,5 @@
       "duration": 0.917
     }
   },
-  "clip_count": 65
+  "clip_count": 66
 }

@@ -134,14 +134,14 @@ const YD = 0.9144;
 // or behind. FB_Idle (authored for this rig) is the default; the stock clip stays as a fallback for old GLBs.
 const IDLE_CLIPS = ['FB_Idle', 'Standing Idle'];
 const PUSH_CLIP = 'Pushing In Place';
-const RUN_TIERS = ['Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place'];
-const CARRY_TIERS = ['Running While Holding Something', 'Running in place', 'Sprint In Place'];
+const RUN_TIERS = ['FB_Walk', 'Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place'];
+const CARRY_TIERS = ['FB_Walk', 'Running While Holding Something', 'Running in place', 'Sprint In Place'];
 const BACK_TIERS = ['Running Backward in place'];
 const LOCO_CLIPS = new Set([...RUN_TIERS, ...CARRY_TIERS, ...BACK_TIERS, ...IDLE_CLIPS, PUSH_CLIP]);
 // Used only when a clip cannot be measured (no foot bones, e.g. unit-test rigs).
 // Values are what the real rig measures at the default 1.88 m player height.
 const FALLBACK_SPEED = {
-  'Jogging In Place': 1.5, 'run-in-place': 3.1, 'Running in place': 4.2, 'Sprint In Place': 4.8,
+  'FB_Walk': 1.1, 'Jogging In Place': 1.5, 'run-in-place': 3.1, 'Running in place': 4.2, 'Sprint In Place': 4.8,
   'Running While Holding Something': 3.0, 'Running Backward in place': 2.6, [PUSH_CLIP]: 0.4,
 };
 const MIN_RATE = 0.6;         // below this a cycle reads as slow motion
@@ -385,6 +385,11 @@ function findBone(root, name) {
     if (clean === name || o.name === name) found = o;
   });
   return found;
+}
+
+/** Is this a cycle that carries the body along the ground (as opposed to a set-piece or contact clip)? */
+export function isLocomotionClip(name) {
+  return !!name && LOCO_CLIPS.has(name);
 }
 
 /** Attach a controller to a built rigged player (idempotent). */
