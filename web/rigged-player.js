@@ -448,10 +448,21 @@ function applyRiggedKit(clone, kit, info) {
   });
 }
 
+export const BUILD_ID = 'footlock-2026-11-10b';
 let loaderPromise = null;
 export function loadRiggedPlayer() {
   if (!loaderPromise) {
-    loaderPromise = new GLTFLoader().loadAsync(ASSET_URL).catch((err) => {
+    loaderPromise = new GLTFLoader().loadAsync(ASSET_URL).then((gltf) => {
+      // visible build stamp: which viewer build and model this page is really running
+      if (typeof document !== 'undefined' && document.body && !document.getElementById('gp-build-stamp')) {
+        const el = document.createElement('div');
+        el.id = 'gp-build-stamp';
+        el.textContent = `build ${BUILD_ID} · ${(gltf.animations || []).length} clips`;
+        el.style.cssText = 'position:fixed;right:6px;bottom:4px;z-index:9999;font:11px/1.2 monospace;color:#fff;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:3px;pointer-events:none';
+        document.body.appendChild(el);
+      }
+      return gltf;
+    }).catch((err) => {
       loaderPromise = null;
       throw err;
     });
@@ -510,6 +521,10 @@ export function buildRiggedPlayer(gltf, info, kit) {
   const S = fit / YD; // metres -> yards (same convention as the primitive body)
   rig.scale.setScalar(S);
   rig.position.y = -bb.min.y * S; // ground the feet
+  // height of the ball of the foot when it stands on the turf (yards), for the foot lock
+  root.updateMatrixWorld(true);
+  const toeBone = bones.toeL || bones['toe.L'];
+  const toeRest = toeBone ? toeBone.getWorldPosition(new THREE.Vector3()).y : undefined;
 
   // Capture the bind pose so posing can be expressed as an offset from rest.
   const dir = (from, to) => {
@@ -550,7 +565,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
   root.add(ring);
 
   root.userData = {
-    rigged: true, id: info.id, jerseyNumber: String(info.jersey ?? ''), body, ring, bones,
+    rigged: true, id: info.id, jerseyNumber: String(info.jersey ?? ''), body, ring, bones, toeRest,
     animation: { mixer, clips, activeAction: null, activeClipName: null },
     phase: stablePhase(info.id, info.animationSeed ?? info.seed ?? kit?.seed ?? ''), lie: 0,
     hinge: {
@@ -697,6 +712,120 @@ export function bodyLean(state, { vx, vy, yaw, time }) {
   return { pitch: state.pitch, roll: state.roll };
 }
 
+// ---------------------------------------------------------------- foot lock
+//
+// The clips are cycles played in place; the engine moves the body at its own speed. Whenever the two disagree
+// the foot on the ground slides over the turf ("skating"). This pins the ball of the planted foot to the spot
+// where it touched down and solves the leg (thigh + shin) to reach it, until the clip lifts the foot or the leg
+// runs out of reach; then the foot is picked up and carried through the air back to the clip's pose.
+const FOOT_PLANT_M = 0.03, FOOT_LIFT_M = 0.07, FOOT_RECOVER_M = 0.12;
+const _fh = new THREE.Vector3(), _fk = new THREE.Vector3(), _fa = new THREE.Vector3(), _ftoe = new THREE.Vector3();
+const _ft = new THREE.Vector3(), _fn = new THREE.Vector3(), _fv1 = new THREE.Vector3(), _fv2 = new THREE.Vector3();
+const _ffq = new THREE.Quaternion(), _fdq = new THREE.Quaternion(), _fpw = new THREE.Quaternion(), _flq = new THREE.Quaternion();
+const wpos = (bone, out) => out.setFromMatrixPosition(bone.matrixWorld);
+function rotateBoneWorld(bone, dq) {
+  bone.parent.getWorldQuaternion(_fpw);
+  _flq.copy(_fpw).invert().multiply(dq).multiply(_fpw);
+  bone.quaternion.premultiply(_flq);
+  bone.updateWorldMatrix(false, true);
+}
+function solveLeg(root, thigh, shin, foot, target) {
+  foot.getWorldQuaternion(_ffq);
+  wpos(thigh, _fh); wpos(shin, _fk); wpos(foot, _fa);
+  const l1 = _fh.distanceTo(_fk), l2 = _fk.distanceTo(_fa);
+  if (l1 < 1e-6 || l2 < 1e-6) return;
+  const d = Math.max(Math.abs(l1 - l2) + 1e-4, Math.min((l1 + l2) * 0.999, _fh.distanceTo(target)));
+  const interior = (len) => Math.acos(Math.max(-1, Math.min(1, (l1 * l1 + l2 * l2 - len * len) / (2 * l1 * l2))));
+  const cur = interior(_fh.distanceTo(_fa)), des = interior(d);
+  _fv1.subVectors(_fk, _fh).normalize(); _fv2.subVectors(_fa, _fk).normalize();
+  _fn.crossVectors(_fv1, _fv2);
+  if (_fn.lengthSq() < 1e-6) {   // straight leg: the knee folds the shin backward
+    root.getWorldQuaternion(_fpw);
+    _fv2.set(-1, 0, 0).applyQuaternion(_fpw);
+    _fn.crossVectors(_fv1, _fv2);
+    if (_fn.lengthSq() < 1e-6) return;
+  }
+  _fn.normalize();
+  rotateBoneWorld(shin, _fdq.setFromAxisAngle(_fn, cur - des));
+  wpos(foot, _fa);
+  _fv1.subVectors(_fa, _fh).normalize(); _fv2.subVectors(target, _fh).normalize();
+  rotateBoneWorld(thigh, _fdq.setFromUnitVectors(_fv1, _fv2));
+  // the foot keeps the clip's own orientation (heel rises over the pinned toe)
+  foot.parent.getWorldQuaternion(_fpw);
+  foot.quaternion.copy(_fpw.invert()).multiply(_ffq);
+  foot.updateWorldMatrix(false, true);
+}
+function lockFeet(root, time, active) {
+  const u = root.userData, b = u.bones;
+  const st = (u.feet ??= { t: time, L: {}, R: {} });
+  const dt = time - st.t;
+  const reset = dt < -1e-6 || dt > 0.25;
+  st.t = time;
+  // if the mixer did not rewrite a leg bone since our last pass (paused, or a held key), put the clip's own
+  // value back first so the correction never stacks on itself
+  for (const side of ['L', 'R']) {
+    const f = st[side];
+    for (const key of ['thigh', 'shin', 'foot']) {
+      const bone = b[key + side], s = f[key];
+      if (bone && s?.dirty && bone.quaternion.equals(s.out)) bone.quaternion.copy(s.clip);
+      if (s) s.dirty = false;
+    }
+    if (reset || !active) { f.on = false; f.w = 0; f.wait = false; f.lift = 0; }
+  }
+  const step = Math.max(0, Math.min(0.1, dt));
+  // the run clips carry the stance foot several centimetres above the turf; st.drop lowers the body by that much
+  if (reset) { st.drop = 0; st.floor = undefined; }
+  if (!active || u.toeRest === undefined) {
+    st.floor = undefined;
+    if (st.drop) { st.drop = Math.max(0, st.drop - step * 0.6 / YD); u.body.position.y = -st.drop; }
+    return;
+  }
+  const drop = st.drop ?? 0;
+  u.body.position.y = -drop;
+  root.updateWorldMatrix(true, true);
+  // stance height of this clip: a slowly rising floor under the lower toe (clip heights, before the drop)
+  const clipToe = (side) => (b['toe' + side] ? wpos(b['toe' + side], _ftoe).y - root.position.y + drop : Infinity);
+  const lowest = Math.min(clipToe('L'), clipToe('R'));
+  st.floor = st.floor === undefined ? lowest : Math.min(st.floor + step * 0.15 / YD, lowest);
+  const want = Math.max(0, Math.min(0.2 / YD, st.floor - u.toeRest));
+  st.drop = drop + (want - drop) * (1 - Math.exp(-step * 10));
+  for (const side of ['L', 'R']) {
+    const f = st[side];
+    const thigh = b['thigh' + side], shin = b['shin' + side], foot = b['foot' + side], toe = b['toe' + side];
+    if (!thigh || !shin || !foot || !toe) continue;
+    wpos(thigh, _fh); wpos(shin, _fk); wpos(foot, _fa); wpos(toe, _ftoe);
+    const toeY = _ftoe.y - root.position.y + drop;
+    const low = toeY < st.floor + (f.on ? FOOT_LIFT_M : FOOT_PLANT_M) / YD;
+    const release = (wait) => {
+      f.on = false; f.w = 1; f.wait = wait;
+      f.ox = (f.tx ?? _fa.x) - _fa.x; f.oz = (f.tz ?? _fa.z) - _fa.z;
+    };
+    if (!low) { f.wait = false; if (f.on) release(false); }
+    else if (!f.on && !f.wait) { f.on = true; f.w = 0; f.x = _ftoe.x; f.z = _ftoe.z; }
+    if (f.on) {
+      f.tx = f.x + (_fa.x - _ftoe.x); f.tz = f.z + (_fa.z - _ftoe.z);
+      _ft.set(f.tx, _fa.y, f.tz);
+      const reach = (_fh.distanceTo(_fk) + _fk.distanceTo(_fa)) * 0.985;
+      if (_fh.distanceTo(_ft) > reach) release(true);   // toe-off: the leg cannot stay on that spot any longer
+    }
+    f.lift = Math.max(0, Math.min(1, (f.lift ?? 0) + (f.wait && !f.on ? step / 0.06 : -step / 0.1)));
+    if (!f.on) {
+      f.w = Math.max(0, (f.w ?? 0) - step / 0.09);
+      if (f.w <= 0 && f.lift <= 0) continue;
+      const e = f.w * f.w * (3 - 2 * f.w);
+      _ft.set(_fa.x + (f.ox ?? 0) * e, _fa.y + f.lift * FOOT_RECOVER_M / YD, _fa.z + (f.oz ?? 0) * e);
+    }
+    const keep = {};
+    for (const [key, bone] of [['thigh', thigh], ['shin', shin], ['foot', foot]]) {
+      keep[key] = (f[key] ??= { clip: new THREE.Quaternion(), out: new THREE.Quaternion(), dirty: false });
+      keep[key].clip.copy(bone.quaternion);
+    }
+    solveLeg(root, thigh, shin, foot, _ft);
+    keep.thigh.out.copy(thigh.quaternion); keep.shin.out.copy(shin.quaternion); keep.foot.out.copy(foot.quaternion);
+    keep.thigh.dirty = keep.shin.dirty = keep.foot.dirty = true;
+  }
+}
+
 export function animateRigged(root, pose, speed, dt, carrying, playbackTime = null, cues = null, travel = null, contact = null) {
   if (neutralMode) return; // Test 1: leave the imported bind pose untouched
   const u = root.userData;
@@ -724,6 +853,7 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
         }
         const offset = u.travelYaw?.offset ?? 0;
         if (!globalThis.__audit?.noTwist) twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
+        lockFeet(root, time, isLocomotionClip(controller.clipName) && speed > 0.5 && !globalThis.__audit?.noFootLock);
         return;
       }
     }
