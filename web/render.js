@@ -706,6 +706,17 @@ export class Renderer {
         ctx = { role, partner, back: sp > 0.6 && vx * Math.cos(yaw) + vy * Math.sin(yaw) < -0.35 * sp };
       }
       if (ctx) { ctx.slot = rec.roster[i].slot ?? null; ctx.kind = rec.kindGroup ?? null; }
+      // a ball carrier with a defender closing alongside him, for the stiff-arm
+      if (ctx && f0[b + 5] > 0.5) {
+        let best = null;
+        for (let j = 0; j < n; j++) {
+          if (rec.roster[j].team === rec.roster[i].team) continue;
+          const dx = X[j] - X[i], dz = Z[j] - Z[i], d = Math.hypot(dx, dz);
+          const fwd = dx * Math.cos(yaw) + dz * Math.sin(yaw), lft = dx * Math.sin(yaw) - dz * Math.cos(yaw);
+          if (d < 2.4 && fwd > -0.4 && fwd < 2.2 && Math.abs(lft) > 0.35 && (!best || d < best.dist)) best = { side: lft > 0 ? 'L' : 'R', dist: d };
+        }
+        if (best) ctx.opp = best;
+      }
       else ctx = { role: 0, partner: -1, back: false, slot: rec.roster[i].slot ?? null, kind: rec.kindGroup ?? null };
       o.rotation.y = -yaw;
       if (o.userData.rigged) {

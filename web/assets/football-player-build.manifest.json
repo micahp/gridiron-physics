@@ -75,6 +75,50 @@
       "loop": true,
       "duration": 1.0
     },
+    "FB_Dropback": {
+      "loop": true,
+      "duration": 0.917
+    },
+    "FB_StiffArm_L": {
+      "loop": false,
+      "duration": 0.708
+    },
+    "FB_Swim": {
+      "loop": false,
+      "duration": 0.917
+    },
+    "FB_Rip": {
+      "loop": false,
+      "duration": 0.917
+    },
+    "FB_GetUp": {
+      "loop": false,
+      "duration": 1.292
+    },
+    "FB_Catch_High": {
+      "loop": false,
+      "duration": 0.958
+    },
+    "FB_Catch_Low": {
+      "loop": false,
+      "duration": 0.958
+    },
+    "FB_Catch_Run": {
+      "loop": false,
+      "duration": 0.833
+    },
+    "FB_Tackle_Dive": {
+      "loop": false,
+      "duration": 1.0
+    },
+    "FB_Tackle_Form": {
+      "loop": false,
+      "duration": 0.708
+    },
+    "FB_Tackled_Back": {
+      "loop": false,
+      "duration": 1.083
+    },
     "FB_Kick": {
       "loop": false,
       "duration": 1.25
@@ -134,7 +178,11 @@
     "FB_Handoff_Take_R": {
       "loop": false,
       "duration": 0.917
+    },
+    "FB_StiffArm_R": {
+      "loop": false,
+      "duration": 0.708
     }
   },
-  "clip_count": 66
+  "clip_count": 78
 }

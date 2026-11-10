@@ -68,11 +68,19 @@ export const FB = Object.freeze({
   STANCE_3PT: 'FB_Stance_3pt', STANCE_2PT: 'FB_Stance_2pt', QB_READY: 'FB_QB_Ready',
   BLOCK_PASS: 'FB_Block_Pass', BLOCK_RUN: 'FB_Block_Run', TACKLE: 'FB_Tackle_Wrap',
   CARRY: 'FB_Carry_Struggle', FALL: 'FB_Tackled_Fall', KICK: 'FB_Kick', PUNT: 'FB_Punt', HOLDER: 'FB_Holder',
+  FALL_BACK: 'FB_Tackled_Back', GETUP: 'FB_GetUp', DROPBACK: 'FB_Dropback', STIFF_L: 'FB_StiffArm_L', STIFF_R: 'FB_StiffArm_R',
+  TACKLE_DIVE: 'FB_Tackle_Dive', TACKLE_FORM: 'FB_Tackle_Form', SWIM: 'FB_Swim', RIP: 'FB_Rip',
+  CATCH_HIGH: 'FB_Catch_High', CATCH_LOW: 'FB_Catch_Low', CATCH_RUN: 'FB_Catch_Run',
 });
 // seconds into each handoff clip at which the ball changes hands
 const HANDOFF_ANCHOR = Object.freeze({ give: 0.55, take: 0.6 });
 // seconds into FB_Kick / FB_Punt at which the foot meets the ball (scripts/football_clips.py)
 const KICK_ANCHOR = Object.freeze({ kick: 0.42, punt: 0.40 });
+// seconds into each one-shot at which the recorded moment (hands on the ball, arms closing on the carrier, the
+// escape from a block) falls; the clip is started that long before the event (scripts/football_clips.py)
+const ONESHOT_ANCHOR = Object.freeze({
+  FB_Catch_High: 0.35, FB_Catch_Low: 0.35, FB_Catch_Run: 0.35, FB_Tackle_Dive: 0.3, FB_Tackle_Form: 0.3, FB_Swim: 0.45, FB_Rip: 0.45,
+});
 const ROLE = Object.freeze({ NONE: 0, ENGAGED: 1, TACKLER: 2, WRAPPED: 3 });
 
 /**
@@ -137,12 +145,13 @@ const PUSH_CLIP = 'Pushing In Place';
 const RUN_TIERS = ['FB_Walk', 'Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place'];
 const CARRY_TIERS = ['FB_Walk', 'Running While Holding Something', 'Running in place', 'Sprint In Place'];
 const BACK_TIERS = ['Running Backward in place'];
-const LOCO_CLIPS = new Set([...RUN_TIERS, ...CARRY_TIERS, ...BACK_TIERS, ...IDLE_CLIPS, PUSH_CLIP]);
+const BALL_BACK_TIERS = ['FB_Dropback']; // a quarterback backing up with the ball at his chest
+const LOCO_CLIPS = new Set([...RUN_TIERS, ...CARRY_TIERS, ...BACK_TIERS, ...BALL_BACK_TIERS, ...IDLE_CLIPS, PUSH_CLIP]);
 // Used only when a clip cannot be measured (no foot bones, e.g. unit-test rigs).
 // Values are what the real rig measures at the default 1.88 m player height.
 const FALLBACK_SPEED = {
   'FB_Walk': 1.1, 'Jogging In Place': 1.5, 'run-in-place': 3.1, 'Running in place': 4.2, 'Sprint In Place': 4.8,
-  'Running While Holding Something': 3.0, 'Running Backward in place': 2.6, [PUSH_CLIP]: 0.4,
+  'Running While Holding Something': 3.0, 'Running Backward in place': 2.6, 'FB_Dropback': 2.2, [PUSH_CLIP]: 0.4,
 };
 const MIN_RATE = 0.6;         // below this a cycle reads as slow motion
 const MAX_RATE = 1.6;         // above this cadence is cartoonish; accept a little slide
@@ -274,6 +283,31 @@ export function deriveCues(rec, { hz = rec?.hz || 30 } = {}) {
     push(e.to, { kind: 'handoff_take', side: sideOf(ti, gi), at: e.t - HANDOFF_ANCHOR.take, anchorAt: e.t, source: 'event' });
   }
 
+  // 0c. tackles: the tackler dives or form-tackles with contact on the 'wrapped' event, and the carrier goes
+  // down backward when the tackler is in front of him, forward otherwise (a pair, timed to the same moment)
+  for (const e of rec.events || []) {
+    if (e?.type !== 'wrapped' || !e.by || !e.on) continue;
+    const ti = slotOf.get(e.by), ci = slotOf.get(e.on);
+    if (ti === undefined || ci === undefined) continue;
+    const f = rec.frames[index(e.t)];
+    const clip = f[ti * 6 + 3] > 6.0 ? FB.TACKLE_DIVE : FB.TACKLE_FORM;
+    push(e.by, { kind: 'oneshot', clip, at: e.t - ONESHOT_ANCHOR[clip], anchorAt: e.t, source: 'event' });
+    const h = f[ci * 6 + 2], dx = f[ti * 6] - f[ci * 6], dz = f[ti * 6 + 1] - f[ci * 6 + 1];
+    const front = dx * Math.cos(h) + dz * Math.sin(h) > 0.25 * Math.hypot(dx, dz);
+    push(e.on, { kind: 'fall_variant', clip: front ? FB.FALL_BACK : FB.FALL, at: e.t, anchorAt: e.t, source: 'event' });
+  }
+  // 0d. a defender who sheds a block does it with a swim or a rip (one per second at most per player)
+  const lastRush = new Map();
+  for (const e of rec.events || []) {
+    if (e?.type !== 'shed' || !e.by) continue;
+    const i = slotOf.get(e.by);
+    if (i === undefined || rec.frames[index(e.t)][i * 6 + 3] > 5) continue;
+    if (e.t - (lastRush.get(e.by) ?? -9) < 1.0) continue;
+    lastRush.set(e.by, e.t);
+    const clip = [...e.by].reduce((a, c) => a + c.charCodeAt(0), 0) % 2 ? FB.SWIM : FB.RIP;
+    push(e.by, { kind: 'oneshot', clip, at: e.t - ONESHOT_ANCHOR[clip], anchorAt: e.t, source: 'event' });
+  }
+
   // 0b. kicks: the engine stamps KICK at contact and never clears it, so the pose code says nothing about when
   // the kick happens; the 'kick' event does. The clip starts early enough that the foot meets the ball on it.
   for (const e of rec.events || []) {
@@ -298,7 +332,14 @@ export function deriveCues(rec, { hz = rec?.hz || 30 } = {}) {
         if (!ballUp(j)) { anchor = at(j); break; }
       }
     }
-    push(e.by, { kind: e.type, at: e.t, anchorAt: anchor, source: 'event' });
+    // which catch: judged from where the ball is when the hands meet it
+    let clip = null;
+    const ri = slotOf.get(e.by);
+    if (e.type === 'catch' && ri !== undefined) {
+      const z = rec.frames[k][bw + 2], v = rec.frames[k][ri * 6 + 3];
+      clip = z > 2.3 ? FB.CATCH_HIGH : z < 0.85 ? FB.CATCH_LOW : v > 4.0 ? FB.CATCH_RUN : null;
+    }
+    push(e.by, { kind: e.type, at: e.t, anchorAt: anchor, source: 'event', ...(clip ? { clip } : {}) });
   }
 
   // 2. fallback for players the event stream did not mention
@@ -415,6 +456,9 @@ export class RiggedAnimationController {
     this.poseSince = 0;
     this.pendingPose = null;
     this.scheduled = new Set(); // cue keys already honoured
+    this.lastPose = null;
+    this.fallVariant = null;   // set by a 'fall_variant' cue: which way this carrier goes down
+    this.lastStiff = -9;
     this.lastAnchorAt = null;   // playback time of the most recent anchored moment
     this.model = this.mixer?.getRoot?.() || root;
     this.loco = { clip: null, idle: false, back: false, stanceMoving: false, blockMoving: false };
@@ -488,7 +532,8 @@ export class RiggedAnimationController {
     const pick = (names) => names.filter((n) => this.clips.has(n))
       .map((n) => ({ n, v: this.nativeSpeed(n) }))
       .sort((a, b) => a.v - b.v);
-    let tiers = pick(L.back ? BACK_TIERS : carrying ? CARRY_TIERS : RUN_TIERS);
+    const ballBack = L.back && carrying ? pick(BALL_BACK_TIERS) : [];
+    let tiers = ballBack.length ? ballBack : pick(L.back ? BACK_TIERS : carrying ? CARRY_TIERS : RUN_TIERS);
     if (!tiers.length) tiers = pick(RUN_TIERS);
     if (!tiers.length) return null;
 
@@ -513,6 +558,8 @@ export class RiggedAnimationController {
     this.cues = Array.isArray(cues) ? cues : [];
     this.cuesRaw = cues ?? null;
     this.scheduled.clear();
+    this.fallVariant = null;
+    this.lastPose = null;
     this.time = null; // a new play restarts the clock; no cross-play dt
     return this;
   }
@@ -537,7 +584,25 @@ export class RiggedAnimationController {
     const anchoredOver = this.lastAnchorAt !== null && time > this.lastAnchorAt + FOLLOW_THROUGH;
     // authored football clips own the body where the replay says what the player is doing (stance,
     // block, tackle, tackled); otherwise locomotion picks a gait from his real speed
-    const football = footballClip({ pose, speed, contact, preSnap: time < 0 && contact?.kind !== 'kick', hasClip: (n) => this.clips.has(n) });
+    // getting up: a tackled player stands up, he does not snap from the ground into a run
+    if (this.lastPose === POSE.DOWN && pose !== POSE.DOWN && this.clips.has(FB.GETUP)
+        && (!this.lock || this.lock.clipName === FB.FALL || this.lock.clipName === FB.FALL_BACK)) {
+      this.lock = null;
+      this.play(FB.GETUP, { loop: false, priority: POSE_PRIORITY[POSE.KNEEL], time, lockUntil: time + this.clips.get(FB.GETUP).duration });
+    }
+    // the variant is set while he is still being wrapped, so it only clears once he is back on his feet
+    if (this.lastPose === POSE.DOWN && pose !== POSE.DOWN) this.fallVariant = null;
+    this.lastPose = pose;
+    // a carrier with a defender closing on one side puts out the arm on that side
+    if (carrying && contact?.opp && contact.role !== ROLE.WRAPPED && !this.lock && speed > 3.5 && time - this.lastStiff > 1.6) {
+      const stiff = contact.opp.side === 'L' ? FB.STIFF_L : FB.STIFF_R;
+      if (this.clips.has(stiff)) {
+        this.lastStiff = time;
+        this.play(stiff, { loop: false, priority: POSE_PRIORITY[POSE.THROW], time, lockUntil: time + this.clips.get(stiff).duration });
+      }
+    }
+    let football = footballClip({ pose, speed, contact, preSnap: time < 0 && contact?.kind !== 'kick', hasClip: (n) => this.clips.has(n) });
+    if (football?.clipName === FB.FALL && this.fallVariant && this.clips.has(this.fallVariant)) football = { clipName: this.fallVariant, loop: false };
     let loco = null;
     if (football) {
       selection = { clipName: football.clipName, loop: football.loop };
@@ -583,6 +648,34 @@ export class RiggedAnimationController {
     return !!this.clipName;
   }
 
+  /** The clip a cue plays, where the recorded moment falls inside it, and how it ranks; null if nothing to play. */
+  resolveCue(cue) {
+    const has = (n) => !!n && this.clips.has(n);
+    if (cue.kind === 'fall_variant') return null;
+    if (cue.kind === 'kick') {
+      const clipName = cue.punt ? FB.PUNT : FB.KICK;
+      return has(clipName) && { clipName, anchorSeconds: KICK_ANCHOR[cue.punt ? 'punt' : 'kick'], priority: POSE_PRIORITY[POSE.KICK], full: true };
+    }
+    if (cue.kind === 'handoff_give' || cue.kind === 'handoff_take') {
+      const clipName = `FB_Handoff_${cue.kind === 'handoff_give' ? 'Give' : 'Take'}_${cue.side}`;
+      return has(clipName) && { clipName, anchorSeconds: HANDOFF_ANCHOR[cue.kind === 'handoff_give' ? 'give' : 'take'], priority: POSE_PRIORITY[POSE.THROW], full: false };
+    }
+    if (cue.kind === 'oneshot') {
+      const clipName = cue.clip;
+      const priority = /^FB_Tackle/.test(clipName || '') ? POSE_PRIORITY[POSE.WRAP] : POSE_PRIORITY[POSE.BLOCK];
+      return has(clipName) && { clipName, anchorSeconds: ONESHOT_ANCHOR[clipName] ?? 0.3, priority, full: true };
+    }
+    if (cue.kind === 'catch' && has(cue.clip)) {
+      return { clipName: cue.clip, anchorSeconds: ONESHOT_ANCHOR[cue.clip] ?? 0.35, priority: POSE_PRIORITY[POSE.CATCH], full: true };
+    }
+    // throw, or the standing catch: the stock clip, with the anchor measured from the hand's motion
+    const clipName = (cue.kind === 'throw' ? getRiggedAnimationSelection(POSE.THROW) : getRiggedAnimationSelection(POSE.CATCH))?.clipName;
+    if (!has(clipName)) return null;
+    const spec = ANCHORED.get(clipName);
+    const anchor = spec ? measureAnchor(this.clips, clipName, spec, this.root) : 0;
+    return { clipName, anchorSeconds: anchor * this.clips.get(clipName).duration, priority: cue.kind === 'throw' ? POSE_PRIORITY[POSE.THROW] : POSE_PRIORITY[POSE.CATCH], full: false };
+  }
+
   honourCues(time) {
     if (!this.cues?.length) return;
     for (const cue of this.cues) {
@@ -590,27 +683,13 @@ export class RiggedAnimationController {
       if (this.scheduled.has(key)) continue;
       if (time < cue.at) continue;
       this.scheduled.add(key);
-      const kick = cue.kind === 'kick';
-      const handoff = cue.kind === 'handoff_give' || cue.kind === 'handoff_take';
-      const selection = handoff || kick ? null : cue.kind === 'throw'
-        ? getRiggedAnimationSelection(POSE.THROW)
-        : getRiggedAnimationSelection(POSE.CATCH);
-      const clipName = kick
-        ? (cue.punt ? FB.PUNT : FB.KICK)
-        : handoff
-          ? `FB_Handoff_${cue.kind === 'handoff_give' ? 'Give' : 'Take'}_${cue.side}`
-          : selection?.clipName;
-      const clip = clipName && this.clips.get(clipName);
-      if (!clip) continue;
-      const spec = ANCHORED.get(clipName);
-      const anchor = kick
-        ? KICK_ANCHOR[cue.punt ? 'punt' : 'kick'] / clip.duration
-        : handoff
-        ? HANDOFF_ANCHOR[cue.kind === 'handoff_give' ? 'give' : 'take'] / clip.duration
-        : spec ? measureAnchor(this.clips, clipName, spec, this.root) : 0;
+      if (cue.kind === 'fall_variant') { this.fallVariant = cue.clip; continue; }
+      const r = this.resolveCue(cue);
+      if (!r) continue;
+      const clip = this.clips.get(r.clipName);
       // start the clip early enough that its anchor frame lands on the recorded
       // event; if we are already late, seek into it instead of restarting
-      const anchorTime = anchor * clip.duration;      // where the release/reach sits in the clip
+      const anchorTime = r.anchorSeconds;             // where the release/reach/contact sits in the clip
       const lead = Math.min(anchorTime, MAX_LEAD);    // how much windup we are willing to play
       const startAt = cue.anchorAt - lead;
       // invariant: clip time = anchorTime + (playback time - anchor time), so the
@@ -619,12 +698,12 @@ export class RiggedAnimationController {
         ? clamp(anchorTime + (time - cue.anchorAt), 0, clip.duration - 1e-3)
         : Math.max(0, anchorTime - lead);
       this.lastAnchorAt = cue.anchorAt;
-      this.play(clipName, {
+      this.play(r.clipName, {
         loop: false,
-        priority: kick ? POSE_PRIORITY[POSE.KICK] : handoff || cue.kind === 'throw' ? POSE_PRIORITY[POSE.THROW] : POSE_PRIORITY[POSE.CATCH],
+        priority: r.priority,
         time,
         offset,
-        lockUntil: kick ? cue.anchorAt + (clip.duration - anchorTime) : cue.anchorAt + FOLLOW_THROUGH, // a kick plays out in full
+        lockUntil: r.full ? cue.anchorAt + (clip.duration - anchorTime) : cue.anchorAt + FOLLOW_THROUGH, // set pieces play out in full
       });
     }
   }
