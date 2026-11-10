@@ -75,3 +75,9 @@ Known gaps: no pass-rush or swim move, no get-up after the fall, no QB drop-back
 - `FB_Kick`, `FB_Punt`, `FB_Holder` authored (16 authored clips total). The kick clips are timed to the engine's `kick` event (contact 0.42 s / 0.40 s into the clip); the engine stamps KICK at contact and never clears it, so a latched KICK code is treated as running once `FB_Kick` exists. Before this the kicker stayed on the finished clip's last frame, a straight standing pose, while sliding 30 yards.
 - Engine: the field-goal holder now kneels beside the kick line and the kicker comes in from the other side (he used to start directly behind the holder and run through him); kicker and holder are no-contact "ghosts" (`Player.ghosts`). The kickoff kicker eases to about 3.5 m/s into the ball and finishes his kick (0.8 s) before sprinting into coverage.
 - A missed tackle puts the tackler on the ground in the engine (`broken_tackle`); the kickoff kicker diving at the returner and falling is that, not a bug in the clips.
+
+## Dev server (no caching)
+
+    python scripts/dev-server.py 8141
+
+Serves the repo root with `Cache-Control: no-store`, no `Last-Modified`/`ETag`, and never answers 304, so a rebuilt model or script is always fetched fresh. The old `no-cache` header only made the browser re-check, and with `Last-Modified` present it could still reuse an old copy. `scripts/audit-motion-live.mjs` needs this server (default http://127.0.0.1:8141).
