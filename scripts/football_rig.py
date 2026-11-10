@@ -35,7 +35,7 @@ def ik(target, pole=None):
     return ('ik', target, pole if pole is not None else Vector((0, 0, -1)))
 
 
-def _two_bone(shoulder, l1, l2, target, pole):
+def _two_bone(shoulder, l1, l2, target, pole, flip=1.0):
     d = target - shoulder
     dist = max(1e-4, min(d.length, (l1 + l2) * 0.9995))
     dirn = d.normalized()
@@ -43,8 +43,41 @@ def _two_bone(shoulder, l1, l2, target, pole):
     h = max(0.0, l1 * l1 - a * a) ** 0.5
     p = pole - dirn * pole.dot(dirn)
     p = p.normalized() if p.length > 1e-6 else Vector((0, 0, -1))
-    elbow = shoulder + dirn * a + p * h
+    elbow = shoulder + dirn * a + p * h * flip
     return (elbow - shoulder), ((shoulder + dirn * dist) - elbow)
+
+
+def _hinge_local(arm, side):
+    """The elbow's natural flexion axis, expressed in the upper-arm bone's own frame.
+
+    The rest pose has the forearm bent slightly forward of the upper arm, which is flexion; the axis that
+    takes the upper arm onto the forearm is therefore the flexion hinge. Positive rotation about it = bend.
+    """
+    U = arm.data.bones['upper_arm.' + side]
+    F = arm.data.bones['forearm.' + side]
+    u = (U.tail_local - U.head_local).normalized()
+    f = (F.tail_local - F.head_local).normalized()
+    return U.matrix_local.to_3x3().inverted() @ u.cross(f).normalized()
+
+
+def _arm_orientation(arm, side, c3, u_dir, f_dir, h_loc):
+    """Upper-arm orientation (3x3, armature space) pointing along u_dir whose elbow hinge lies along u x f.
+
+    Swing-twist: swing the bone's Y onto u_dir with the minimal rotation, then roll about u_dir until the
+    hinge matches the bend plane. Returns (orientation, roll in radians). The bend is then always flexion
+    about the real hinge, so the forearm cannot fold backward or candy-wrap at the elbow.
+    """
+    import math
+    u = u_dir.normalized()
+    cur_y = (c3 @ Vector((0, 1, 0))).normalized()
+    o1 = cur_y.rotation_difference(u).to_matrix() @ c3
+    n = u.cross(f_dir.normalized())
+    if n.length < 1e-5:
+        return o1, 0.0
+    n.normalize()
+    h1 = (o1 @ h_loc).normalized()
+    phi = math.atan2(h1.cross(n).dot(u), h1.dot(n))
+    return Matrix.Rotation(phi, 3, u) @ o1, phi
 
 
 def mirror(spec):
@@ -114,6 +147,7 @@ def _solve(arm, spec, hips, dz, default_feet_flat):
     """
     pose = {}
     dyn = {}
+    dynO = {}
     for name in _order(arm):
         bone = arm.data.bones[name]
         rest = bone.matrix_local.copy()
@@ -125,15 +159,28 @@ def _solve(arm, spec, hips, dz, default_feet_flat):
         if name.startswith('upper_arm.') and spec.get('ik.' + name[-1]):
             _, tgt, pole = spec['ik.' + name[-1]]
             side = name[-1]
-            up_dir, fore_dir = _two_bone(cur.translation, bone.length, arm.data.bones['forearm.' + side].length, tgt, pole)
-            dyn['upper_arm.' + side], dyn['forearm.' + side] = up_dir, fore_dir
+            h_loc = _hinge_local(arm, side)
+            best = None
+            for flip in (1.0, -1.0):   # elbow on either side of the shoulder-hand line; keep the one needing least roll
+                up_dir, fore_dir = _two_bone(cur.translation, bone.length, arm.data.bones['forearm.' + side].length, tgt, pole, flip)
+                o3, phi = _arm_orientation(arm, side, cur.to_3x3(), up_dir, fore_dir, h_loc)
+                elbow_dir = (up_dir.normalized() - fore_dir.normalized())
+                like = elbow_dir.normalized().dot(pole.normalized()) if elbow_dir.length > 1e-6 else 0.0
+                score = abs(phi) + 0.35 * (1.0 - like)      # roll is the cost; the hint breaks ties
+                if best is None or score < best[0]:
+                    best = (score, up_dir, fore_dir, o3)
+            _, up_dir, fore_dir, o3 = best
+            dyn['forearm.' + side] = fore_dir
+            dynO['upper_arm.' + side] = o3
         target = dyn.get(name, spec.get(name))
         if target is None and default_feet_flat and name in ('foot.L', 'foot.R'):
             target = bone.tail_local - bone.head_local
         pb = arm.pose.bones[name]
         pb.rotation_mode = 'QUATERNION'
         basis3 = Matrix.Identity(3)
-        if target is not None:
+        if name in dynO:
+            basis3 = cur.to_3x3().inverted() @ dynO[name]
+        elif target is not None:
             c3 = cur.to_3x3()
             cur_dir = (c3 @ Vector((0, 1, 0))).normalized()
             rot = cur_dir.rotation_difference(target.normalized())

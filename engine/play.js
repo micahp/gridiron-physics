@@ -313,10 +313,13 @@ export function simulatePlay(game, S, ctx = {}) {
       }
       return;
     }
-    const along = Math.abs((st.endX - c.p.x / YD));
+    // yards still to go to the sampled spot; negative once he has reached or passed it. A runner who has
+    // arrived goes down on the first touch (the old |distance| test never counted a touch once he was a few
+    // yards past the spot, so he milled around it for seconds while defenders bounced off him).
+    const along = remainingYd(c);
     const designated = st.tacklers.has(d.id);
     const lim = designated ? 2.6 : 1.1;
-    const waited = st.waitT > 1.4;
+    const waited = st.waitT > 0.9;
     if (along <= lim || waited) {
       startTackle(d, c);
     } else {
@@ -403,16 +406,24 @@ export function simulatePlay(game, S, ctx = {}) {
     if (st.tTackle != null) return { x: p.v.x, y: p.v.y };
     while (a.wp < a.path.length - 1 && (d2(p.p, a.path[a.wp]) < 1.2 || (a.path[a.wp].x - p.p.x) * dir * (p.team === off ? 1 : -1) < -0.5)) a.wp++;
     const tgt = a.path[a.wp];
-    let dv = seek(p, tgt, 1, 2.5);
     const atEnd = a.wp === a.path.length - 1;
-    const remYd = Math.abs(st.endX - p.p.x / YD);
+    // Run THROUGH intermediate waypoints at full speed; only the final one is an arrival. The old
+    // seek(..., 2.5 m/s^2) braked toward every waypoint (speed <= sqrt(2*2.5*d)), which capped runners at
+    // 5 m/s and made them slow down constantly while 9 m/s defenders ran them down. The final point
+    // brakes at 6.5 m/s^2: still fast until the last few yards, stopped on the anchored spot.
+    // Heading for the sampled end spot he eases down over the last ~12 yd (to ~60% of top speed at the spot)
+    // instead of sprinting and then stopping dead in the open field with a defender still yards behind.
+    let easeFrac = 1;
+    if (atEnd && !a.oob && !a.td) easeFrac = Math.max(0.6, Math.min(1, 0.6 + 0.4 * (remainingYd(p) / 12)));
+    let dv = seek(p, tgt, easeFrac, atEnd ? 14 : 60);
+    const remYd = remainingYd(p); // signed: negative once past the spot
     if (atEnd && !a.oob && !a.td) {
-      // near the spot: the play is about to end — wait for the tackle
+      // at the spot: the play is about to end — wait for the tackle
       if (remYd < 1.5) {
         st.waitT += DT;
-        dv = { x: dv.x * 0.25, y: dv.y * 0.25 };
+        dv = { x: dv.x * 0.5, y: dv.y * 0.5 }; // grinding forward with a tackler on him, not standing still
         // tacklers converge
-        if (st.waitT > 1.4) {
+        if (st.waitT > 0.3) {
           let best = null, bd = 1e9;
           for (const q of W.players) {
             if (q.team === p.team || q.down) continue;
