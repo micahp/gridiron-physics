@@ -246,17 +246,59 @@ function buildPlayer(info, kit) {
   return root;
 }
 
-function animate(root, pose, speed, dt, carrying) {
+// Kick motion, keyed on seconds relative to ball contact (tk = 0). The engine
+// stamps POSE.KICK at contact and never clears it, so the renderer owns the
+// timing: wind-up before contact, swing through, follow-through, then back to
+// whatever the player was doing. Rows: [tk, kickHip, kickKnee, plantHip, plantKnee, lean, armA, armB].
+const KICK_KEYS = [
+  [-0.45, 0.30, 0.30, 0.30, 0.30, 0.10, 0.4, -0.4],
+  [-0.16, -1.10, 1.90, 0.15, 0.35, -0.12, 0.9, -0.9],
+  [0.00, 0.55, 0.50, 0.05, 0.40, 0.12, 0.6, -0.8],
+  [0.14, 1.50, 0.05, -0.15, 0.55, -0.05, 0.5, -0.9],
+  [0.45, 1.30, 0.10, -0.10, 0.50, -0.20, 0.4, -0.7],
+  [0.95, 0.30, 0.40, 0.30, 0.40, 0.10, 0.3, -0.3],
+];
+const KICK_START = KICK_KEYS[0][0], KICK_END = KICK_KEYS[KICK_KEYS.length - 1][0];
+function kickPose(tk) {
+  let i = 0;
+  while (i < KICK_KEYS.length - 2 && tk > KICK_KEYS[i + 1][0]) i++;
+  const a = KICK_KEYS[i], b = KICK_KEYS[i + 1];
+  let u = Math.max(0, Math.min(1, (tk - a[0]) / (b[0] - a[0])));
+  u = u * u * (3 - 2 * u);
+  return a.slice(1).map((v, j) => v + (b[j + 1] - v) * u);
+}
+// First frame at which each player's recorded pose becomes KICK (cached per replay).
+function kickOnsets(rec) {
+  if (rec._kickOnset) return rec._kickOnset;
+  const n = rec.roster.length, out = new Array(n).fill(-1);
+  for (let k = 0; k < rec.frames.length; k++) {
+    const f = rec.frames[k];
+    for (let i = 0; i < n; i++) if (out[i] < 0 && f[i * 6 + 4] === POSE.KICK) out[i] = k;
+  }
+  return (rec._kickOnset = out);
+}
+
+const LEG_LEN = 0.95; // hip to ground, metres
+function animate(root, pose, speed, dt, carrying, tk = null, dist = 0, ctx = null) {
   const u = root.userData;
   const { legs, arms, torso, body } = u;
-  u.phase += dt * (2.2 + speed * 0.9);
-  const swing = Math.min(0.95, speed * 0.11);
+  if (pose === POSE.KICK && tk !== null && (tk < KICK_START || tk > KICK_END)) pose = POSE.RUN;
+  // Gait locked to ground: a planted foot must travel back relative to the hip at
+  // exactly the body's speed. With hip swing amplitude A (rad) and leg length LEG,
+  // that is phase advance = distance / (LEG * A), so stride length follows speed
+  // and the feet don't skate. Driven by distance moved, so it stops when paused.
+  const vm = speed * YD;
+  const swing = Math.max(0.18, Math.min(1.0, 0.2 + vm * 0.1)) * Math.min(1, vm / 1.0);
+  // moving against the heading (a backpedal the pose code did not flag) runs the cycle in reverse
+  const sgn = ctx && ctx.back ? -1 : 1;
+  if (swing > 0.02) u.phase += sgn * Math.min(dist, 1.2) / (LEG_LEN * swing);
   let lean = Math.min(0.38, speed * 0.04);
   let crouch = 0;
   let armF = [Math.sin(u.phase) * swing * 0.8, -Math.sin(u.phase) * swing * 0.8];
   let armOut = 0.12;
   let legA = [Math.sin(u.phase) * swing, -Math.sin(u.phase) * swing];
-  let kneeB = [Math.max(0, -Math.cos(u.phase)) * swing * 1.4, Math.max(0, Math.cos(u.phase)) * swing * 1.4];
+  // knee folds on the forward (recovery) swing, i.e. while that hip angle is increasing
+  let kneeB = [Math.max(0, Math.cos(u.phase)) * swing * 1.5, Math.max(0, -Math.cos(u.phase)) * swing * 1.5];
   let lieT = 0, lift = 0;
   switch (pose) {
     case POSE.STANCE:
@@ -283,13 +325,32 @@ function animate(root, pose, speed, dt, carrying) {
       lean = 0.25; crouch = 0.1; break;
   }
   if (carrying && pose !== POSE.DOWN) armF[1] = 1.4;
+  // contact: a wrapped ball carrier is driven back; a man locked up drives forward
+  if (ctx && ctx.role === 3 && pose !== POSE.DOWN) { lean = -0.25; crouch = 0.08; armF = [1.2, 1.2]; }
+  if (ctx && ctx.role === 1 && pose === POSE.BLOCK) { lean = 0.62; crouch = 0.18; }
   const k = 1 - Math.exp(-dt * 14);
+  const kicking = tk !== null && tk >= KICK_START && tk <= KICK_END;
+  if (kicking) {
+    const [kh, kk, ph, pk, ln, a0, a1] = kickPose(tk);
+    legs[0].hip.rotation.z = kh; legs[0].knee.rotation.z = -kk;
+    legs[1].hip.rotation.z = ph; legs[1].knee.rotation.z = -pk;
+    arms[0].sh.rotation.z = a0; arms[1].sh.rotation.z = a1;
+    torso.rotation.z = -ln; torso.position.y = 0.95 - 0.04;
+    arms.forEach((a, i) => { a.sh.rotation.x = (i ? -1 : 1) * 0.35; a.el.rotation.z = 0.5; });
+    body.rotation.z = 0; body.position.y = 0; u.lie = 0;
+    return;
+  }
+  // The run cycle is tracked exactly (smoothing would low-pass it and shrink the
+  // stride, making the feet skate); smoothing is kept for pose changes.
+  const cyc = pose === POSE.RUN || pose === POSE.BACKPEDAL;
+  u.direct = Math.max(0, Math.min(1, (u.direct ?? 0) + (cyc ? 1 : -1) * dt / 0.12));
+  const kc = cyc ? Math.max(k, u.direct) : k;
   legs.forEach((l, i) => {
-    l.hip.rotation.z += (legA[i] - l.hip.rotation.z) * k;
-    l.knee.rotation.z += (-kneeB[i] - l.knee.rotation.z) * k;
+    l.hip.rotation.z += (legA[i] - l.hip.rotation.z) * kc;
+    l.knee.rotation.z += (-kneeB[i] - l.knee.rotation.z) * kc;
   });
   arms.forEach((a, i) => {
-    a.sh.rotation.z += (armF[i] - a.sh.rotation.z) * k;
+    a.sh.rotation.z += (armF[i] - a.sh.rotation.z) * kc;
     a.sh.rotation.x = (i ? -1 : 1) * armOut;
     a.el.rotation.z = pose === POSE.CATCH ? 0.2 : 0.5;
   });
@@ -595,34 +656,79 @@ export class Renderer {
     const L = (i) => f0[i] + (f1[i] - f0[i]) * a;
     const n = rec.roster.length;
     const playerUpdateStart = performance.now();
+    const aux = rec.aux ? rec.aux[k0] : null, aux1 = rec.aux ? rec.aux[Math.min(rec.frames.length - 1, k0 + 1)] : null;
+    const AS = rec.auxStride || 5;
+    // 1. interpolated positions
+    const X = new Float64Array(n), Z = new Float64Array(n), X0 = new Float64Array(n), Z0 = new Float64Array(n);
+    for (let i = 0; i < n; i++) { X[i] = X0[i] = L(i * 6); Z[i] = Z0[i] = L(i * 6 + 1); }
+    // 2. keep bodies from drawing through each other. The physics lets padded discs
+    // overlap and ignores downed players entirely, so push overlapping pairs apart
+    // for display only (simulation output is untouched). A tackler and the man he
+    // wrapped are allowed to be close.
+    const down = (i) => f0[i * 6 + 4] === POSE.DOWN;
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          if (aux && aux[i * AS + 3] >= 2 && aux[i * AS + 4] === j) continue;
+          const min = down(i) || down(j) ? 0.8 : 0.52;
+          let dx = X[j] - X[i], dz = Z[j] - Z[i];
+          const d2 = dx * dx + dz * dz;
+          if (d2 >= min * min) continue;
+          const d = Math.sqrt(d2);
+          if (d < 1e-6) { dx = 1; dz = 0; } else { dx /= d; dz /= d; }
+          const push = (min - d) / 2;
+          X[i] -= dx * push; Z[i] -= dz * push; X[j] += dx * push; Z[j] += dz * push;
+        }
+      }
+    }
     for (let i = 0; i < n; i++) {
       const o = this.players.get(rec.roster[i].id);
       if (!o) continue;
       const b = i * 6;
-      o.position.set(L(b), 0, L(b + 1));
+      const nx = X[i], nz = Z[i];
+      const moved = o.userData.seen ? Math.hypot(nx - o.position.x, nz - o.position.z) * YD : 0;
+      o.userData.seen = true;
+      o.position.set(nx, 0, nz);
       let h0 = f0[b + 2], h1 = f1[b + 2];
       let dh = h1 - h0;
       while (dh > Math.PI) dh -= 2 * Math.PI;
       while (dh < -Math.PI) dh += 2 * Math.PI;
-      const heading = h0 + dh * a;
-      o.rotation.y = -heading;
+      let yaw = h0 + dh * a;
+      const AL = (c) => aux[i * AS + c] + (aux1[i * AS + c] - aux[i * AS + c]) * a;
+      let ctx = null;
+      let vel = null;
+      if (aux) {
+        const role = aux[i * AS + 3], partner = aux[i * AS + 4];
+        const vx = AL(0), vy = AL(1), sp = Math.hypot(vx, vy);
+        vel = { vx, vy, sp };
+        // blockers and tacklers square up to the man they are on
+        if ((role === 1 || role === 2) && partner >= 0) yaw = Math.atan2(Z[partner] - Z[i], X[partner] - X[i]);
+        ctx = { role, partner, back: sp > 0.6 && vx * Math.cos(yaw) + vy * Math.sin(yaw) < -0.35 * sp };
+      }
+      o.rotation.y = -yaw;
       if (o.userData.rigged) {
-        // direction of travel relative to the heading; hips turn toward it
-        const vx = f1[b] - f0[b], vz = f1[b + 1] - f0[b + 1];
-        const dir = Math.hypot(vx, vz) > 1e-4 ? Math.atan2(Math.sin(Math.atan2(vz, vx) - heading), Math.cos(Math.atan2(vz, vx) - heading)) : null;
+        // direction of travel relative to the heading; hips turn toward it. The recorded
+        // velocity vector is exact; differencing positions was the fallback for old records.
+        const vx = vel ? vel.vx : f1[b] - f0[b], vz = vel ? vel.vy : f1[b + 1] - f0[b + 1];
+        const moving = vel ? vel.sp > 0.1 : Math.hypot(vx, vz) > 1e-4;
+        const dir = moving ? Math.atan2(Math.sin(Math.atan2(vz, vx) - yaw), Math.cos(Math.atan2(vz, vx) - yaw)) : null;
         const speed = L(b + 3);
         const offset = travelYawOffset(o, { pose: f0[b + 4], speed, dir, dt });
-        o.rotation.y = -(heading + offset);
+        o.rotation.y = -(yaw + offset);
         // cosine between the hips and the travel: 1 straight ahead, -1 backwards
         const travel = dir === null ? null : Math.cos(dir - offset);
-        animateRigged(o, f0[b + 4], speed, dt, f0[b + 5] > 0.5, t, this.cuesById?.get(rec.roster[i].id) || null, travel);
+        animateRigged(o, f0[b + 4], speed, dt, f0[b + 5] > 0.5, t, this.cuesById?.get(rec.roster[i].id) || null, travel, ctx);
+      } else {
+        const onset = kickOnsets(rec)[i];
+        const tk = onset >= 0 ? (t - rec.t0) - onset / rec.hz : null;
+        animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, tk, moved, ctx);
       }
-      else animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
     }
-    this.separatePlayers(rec);
     this.lastPlayerUpdateMs = performance.now() - playerUpdateStart;
     const B = n * 6;
-    const bx = L(B), by = L(B + 1), bz = L(B + 2) / YD;
+    let bx = L(B), by = L(B + 1);
+    const bz = L(B + 2) / YD;
+    for (let i = 0; i < n; i++) if (f0[i * 6 + 5] > 0.5) { bx += X[i] - X0[i]; by += Z[i] - Z0[i]; break; }
     this.ball.position.set(bx, Math.max(0.12, bz), by);
     this.ball.rotation.set(0, -f0[B + 4], 0);
     this.ballMesh.rotation.set(f0[B + 3] * 0.3, 0, f0[B + 5]);

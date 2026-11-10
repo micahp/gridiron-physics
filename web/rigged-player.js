@@ -509,7 +509,7 @@ function rotWorldComposed(bone, rotations, k) {
   bone.quaternion.slerp(_q, k);
 }
 
-export function animateRigged(root, pose, speed, dt, carrying, playbackTime = null, cues = null, travel = null) {
+export function animateRigged(root, pose, speed, dt, carrying, playbackTime = null, cues = null, travel = null, contact = null) {
   if (neutralMode) return; // Test 1: leave the imported bind pose untouched
   const u = root.userData;
   const b = u.bones;

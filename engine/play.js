@@ -1489,6 +1489,14 @@ export function simulatePlay(game, S, ctx = {}) {
   const NP = W.players.length;
   const STRIDE = NP * 6 + 6;
   const frames = [];
+  // Optional side channel for renderers. `frames` keeps its fixed 6-float stride (the
+  // contract, the autonomous engines and every consumer index into it), so richer
+  // per-player state travels in a parallel array: one AUX_STRIDE row per player per frame,
+  // [vx, vy (m/s), z (m), role, partner index (-1 none)]. Recording it reads state only;
+  // it cannot change a play's outcome.
+  const AUX = { stride: 5, ROLE: { NONE: 0, ENGAGED: 1, TACKLER: 2, WRAPPED: 3 } };
+  const aux = [];
+  const idx = new Map(W.players.map((p, i) => [p, i]));
   let nextRec = -PRE;
 
   W.onTouch = (a, b) => tryTackle(a, b);
@@ -1512,6 +1520,18 @@ export function simulatePlay(game, S, ctx = {}) {
     f[o++] = b.state === 'air' || b.state === 'snap' ? Math.atan2(b.vy, b.vx) : b.rot || 0;
     f[o++] = b.state === 'air' || b.state === 'snap' ? Math.atan2(b.vz, Math.hypot(b.vx, b.vy)) : 0;
     frames.push(f);
+    const a = new Float32Array(W.players.length * AUX.stride);
+    let q = 0;
+    for (const p of W.players) {
+      let role = AUX.ROLE.NONE, partner = -1;
+      if (p.engaged) { role = AUX.ROLE.ENGAGED; partner = idx.get(p.engaged) ?? -1; }
+      for (const w of W.wraps) {
+        if (w.tackler === p) { role = AUX.ROLE.TACKLER; partner = idx.get(w.carrier) ?? -1; }
+        else if (w.carrier === p) { role = AUX.ROLE.WRAPPED; partner = idx.get(w.tackler) ?? -1; }
+      }
+      a[q++] = p.v.x; a[q++] = p.v.y; a[q++] = p.z || 0; a[q++] = role; a[q++] = partner;
+    }
+    aux.push(a);
   }
 
   W.t = -PRE;
@@ -1698,7 +1718,7 @@ export function simulatePlay(game, S, ctx = {}) {
   const b = W.ball;
   const top = W.players.reduce((m, p) => (p.topSpeed > m.v ? { v: p.topSpeed, id: p.id } : m), { v: 0, id: null });
   return {
-    id: S.id, roster, stride: STRIDE, frames, t0: -PRE, hz: REC_HZ, events: W.events,
+    id: S.id, roster, stride: STRIDE, frames, aux, auxStride: AUX.stride, t0: -PRE, hz: REC_HZ, events: W.events,
     end: { x: st.spot ? st.spot.x : b.x / YD, y: st.spot ? st.spot.y : b.y / YD, reason: st.whistle, t: st.deadT },
     expectEndX: st.endX ?? null,
     biggestHit: W.biggestHit, topSpeed: top, throwSpeed: st.throwSpeed ?? null,
