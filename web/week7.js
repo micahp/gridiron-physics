@@ -52,6 +52,7 @@ function makeViewer(){
     players:playersMap(home,away)};
   renderer = new Renderer($('view'),physicsGame,{displayFont:'"Saira Condensed", "Arial Narrow", sans-serif'});
   renderer.setCamera('broadcast');renderer.resize();
+  if(/[?&]debug/.test(location.search)){window.__gridironRenderer=renderer;window.__gridironRec=()=>current?.rec;window.__gridironChoose=choose;}
   window.addEventListener('resize',()=>renderer.resize());
   $('view').addEventListener('click',e=>{const id=renderer.pick(e.clientX,e.clientY);if(id)inspectPlayer(id);});
 }

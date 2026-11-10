@@ -175,9 +175,42 @@ function buildPlayer(info, kit) {
   return root;
 }
 
-function animate(root, pose, speed, dt, carrying) {
+// Kick motion, keyed on seconds relative to ball contact (tk = 0). The engine
+// stamps POSE.KICK at contact and never clears it, so the renderer owns the
+// timing: wind-up before contact, swing through, follow-through, then back to
+// whatever the player was doing. Rows: [tk, kickHip, kickKnee, plantHip, plantKnee, lean, armA, armB].
+const KICK_KEYS = [
+  [-0.45, 0.30, 0.30, 0.30, 0.30, 0.10, 0.4, -0.4],
+  [-0.16, -1.10, 1.90, 0.15, 0.35, -0.12, 0.9, -0.9],
+  [0.00, 0.55, 0.50, 0.05, 0.40, 0.12, 0.6, -0.8],
+  [0.14, 1.50, 0.05, -0.15, 0.55, -0.05, 0.5, -0.9],
+  [0.45, 1.30, 0.10, -0.10, 0.50, -0.20, 0.4, -0.7],
+  [0.95, 0.30, 0.40, 0.30, 0.40, 0.10, 0.3, -0.3],
+];
+const KICK_START = KICK_KEYS[0][0], KICK_END = KICK_KEYS[KICK_KEYS.length - 1][0];
+function kickPose(tk) {
+  let i = 0;
+  while (i < KICK_KEYS.length - 2 && tk > KICK_KEYS[i + 1][0]) i++;
+  const a = KICK_KEYS[i], b = KICK_KEYS[i + 1];
+  let u = Math.max(0, Math.min(1, (tk - a[0]) / (b[0] - a[0])));
+  u = u * u * (3 - 2 * u);
+  return a.slice(1).map((v, j) => v + (b[j + 1] - v) * u);
+}
+// First frame at which each player's recorded pose becomes KICK (cached per replay).
+function kickOnsets(rec) {
+  if (rec._kickOnset) return rec._kickOnset;
+  const n = rec.roster.length, out = new Array(n).fill(-1);
+  for (let k = 0; k < rec.frames.length; k++) {
+    const f = rec.frames[k];
+    for (let i = 0; i < n; i++) if (out[i] < 0 && f[i * 6 + 4] === POSE.KICK) out[i] = k;
+  }
+  return (rec._kickOnset = out);
+}
+
+function animate(root, pose, speed, dt, carrying, tk = null) {
   const u = root.userData;
   const { legs, arms, torso, body } = u;
+  if (pose === POSE.KICK && tk !== null && (tk < KICK_START || tk > KICK_END)) pose = POSE.RUN;
   u.phase += dt * (2.2 + speed * 0.9);
   const swing = Math.min(0.95, speed * 0.11);
   let lean = Math.min(0.38, speed * 0.04);
@@ -213,6 +246,17 @@ function animate(root, pose, speed, dt, carrying) {
   }
   if (carrying && pose !== POSE.DOWN) armF[1] = 1.4;
   const k = 1 - Math.exp(-dt * 14);
+  const kicking = tk !== null && tk >= KICK_START && tk <= KICK_END;
+  if (kicking) {
+    const [kh, kk, ph, pk, ln, a0, a1] = kickPose(tk);
+    legs[0].hip.rotation.z = kh; legs[0].knee.rotation.z = -kk;
+    legs[1].hip.rotation.z = ph; legs[1].knee.rotation.z = -pk;
+    arms[0].sh.rotation.z = a0; arms[1].sh.rotation.z = a1;
+    torso.rotation.z = -ln; torso.position.y = 0.95 - 0.04;
+    arms.forEach((a, i) => { a.sh.rotation.x = (i ? -1 : 1) * 0.35; a.el.rotation.z = 0.5; });
+    body.rotation.z = 0; body.position.y = 0; u.lie = 0;
+    return;
+  }
   legs.forEach((l, i) => {
     l.hip.rotation.z += (legA[i] - l.hip.rotation.z) * k;
     l.knee.rotation.z += (-kneeB[i] - l.knee.rotation.z) * k;
@@ -473,7 +517,9 @@ export class Renderer {
       while (dh > Math.PI) dh -= 2 * Math.PI;
       while (dh < -Math.PI) dh += 2 * Math.PI;
       o.rotation.y = -(h0 + dh * a);
-      animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
+      const onset = kickOnsets(rec)[i];
+      const tk = onset >= 0 ? (t - rec.t0) - onset / rec.hz : null;
+      animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, tk);
     }
     const B = n * 6;
     const bx = L(B), by = L(B + 1), bz = L(B + 2) / YD;
