@@ -1,0 +1,51 @@
+{
+  "clock_clamp_census": {
+    "clamped_plays": 594,
+    "drives": 1200,
+    "meaning": "E1 sampled-runoff boundary clamp census; bookkeeping at quarter-end, not realistic predictive clock behavior",
+    "plays": 7016,
+    "producer_commit": "585f49719b9767170ccec8b2003646c6ba98b133",
+    "script": "scripts/nfl_sequence/clamp_census.py",
+    "seeds_per_start": 300,
+    "share": 0.0846636259977195,
+    "starts": [
+      "own25_q1_900",
+      "own25_q4_150",
+      "own25_q2_120",
+      "own25_q1_060"
+    ]
+  },
+  "population": {
+    "drives": 23579,
+    "games": 1087,
+    "nfl_pbp_rows": 188282,
+    "schedule_key_mismatches": 0,
+    "season_max": 2025,
+    "season_min": 2022,
+    "week_max": 18,
+    "week_min": 1
+  },
+  "schema": "gridiron.nfl.e3-observed-reference.v1",
+  "source": {
+    "branch": "nfl-e3-observed-distributions-2026-10-24",
+    "commit": "4d538b6d161247f156454fd2a0a757dc47a99a5d",
+    "repository": "micahp/legendarypicks",
+    "source_manifest_file": "lp-manifest.json",
+    "source_manifest_sha256": "5d27cc3b0c39f327ad657d14bd5dcac3805b659d6c7d4387389991780cbf59ff",
+    "source_schema": "lp.nfl.e3-observed-distributions.v1"
+  },
+  "tables": {
+    "drive_distribution.csv": {
+      "file": "drive_distribution.csv",
+      "sha256": "4e401f42666bd8fdaea341d00a4dc95f382255bbf72cb8d088545ec044ecdf58"
+    },
+    "game_distribution.csv": {
+      "file": "game_distribution.csv",
+      "sha256": "bdd89eb6a971b2fd32704793261ff05a0265135ce58e797134f9669578c1fd55"
+    },
+    "play_distribution.csv": {
+      "file": "play_distribution.csv",
+      "sha256": "b5d2e07347c26674552ae70bdeedf9f47e54233afe9a003662f2cf19d2ffc57d"
+    }
+  }
+}

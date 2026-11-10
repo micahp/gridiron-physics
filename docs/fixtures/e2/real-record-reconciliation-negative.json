@@ -1,0 +1,24 @@
+{
+  "schema": "gridiron.e2-real-record-reconciliation-negative.v1",
+  "base_play": "first LP seed-1 play; values are derived from the pinned source at test time",
+  "fixtures": [
+    {
+      "name": "tampered-clock",
+      "target": "projection.before.clock_seconds",
+      "delta": 1,
+      "expected": "reject because rendered clock differs from LP state_before"
+    },
+    {
+      "name": "tampered-score",
+      "target": "projection.before.home_score",
+      "delta": 1,
+      "expected": "reject because rendered score differs from LP state_before"
+    },
+    {
+      "name": "mismatched-drive-index",
+      "target": "record.state_before.drive_index",
+      "delta": 1,
+      "expected": "reject because a play state drive_index differs from its containing LP drive"
+    }
+  ]
+}

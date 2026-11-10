@@ -1,0 +1,75 @@
+{
+  "schema": "gridiron.e3.presnap_clock_holdout_protocol.v1",
+  "created_utc_date": "2026-10-24",
+  "status": "FROZEN BEFORE TWO-REGIME DEVELOPMENT SCORING",
+  "study": "2022 NFL pre-snap conditional clock-delta model; weeks 1-5 development, weeks 6-9 reserved for one frozen evaluation",
+  "historical_caveat": "Weeks 6-9 were examined in prior E3 work. This protocol freezes future scoring rules but cannot restore untouched-holdout status; results must not be called holdout-validated.",
+  "holdout_access_rule": "Do not read, query, join, summarize, tune against, or otherwise inspect weeks 6-9 while developing or freezing this protocol. When evaluation is authorized, load only the exact weeks 6-9 cohort after code and this manifest are pinned.",
+  "data_scope": {
+    "season": 2022,
+    "development_weeks": [1, 2, 3, 4, 5],
+    "reserved_evaluation_weeks": [6, 7, 8, 9],
+    "development_baseline_artifact": "docs/evidence/e3/presnap-clock-model-comparison-weeks1-5-2026-10-24.json",
+    "development_baseline_sha256": "4f1af788f3ca3a0ee18a994439acf8c8491ddffff945882b285202787de8e302",
+    "development_state_source": "/root/lp-nfl-bdb-join/docs/research/bdb2022-clock-audit-weeks1-5-2026-10-24.csv",
+    "development_state_source_sha256": "f030e9c6da3d69f1b1a9a15da0d5f14074639b1697f52d9e964eeabdb6f844c9",
+    "join_key": ["lp_game_id = game_id", "lp_play_id = play_id"],
+    "eligible_development_rows": 8977,
+    "eligible_development_drives": 1654,
+    "evaluation_population": "same paired target rows as the frozen baseline: current PBP row has non-null play_type, next non-null-play_type row is in the same quarter with a nonnegative clock delta, and the play has the complete 22-player snap-3 through snap-1 tracking history required by the pinned baseline cohort"
+  },
+  "target": {
+    "name": "same-quarter snap-to-next-play game-clock delta",
+    "definition_seconds": "for a current row with non-null play_type, current game_seconds_remaining minus the next row with non-null play_type game_seconds_remaining, only when both rows are in the same quarter; negative or unresolved deltas are excluded",
+    "interpretation": "PBP clock delta between play rows; not whistle time, live-play duration, wall-clock possession duration, or a causal stoppage label"
+  },
+  "feature_policy": {
+    "regime_selector": ["pre-snap quarter", "pre-snap quarter_seconds_remaining"],
+    "regime_rule": "stoppage_drill exactly when quarter in {2,4} and quarter_seconds_remaining <= 120; regulation otherwise",
+    "predictor_fields": [
+      "quarter",
+      "pre-snap quarter_seconds_remaining, binned at 30, 60, 120, 300, and 600 seconds",
+      "pre-snap offense-relative score_diff, bands <=-14, -13..-7, -6..-3, -2..2, 3..6, 7..13, >=14",
+      "pre-snap down, values 1-4 with other values unknown",
+      "pre-snap distance, bands 1-3, 4-6, 7-10, 11+ yards"
+    ],
+    "timeouts_left": "listed as a desired pre-snap state field but unresolvable in the pinned source (0/9,225 non-null); excluded, never imputed or defaulted",
+    "forbidden_predictors": ["play_type", "outcome family", "terminal_event", "timeout_called", "penalty or stoppage result", "target clock delta", "next-play fields", "snap-or-later tracking", "future player locations"],
+    "regime_must_not_use": ["play_type", "outcome family", "timeout_called", "target or future fields"]
+  },
+  "model_forms": {
+    "development_evaluation": "five leave-one-week-out folds; fit on the other four weeks 1-5 and predict the held week",
+    "single_model_baseline": {
+      "development_comparison": "frozen prior PBP-only pre-snap model predictions, 12.2427-second MAE on the exact 8,977-row paired cohort",
+      "holdout_fit": "refit this exact pinned categorical conditional-median/backoff form on all eligible weeks 1-5 rows",
+      "predictors": ["quarter", "quarter clock band (0-120, 121-300, 301-600, 601-900 seconds)", "down band (1-2, 3-4)", "distance band (1-3, 4-6, 7-10, 11+ yards)", "yardline_100 band (1-9, 10-19, 20-49, 50-79, 80-100)", "offense team identity", "defense team identity"],
+      "backoff_order": ["quarter+clock+down+distance+field+offense+defense", "quarter+clock+down+distance+field", "quarter+down+distance+field", "down+distance+field", "down+field", "field", "global"],
+      "minimum_bucket_rows": 25,
+      "estimation": "conditional median"
+    },
+    "two_regime_candidate": "separate categorical conditional-median models by the frozen regime; backoff keys in order: quarter+clock_band+score_band+down_band+distance_band, clock_band+score_band+down_band+distance_band, score_band+down_band+distance_band, down_band+distance_band, score_band, then that regime's global median; use a bucket only at >=25 training rows",
+    "final_holdout_fit": "fit both frozen model forms once on eligible development rows from weeks 1-5; no post-holdout refit, threshold change, feature change, or regime change before reporting"
+  },
+  "metrics": {
+    "primary": "mean absolute error in seconds, paired on the same eligible target rows",
+    "tail": ["P90 absolute error in seconds", "P99 absolute error in seconds"],
+    "strata": ["overall", "regulation", "stoppage_drill"],
+    "quantile_definition": "Type-7 linear interpolation at index p*(n-1)",
+    "additional_reporting": ["eligible row count", "distinct game/drive count", "coverage against baseline-eligible rows", "paired errors by regime", "unresolvable timeout coverage"],
+    "aggregation": "report per-play metrics; count a drive by distinct (game_id, drive) among scored plays"
+  },
+  "acceptance_thresholds": {
+    "coverage": "at least 90% of eligible baseline target rows overall; report all exclusions and never substitute unknown labels",
+    "minimum_regime_n": 200,
+    "overall_mae": "two-regime candidate must reduce MAE by at least 5% relative to the frozen single-model baseline",
+    "per_regime_mae": "candidate MAE must be no more than 5% above baseline MAE in each regime",
+    "per_regime_tail": "candidate P90 and P99 absolute error must each be no more than 5% above baseline within each regime",
+    "insufficient_support": "if either regime has fewer than 200 eligible rows, report the evaluation inconclusive and do not relax thresholds",
+    "decision_rule": "all coverage, minimum-n, overall-MAE, per-regime-MAE, and per-regime-tail conditions must pass; otherwise no acceptance"
+  },
+  "reproducibility": {
+    "protocol_sha256_file": "E3-PRESNAP-CLOCK-HOLDOUT-PROTOCOL-2026-10-24.json.sha256",
+    "sha256_scope": "SHA-256 over the exact UTF-8 bytes of this JSON file, including final newline",
+    "expected_evaluation_action": "first authorized weeks 6-9 run uses the committed manifest and frozen code; record inputs, code SHA, and output SHA before reporting metrics"
+  }
+}

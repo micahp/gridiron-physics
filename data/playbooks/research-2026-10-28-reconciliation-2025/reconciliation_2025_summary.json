@@ -1,0 +1,35 @@
+{
+ "drives": {
+  "distinct_drive_ids_in_game_totals": 5733,
+  "drives_with_more_than_one_posteam": 0,
+  "drives_with_more_than_one_posteam_explained": 7,
+  "ended_with_score_match": 5733,
+  "ended_with_score_mismatch": 0,
+  "explanations": {
+   "kickoff_recovered_by_kicking_team": 1,
+   "onside_kickoff": 5,
+   "turnover_on_downs_drive_id_not_split": 1
+  },
+  "rows_with_drive_id": 45910,
+  "rows_without_drive_id": 542
+ },
+ "final_score": {
+  "match": 272,
+  "mismatch": 0
+ },
+ "games_in_official": 272,
+ "games_in_pbp": 272,
+ "mismatch_rows": 0,
+ "official_drive_count_available": false,
+ "points_from_events_by_team_game": {
+  "match": 544,
+  "mismatch": 0
+ },
+ "season": 2025,
+ "touchdowns_by_team": {
+  "match": 32,
+  "mismatch": 0,
+  "official_total": 1395,
+  "pbp_total": 1395
+ }
+}

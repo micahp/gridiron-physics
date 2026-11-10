@@ -1,0 +1,2 @@
+game_id,drive_index,team,end_class,end_subtype,nflverse_fixed_drive_result,crosscheck,nflverse_drive_end_transition,transition_crosscheck,last_offense_play_id,last_offense_desc
+2025_05_TEN_ARI,23,TEN,touchdown_scored,pass,Touchdown,agree,INTERCEPTION,disagree,4224,(4:53) (Shotgun) 1-C.Ward pass short left intended for 0-C.Ridley INTERCEPTED by 42-D.Taylor-Demerson (2-Ma.Wilson) at ARI 5. 42-D.Taylor-Demerson to ARI 5 for 

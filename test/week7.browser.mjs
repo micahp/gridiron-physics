@@ -9,6 +9,11 @@ import { MATCHUPS } from '../web/week7-core.js';
 // data/teams/week7-six-2026-10-24.json, data/special_teams/2025-league.json).
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:8080';
 const roster = JSON.parse(readFileSync(new URL('../data/teams/week7-six-2026-10-24.json', import.meta.url)));
+// Seeds verified to reach regulation end with no refusal. Re-survey if the generator changes.
+const PLAYABLE_SEEDS = {
+  '2026_07_CIN_BAL':'1042', '2026_07_MIA_NYJ':'1', '2026_07_SF_ATL':'1042',
+  '2026_07_TB_CAR':'1042', '2026_07_GB_DET':'1042', '2026_07_DAL_PHI':'1042',
+};
 const browser=await chromium.launch({
   headless:true,
   args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist'],
@@ -17,23 +22,54 @@ const errors=[];
 const page=await browser.newPage({viewport:{width:1280,height:880}});
 page.on('pageerror',e=>errors.push(String(e)));
 page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text());});
+const waitForStatus=()=>page.waitForFunction(()=>{
+  const s=document.querySelector('#status')?.textContent||'';
+  return s.startsWith('Ready ·')||s.includes('Regulation ended')||s.includes('Simulation incomplete ·')||s.includes('Simulation stopped:')||
+    s.includes('Assets not ready:')||s.includes('Simulation failed:');
+},null,{timeout:100000,polling:250});
+const safety=[];
 const rendered=[];
 try{
+  // Safety: each matchup on its default seed either initializes or stops with an explicit reason.
   for(const game of MATCHUPS){
     await page.goto(BASE+'/week7.html?game='+encodeURIComponent(game.id),{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>{
-      const s=document.querySelector('#status')?.textContent||'';
-      return s.includes('Ready ·')||s.includes('Assets not ready:')||s.includes('Simulation failed:');
-    },null,{timeout:100000});
+    await waitForStatus();
     const status=await page.locator('#status').innerText();
-    assert.match(status,/Ready ·/,'matchup '+game.id+' did not initialize: '+status);
+    const refused=/Simulation stopped: unsupported rule \(/.test(status);
+    const regulationEnded=/Ready ·|Regulation ended/.test(status);
+    const incomplete=/Simulation incomplete ·/.test(status);
+    assert.ok(refused||regulationEnded||incomplete,'matchup '+game.id+' did not initialize: '+status);
+    if(refused){
+      assert.match(status,/Simulation stopped: unsupported rule \([a-z_]+\)\. .+/,game.id+' refusal must state a reason: '+status);
+      assert.match(status,/no final result/,game.id+' refusal must not present a final result');
+      assert.equal(await page.locator('#timeline button[data-index]', {hasText:'REFUSED'}).count(),1,game.id+' refusal event is listed once');
+    }
+    if(incomplete)assert.match(status,/no final result/,game.id+' incomplete simulation must not present a final result');
+    safety.push({game:game.id,default:refused?'refused':regulationEnded?'regulation-ended':'incomplete'});
+  }
+
+  // Playable: each matchup on its pinned seed must reach regulation end and render a real 22-player play.
+  for(const game of MATCHUPS){
+    const seed=PLAYABLE_SEEDS[game.id];
+    await page.goto(BASE+'/week7.html?game='+encodeURIComponent(game.id),{waitUntil:'domcontentloaded'});
+    await waitForStatus();
+    await page.fill('#seed',seed);
+    await page.click('#simulate');
+    const status=await page.locator('#status').innerText();
+    assert.match(status,/^Ready ·/,game.id+' must report ready after simulating, not a finished game: '+status);
     const n=await page.locator('#timeline button[data-index]').count();
     assert.ok(n>40,'not enough generated events for '+game.id+': '+n);
-    // The game opens with a kickoff, which is text-only (no 3D), so select the
-    // first scrimmage play to exercise the physical 22-player animation.
+    // The game opens with a kickoff, which the director now replays with a
+    // real 22-player kicking formation.
     await page.locator('#timeline button[data-index="0"]').click();
-    assert.match(await page.locator('#replay-type').innerText(),/Text-only event/,game.id+' opening kickoff should be text-only');
-    await page.locator('#timeline button.pl:not(.admin)').first().click();
+    assert.match(await page.locator('#replay-type').innerText(),/22-player 3D · special teams/,game.id+' opening kickoff should replay physically');
+    // The kickoff is a special-teams event and must show both teams.
+    const koText=await page.locator('#play-detail').innerText();
+    assert.match(koText,/→/,game.id+' kickoff detail should name the kicking and receiving teams: '+koText);
+    assert.match(koText,/touchback|return|out of bounds/i,game.id+' kickoff detail should name the outcome: '+koText);
+    assert.match(koText,/reconstructed from this sampled outcome/,game.id+' kickoff replay must state it is a reconstruction: '+koText);
+    // Then a scrimmage snap: the original 22-player run/pass animation.
+    await page.locator('#timeline button.pl:not(.admin)',{hasText:'RUN'}).first().click();
     const event=await page.locator('#replay-type').innerText();
     assert.match(event,/22-player 3D/,game.id+' physical animation unavailable: '+await page.locator('#play-detail').innerText());
     const playText=await page.locator('#play-detail').innerText();
@@ -46,10 +82,56 @@ try{
       game.id+' timeline row lacks matching player attribution');
     assert.match(playText,/Illustrative 2026 roster assignment/,
       game.id+' missing historical-credit disclaimer');
-    rendered.push({game:game.id,events:n,first:event});
+    // A punt and a field goal also replay physically when the outcome has a
+    // model (blocked kicks stay text-only and carry the admin class).
+    for(const label of ['PUNT','FIELD GOAL']){
+      const row=page.locator('#timeline button.pl:not(.admin)',{hasText:label}).first();
+      if(!(await row.count()))continue;
+      await row.click();
+      const kindText=await page.locator('#replay-type').innerText();
+      assert.match(kindText,/22-player 3D · special teams/,game.id+' '+label+' did not replay: '+await page.locator('#play-detail').innerText());
+      assert.match(await page.locator('#play-detail').innerText(),/reconstructed from this sampled outcome/,game.id+' '+label+' replay must state its provenance');
+    }
+    rendered.push({game:game.id,seed,events:n,first:event});
   }
   await page.locator('#again').click();
-  assert.equal(await page.locator('#seed').inputValue(),'1043');
+  const lastSeed=PLAYABLE_SEEDS[MATCHUPS.at(-1).id];
+  assert.equal(await page.locator('#seed').inputValue(),String(Number(lastSeed)+1));
   assert.equal(errors.length,0,'browser errors: '+errors.join('; '));
-  console.log('PASS full 3D render on six 2026 matchups: '+JSON.stringify(rendered));
+  console.log('PASS safety: default seeds initialize or refuse with a reason: '+JSON.stringify(safety));
+  console.log('PASS playable: pinned seeds render 22-player 3D plays: '+JSON.stringify(rendered));
+
+// Forced refusal: every punt is a blocked kicking-team recovery, which the
+// generator refuses rather than resolving. Verifies the viewer reports the stop.
+{
+  const forced = JSON.parse(readFileSync(new URL('../data/special_teams/2025-league.json', import.meta.url), 'utf8'));
+  forced.punts = {...forced.punts, outcomes:{blocked:1}, distance_yards:{'0':1,'40':1},
+    blocked_resolution_pooled:{receiving_recovery:0, kicking_recovery:1, out_of_bounds:0, safety:0}};
+  const refusalErrors = [];
+  const rpage = await browser.newPage({viewport:{width:1280,height:880}});
+  rpage.on('pageerror',e=>refusalErrors.push(String(e)));
+  rpage.on('console',m=>{if(m.type()==='error')refusalErrors.push('console: '+m.text());});
+  await rpage.route('**/data/special_teams/2025-league.json', route=>route.fulfill({
+    contentType:'application/json', body:JSON.stringify(forced)}));
+  const game = MATCHUPS[0];
+  await rpage.goto(BASE+'/week7.html?game='+encodeURIComponent(game.id),{waitUntil:'domcontentloaded'});
+  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Simulation stopped|Regulation ended|Simulation incomplete|failed|not ready/),null,{timeout:100000});
+  const st = await rpage.locator('#status').innerText();
+  assert.match(st,/Simulation stopped: unsupported rule \(blocked_punt_kicking_recovery\)/,'refusal status: '+st);
+  assert.match(st,/no final result/,'refusal must not present a final result');
+  const refused = rpage.locator('#timeline button[data-index]', {hasText:'REFUSED'});
+  assert.equal(await refused.count(), 1, 'refusal event is listed once in the timeline');
+  await refused.first().click();
+  assert.match(await rpage.locator('#play-detail').innerText(), /Blocked punt|line of scrimmage|Rule 2-3-1/i,'refusal reason shown');
+  assert.equal(refusalErrors.length, 0, 'refusal browser errors: '+refusalErrors.join('; '));
+  // Recover: remove the forced table and switch to a normal game.
+  await rpage.unroute('**/data/special_teams/2025-league.json');
+  await rpage.goto(BASE+'/week7.html?game='+encodeURIComponent(MATCHUPS[1].id),{waitUntil:'domcontentloaded'});
+  await rpage.waitForFunction(()=>(document.querySelector('#status')?.textContent||'').match(/Ready ·|Regulation ended|Simulation incomplete|Simulation stopped|failed|not ready/),null,{timeout:100000});
+  const recovered = await rpage.locator('#status').innerText();
+  assert.doesNotMatch(recovered,/blocked_punt_kicking_recovery/,'forced refusal is gone after recovery');
+  assert.match(recovered,/Ready ·|Simulation incomplete ·|Simulation stopped: unsupported rule \(/,'viewer recovers after a refused game: '+recovered);
+  await rpage.close();
+  console.log('PASS refusal display: stop status, refused event, reason, and recovery');
+}
 }finally{await browser.close();}

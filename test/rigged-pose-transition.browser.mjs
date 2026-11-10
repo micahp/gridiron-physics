@@ -26,16 +26,23 @@ try {
   await page.waitForFunction(()=>document.querySelector('#status')?.textContent?.includes('Ready ·')
     && window.__gridironRenderer?.riggedGltf,null,{timeout:100000});
   const buttons=await page.locator('#timeline button.pl:not(.admin)').all();
-  let chosen;
+  // The catch clip can only be seen if the receiver is not wrapped straight away: a
+  // tackle pose 50 ms after the catch correctly takes over the body. So use the first
+  // completed pass that leaves at least CATCH_WINDOW seconds between catch and tackle.
+  const CATCH_WINDOW=0.3;
+  let chosen,meta;
   for(const button of buttons) {
     const label=await button.innerText();
-    if(/PASS COMPLETE/i.test(label)) {chosen=label;await button.click();break;}
+    if(!/PASS COMPLETE/i.test(label)) continue;
+    await button.click();
+    if(await page.locator('#play').getAttribute('aria-label')==='Pause')await page.locator('#play').click();
+    const m=await page.evaluate(()=>window.__gridironRecordMeta?.());
+    const c=m?.events?.find(e=>e.type==='catch');
+    const end=m?.events?.find(e=>(e.type==='tackle'||e.type==='wrapped'||e.type==='whistle')&&c&&e.t>=c.t);
+    if(c&&(!end||end.t-c.t>=CATCH_WINDOW)) {chosen=label;meta=m;break;}
   }
-  assert.ok(chosen,'no completed pass found in seed-1042 BAL/CIN game');
+  assert.ok(chosen,'no completed pass with a visible catch found in seed-1042 BAL/CIN game');
   assert.match(await page.locator('#replay-type').innerText(),/22-player 3D/);
-  // Clicking timeline starts the play. Pause before seeking.
-  if(await page.locator('#play').getAttribute('aria-label')==='Pause')await page.locator('#play').click();
-  const meta=await page.evaluate(()=>window.__gridironRecordMeta?.());
   const eThrow=meta.events.find(e=>e.type==='throw');
   const eCatch=meta.events.find(e=>e.type==='catch');
   assert.ok(eThrow,'physics must contain real quarterback throw event');

@@ -1,8 +1,9 @@
 import { Renderer } from './render.js';
-import { selectPlay } from './prototype-model.js';
+import { selectPlay, selectSpecialTeamsPlay } from './prototype-model.js';
 import { executeSelectedPlay } from './prototype-execution.js';
 import { MATCHUPS, generateGame } from './week7-core.js';
-import { describeWeek7Play } from './week7-play-description.js';
+import { describeWeek7Play, describeWeek7Movement } from './week7-play-description.js';
+import { FootballAudio } from './audio-director.js';
 
 const $ = id => document.getElementById(id);
 const esc = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -20,14 +21,22 @@ const match = MATCHUPS.find(m=>m.id===matchQuery) || MATCHUPS[0];
 $('matchup').innerHTML = MATCHUPS.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.away+' @ '+m.home+' · '+m.day)+'</option>').join('');
 $('matchup').value = match.id;
 for (const [side, id] of [['away', match.away], ['home', match.home]]) {
-  $(side+'-name').textContent = id;
+  $(side+'-name').textContent = teamStyle(id).short;
+  $(side+'-logo').src = teamLogoUrl(id);
   $('bug-'+side).style.setProperty('--team', teamStyle(id).color);
 }
 
 let snapshot, books, physicsGame, renderer, simulation, selected = 0, current = null, currentSelection = null;
 let animating = false, lastTick = null, playSeconds = 0;
+let scoreCue = null;
 // Reuse the same 2026 lineups for timeline credits and the actual 3D play.
 const selectedDemos = new Map();
+const stadiumAudio = new FootballAudio(match.home);
+// Kicks the director can replay. Blocked kicks have no physical model, so they
+// keep the text-only row instead of pretending to animate.
+const animatableSpecial = p => (p.type === 'kickoff' || p.type === 'field_goal' || p.type === 'punt') &&
+  !(p.type === 'punt' && p.outcome === 'blocked') && !(p.type === 'field_goal' && p.blocked);
+const replayable = p => p.type === 'scrimmage' || animatableSpecial(p);
 
 function status(message, failure=false){$('status').textContent=message; $('status').style.color=failure?'#ffc3b8':'#c9eaff';}
 function clock(v){return Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0');}
@@ -113,9 +122,15 @@ function inspectPlayer(id){
   detail.innerHTML='<div class="card-h" style="grid-template-columns:1fr auto"><div><h2>'+esc(p.name)+'</h2><p>'+esc(p.team)+' · '+esc(p.pos)+' · OVR estimate</p></div><div class="big">'+esc(p.overall_estimate ?? 'n/r')+'</div></div>'+
     '<div class="attrs" style="margin-top:12px">'+Object.entries(p.ratings||{}).map(([k,v])=>'<div class="attr est"><div class="top"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div></div>').join('')+'</div>'+
     '<p class="note" style="margin-top:10px">Estimated public-research ratings, not EA-licensed player grades.</p>';
-  const row=[...$('players').querySelectorAll('[data-player]')].find(b=>b.dataset.player===id);
-  if(row){row.after(detail);row.scrollIntoView({block:'start'});}
-  else{$('players').prepend(detail);detail.scrollIntoView({block:'start'});}
+  const list=$('players');
+  const reveal=(node)=>{ // scroll the roster list only; scrollIntoView moved the whole page on phones
+    const lr=list.getBoundingClientRect(), nr=node.getBoundingClientRect();
+    if(nr.top<lr.top)list.scrollTop+=nr.top-lr.top-2;
+    else if(nr.bottom>lr.bottom)list.scrollTop+=nr.bottom-lr.bottom+2;
+  };
+  const row=[...list.querySelectorAll('[data-player]')].find(b=>b.dataset.player===id);
+  if(row){row.after(detail);reveal(detail);}
+  else{list.prepend(detail);reveal(detail);}
 }
 function drawPlayerList(demo) {
   rosterSlots = [...Object.entries(demo.lineups.offense).map(([slot,id])=>({side:demo.play.off,slot,id})),
@@ -267,6 +282,26 @@ function advance(){
   else{playing=false;renderPlayButton();}
 }
 function startFrom(i){choose(i);playing=true;dwell=0;renderPlayButton();}
+// Special-teams events carry their own ownership: who kicked, who received,
+// and where the ball was spotted. A kickoff is not part of the receiving
+// team's offensive drive in NFL terms, so the timeline labels it as its own
+// special-teams event inside the drive it opens.
+function kickoffLabel(p){
+  const who=esc(p.kicking_team)+' → '+esc(p.receiving_team);
+  if(p.outcome==='returned')return who+' · '+esc(p.return_yards)+' yd return';
+  if(p.touchback_type==='landing_zone')return who+' · touchback, receiving 20';
+  if(p.touchback_type==='in_air')return who+' · touchback, receiving 35';
+  if(p.touchback_type==='midfield')return who+' · touchback, receiving 20 (from 50)';
+  if(p.outcome==='out_of_bounds')return who+' · out of bounds, receiving 40';
+  return who+' · '+esc(String(p.outcome||'').replace('_',' '));
+}
+function playLabel(p){
+  if(p.type==='kickoff')return kickoffLabel(p);
+  if(p.touchdown)return 'TOUCHDOWN';
+  if(p.type==='scrimmage')return esc(p.gain)+' yd';
+  if(p.type==='punt'||p.type==='field_goal')return esc(p.distance)+' yd';
+  return 'event';
+}
 function renderTimeline(){
   const drives=new Map();let shown=0;
   simulation.plays.forEach((p,i)=>{
@@ -278,28 +313,65 @@ function renderTimeline(){
   $('timeline-head').textContent=shown+' of '+simulation.plays.length+' events · '+drives.size+' drives';
   $('timeline').innerHTML=[...drives].map(([n,d])=>
     '<div class="drive"><div class="drive-h" style="--team:'+esc(teamStyle(d.offense).color)+'"><span>Drive '+n+' · '+esc(d.offense)+'</span><span class="res">'+d.rows.length+(d.rows.length===1?' event':' events')+'</span></div>'+
-    d.rows.map(({p,i})=>'<button class="pl'+(p.type==='scrimmage'?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+
+    d.rows.map(({p,i})=>'<button class="pl'+(replayable(p)?'':' admin')+(i===selected?' on':'')+'" data-index="'+i+'"><span class="dd">Q'+p.quarter+' '+clock(p.clock)+'</span><span class="txt">'+
       esc(describeWeek7Play(p, selectionFor(p)?.demo, physicsGame?.players).line)+'</span></button>').join('')+'</div>').join('');
   $('timeline').querySelectorAll('button[data-index]').forEach(b=>b.addEventListener('click',()=>startFrom(Number(b.dataset.index))));
 }
+// Broadcast spot notation: the number is the yard line the ball sits on, named
+// for the team whose goal line it is nearest. A ball 31 yards from the goal
+// line the offense attacks reads "DEN 31"; own-side yardage reads "CIN 25".
+function spotLabel(p) {
+  const yl = Math.round(safe(p.yl));
+  if (yl === 50) return 'MIDFIELD';
+  const ownSide = yl > 50;
+  const team = ownSide ? p.offense : (p.offense === match.home ? match.away : match.home);
+  return team + ' ' + (ownSide ? 100 - yl : yl);
+}
+import { afterPlayEnd, animateScoreBug, touchdownScore } from './score-animation.js';
+import { teamLogoUrl } from './team-logo.js';
 function scoreAtPlay(p) {
-  const score=p.scoreAfter || p.score || simulation.score;
-  $('away-score').textContent=score[match.away]??0;
-  $('home-score').textContent=score[match.home]??0;
+  // The try (one or two) belongs to the next play's starting score, so a touchdown shows six points here.
+  const i = simulation.plays.indexOf(p);
+  const before = (i > 0 ? simulation.plays[i-1].score : null) || {[match.away]:0,[match.home]:0};
+  const after = p.scoreAfter || p.score || simulation.score;
+  const held = touchdownScore({away: before[match.away]??0, home: before[match.home]??0},
+    {away: after[match.away]??0, home: after[match.home]??0}, {outcome: {touchdown: !!p.touchdown}});
+  const score = {[match.away]: held.away, [match.home]: held.home};
+  // The score changes in the 3D play, when its touchdown is reached, not when the play is selected.
+  scoreCue = {pre: {away: before[match.away]??0, home: before[match.home]??0},
+    held: {away: score[match.away]??0, home: score[match.home]??0}, applied: false};
+  $('away-score').textContent = String(scoreCue.pre.away);
+  $('home-score').textContent = String(scoreCue.pre.home);
   $('bug-q').textContent='Q'+p.quarter;
   $('game-clock').textContent=clock(p.clock);
-  $('down-distance').textContent=p.down+' & '+p.togo+' · '+(p.yl===50?'MIDFIELD':p.yl+' YDS TO GOAL');
+  $('down-distance').textContent=p.down+' & '+p.togo+' · '+spotLabel(p);
   $('bug-away').classList.toggle('poss',p.offense===match.away);
   $('bug-home').classList.toggle('poss',p.offense===match.home);
 }
-function makeSelected(p){
-  // Adapter uses current 2026 roster, real 2025 playbook catalog, and LP-like chosen outcome.
-  const input={schema_version:'gridiron.play_selection.v1',
+// Shared team/roster join for both adapters: the frozen weekly snapshot, never
+// a historical lineup.
+function selectionBase(){
+  return {schema_version:'gridiron.play_selection.v1',
     teams:{[match.home]:snapshot.teams[match.home],[match.away]:snapshot.teams[match.away]},
     playbooks:books,
     active_rosters:Object.fromEntries([match.home,match.away].map(id=>[
       id,snapshot.teams[id].roster.filter(x=>x.status==='ACT'&&x.availability==='available').map(x=>x.id)])),
     personnel_availability:{[match.home]:{inactive_ids:[]},[match.away]:{inactive_ids:[]}},
+    random_seed:simulation.seed};
+}
+function makeSelected(p){
+  if(p.type!=='scrimmage'){
+    // The generator sampled the kick from 2025 league tables; the director
+    // reconstructs that outcome with a real 22-player kicking formation.
+    const demo=selectSpecialTeamsPlay({...selectionBase(),
+      game_state:{game_id:match.id,quarter:p.quarter,clock_seconds:p.clock},
+      demo_controls:{kind:p.type,event:p},random_seed:simulation.seed+'|'+p.id});
+    demo.play.id=p.id;
+    demo.execution_contract.unsupported.push('2025 sampled special-teams outcome anchors the 2026 visualization');
+    return demo;
+  }
+  // Adapter uses current 2026 roster, real 2025 playbook catalog, and LP-like chosen outcome.
+  const input={...selectionBase(),
     game_state:{game_id:match.id,offense_team_id:p.offense,defense_team_id:p.defense,down:p.down,
       distance_yards:p.togo,yard_line:p.offense===match.home?100-p.yl:p.yl,
       score:p.score,clock_seconds:p.clock,
@@ -323,7 +395,7 @@ function makeSelected(p){
   return demo;
 }
 function selectionFor(p){
-  if(p.type!=='scrimmage')return null;
+  if(!replayable(p))return null;
   if(!selectedDemos.has(p.id)){
     try{selectedDemos.set(p.id,{demo:makeSelected(p)});}
     catch(error){selectedDemos.set(p.id,{error});}
@@ -337,15 +409,17 @@ function choose(idx){
   currentPlay=p;
   const credit=describeWeek7Play(p, selectionFor(p)?.demo, physicsGame?.players);
   scoreAtPlay(p);
-  $('snap-title').textContent='Play '+p.index+' · '+p.action+' · '+(credit.actors||p.offense);
-  $('play-detail').innerHTML='<b>'+esc(p.action)+'</b>'+
+  $('snap-title').textContent='Play '+p.index+' · '+credit.action+' · '+(credit.actors||p.offense);
+  $('play-detail').innerHTML='<b>'+esc(credit.action)+'</b>'+
     (credit.actors?' · '+esc(credit.actors):'')+(credit.result?' · '+esc(credit.result):'')+
     ' · Q'+p.quarter+' '+clock(p.clock)+' → '+clock(Math.max(0,p.clock-(p.runoff||0)))+
     '<br>'+esc(p.note||'')+
     (credit.actors?'<br><span class="note">Illustrative 2026 roster assignment for the 3D replay, not a historical player credit.</span>':'')+
-    (p.try?'<br>'+esc(p.try):'');
+    (p.try?'<br>'+esc(p.try):'')+
+    (p.type==='kickoff'?'<br>'+kickoffLabel(p):'')+
+    (p.type==='field_goal'&&!p.good&&p.restart_rule?'<br>Restart: '+esc(p.restart_rule):'');
   current=null;playSeconds=0;lastTick=null;animating=false;dwell=0;$('scrub').value='0';
-  if(p.type!=='scrimmage'){
+  if(!replayable(p)){
     currentSelection=null;
     $('replay-type').textContent='Text-only event';
     $('roster-t').hidden=true;rosterSlots=[];
@@ -358,15 +432,24 @@ function choose(idx){
       if(!demo)throw new Error('missing 2026 replay lineup');
       currentSelection=demo;
       renderer.clearTrail();
-      const roster=[...Object.entries(demo.lineups.offense).map(([slot,id])=>({id,team:p.offense,slot})),
-        ...Object.entries(demo.lineups.defense).map(([slot,id])=>({id,team:p.defense,slot}))];
+      const roster=[...Object.entries(demo.lineups.offense).map(([slot,id])=>({id,team:demo.play.off,slot})),
+        ...Object.entries(demo.lineups.defense).map(([slot,id])=>({id,team:demo.play.def,slot}))];
       renderer.setRoster(roster);
-      renderer.setLines(demo.play.los,demo.play.los+demo.play.dir*p.togo);
+      // A kick has no line to gain; show only the kick spot.
+      renderer.setLines(demo.play.los,demo.play.kindGroup==='kick'?null:demo.play.los+demo.play.dir*p.togo);
       const result=executeSelectedPlay(demo);
       if(result.failure) throw new Error(result.failure.message);
       if(!result.record?.frames?.length)throw new Error('physics returned no frames');
       current={rec:result.record,duration:(result.record.frames.length-1)/result.record.hz};
-      $('replay-type').textContent='22-player 3D · constrained';
+      const movement=describeWeek7Movement(p,demo,result.record,physicsGame?.players);
+      if(movement)$('play-detail').innerHTML+='<p class="note">'+esc(movement)+'</p>';
+      if(demo.play.kindGroup==='kick'){
+        $('play-detail').innerHTML+='<p class="note">3D replay: the kick and return are reconstructed from this sampled outcome, not predicted. The game log itself does not simulate kick flight.</p>';
+        for(const a of demo.selection.role_adaptations||[])
+          $('play-detail').innerHTML+='<p class="note">Roster note: '+esc(a.reason)+'.</p>';
+      }
+      $('replay-type').textContent=demo.play.kindGroup==='kick'
+        ?'22-player 3D · special teams':'22-player 3D · constrained';
       drawPlayerList(demo);
       animating=true;
     }catch(e){
@@ -375,7 +458,13 @@ function choose(idx){
     }
   }
   for(const b of $('timeline').querySelectorAll('button[data-index]'))b.classList.toggle('on',Number(b.dataset.index)===selected);
-  $('timeline').querySelector('.pl.on')?.scrollIntoView({block:'nearest'});
+  { // same reason: keep the window where it is, scroll the timeline list instead
+    const t=$('timeline'), on=t.querySelector('.pl.on');
+    if(on){const tr=t.getBoundingClientRect(), or=on.getBoundingClientRect();
+      if(or.top<tr.top)t.scrollTop+=or.top-tr.top-2;
+      else if(or.bottom>tr.bottom)t.scrollTop+=or.bottom-tr.bottom+2;}
+  }
+  stadiumAudio.setPlay(p, current?.rec || null);
   renderPlaybook();
 }
 function simulate(){
@@ -384,13 +473,38 @@ function simulate(){
     if(physicsGame)physicsGame.seed=seed;
     simulation=generateGame(match,books,seed,league);
     selectedDemos.clear();
+    stadiumAudio.setPlay(null, null);
     ({scoring:scoringAt,key:keyAt}=classify(simulation));
     playing=false;
     renderFilter();renderTimeline();renderBox();choose(playable(-1,1)??0);renderPlayButton();
-    status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
-      ' drives · '+match.away+' '+simulation.score[match.away]+' / '+match.home+' '+simulation.score[match.home]+
-      ' · experimental, not legally validated');
+    if(simulation.refusal)status('Simulation stopped: unsupported rule ('+simulation.refusal.rule+'). '+
+      simulation.refusal.detail+' Partial record through play '+simulation.plays.length+'; no final result.',true);
+    else if(!simulation.complete_regulation)status('Simulation incomplete · stopped before regulation time expired · '+
+      simulation.source_play_count+' hypothetical snaps · no final result.',true);
+    else if(simulation.score[match.home]===simulation.score[match.away])status('Regulation ended tied · '+
+      simulation.source_play_count+' hypothetical snaps · overtime is unsupported · no final game result.',true);
+    else status('Ready · '+simulation.source_play_count+' hypothetical snaps · '+simulation.drives.length+
+      ' drives · modeled final '+match.away+' '+simulation.score[match.away]+' / '+
+      match.home+' '+simulation.score[match.home]+' · result illustrative; legal status unvalidated');
   }catch(e){status('Simulation failed: '+e.message,true);}
+}
+// Score cue: the post-play score appears when the 3D play's clock crosses the play's end (the touchdown), and
+// reverts when the clock is scrubbed back before it.
+function updatePlayScore(){
+  if(!scoreCue||!current)return;
+  const t=current.rec.t0+playSeconds;
+  const at=current.rec.end&&current.rec.end.t!=null?current.rec.end.t:current.rec.t0+current.duration;
+  const after=afterPlayEnd(at,t);
+  if(after===scoreCue.applied)return;
+  scoreCue.applied=after;
+  if(after){
+    animateScoreBug($('bug-away'),$('away-score'),scoreCue.pre.away,scoreCue.held.away);
+    animateScoreBug($('bug-home'),$('home-score'),scoreCue.pre.home,scoreCue.held.home);
+  }else{
+    $('away-score').textContent=String(scoreCue.pre.away);
+    $('home-score').textContent=String(scoreCue.pre.home);
+    $('bug-away').classList.remove('scored');$('bug-home').classList.remove('scored');
+  }
 }
 function animate(now){
   if(lastTick===null)lastTick=now;
@@ -401,9 +515,11 @@ function animate(now){
     // keep advancing the Mixamo skeleton, and ½×/2× must scale both equally.
     const animationDt=playing&&animating ? dt*Number($('speed').value) : 0;
     renderer.draw(current.rec,current.rec.t0+playSeconds,animationDt);
+    updatePlayScore();
     $('scrub').value=String(Math.round(1000*playSeconds/Math.max(.01,current.duration)));
     if(playSeconds>=current.duration)animating=false;
   }
+  stadiumAudio.update(current ? playSeconds : dwell, playing);
   if(playing&&!animating){
     dwell+=dt;
     if(dwell>=(current?POST_CLIP_PAUSE:TEXT_EVENT_SECONDS))advance();
@@ -432,6 +548,17 @@ async function start(){
     $('previous').addEventListener('click',()=>{const j=playable(selected,-1);if(j!=null)choose(j);});
     $('next').addEventListener('click',()=>{const j=playable(selected,1);if(j!=null)choose(j);});
     $('play').addEventListener('click',()=>{playing=!playing;dwell=0;renderPlayButton();});
+    $('audio-toggle').addEventListener('click',async()=>{
+      const button=$('audio-toggle');
+      if(stadiumAudio.enabled){stadiumAudio.disable();button.textContent='Sound off';button.setAttribute('aria-pressed','false');return;}
+      button.disabled=true;
+      button.textContent='Loading audio…';
+      const loaded=await stadiumAudio.enable();
+      button.disabled=false;
+      button.textContent=loaded?'Sound on':'Audio files missing';
+      button.setAttribute('aria-pressed',String(stadiumAudio.enabled));
+    });
+    $('audio-volume').addEventListener('input',e=>stadiumAudio.setVolume(Number(e.target.value)/100));
     $('filterbar').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(b)setFilter(b.dataset.filter);});
     document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('play').click();}});
     $('scrub').addEventListener('input',()=>{if(current){playing=false;renderPlayButton();playSeconds=current.duration*Number($('scrub').value)/1000;animating=playSeconds<current.duration;}});

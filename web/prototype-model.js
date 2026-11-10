@@ -113,6 +113,230 @@ export function validateLineups(offRoster, defRoster, O, D) {
   return true;
 }
 
+// --------------------------------------------------------- special teams
+// The game generator samples a special-teams outcome from the 2025 league
+// tables. The director can animate that outcome, but it needs a full 11-on-11
+// kicking formation. Both units come from the same frozen active rosters as
+// the scrimmage path: K, P and LS by listed position, everyone else from the
+// ordinary lineup. No player is invented for the replay.
+const KICKING_DROPS = { kickoff: ['WR3'], punt: ['WR2', 'WR3'], fg: ['TE', 'WR2', 'WR3'] };
+
+function specialist(roster, position, teamId) {
+  const p = available(roster).find((x) => x.position === position);
+  if (!p) throw new Error(`${teamId} has no active ${position} on the frozen roster`);
+  return p;
+}
+
+// Some frozen rosters have no active kicker (Miami carries two unavailable
+// kickers). An active punter is a real player who kicks off in the NFL, so use
+// him and state the duty switch rather than inventing a kicker.
+function kicker(roster, teamId, adaptations) {
+  const k = available(roster).find((x) => x.position === 'K');
+  if (k) return k;
+  const p = available(roster).find((x) => x.position === 'P');
+  if (!p) throw new Error(`${teamId} has no active kicker or punter on the frozen roster`);
+  adaptations.push({
+    player_id: p.id, engine_slot: 'K', roster_role: 'P', provenance: 'roster_status',
+    reason: `${teamId} has no active kicker on the frozen roster; the active punter kicks off`,
+  });
+  return p;
+}
+
+function kickingUnit(base, dropped, specialists) {
+  const unit = {};
+  for (const [slot, id] of Object.entries(base)) if (!dropped.includes(slot)) unit[slot] = id;
+  for (const [slot, id] of Object.entries(specialists)) unit[slot] = id;
+  if (Object.keys(unit).length !== 11) {
+    throw new Error(`special-teams unit must field 11, got ${Object.keys(unit).length}`);
+  }
+  return unit;
+}
+
+/**
+ * Build the kicking and receiving units for one sampled special-teams event.
+ * `kind` is the director's play kind (kickoff, punt or fg).
+ */
+export function buildSpecialTeamsLineups(kickRoster, retRoster, kickTeamId, retTeamId, kind) {
+  if (!KICKING_DROPS[kind]) throw new Error(`unsupported special-teams unit: ${kind}`);
+  const base = buildLineups(kickRoster, retRoster);
+  const adaptations = [];
+  const kickId = kicker(kickRoster, kickTeamId, adaptations).id;
+  const punter = available(kickRoster).find((p) => p.position === 'P');
+  const punterId = punter?.id ?? kickId;
+  const longSnapperId = specialist(kickRoster, 'LS', kickTeamId).id;
+
+  let dropped, specialists, holder = punterId;
+  if (kind === 'kickoff') {
+    dropped = KICKING_DROPS.kickoff;
+    specialists = { K: kickId };
+  } else if (kind === 'punt') {
+    dropped = KICKING_DROPS.punt;
+    specialists = { P: punterId, LS: longSnapperId };
+  } else if (kickId === punterId) {
+    // No separate kicker: the punter kicks and the quarterback holds, so the
+    // unit keeps 11 distinct players instead of listing one man twice.
+    dropped = ['TE', 'WR3'];
+    specialists = { K: kickId, LS: longSnapperId };
+    holder = base.offense.QB;
+  } else {
+    dropped = KICKING_DROPS.fg;
+    specialists = { K: kickId, P: punterId, LS: longSnapperId };
+  }
+  const kicking = kickingUnit(base.offense, dropped, specialists);
+
+  // The returner is the fastest receiving-team defender; relabel his slot so
+  // the roster panel states the role instead of inventing a new player.
+  const retById = new Map(available(retRoster).map((p) => [p.id, p]));
+  const [returnerSlot, returnerId] = Object.entries(base.defense)
+    .sort((a, b) => (retById.get(b[1])?.physics?.vmax ?? 0) - (retById.get(a[1])?.physics?.vmax ?? 0))[0];
+  const receiving = { ...base.defense };
+  delete receiving[returnerSlot];
+  receiving[kind === 'punt' ? 'PR' : 'KR'] = returnerId;
+
+  // The director treats the first kicking id as the kicker/punter and the
+  // first receiving id as the returner, so order the units accordingly.
+  const kickingOrder = (kind === 'kickoff' ? ['K'] : kind === 'punt' ? ['P', 'LS'] : ['K', 'LS', 'P'])
+    .filter((slot) => slot in kicking);
+  const units = {
+    [kickTeamId]: [...kickingOrder.map((slot) => kicking[slot]),
+      ...Object.entries(kicking).filter(([slot]) => !kickingOrder.includes(slot)).map(([, id]) => id)],
+    [retTeamId]: [returnerId, ...Object.entries(receiving)
+      .filter(([slot]) => slot !== (kind === 'punt' ? 'PR' : 'KR')).map(([, id]) => id)],
+  };
+  for (const [team, list] of Object.entries(units)) {
+    if (list.length !== 11 || new Set(list).size !== 11) {
+      throw new Error(`${team} special-teams unit needs 11 distinct players, got ${new Set(list).size} of ${list.length}`);
+    }
+  }
+  return { kicking, receiving, units, returner: returnerId, holder, specialists, adaptations };
+}
+
+/** The physical play script for one sampled special-teams outcome. */
+function specialTeamsPlay({ kind, kickTeamId, returnTeamId, event, units, returner, holder, specialists, seed }) {
+  const dir = 1; // every special-teams replay is oriented with the kicking team attacking right
+  const id = `demo:${kickTeamId}:${returnTeamId}:${kind}:${seed}`;
+  const base = {
+    id, off: kickTeamId, def: returnTeamId, kind, kindGroup: 'kick', dir, units,
+    text: `Sampled 2025 ${kind.replace('_', ' ')} outcome; 22-player reconstructed alignment`,
+  };
+  if (kind === 'kickoff') {
+    const los = event.touchback_type === 'midfield' ? 50 : 35;
+    const returned = event.outcome === 'returned';
+    const fairCatch = event.outcome === 'fair_catch';
+    return {
+      ...base, los,
+      // Absolute yard line where the ball comes down in the kicking team's
+      // frame (0 = kicking goal, 100 = receiving goal). The receiving spot is
+      // already in that frame; a return starts where the ball landed.
+      land: event.outcome === 'touchback' ? 103
+        : returned ? Math.min(103, event.receiving_spot + event.return_yards)
+          : event.receiving_spot,
+      returner: returned || fairCatch ? returner : undefined,
+      end: returned ? event.receiving_spot : undefined,
+      touchback: event.outcome === 'touchback',
+      oob: event.outcome === 'out_of_bounds',
+      fairCatch,
+    };
+  }
+  if (kind === 'punt') {
+    const los = 100 - event.yl;
+    const returned = event.outcome === 'returned';
+    const fairCatch = event.outcome === 'fair_catch';
+    return {
+      ...base, los,
+      punter: specialists.P, longSnapper: specialists.LS,
+      // Same absolute frame as the kickoff: a punt lands `distance` past the
+      // snap and a return starts from there.
+      land: event.outcome === 'touchback' ? 103
+        : returned ? Math.min(103, event.receiving_spot + event.return_yards)
+          : event.receiving_spot,
+      returner: returned || fairCatch ? returner : undefined,
+      end: returned ? event.receiving_spot : undefined,
+      touchback: event.outcome === 'touchback',
+      oob: event.outcome === 'out_of_bounds',
+      downed: event.outcome === 'downed',
+      fairCatch,
+    };
+  }
+  const los = 100 - event.yl;
+  const misses = ['wide left', 'wide right', 'short'];
+  const pick = [...String(event.id)].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 997, 7);
+  return {
+    ...base, los,
+    kicker: specialists.K, holder, snapper: specialists.LS,
+    good: Boolean(event.good),
+    miss: event.good ? null : misses[pick % misses.length],
+    distance: event.distance,
+  };
+}
+
+/** Versioned adapter for a sampled special-teams event and its 2026 replay. */
+export function selectSpecialTeamsPlay(input) {
+  if (input?.schema_version !== 'gridiron.play_selection.v1') throw new Error('unsupported play-selection schema version');
+  const state = input.game_state || {};
+  const controls = input.demo_controls || {};
+  const event = controls.event;
+  const kind = controls.kind;
+  if (!event) throw new Error('special-teams selection is missing the sampled event');
+  if (!['kickoff', 'punt', 'field_goal'].includes(event.type)) throw new Error(`unsupported special-teams event: ${event.type}`);
+  if (event.type === 'punt' && event.outcome === 'blocked') throw new Error('blocked punts have no physical replay model');
+  if (event.type === 'field_goal' && event.blocked) throw new Error('blocked field goals have no physical replay model');
+  const kickTeamId = event.type === 'kickoff' ? event.kicking_team : event.offense;
+  const returnTeamId = event.type === 'kickoff' ? event.receiving_team : event.defense;
+  const teams = input.teams || {};
+  if (!teams[kickTeamId] || !teams[returnTeamId] || kickTeamId === returnTeamId) {
+    throw new Error('special-teams team configuration join failed');
+  }
+  const joined = {};
+  for (const id of [kickTeamId, returnTeamId]) {
+    const source = teams[id];
+    const activeIds = input.active_rosters?.[id] ? new Set(input.active_rosters[id]) : null;
+    const inactiveIds = new Set(input.personnel_availability?.[id]?.inactive_ids || []);
+    const roster = source.roster.filter((p) => (!activeIds || activeIds.has(p.id)) && !inactiveIds.has(p.id) &&
+      p.status === 'ACT' && p.availability === 'available');
+    if (activeIds && roster.length !== activeIds.size) throw new Error(`active roster join failed for ${id}`);
+    joined[id] = { ...source, roster };
+  }
+  const playKind = kind === 'field_goal' ? 'fg' : kind;
+  const units = buildSpecialTeamsLineups(joined[kickTeamId].roster, joined[returnTeamId].roster,
+    kickTeamId, returnTeamId, playKind);
+  const play = specialTeamsPlay({
+    kind: playKind, kickTeamId, returnTeamId, event, units: units.units,
+    returner: units.returner, holder: units.holder, specialists: units.specialists,
+    seed: input.random_seed,
+  });
+  const players = Object.fromEntries([...joined[kickTeamId].roster, ...joined[returnTeamId].roster]
+    .map((p) => [p.id, { ...p, team: p.team_id, pos: p.rating_position, group: p.rating_group }]));
+  return {
+    schema_version: 'gridiron.play_selection.v1',
+    selection: {
+      play_id: `${play.id}:${event.id}`,
+      provenance: 'synthetic_replay_of_sampled_outcome',
+      provenance_basis: '2025_league_special_teams_tables',
+      team_id: kickTeamId, opponent_id: returnTeamId, formation_reference: null,
+      selected_draws: { event_id: event.id, type: event.type, outcome: event.outcome ?? (event.good ? 'good' : 'miss'),
+        return_yards: event.return_yards ?? null, distance: event.distance ?? null },
+      role_adaptations: units.adaptations,
+      random_seed: String(input.random_seed),
+      probability_note: 'The outcome is sampled from 2025 league tables by the game generator. The 3D replay reconstructs that outcome; it is not a prediction.',
+    },
+    play,
+    players,
+    lineups: { offense: units.kicking, defense: units.receiving },
+    action_policy_inputs: {
+      outcome_anchor: { kind: event.type, outcome: event.outcome ?? (event.good ? 'good' : 'miss'),
+        provenance: 'observed_2025_special_teams_tables', purpose: 'sampled outcome anchors the 3D replay' },
+      game_state: state,
+    },
+    execution_contract: {
+      mode: 'constrained_visualization', predictive_success: false,
+      unsupported: ['special-teams outcome prediction; the replay reconstructs the sampled 2025 outcome',
+        'blocked kicks, onside kicks and safeties have no physical replay model'],
+      hidden_historical_outcome_constraints: false,
+    },
+  };
+}
+
 function normalizeGap(value) {
   const v = String(value || '').toLowerCase();
   if (['end', 'tackle', 'guard', 'middle'].includes(v)) return v;

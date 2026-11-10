@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gridiron.event-driven-clock.v1",
+  "title": "Gridiron event-driven game clock v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["clock_contract_version", "model_version", "rules_version", "events"],
+  "properties": {
+    "clock_contract_version": { "const": "gridiron.event-driven-clock.v1" },
+    "model_version": { "type": "string", "minLength": 1, "description": "Required producer-supplied model identifier; consumers must not infer or default it." },
+    "rules_version": { "type": "string", "minLength": 1, "description": "Required producer-supplied rules identifier; consumers must not infer or default it." },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/event" }
+    }
+  },
+  "$defs": {
+    "event": {
+      "type": "object",
+      "required": ["sequence", "event_type", "game_elapsed_ms", "period", "game_clock_seconds", "game_clock_status"],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 0 },
+        "event_type": {
+          "enum": ["period_start", "play_start", "play_end", "clock_status_change", "stoppage_start", "stoppage_end", "between_play_start", "between_play_end", "period_end", "game_end"]
+        },
+        "game_elapsed_ms": { "type": "integer", "minimum": 0 },
+        "period": { "type": "integer", "minimum": 1 },
+        "game_clock_seconds": { "type": "number", "minimum": 0 },
+        "game_clock_status": { "enum": ["running", "stopped"] },
+        "play_id": { "type": "string", "minLength": 1 },
+        "live_play_duration_ms": { "type": "integer", "minimum": 0 },
+        "between_play_duration_ms": { "type": "integer", "minimum": 0 },
+        "after_play_id": { "type": "string", "minLength": 1 },
+        "before_play_id": { "type": "string", "minLength": 1 },
+        "clock_change_reason": { "type": "string", "minLength": 1 },
+        "stoppage_id": { "type": "string", "minLength": 1 },
+        "stoppage_type": { "type": "string", "minLength": 1 },
+        "charged_team": { "type": ["string", "null"] },
+        "period_kind": { "enum": ["regulation", "overtime"] },
+        "transition_reason": { "type": "string", "minLength": 1 },
+        "period_end_reason": { "type": "string", "minLength": 1 },
+        "game_end_reason": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "event_type": { "const": "play_start" } }, "required": ["event_type"] },
+          "then": { "required": ["play_id"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "const": "play_end" } }, "required": ["event_type"] },
+          "then": { "required": ["play_id", "live_play_duration_ms"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "const": "clock_status_change" } }, "required": ["event_type"] },
+          "then": { "required": ["clock_change_reason"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "enum": ["stoppage_start", "stoppage_end"] } }, "required": ["event_type"] },
+          "then": { "required": ["stoppage_id", "stoppage_type"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "const": "between_play_start" } }, "required": ["event_type"] },
+          "then": { "required": ["after_play_id"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "const": "between_play_end" } }, "required": ["event_type"] },
+          "then": { "required": ["after_play_id", "before_play_id", "between_play_duration_ms"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "const": "period_start" } }, "required": ["event_type"] },
+          "then": { "required": ["period_kind", "transition_reason"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "const": "period_end" } }, "required": ["event_type"] },
+          "then": { "required": ["period_end_reason"] }
+        },
+        {
+          "if": { "properties": { "event_type": { "const": "game_end" } }, "required": ["event_type"] },
+          "then": { "required": ["game_end_reason"] }
+        }
+      ]
+    }
+  }
+}

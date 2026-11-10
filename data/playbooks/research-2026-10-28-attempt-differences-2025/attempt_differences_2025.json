@@ -1,0 +1,179 @@
+{
+ "passing": {
+  "best_subsets": [
+   {
+    "kinds_counted": [
+     "field_goal",
+     "no_play",
+     "pass_play",
+     "qb_spike"
+    ],
+    "teams_matched": 32
+   },
+   {
+    "kinds_counted": [
+     "field_goal",
+     "pass_play",
+     "qb_spike"
+    ],
+    "teams_matched": 31
+   },
+   {
+    "kinds_counted": [
+     "no_play",
+     "pass_play",
+     "qb_spike"
+    ],
+    "teams_matched": 31
+   },
+   {
+    "kinds_counted": [
+     "pass_play",
+     "qb_spike"
+    ],
+    "teams_matched": 30
+   },
+   {
+    "kinds_counted": [
+     "no_play",
+     "pass_play",
+     "two_point_attempt"
+    ],
+    "teams_matched": 6
+   }
+  ],
+  "kind_totals": {
+   "field_goal": 1,
+   "no_play": 1,
+   "pass_play": 17358,
+   "qb_spike": 79,
+   "two_point_attempt": 96
+  },
+  "kinds": [
+   "field_goal",
+   "no_play",
+   "pass_play",
+   "qb_spike",
+   "two_point_attempt"
+  ],
+  "per_team_difference": {
+   "ARI": 3,
+   "ATL": 3,
+   "BAL": 2,
+   "BUF": 9,
+   "CAR": 3,
+   "CHI": 4,
+   "CIN": 4,
+   "CLE": 2,
+   "DAL": 3,
+   "DEN": 5,
+   "GB": 2,
+   "HOU": 5,
+   "IND": 6,
+   "JAX": 2,
+   "KC": 3,
+   "LV": 2,
+   "MIA": 3,
+   "MIN": 4,
+   "NE": 1,
+   "NO": 1,
+   "NYG": 3,
+   "NYJ": 5,
+   "PHI": 2,
+   "PIT": 2,
+   "SEA": 2,
+   "SF": 5,
+   "TB": 6,
+   "WAS": 4
+  },
+  "teams": 32,
+  "teams_matched_by_removing_nothing": 4,
+  "total_pbp_minus_official": 96
+ },
+ "rushing": {
+  "best_subsets": [
+   {
+    "kinds_counted": [
+     "aborted_play_row",
+     "qb_kneel",
+     "run_pass_qb_scramble",
+     "run_play"
+    ],
+    "teams_matched": 32
+   },
+   {
+    "kinds_counted": [
+     "aborted_play_row",
+     "qb_kneel",
+     "run_pass_qb_scramble",
+     "run_play",
+     "two_point_attempt"
+    ],
+    "teams_matched": 11
+   },
+   {
+    "kinds_counted": [
+     "qb_kneel",
+     "run_pass_qb_scramble",
+     "run_play",
+     "two_point_attempt"
+    ],
+    "teams_matched": 5
+   },
+   {
+    "kinds_counted": [
+     "qb_kneel",
+     "run_pass_qb_scramble",
+     "run_play"
+    ],
+    "teams_matched": 4
+   },
+   {
+    "kinds_counted": [
+     "aborted_play_row"
+    ],
+    "teams_matched": 0
+   }
+  ],
+  "kind_totals": {
+   "aborted_play_row": 87,
+   "qb_kneel": 433,
+   "run_pass_qb_scramble": 1089,
+   "run_play": 12992,
+   "two_point_attempt": 32
+  },
+  "kinds": [
+   "aborted_play_row",
+   "qb_kneel",
+   "run_pass_qb_scramble",
+   "run_play",
+   "two_point_attempt"
+  ],
+  "per_team_difference": {
+   "ARI": 1,
+   "ATL": 1,
+   "CAR": 2,
+   "CHI": 2,
+   "CIN": 1,
+   "CLE": 2,
+   "DEN": 1,
+   "DET": 1,
+   "HOU": 1,
+   "IND": 1,
+   "JAX": 2,
+   "LAC": 1,
+   "LV": 1,
+   "NE": 2,
+   "NO": 2,
+   "NYG": 1,
+   "NYJ": 3,
+   "PHI": 1,
+   "SEA": 1,
+   "TB": 2,
+   "WAS": 3
+  },
+  "teams": 32,
+  "teams_matched_by_removing_nothing": 11,
+  "total_pbp_minus_official": 32
+ }
+}

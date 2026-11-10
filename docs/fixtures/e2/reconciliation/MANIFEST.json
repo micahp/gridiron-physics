@@ -1,0 +1,30 @@
+{
+  "producer_base_commit": "d4ef090f910307ab2b554a025af542540df4cc52",
+  "producer_source_tree_sha256": "79a65db640e587798f2a067853a3ba8f723aadfbb10e3021cddb3c92ec08c117",
+  "fixtures": [
+    {
+      "seed": 9,
+      "file": "seed-009-baseline.envelope.json",
+      "sha256": "a9eb784e5e3945f9b980f4299834399f88f3aa079b1d3c44889ab3491a75835d",
+      "purpose": "negative: legacy safety_free_kick emitted without a distinct observed outcome table"
+    },
+    {
+      "seed": 11,
+      "file": "seed-011-baseline.envelope.json",
+      "sha256": "9cd398ce4febe2e880e421f1307a12b6dddb0380d9d1f158fd9a056874e21635",
+      "purpose": "positive: Q1 kickoff return expires and the receiving team starts Q2 at 15:00"
+    },
+    {
+      "seed": 101,
+      "file": "seed-101-baseline.envelope.json",
+      "sha256": "54110fad19de54859ef9761e77a1beb18b052220d4053196bdc683e25afc12be",
+      "purpose": "positive: a Q2 touchdown at 0:00 is followed by the explicit halftime boundary and Q3 half-start"
+    },
+    {
+      "seed": 176,
+      "file": "seed-176-baseline.envelope.json",
+      "sha256": "b9340b1b8e867d089c4f7f99a3ccfb66d59139ff954127ccb54c75aaea76826a",
+      "purpose": "positive: Q2 post-field-goal kickoff expires, then the recorded Q3 half-start controls Drive 11"
+    }
+  ]
+}

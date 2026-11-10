@@ -4,3 +4,5 @@ __pycache__/
 data/raw/*.csv
 data/raw/*.csv.gz
 .DS_Store
+data/playbooks/research-2026-10-27/*-20*.json
+data/playbooks/research-2026-10-27/inputs/

@@ -1,0 +1,207 @@
+{
+ "by_disposition": {
+  "exclude_candidate": 19,
+  "keep_ordinary": 142,
+  "review": 1
+ },
+ "by_explicit_evidence": {
+  "desc_tag_shotgun": 77,
+  "ftn_qb_location_S": 5,
+  "ftn_qb_location_U": 4,
+  "none": 76
+ },
+ "by_flag": {
+  "ABORTED": 2,
+  "DESC_TAG_SHOTGUN": 81,
+  "DIRECT_SNAP": 1,
+  "KICK_TEXT": 7,
+  "KNEEL": 1,
+  "PENALTY_TEXT": 6,
+  "QB_SCRAMBLE": 11,
+  "TRICK_TEXT": 2,
+  "TWO_POINT": 12
+ },
+ "by_reason": {
+  "PARTICIPATION_FORMATION_BLANK": 162
+ },
+ "by_season_play_type": {
+  "2022|pass": 4,
+  "2022|run": 3,
+  "2023|pass": 36,
+  "2023|run": 53,
+  "2024|pass": 6,
+  "2024|run": 12,
+  "2025|pass": 29,
+  "2025|run": 19
+ },
+ "by_shotgun_source": {
+  "ftn": 9,
+  "pbp_flag": 153
+ },
+ "by_team": {
+  "ARI": 2,
+  "ATL": 5,
+  "BAL": 8,
+  "BUF": 4,
+  "CAR": 4,
+  "CHI": 4,
+  "CIN": 5,
+  "CLE": 9,
+  "DAL": 5,
+  "DEN": 35,
+  "DET": 3,
+  "GB": 4,
+  "HOU": 3,
+  "IND": 4,
+  "JAX": 2,
+  "KC": 7,
+  "LA": 2,
+  "LV": 1,
+  "MIA": 5,
+  "MIN": 2,
+  "NE": 3,
+  "NO": 2,
+  "NYG": 6,
+  "NYJ": 2,
+  "PHI": 4,
+  "PIT": 5,
+  "SEA": 5,
+  "SF": 4,
+  "TB": 9,
+  "TEN": 4,
+  "WAS": 4
+ },
+ "profile_offense_formation_missing_2022_2025": {
+  "2022": 7,
+  "2023": 89,
+  "2024": 18,
+  "2025": 48
+ },
+ "profile_offense_formation_missing_total_2022_2025": 162,
+ "rows": 162,
+ "two_point_flag_on_two_point_rows": {
+  "1": 12
+ },
+ "vocab_check": [
+  [
+   2022,
+   "(blank)",
+   13358,
+   "None (missing)"
+  ],
+  [
+   2022,
+   "EMPTY",
+   3028,
+   "True (not None: True)"
+  ],
+  [
+   2022,
+   "I_FORM",
+   2238,
+   "False (not None: True)"
+  ],
+  [
+   2022,
+   "JUMBO",
+   317,
+   "False (not None: True)"
+  ],
+  [
+   2022,
+   "PISTOL",
+   1584,
+   "True (not None: True)"
+  ],
+  [
+   2022,
+   "SHOTGUN",
+   20438,
+   "True (not None: True)"
+  ],
+  [
+   2022,
+   "SINGLEBACK",
+   8919,
+   "False (not None: True)"
+  ],
+  [
+   2022,
+   "WILDCAT",
+   268,
+   "True (not None: True)"
+  ],
+  [
+   2023,
+   "(blank)",
+   9209,
+   "None (missing)"
+  ],
+  [
+   2023,
+   "PISTOL",
+   1458,
+   "True (not None: True)"
+  ],
+  [
+   2023,
+   "SHOTGUN",
+   25459,
+   "True (not None: True)"
+  ],
+  [
+   2023,
+   "UNDER CENTER",
+   10042,
+   "False (not None: True)"
+  ],
+  [
+   2024,
+   "(blank)",
+   9237,
+   "None (missing)"
+  ],
+  [
+   2024,
+   "PISTOL",
+   3397,
+   "True (not None: True)"
+  ],
+  [
+   2024,
+   "SHOTGUN",
+   22859,
+   "True (not None: True)"
+  ],
+  [
+   2024,
+   "UNDER CENTER",
+   10426,
+   "False (not None: True)"
+  ],
+  [
+   2025,
+   "(blank)",
+   9108,
+   "None (missing)"
+  ],
+  [
+   2025,
+   "PISTOL",
+   1704,
+   "True (not None: True)"
+  ],
+  [
+   2025,
+   "SHOTGUN",
+   22227,
+   "True (not None: True)"
+  ],
+  [
+   2025,
+   "UNDER CENTER",
+   12145,
+   "False (not None: True)"
+  ]
+ ]
+}

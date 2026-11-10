@@ -1,0 +1,44 @@
+{
+ "reconciles": true,
+ "rows_by_event_type": {
+  "administrative": 14933,
+  "extra_point": 5365,
+  "field_goal": 4772,
+  "kickoff": 12098,
+  "no_play": 11125,
+  "punt": 9241,
+  "qb_kneel": 1852,
+  "qb_spike": 317,
+  "run_pass": 147317
+ },
+ "rows_by_event_type_and_subtype": {
+  "administrative|game_delay": 26,
+  "administrative|game_marker": 2388,
+  "administrative|penalty_text": 2,
+  "administrative|period_end": 3654,
+  "administrative|play_did_not_occur": 2,
+  "administrative|replay_or_clock_note": 2,
+  "administrative|timeout": 8859,
+  "extra_point|extra_point": 5365,
+  "field_goal|field_goal": 4772,
+  "kickoff|kickoff": 12098,
+  "no_play|no_play_fumbled_snap": 7,
+  "no_play|penalty_or_no_play": 11118,
+  "punt|punt": 9241,
+  "qb_kneel|qb_kneel": 1852,
+  "qb_spike|qb_spike": 317,
+  "run_pass|aborted_unknown_handling": 53,
+  "run_pass|fumbled_snap": 368,
+  "run_pass|scrimmage": 146252,
+  "run_pass|special_teams_run_pass": 94,
+  "run_pass|two_point_conversion": 550
+ },
+ "rows_by_season": {
+  "2022": 47157,
+  "2023": 47399,
+  "2024": 47274,
+  "2025": 46452,
+  "2026": 18738
+ },
+ "rows_written": 207020
+}

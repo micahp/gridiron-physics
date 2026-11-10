@@ -19,7 +19,18 @@ test('run names the same roster ball carrier used by 3D physics', () => {
 test('completed pass credits QB and catcher, including touchdown', () => {
   const p = { type: 'scrimmage', kind: 'pass', action: 'PASS COMPLETE', completed: true, gain: 22, touchdown: true };
   assert.equal(describeWeek7Play(p, selection, players).line,
-    'PASS COMPLETE · Quarterback Name to Receiver Name · Touchdown · 22 yd');
+    'TOUCHDOWN · Quarterback Name to Receiver Name · 22 yd');
+});
+test('touchdown replaces the action code instead of tagging it twice', () => {
+  const pass = describeWeek7Play({ type: 'scrimmage', kind: 'pass', action: 'PASS COMPLETE', completed: true, gain: 22, touchdown: true }, selection, players);
+  assert.equal(pass.action, 'TOUCHDOWN');
+  assert.equal(pass.result, '22 yd');
+  assert.equal(/complete|run|touchdown/i.test(pass.line.replace(/^TOUCHDOWN/, '')), false,
+    'the line must name the touchdown once, at the front');
+  const run = describeWeek7Play({ type: 'scrimmage', kind: 'run', action: 'RUN', gain: 4, touchdown: true }, selection, players);
+  assert.equal(run.line, 'TOUCHDOWN · Running Back Name · 4 yd');
+  const unscored = describeWeek7Play({ type: 'scrimmage', kind: 'run', action: 'RUN', gain: 4 }, selection, players);
+  assert.equal(unscored.line, 'RUN · Running Back Name · 4 yd');
 });
 test('incomplete pass names the intended target, not a catcher', () => {
   const p = { type: 'scrimmage', kind: 'pass', action: 'PASS INCOMPLETE', completed: false, gain: 0 };

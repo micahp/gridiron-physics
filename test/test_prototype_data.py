@@ -70,9 +70,8 @@ class PlaybookDataTests(unittest.TestCase):
                              book["coverage"]["eligible_defense_scrimmage_plays"])
             self.assertTrue(book["source"]["pbp"]["sha256"])
             self.assertTrue(book["source"]["participation"]["sha256"])
-            self.assertTrue(book["source"]["pbp_2026_pre_game"]["sha256"])
-            self.assertTrue(all(int(p["game_id"].split("_")[1]) <= 6
-                                for p in book["pregame_2026_comparison"]["source_ids"]))
+            self.assertNotIn("pbp_2026_pre_game", book["source"])
+            self.assertNotIn("pregame_2026_comparison", book)
 
 
 if __name__ == "__main__":

@@ -76,7 +76,9 @@ export function simulatePlay(game, S, ctx = {}) {
     pos.RT = [-0.85, -2.9];
     const strong = rightRoom >= leftRoom ? -1 : 1; // TE to the field side
     pos.TE = [-0.9, 4.35 * strong];
-    pos.QB = shotgun ? [-5, 0] : [-1.1, 0];
+    // Keep the under-center QB clear of the center's collision radius so he
+    // can take the snap and move into the handoff lane without getting pinned.
+    pos.QB = shotgun ? [-5, 0] : [-1.6, 0];
     pos.RB = shotgun ? [-5.2, -1.5 * strong] : [-7, 0];
     pos.WR1 = [-0.8, leftRoom - clamp(leftRoom * 0.35, 5, 12)];
     pos.WR2 = [-0.8, -(rightRoom - clamp(rightRoom * 0.35, 5, 12))];
@@ -676,34 +678,22 @@ export function simulatePlay(game, S, ctx = {}) {
           p.dv = st.catchPt ? seek(p, st.catchPt, 0.95) : { x: 0, y: 0 };
           return;
         }
-        // pursuit angle: aim at where the carrier will be; DBs keep leverage
-        let tgt = lead(p, c, 0.85);
-        if (st.endX != null && !c.ai.td) {
-          const end = { x: st.endX * YD, y: (st.endY ?? c.p.y / YD) * YD };
-          // fold toward the spot the real play ended — that's where the pile forms
-          const w = clamp(1 - d2(c.p, end) / 25, 0, 0.6);
-          tgt = { x: tgt.x * (1 - w) + end.x * w, y: tgt.y * (1 - w) + end.y * w };
-        }
+        // Defenders track the carrier, not the preselected endpoint. The end
+        // spot still gates the whistle and final pile when contact occurs.
+        const tgt = c.p;
         p.dv = separate(p, seek(p, tgt, p.ai.missUntil > t ? 0.6 : 0.97, 25), 0.8);
         return;
       }
       case 'tackle_to': {
-        // designated tackler: arrive at the real end spot as the carrier does
         const c = st.carrier;
         if (p.engaged) {
           const e = W.engagements.find((x) => x.a === p || x.b === p);
           if (e) W.disengage(e, p);
         }
         if (!c) return;
-        const end = { x: st.endX * YD, y: (st.endY ?? c.p.y / YD) * YD };
-        const dc = d2(p.p, c.p);
-        let tgt;
-        if (dc < 4.5 || d2(c.p, end) < 3) tgt = lead(p, c, 1);
-        else {
-          // head for the spot, biased toward the carrier's current line
-          tgt = { x: end.x * 0.75 + lead(p, c, 0.9).x * 0.25, y: end.y * 0.75 + lead(p, c, 0.9).y * 0.25 };
-        }
-        p.dv = seek(p, tgt, 1, 30);
+        // Keep pressure on the live carrier; tryTackle still gates the
+        // whistle at the sampled spot to preserve the recorded gain.
+        p.dv = seek(p, c.p, 1, 30);
         return;
       }
       case 'cover_man': {
@@ -816,10 +806,12 @@ export function simulatePlay(game, S, ctx = {}) {
       // QB keeper / sneak
       st.carrierIsQB = true;
     } else if (carrier) {
-      carrier.ai.mesh = S.shotgun ? at(-4.6, sgn(st.gapL) * 0.5) : at(-4.2, st.gapL * 0.3);
+      carrier.ai.mesh = S.shotgun ? at(-4.6, sgn(st.gapL) * 0.5) : at(-3.5, st.gapL * 0.3);
       carrier.ai.runPath = path;
     }
-    if (qb) qb.ai.mesh = carrier && carrier !== qb ? carrier.ai.mesh : at(-1, 0);
+    if (qb) qb.ai.mesh = carrier && carrier !== qb
+      ? (S.shotgun ? carrier.ai.mesh : at(-4.2, st.gapL * 0.3))
+      : at(-1, 0);
 
     // blocking: OL + TE + extra; skip designated tacklers
     const front = defense().filter((q) => fOf(q.p) < 6.5 && !['LCB', 'RCB'].includes(q.slot));
@@ -868,11 +860,21 @@ export function simulatePlay(game, S, ctx = {}) {
   }
 
   function setupKneel() {
+    const gain = S.gain ?? -1;
+    if (!Number.isFinite(gain) || gain > 0) {
+      throw new RangeError(`QB kneel gain must be finite and nonpositive (got ${S.gain})`);
+    }
+    if (S.td || S.scoring) {
+      throw new RangeError('QB kneel cannot be marked as a touchdown or scoring play');
+    }
     S.kindGroup = 'run';
     setupScrimmage();
     setBlockMuls();
     const qb = st.qb;
-    st.endX = losYd + dir * (S.gain ?? -1);
+    const requestedEndX = losYd + dir * gain;
+    const ownGoalLine = dir > 0 ? 0 : 100;
+    st.kneelSafety = dir > 0 ? requestedEndX < ownGoalLine : requestedEndX > ownGoalLine;
+    st.endX = st.kneelSafety ? ownGoalLine : requestedEndX;
     for (const p of offense()) if (p !== qb) p.mode = 'idle';
     for (const p of defense()) p.mode = 'idle';
     st.onSnap = () => snapTo(qb, 0.1);
@@ -885,11 +887,14 @@ export function simulatePlay(game, S, ctx = {}) {
         qb.downT = W.t;
         qb.p.x = st.endX * YD;
       }
-      if (W.t > 1.2) whistle('kneel');
+      if (W.t > 1.2) whistle(st.kneelSafety ? 'safety' : 'kneel');
     };
   }
 
   function setupSpike() {
+    if (S.td || S.scoring) {
+      throw new RangeError('QB spike cannot be marked as a touchdown or scoring play');
+    }
     S.kindGroup = 'pass';
     setupScrimmage();
     const qb = st.qb;
@@ -901,7 +906,11 @@ export function simulatePlay(game, S, ctx = {}) {
         qb.pose = POSE.THROW;
         Object.assign(W.ball, { state: 'air', holder: null, vx: dir * 1, vy: 0, vz: -9, k: dragK(AERO.spiral) });
         qb.hasBall = false;
-        ev('spike', { by: qb.id });
+        ev('spike', {
+          by: qb.id, pass_attempt: true, forward_pass: true, incomplete: true,
+          yards_gained: 0, passing_yards: 0, receiver_id: null, receiving_yards: 0,
+          first_down: false,
+        });
       }
       if (st.spiked && W.ball.state === 'loose') whistle('spike');
     };
@@ -1506,8 +1515,11 @@ export function simulatePlay(game, S, ctx = {}) {
   }
 
   W.t = -PRE;
+  // A kick has a four-second flight and a return behind it; give the kicking
+  // game its own clock so a long return is not truncated as a technical stop.
+  const maxT = S.kindGroup === 'kick' ? 20 : MAX_T;
   let snapped = false;
-  while (W.t < MAX_T) {
+  while (W.t < maxT) {
     if (!snapped && W.t >= 0) {
       snapped = true;
       st.phase = 'live';
@@ -1568,6 +1580,12 @@ export function simulatePlay(game, S, ctx = {}) {
       if (kind === 'kickoff') {
         if (S.touchback && !S.returner) {
           W.ball.state = 'loose';
+        } else if (R && !S.oob && S.fairCatch) {
+          ev('catch', { by: R.id, kick: true, fair: true });
+          Object.assign(W.ball, { state: 'held', holder: R, hand: 'chest' });
+          R.hasBall = true;
+          R.pose = POSE.CATCH;
+          whistle('fair_catch', { by: R.id });
         } else if (R && !S.oob) {
           ev('catch', { by: R.id, kick: true });
           const endY = S.retOob ? (R.p.y / YD > FIELD_W_YD / 2 ? FIELD_W_YD + 1.2 : -1.2) : clamp(R.p.y / YD + (rand() - 0.5) * 16, 4, FIELD_W_YD - 4);
@@ -1631,7 +1649,10 @@ export function simulatePlay(game, S, ctx = {}) {
       const b = W.ball;
       const out = b.y < 0 || b.y > FIELD_W || b.x < -10 * YD || b.x > 110 * YD;
       if (['incomplete', 'spike'].includes(kind) && b.z <= 0.12) whistle('incomplete');
-      else if (out) whistle(kind === 'punt' || kind === 'kickoff' ? 'kick_out_of_bounds' : 'out_of_bounds');
+      // A field-goal attempt that sails through or wide of the end zone is
+      // already decided by the post-crossing event; the loose ball must not
+      // overwrite that whistle with a generic out of bounds.
+      else if (out && kind !== 'fg' && kind !== 'xp') whistle(kind === 'punt' || kind === 'kickoff' ? 'kick_out_of_bounds' : 'out_of_bounds');
       else if ((kind === 'punt' || kind === 'kickoff') && (S.touchback || S.oob || S.downed) && Math.hypot(b.vx, b.vy) < 0.4 && b.z < 0.15) whistle(S.touchback ? 'touchback' : 'downed');
       else if ((kind === 'punt' || kind === 'kickoff') && S.touchback && ((dir > 0 && b.x > 100 * YD) || (dir < 0 && b.x < 0)) && W.t > (st.ballLandT ?? 0) + 0.8) whistle('touchback');
     }
@@ -1644,7 +1665,10 @@ export function simulatePlay(game, S, ctx = {}) {
     if (W.ball.y >= 0 && W.ball.y <= FIELD_W) st.lastIn = { x: W.ball.x, y: W.ball.y };
     if (st.carrier && !st.dead && st.tTackle == null && !st.carrier.ai.oob && !st.carrier.ai.td) {
       const c = st.carrier;
-      const budget = Math.abs(st.endX - c.ai.startX) * YD / (0.55 * c.vmax) + 2.5;
+      // A returner covers ground faster than a run from scrimmage; a generous
+      // 0.55*vmax budget lets a long return run out the clock before contact.
+      const pace = S.kindGroup === 'kick' ? 0.9 : 0.55;
+      const budget = Math.abs(st.endX - c.ai.startX) * YD / (pace * c.vmax) + 2.5;
       if (W.t - st.carrierSince > budget) {
         const near = W.players.filter((q) => q.team !== c.team && !q.down).sort((a, b) => d2(a.p, c.p) - d2(b.p, c.p))[0];
         if (near && d2(near.p, c.p) < 3) startTackle(near, c);
@@ -1664,7 +1688,10 @@ export function simulatePlay(game, S, ctx = {}) {
       nextRec += 1 / REC_HZ;
     }
     if (st.dead && W.t - st.deadT > POST) break;
-    if (!st.dead && W.t > MAX_T - POST - 0.05) whistle('timeout_sim');
+    // A wrap that is already in progress is real contact, not a truncated
+    // play: let it finish rather than reporting a technical timeout.
+    if (!st.dead && st.tTackle != null && W.t > maxT - 0.05) whistle('tackle', { by: st.tackler.id });
+    else if (!st.dead && st.tTackle == null && W.t > maxT - POST - 0.05) whistle('timeout_sim');
   }
 
   // final ball spot (yards) for validation

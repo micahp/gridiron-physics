@@ -1,0 +1,219 @@
+{
+ "2022_dev_weeks": {
+  "1": {
+   "median_frames_per_play": 158.5,
+   "plays_22_players_at_snap": 1952,
+   "plays_with_line_set": 1923,
+   "plays_with_motion_marker": 688,
+   "plays_with_snap_marker": 1948,
+   "raw_rows": 7104700,
+   "tracked_plays": 1952
+  },
+  "2": {
+   "median_frames_per_play": 162,
+   "plays_22_players_at_snap": 1809,
+   "plays_with_line_set": 1800,
+   "plays_with_motion_marker": 582,
+   "plays_with_snap_marker": 1805,
+   "raw_rows": 6704339,
+   "tracked_plays": 1809
+  },
+  "3": {
+   "median_frames_per_play": 161,
+   "plays_22_players_at_snap": 1959,
+   "plays_with_line_set": 1941,
+   "plays_with_motion_marker": 561,
+   "plays_with_snap_marker": 1958,
+   "raw_rows": 7129195,
+   "tracked_plays": 1959
+  },
+  "4": {
+   "median_frames_per_play": 162.0,
+   "plays_22_players_at_snap": 1830,
+   "plays_with_line_set": 1820,
+   "plays_with_motion_marker": 650,
+   "plays_with_snap_marker": 1826,
+   "raw_rows": 6747556,
+   "tracked_plays": 1830
+  },
+  "5": {
+   "median_frames_per_play": 163.0,
+   "plays_22_players_at_snap": 1906,
+   "plays_with_line_set": 1891,
+   "plays_with_motion_marker": 504,
+   "plays_with_snap_marker": 1902,
+   "raw_rows": 7103067,
+   "tracked_plays": 1906
+  }
+ },
+ "2022_joins": {
+  "in_lp_cohort": 9456,
+  "line_set_marker": 9375,
+  "lp_eligible_input": 9289,
+  "motion_marker": 2985,
+  "player_play_plays": 16124,
+  "player_play_plays_with_route_labels": 9313,
+  "players_22_at_snap_frame": 9456,
+  "plays_csv_plays": 16124,
+  "snap_marker": 9439,
+  "tracked_plays": 9456,
+  "tracked_with_player_play": 9456,
+  "tracked_with_plays_csv": 9456,
+  "tracked_with_route_labels": 5502
+ },
+ "2023_train_weeks": {
+  "1": {
+   "ball_land_present": 819,
+   "has_output": 819,
+   "has_target": 819,
+   "input_plays": 819,
+   "output_frames_match_num_frames_output": 819,
+   "output_plays": 819,
+   "output_target_matches_input": 819,
+   "players_22_or_more": 0,
+   "roles_seen": [
+    "Defensive Coverage",
+    "Other Route Runner",
+    "Passer",
+    "Targeted Receiver"
+   ],
+   "sides_seen": [
+    "Defense",
+    "Offense"
+   ],
+   "week": 1
+  },
+  "2": {
+   "ball_land_present": 850,
+   "has_output": 850,
+   "has_target": 850,
+   "input_plays": 850,
+   "output_frames_match_num_frames_output": 850,
+   "output_plays": 850,
+   "output_target_matches_input": 850,
+   "players_22_or_more": 0,
+   "roles_seen": [
+    "Defensive Coverage",
+    "Other Route Runner",
+    "Passer",
+    "Targeted Receiver"
+   ],
+   "sides_seen": [
+    "Defense",
+    "Offense"
+   ],
+   "week": 2
+  },
+  "3": {
+   "ball_land_present": 904,
+   "has_output": 904,
+   "has_target": 904,
+   "input_plays": 904,
+   "output_frames_match_num_frames_output": 904,
+   "output_plays": 904,
+   "output_target_matches_input": 904,
+   "players_22_or_more": 0,
+   "roles_seen": [
+    "Defensive Coverage",
+    "Other Route Runner",
+    "Passer",
+    "Targeted Receiver"
+   ],
+   "sides_seen": [
+    "Defense",
+    "Offense"
+   ],
+   "week": 3
+  },
+  "4": {
+   "ball_land_present": 779,
+   "has_output": 779,
+   "has_target": 779,
+   "input_plays": 779,
+   "output_frames_match_num_frames_output": 779,
+   "output_plays": 779,
+   "output_target_matches_input": 779,
+   "players_22_or_more": 0,
+   "roles_seen": [
+    "Defensive Coverage",
+    "Other Route Runner",
+    "Passer",
+    "Targeted Receiver"
+   ],
+   "sides_seen": [
+    "Defense",
+    "Offense"
+   ],
+   "week": 4
+  },
+  "5": {
+   "ball_land_present": 742,
+   "has_output": 742,
+   "has_target": 742,
+   "input_plays": 742,
+   "output_frames_match_num_frames_output": 742,
+   "output_plays": 742,
+   "output_target_matches_input": 742,
+   "players_22_or_more": 0,
+   "roles_seen": [
+    "Defensive Coverage",
+    "Other Route Runner",
+    "Passer",
+    "Targeted Receiver"
+   ],
+   "sides_seen": [
+    "Defense",
+    "Offense"
+   ],
+   "week": 5
+  },
+  "6": {
+   "ball_land_present": 793,
+   "has_output": 793,
+   "has_target": 793,
+   "input_plays": 793,
+   "output_frames_match_num_frames_output": 793,
+   "output_plays": 793,
+   "output_target_matches_input": 793,
+   "players_22_or_more": 0,
+   "roles_seen": [
+    "Defensive Coverage",
+    "Other Route Runner",
+    "Passer",
+    "Targeted Receiver"
+   ],
+   "sides_seen": [
+    "Defense",
+    "Offense"
+   ],
+   "week": 6
+  },
+  "7": {
+   "ball_land_present": 693,
+   "has_output": 693,
+   "has_target": 693,
+   "input_plays": 693,
+   "output_frames_match_num_frames_output": 693,
+   "output_plays": 693,
+   "output_target_matches_input": 693,
+   "players_22_or_more": 0,
+   "roles_seen": [
+    "Defensive Coverage",
+    "Other Route Runner",
+    "Passer",
+    "Targeted Receiver"
+   ],
+   "sides_seen": [
+    "Defense",
+    "Offense"
+   ],
+   "week": 7
+  }
+ },
+ "reserved_2022_weeks_not_read": [
+  6,
+  7,
+  8,
+  9
+ ]
+}

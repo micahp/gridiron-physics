@@ -1,6 +1,8 @@
 import { simulatePlay } from '../engine/play.js';
 import { nextBallY } from '../engine/game.js';
 import { Renderer } from './render.js';
+import { afterPlayEnd, animateScoreBug, touchdownScore } from './score-animation.js';
+import { teamLogoUrl } from './team-logo.js';
 
 const $ = (s) => document.querySelector(s);
 const MPH = 2.23694;
@@ -20,6 +22,7 @@ R.resize();
 
 // ------------------------------------------------------------- simulate
 const recs = new Array(game.plays.length).fill(null);
+let bugAfter = null;
 const simIdx = game.plays.map((p, i) => (p.kind === 'admin' ? -1 : i)).filter((i) => i >= 0);
 {
   let prev = null, done = 0;
@@ -120,24 +123,32 @@ function prevScore(i) {
   for (let j = i - 1; j >= 0; j--) if (game.plays[j].score) return game.plays[j].score;
   return [0, 0];
 }
-function renderBug() {
+function renderBug(opts = {}) {
   const S = game.plays[state.i];
   const rec = recs[state.i];
-  const after = rec.end.t != null && state.t > rec.end.t;
-  const [as, hs] = after ? S.score : prevScore(state.i);
-  const team = (id, score) => {
+  const after = afterPlayEnd(rec.end.t, state.t);
+  const pre = prevScore(state.i);
+  const held = touchdownScore({ away: pre[0], home: pre[1] }, { away: S.score[0], home: S.score[1] }, { outcome: { touchdown: !!S.td } });
+  const [as, hs] = after ? [held.away, held.home] : pre;
+  const team = (id, score, right = false) => {
     const t = T[id];
     const poss = S.off === id && !['kickoff'].includes(S.kind);
-    return `<img src="${esc(t.logo)}" alt=""><span class="abbr">${esc(t.abbr)}</span><span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
+    const logo = `<img src="${esc(teamLogoUrl(t.abbr))}" alt="">`;
+    const name = `<span class="abbr">${esc(t.short || t.abbr)}</span>`;
+    return (right ? name + logo : logo + name) + `<span class="rec">${esc(t.record || '')}</span><span class="score">${score}</span>`
       + (poss ? '' : '');
   };
   const a = $('#bug-away'), h = $('#bug-home');
   a.innerHTML = team(game.away, as);
-  h.innerHTML = team(game.home, hs);
+  h.innerHTML = team(game.home, hs, true);
   a.style.setProperty('--team', T[game.away].color);
   h.style.setProperty('--team', T[game.home].color);
   a.classList.toggle('poss', S.off === game.away && S.kind !== 'kickoff');
   h.classList.toggle('poss', S.off === game.home && S.kind !== 'kickoff');
+  if (opts.animate && after) {
+    animateScoreBug(a, a.querySelector('.score'), pre[0], as);
+    animateScoreBug(h, h.querySelector('.score'), pre[1], hs);
+  }
   $('#bug-q').textContent = S.q > 4 ? 'OT' : `Q${S.q}`;
   $('#bug-clock').textContent = S.clock;
   const dd = { kickoff: 'Kickoff', punt: `${S.downText} · Punt`, fg: `${S.downText} · FG try`, xp: 'Extra point' }[S.kind] || `${S.downText}${S.posText ? ' at ' + S.posText : ''}`;
@@ -521,8 +532,11 @@ function frame(now) {
   lastFrame = renderTags();
   if (!state.scrubbing) $('#scrub').value = String(Math.round(((state.t - rec.t0) / (end - rec.t0)) * 1000));
   $('#play').textContent = state.playing ? '❚❚' : '▶';
+  // Refresh the scorebug whenever the clock crosses the play's end, whatever the speed, scrubbing or pausing.
+  const afterNow = afterPlayEnd(rec.end.t, state.t);
+  if (afterNow !== bugAfter) { bugAfter = afterNow; renderBug({ animate: afterNow }); }
   physT += dt;
-  if (physT > 0.2) { physT = 0; renderPhysics(lastFrame); if (rec.end.t != null && Math.abs(state.t - rec.end.t) < 0.25) renderBug(); }
+  if (physT > 0.2) { physT = 0; renderPhysics(lastFrame); }
   requestAnimationFrame(frame);
 }
 

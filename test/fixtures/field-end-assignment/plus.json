@@ -1,0 +1,9 @@
+{
+  "assignment_version": "team-period-field-end-v1",
+  "source": "independent_plus_fixture",
+  "assignments": [
+    { "team_id": "NE", "period": "Q2", "dir": 1 },
+    { "team_id": "CHI", "period": "Q2", "dir": -1 }
+  ],
+  "case": { "team_id": "NE", "period": "Q2", "yardline_100": 28, "expected_dir": 1, "expected_los": 72 }
+}

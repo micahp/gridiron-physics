@@ -1,0 +1,66 @@
+{
+ "clock_rises_file_order": {
+  "overtime_period_start": 14,
+  "unexplained_rise": 1
+ },
+ "continuity_audit": {
+  "clock | unresolved | source_clock_unexplained_rise": 1,
+  "down_progression | explained | fumble_end_spot_net_gain": 2,
+  "field_position | explained | fumble_end_spot": 58
+ },
+ "control_end_spot_rule": {
+  "fumble|yardage_fails|no_penalty_flag|hit": 58,
+  "fumble|yardage_fails|penalty_flag|hit": 1,
+  "fumble|yardage_fails|penalty_flag|miss": 19,
+  "fumble|yardage_ok|no_penalty_flag|hit": 104,
+  "fumble|yardage_ok|no_penalty_flag|miss": 23,
+  "ordinary|yardage_fails|penalty_flag|miss": 1862,
+  "ordinary|yardage_fails|penalty_flag|no_spot": 309,
+  "ordinary|yardage_ok|no_penalty_flag|hit": 20758,
+  "ordinary|yardage_ok|no_penalty_flag|miss": 29,
+  "ordinary|yardage_ok|no_penalty_flag|no_spot": 3653,
+  "ordinary|yardage_ok|penalty_flag|hit": 352,
+  "ordinary|yardage_ok|penalty_flag|miss": 1,
+  "ordinary|yardage_ok|penalty_flag|no_spot": 71
+ },
+ "drive_count": {
+  "kept": 5722,
+  "offensive": 5682
+ },
+ "possession_change": {
+  "by_end_class": {
+   "blocked_punt ok": 7,
+   "field_goal_made ok": 830,
+   "field_goal_missed ok": 129,
+   "fumble_lost ok": 195,
+   "interception ok": 343,
+   "punt ok": 1893,
+   "safety_allowed ok": 11,
+   "touchdown_allowed ok": 63,
+   "touchdown_scored ok": 1323,
+   "turnover_on_downs ok": 351
+  },
+  "exception_rows": [],
+  "exceptions": 0,
+  "transitions_checked": 5145
+ },
+ "simulator_clock_convention": {
+  "drives": 121,
+  "end_equals_last_play": 121,
+  "kickoff_checked": 48,
+  "kickoff_expired_quarter": 2,
+  "kickoff_restart_equals_next_drive": 48,
+  "simulations": 5,
+  "start_equals_first_play": 121
+ },
+ "touchdown_allowed": {
+  "cause_consistent": 66,
+  "drives": 66,
+  "inconsistent": 0,
+  "points_against_distribution": {
+   "6": 6,
+   "7": 59,
+   "8": 1
+  }
+ }
+}
