@@ -3,10 +3,11 @@
 // (0..53.33), Y is up. Player bodies are built in metres and scaled.
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
-import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, setNeutralMode, stablePhase } from './rigged-player.js';
+import { loadRiggedPlayer, buildRiggedPlayer, animateRigged, setNeutralMode, stablePhase, travelYawOffset } from './rigged-player.js';
 import { deriveCues } from './rigged-animation-controller.js';
 import { kitsForGame } from './football-kits.js';
 import { loadStadium, placeStadium, STADIUM_SCALE } from './stadium.js';
+import { buildNflDome } from './nfl-dome.js';
 
 // ?neutral=1 keeps the imported rig in its bind pose (no procedural posing).
 if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('neutral')) {
@@ -263,6 +264,7 @@ export class Renderer {
   constructor(canvas, game, { displayFont }) {
     this.game = game;
     this.canvas = canvas;
+    this.displayFont = displayFont;
     const r = (this.r3 = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
     r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     r.shadowMap.enabled = true;
@@ -366,6 +368,20 @@ export class Renderer {
   }
 
   buildStadium() {
+    // ?stadium= picks the backdrop:
+    //   dome (default) - procedural NFL dome in the home team's colours (web/nfl-dome.js)
+    //   blockout       - the original box stands and light towers only, cheapest to draw
+    //   bowl           - the older baked soccer bowl GLB (web/stadium.js)
+    const mode = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stadium')) || 'dome';
+    this.stadiumMode = mode;
+    if (mode !== 'bowl' && mode !== 'blockout') {
+      const g = this.game;
+      const dome = buildNflDome({ teams: g.teams, home: g.home, away: g.away, seed: 7, font: this.displayFont });
+      this.scene.add(dome);
+      this.stadiumModel = dome;
+      this.stadiumLoadMs = 0;
+      return;
+    }
     // Cheap blockout while the baked stadium GLB loads (see web/stadium.js).
     const primitives = (this.stadiumPrimitives = new THREE.Group());
     this.scene.add(primitives);
@@ -393,6 +409,7 @@ export class Renderer {
       l.position.set(x, 41, z);
       primitives.add(t, l);
     }
+    if (mode === 'blockout') { this.stadiumModel = primitives; return; }
     this.loadStadiumModel();
   }
 
@@ -513,9 +530,18 @@ export class Renderer {
       let dh = h1 - h0;
       while (dh > Math.PI) dh -= 2 * Math.PI;
       while (dh < -Math.PI) dh += 2 * Math.PI;
-      o.rotation.y = -(h0 + dh * a);
+      const heading = h0 + dh * a;
+      o.rotation.y = -heading;
       if (o.userData.rigged) {
-        animateRigged(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, t, this.cuesById?.get(rec.roster[i].id) || null);
+        // direction of travel relative to the heading; hips turn toward it
+        const vx = f1[b] - f0[b], vz = f1[b + 1] - f0[b + 1];
+        const dir = Math.hypot(vx, vz) > 1e-4 ? Math.atan2(Math.sin(Math.atan2(vz, vx) - heading), Math.cos(Math.atan2(vz, vx) - heading)) : null;
+        const speed = L(b + 3);
+        const offset = travelYawOffset(o, { pose: f0[b + 4], speed, dir, dt });
+        o.rotation.y = -(heading + offset);
+        // cosine between the hips and the travel: 1 straight ahead, -1 backwards
+        const travel = dir === null ? null : Math.cos(dir - offset);
+        animateRigged(o, f0[b + 4], speed, dt, f0[b + 5] > 0.5, t, this.cuesById?.get(rec.roster[i].id) || null, travel);
       }
       else animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5);
     }

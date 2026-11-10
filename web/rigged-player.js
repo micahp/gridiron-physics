@@ -203,48 +203,6 @@ let neutralMode = false;
 export function setNeutralMode(on) { neutralMode = !!on; }
 export function isNeutralMode() { return neutralMode; }
 
-function updateRiggedAnimation(root, pose, speed, dt, carrying) {
-  const animation = root.userData.animation;
-  if (!animation?.mixer) return false;
-  const selection = getRiggedAnimationSelection(pose, carrying);
-  const clip = selection && animation.clips.get(selection.clipName);
-  if (!clip) {
-    if (animation.activeAction) {
-      animation.activeAction.fadeOut(0.12);
-      animation.activeAction = null;
-      animation.activeClipName = null;
-    }
-    animation.mixer.update(dt);
-    return false;
-  }
-
-  const locomotion = pose === POSE.RUN || pose === POSE.BACKPEDAL;
-  const timeScale = locomotion ? THREE.MathUtils.clamp(speed / 5, 0.55, 1.55) : 1;
-  if (animation.activeClipName !== selection.clipName) {
-    const next = animation.mixer.clipAction(clip);
-    next.reset();
-    next.enabled = true;
-    next.setLoop(selection.loop ? THREE.LoopRepeat : THREE.LoopOnce, selection.loop ? Infinity : 1);
-    next.clampWhenFinished = !selection.loop;
-    next.setEffectiveTimeScale(timeScale);
-    if (animation.activeAction) {
-      next.setEffectiveWeight(0);
-      next.play();
-      next.fadeIn(0.12);
-      animation.activeAction.fadeOut(0.12);
-    } else {
-      next.setEffectiveWeight(1);
-      next.play();
-    }
-    animation.activeAction = next;
-    animation.activeClipName = selection.clipName;
-  } else {
-    animation.activeAction.setEffectiveTimeScale(timeScale);
-  }
-  animation.mixer.update(dt);
-  return true;
-}
-
 export function buildRiggedPlayer(gltf, info, kit) {
   const root = new THREE.Group(); // positioned & yawed on the field (yards)
   const body = new THREE.Group(); // tipped over when down
@@ -353,6 +311,56 @@ export function buildRiggedPlayer(gltf, info, kit) {
   return root;
 }
 
+// ------------------------------------------------- hips follow travel direction
+//
+// The engine's heading is where the player is looking (often the ball), which is
+// not always where he is going. The run clips only sweep the feet straight back,
+// so moving at an angle to the body slid the feet sideways. Locomotion turns the
+// hips toward the direction of travel (or directly away from it for a backpedal)
+// and twists the upper body back toward the engine's heading, like a real player
+// running while watching the ball.
+const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const TRAVEL_POSES = new Set([POSE.RUN, POSE.BACKPEDAL, POSE.STANCE, POSE.BLOCK]);
+const MAX_TWIST = 1.2;       // radians the torso can stay turned from the hips
+const HIP_TURN_RATE = 10;    // 1/s, exponential smoothing of the hip yaw
+
+/**
+ * Hip yaw offset from the engine heading, in radians (field-angle convention:
+ * the body is drawn at heading + offset).
+ * @param dir travel direction relative to heading in radians, or null when still
+ */
+export function travelYawOffset(root, { pose, speed, dir, dt }) {
+  const u = root.userData;
+  const st = (u.travelYaw ??= { offset: 0, moving: false, back: false });
+  const enter = pose === POSE.BLOCK ? 1.6 : 1.2;
+  st.moving = TRAVEL_POSES.has(pose) && dir !== null && speed > (st.moving ? 0.8 : enter);
+  let target = 0;
+  if (st.moving) {
+    const a = Math.abs(dir);
+    // ~115 degrees off the heading reads as a backpedal; leave it below ~100
+    st.back = a > (st.back ? 1.75 : 2.0) || (pose === POSE.BACKPEDAL && a > Math.PI / 2);
+    target = st.back ? wrapAngle(dir - Math.PI) : dir;
+  } else {
+    st.back = false;
+  }
+  const k = 1 - Math.exp(-Math.max(0, dt) * HIP_TURN_RATE);
+  st.offset = wrapAngle(st.offset + wrapAngle(target - st.offset) * k);
+  return st.offset;
+}
+
+const _UP = new THREE.Vector3(0, 1, 0);
+/** Turn the chest back toward the heading after the clip has posed the body. */
+function twistSpine(bones, angle) {
+  if (!angle) return;
+  for (const bone of [bones.chest, bones.chest2]) {
+    if (!bone?.parent) continue;
+    bone.parent.getWorldQuaternion(_pq);
+    _axisRotation.setFromAxisAngle(_UP, angle * 0.5);
+    _q.copy(_pq).invert().multiply(_axisRotation).multiply(_pq);
+    bone.quaternion.premultiply(_q);
+  }
+}
+
 // Compose world-space deltas first, then express the result relative to the bind
 // pose. A later shoulder axis must not replace an earlier flexion rotation.
 const _q = new THREE.Quaternion();
@@ -377,7 +385,7 @@ function rotWorldComposed(bone, rotations, k) {
   bone.quaternion.slerp(_q, k);
 }
 
-export function animateRigged(root, pose, speed, dt, carrying, playbackTime = null, cues = null) {
+export function animateRigged(root, pose, speed, dt, carrying, playbackTime = null, cues = null, travel = null) {
   if (neutralMode) return; // Test 1: leave the imported bind pose untouched
   const u = root.userData;
   const b = u.bones;
@@ -391,7 +399,11 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
       // null is a real value here: it means "this play has no anchored clips"
       if (controller.cuesRaw !== (cues ?? null)) controller.setCues(cues);
       const time = playbackTime ?? (u.animTime = (u.animTime ?? 0) + dt);
-      if (controller.tick({ time, pose, speed, carrying })) return;
+      if (controller.tick({ time, pose, speed, carrying, travel })) {
+        const offset = u.travelYaw?.offset ?? 0;
+        twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
+        return;
+      }
     }
   }
   u.phase += dt * (2.2 + speed * 0.9);

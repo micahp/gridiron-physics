@@ -72,6 +72,117 @@ const FOLLOW_THROUGH = 0.6;  // keep the body on the clip this long after the an
 const MAX_ONESHOT = 2.5;     // cap for pose-driven one-shots with no anchor
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const YD = 0.9144;
+
+// ---------------------------------------------------------------- locomotion
+//
+// The clips are "in place": root motion was stripped so physics owns position.
+// That only looks right if the planted foot sweeps backward at the speed the
+// body is actually travelling. Each clip's natural ground speed is measured
+// from the rig (planted-foot velocity relative to the hips), the clip whose
+// speed is closest is chosen, and its playback rate is set to speed / natural
+// speed so the foot stays put on the turf.
+const IDLE_CLIP = 'Standing Idle';
+const PUSH_CLIP = 'Pushing In Place';
+const RUN_TIERS = ['Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place'];
+const CARRY_TIERS = ['Running While Holding Something', 'Running in place', 'Sprint In Place'];
+const BACK_TIERS = ['Running Backward in place'];
+const LOCO_CLIPS = new Set([...RUN_TIERS, ...CARRY_TIERS, ...BACK_TIERS, IDLE_CLIP, PUSH_CLIP]);
+// Used only when a clip cannot be measured (no foot bones, e.g. unit-test rigs).
+// Values are what the real rig measures at the default 1.88 m player height.
+const FALLBACK_SPEED = {
+  'Jogging In Place': 1.5, 'run-in-place': 3.1, 'Running in place': 4.2, 'Sprint In Place': 4.8,
+  'Running While Holding Something': 3.0, 'Running Backward in place': 2.6, [PUSH_CLIP]: 0.4,
+};
+const MIN_RATE = 0.6;         // below this a cycle reads as slow motion
+const MAX_RATE = 1.6;         // above this cadence is cartoonish; accept a little slide
+const TIER_HYSTERESIS = 0.12; // fraction past a tier boundary before switching
+const IDLE_ENTER = 0.35;      // m/s: a "running" player this slow is standing
+const IDLE_EXIT = 0.6;
+const STANCE_MOVING = [1.0, 0.6];  // m/s enter/exit: stance code but clearly moving
+const BLOCK_MOVING = [1.6, 1.2];   // m/s enter/exit: block code while running to the block
+const BACK_ENTER = -0.4;      // cosine of facing vs travel: moving backwards
+const BACK_EXIT = -0.15;
+const GAIT_DWELL = 0.18;      // seconds a gait holds before another switch; a braking
+                              // player otherwise crossfades through every tier at once
+
+/**
+ * Measure a clip's gait in model space: the natural ground speed (planted-foot
+ * velocity relative to the hips, model units per second) and a foot-phase
+ * signature used to line strides up when switching clips. Cached by clip name;
+ * every player shares one skeleton and clip set.
+ */
+const gaitCache = new Map();
+export function measureGait(clips, clipName, model) {
+  if (gaitCache.has(clipName)) return gaitCache.get(clipName);
+  const clip = clips.get(clipName);
+  const footL = clip && findBone(model, 'footL');
+  const footR = clip && findBone(model, 'footR');
+  if (!clip || !footL || !footR) {
+    gaitCache.set(clipName, null);
+    return null;
+  }
+  const mixer = new THREE.AnimationMixer(model);
+  mixer.clipAction(clip).play();
+  const n = Math.max(48, Math.round(clip.duration * 120));
+  const inv = new THREE.Matrix4();
+  const l = new THREE.Vector3();
+  const r = new THREE.Vector3();
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i / n) * clip.duration;
+    mixer.setTime(t);
+    model.updateMatrixWorld(true);
+    inv.copy(model.matrixWorld).invert();
+    footL.getWorldPosition(l).applyMatrix4(inv);
+    footR.getWorldPosition(r).applyMatrix4(inv);
+    rows.push({ t, lz: l.z, ly: l.y, rz: r.z, ry: r.y });
+  }
+  mixer.stopAllAction();
+  mixer.uncacheRoot(model);
+
+  let minY = Infinity, maxY = -Infinity, range = 0;
+  for (const q of rows) {
+    minY = Math.min(minY, q.ly, q.ry);
+    maxY = Math.max(maxY, q.ly, q.ry);
+    range = Math.max(range, Math.abs(q.lz - q.rz));
+  }
+  // the model faces +Z, so a planted foot moves toward -Z while running forward
+  const v = [];
+  for (let i = 1; i < n; i++) {
+    const dt = rows[i].t - rows[i - 1].t;
+    for (const [z, y, other] of [['lz', 'ly', 'ry'], ['rz', 'ry', 'ly']]) {
+      if (rows[i][y] > rows[i][other]) continue;                // not the lower foot
+      if (rows[i][y] > minY + 0.25 * (maxY - minY)) continue;   // not on the ground
+      v.push(-(rows[i][z] - rows[i - 1][z]) / dt);
+    }
+  }
+  v.sort((a, b) => a - b);
+  const speed = v.length ? Math.abs(v[Math.floor(v.length / 2)]) : 0;
+  const gait = {
+    speed,
+    duration: clip.duration,
+    // (left z - right z) and which foot is down: enough to match stride phase
+    samples: range > 0.05
+      ? rows.map((q) => ({ t: q.t, s: (q.lz - q.rz) / range, c: q.ly < q.ry ? -1 : 1 }))
+      : null,
+  };
+  gaitCache.set(clipName, gait);
+  return gait;
+}
+
+/** Time in clip `to` whose stride phase best matches clip `from` at `fromTime`. */
+export function matchGaitPhase(from, fromTime, to) {
+  const ft = ((fromTime % from.duration) + from.duration) % from.duration;
+  let cur = from.samples[0];
+  for (const q of from.samples) if (Math.abs(q.t - ft) < Math.abs(cur.t - ft)) cur = q;
+  let best = to.samples[0], bestScore = Infinity;
+  for (const q of to.samples) {
+    const score = Math.abs(q.s - cur.s) + (q.c === cur.c ? 0 : 0.5);
+    if (score < bestScore) { bestScore = score; best = q; }
+  }
+  return best.t;
+}
 
 /**
  * Derive per-player animation cues from a recorded play.
@@ -222,6 +333,95 @@ export class RiggedAnimationController {
     this.pendingPose = null;
     this.scheduled = new Set(); // cue keys already honoured
     this.lastAnchorAt = null;   // playback time of the most recent anchored moment
+    this.model = this.mixer?.getRoot?.() || root;
+    this.loco = { clip: null, idle: false, back: false, stanceMoving: false, blockMoving: false };
+    this.speedCache = new Map();
+    this.modelScale = null;
+    // Measure every run clip now, while the roster is being built. Doing it lazily put a
+    // ~50 ms stall in the middle of the first play that needed each gait. The cache is
+    // shared, so only the first player pays.
+    for (const name of LOCO_CLIPS) this.gait(name);
+  }
+
+  /** Model units -> metres for this player (players are scaled to height). */
+  modelToMetres() {
+    if (this.modelScale === null) {
+      this.root.updateMatrixWorld(true);
+      const a = new THREE.Vector3();
+      const b = new THREE.Vector3();
+      this.model.getWorldScale(a);
+      this.root.getWorldScale(b);
+      this.modelScale = (a.x / (b.x || 1)) * YD;
+    }
+    return this.modelScale;
+  }
+
+  gait(clipName) {
+    return measureGait(this.clips, clipName, this.model);
+  }
+
+  /** Natural ground speed of a locomotion clip for this player, in m/s. */
+  nativeSpeed(clipName) {
+    if (this.speedCache.has(clipName)) return this.speedCache.get(clipName);
+    const gait = this.gait(clipName);
+    let v = gait ? gait.speed * this.modelToMetres() : NaN;
+    if (!(v > 0.2 && v < 12)) v = FALLBACK_SPEED[clipName] ?? 4;
+    this.speedCache.set(clipName, v);
+    return v;
+  }
+
+  /** Should this pose be shown as locomotion at this speed? */
+  wantsLocomotion(pose, speed) {
+    const L = this.loco;
+    L.stanceMoving = pose === POSE.STANCE && speed > STANCE_MOVING[L.stanceMoving ? 1 : 0];
+    L.blockMoving = pose === POSE.BLOCK && speed > BLOCK_MOVING[L.blockMoving ? 1 : 0];
+    return pose === POSE.RUN || pose === POSE.BACKPEDAL || L.stanceMoving || L.blockMoving;
+  }
+
+  /** Pick the locomotion clip and playback rate for a speed (m/s) and direction. */
+  pickLocomotion({ speed, pose, carrying, travel, time = 0 }) {
+    const L = this.loco;
+    // hold the current gait briefly; only its playback rate follows the speed
+    if (L.clip && L.since !== undefined && time - L.since < GAIT_DWELL && this.clips.has(L.clip)) {
+      const rate = L.clip === IDLE_CLIP ? 1 : clamp(speed / this.nativeSpeed(L.clip), MIN_RATE, MAX_RATE);
+      return { clipName: L.clip, rate };
+    }
+    const chosen = this.chooseGait({ speed, pose, carrying, travel });
+    if (chosen && chosen.clipName !== L.clip) L.since = time;
+    L.clip = chosen?.clipName ?? null;
+    return chosen;
+  }
+
+  chooseGait({ speed, pose, carrying, travel }) {
+    const L = this.loco;
+    // the measured direction of travel decides which way the feet sweep; the
+    // pose code is only a fallback when the player is too slow to tell
+    const known = travel !== null && travel !== undefined && speed > 0.8;
+    L.back = known ? travel < (L.back ? BACK_EXIT : BACK_ENTER) : pose === POSE.BACKPEDAL;
+    L.idle = speed < (L.idle ? IDLE_EXIT : IDLE_ENTER) && this.clips.has(IDLE_CLIP);
+    if (L.idle) return { clipName: IDLE_CLIP, rate: 1 };
+
+    const pick = (names) => names.filter((n) => this.clips.has(n))
+      .map((n) => ({ n, v: this.nativeSpeed(n) }))
+      .sort((a, b) => a.v - b.v);
+    let tiers = pick(L.back ? BACK_TIERS : carrying ? CARRY_TIERS : RUN_TIERS);
+    if (!tiers.length) tiers = pick(RUN_TIERS);
+    if (!tiers.length) return null;
+
+    let i = tiers.findIndex((t) => t.n === L.clip);
+    if (i < 0) {
+      // nearest natural speed on a log scale
+      const s = Math.max(speed, 0.1);
+      i = 0;
+      for (let k = 1; k < tiers.length; k++) {
+        if (Math.abs(Math.log(s / tiers[k].v)) < Math.abs(Math.log(s / tiers[i].v))) i = k;
+      }
+    } else {
+      const edge = (a, b) => Math.sqrt(tiers[a].v * tiers[b].v);
+      while (i < tiers.length - 1 && speed > edge(i, i + 1) * (1 + TIER_HYSTERESIS)) i++;
+      while (i > 0 && speed < edge(i - 1, i) * (1 - TIER_HYSTERESIS)) i--;
+    }
+    return { clipName: tiers[i].n, rate: clamp(speed / tiers[i].v, MIN_RATE, MAX_RATE) };
   }
 
   /** Clips this player must start at an exact playback time. */
@@ -237,7 +437,7 @@ export class RiggedAnimationController {
    * Advance from playback time, not frame time: 0 while paused, 2x at 2x.
    * Returns true when a clip owns the body (so the caller must not also pose it).
    */
-  tick({ time, pose, speed = 0, carrying = false }) {
+  tick({ time, pose, speed = 0, carrying = false, travel = null }) {
     const dt = this.time === null ? 0 : clamp(time - this.time, 0, MAX_STEP);
     this.time = time;
     if (!this.animation?.mixer) return false;
@@ -248,8 +448,10 @@ export class RiggedAnimationController {
     // has gone. Playing the clip forever is what made the quarterbacks look
     // possessed; once the follow-through is over the body belongs to locomotion.
     const anchoredOver = this.lastAnchorAt !== null && time > this.lastAnchorAt + FOLLOW_THROUGH;
-    if (anchoredOver && ANCHORED.has(selection?.clipName)) {
-      selection = getRiggedAnimationSelection(speed > 0.5 ? POSE.RUN : POSE.STANCE, carrying);
+    let loco = null;
+    if ((anchoredOver && ANCHORED.has(selection?.clipName)) || this.wantsLocomotion(pose, speed)) {
+      loco = this.pickLocomotion({ speed, pose, carrying, travel, time });
+      if (loco) selection = { clipName: loco.clipName, loop: true };
     }
     const clipName = selection?.clipName ?? null;
     const priority = POSE_PRIORITY[pose] ?? 0;
@@ -271,12 +473,18 @@ export class RiggedAnimationController {
     if (clipName && clipName !== this.clipName && canSwitch) {
       const assertedLoop = LOOPING.get(pose) ?? (getRiggedAnimationSelection(pose)?.loop === true);
       // locomotion clips are cycles whatever pose code asked for them
-      const loop = assertedLoop
-        || clipName === 'Running in place' || clipName === 'Running While Holding Something';
+      // locomotion clips are cycles whatever pose code asked for them
+      const loop = !!loco || assertedLoop || LOCO_CLIPS.has(clipName);
       // Anchored one-shots are started by honourCues with a seek, not here.
       if (!ANCHORED.has(clipName)) this.play(clipName, { loop, priority, time });
     }
     if (!clipName && this.clipName && !this.lock) this.stop(time);
+    // stride matching: the planted foot must sweep back as fast as the body moves
+    if (this.action && loco && this.clipName === loco.clipName) {
+      this.action.setEffectiveTimeScale(loco.rate);
+    } else if (this.action && this.clipName === PUSH_CLIP) {
+      this.action.setEffectiveTimeScale(clamp(speed / this.nativeSpeed(PUSH_CLIP), 1, 1.4));
+    }
     this.mixer.update(dt);
     return !!this.clipName;
   }
@@ -328,14 +536,23 @@ export class RiggedAnimationController {
     next.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, loop ? Infinity : 1);
     next.clampWhenFinished = !loop;
     next.time = offset;
-    // carry the locomotion phase across so the stride does not pop when a run
-    // clip replaces a backpedal clip
-    if (loop && prev && prev.getClip() !== clip && LOOPING_CLIPS.has(prev.getClip().name)) {
-      const prevDur = prev.getClip().duration || 1;
-      const phase = (prev.time / prevDur) % 1;
-      next.time = phase * clip.duration;
+    next.setEffectiveTimeScale(1);
+    // carry the stride across so the feet do not pop when one run clip
+    // replaces another: match which foot is down and how far apart they are
+    if (loop && prev && prev.getClip() !== clip && LOCO_CLIPS.has(prev.getClip().name)) {
+      const from = this.gait(prev.getClip().name);
+      const to = this.gait(clipName);
+      if (from?.samples && to?.samples) {
+        next.time = matchGaitPhase(from, prev.time, to);
+      } else {
+        const prevDur = prev.getClip().duration || 1;
+        next.time = ((prev.time / prevDur) % 1) * clip.duration;
+      }
     }
-    next.setEffectiveWeight(prev ? 0 : 1);
+    // Full base weight, then fade in. fadeIn() scales the base weight, so a base
+    // weight of 0 here left every clip after the first permanently invisible and
+    // froze the player in whatever pose the previous clip faded out of.
+    next.setEffectiveWeight(1);
     next.play();
     if (prev && prev !== next) {
       next.fadeIn(FADE_IN);
@@ -385,5 +602,3 @@ export class RiggedAnimationController {
     return this.clipName;
   }
 }
-
-const LOOPING_CLIPS = new Set(['Running in place', 'Running Backward in place', 'Pushing In Place', 'Football Stance']);

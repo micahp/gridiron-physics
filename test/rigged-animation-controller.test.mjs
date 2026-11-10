@@ -190,6 +190,89 @@ test('an anchored throw plays its windup before the ball leaves the hand', () =>
   assert.ok(Math.abs(phase - 0.5) < 0.06, `phase ${phase} should be the measured anchor`);
 });
 
+/** Controller with the full locomotion clip set (natural speeds from FALLBACK_SPEED). */
+function makeLocoController() {
+  const made = makeController();
+  for (const name of ['Standing Idle', 'Jogging In Place', 'run-in-place', 'Sprint In Place',
+    'Running While Holding Something', 'Running Backward in place', 'Pushing In Place']) {
+    made.clips.set(name, makeClip(name, 0.7));
+  }
+  return made;
+}
+
+test('a crossfaded clip reaches full weight instead of freezing the body', () => {
+  const { controller, mixer } = makeController();
+  controller.tick({ time: T0, pose: POSE.RUN, speed: 5 });
+  // a tackle takes over from the run: it must actually become visible
+  controller.tick({ time: T0 + 0.5, pose: POSE.DOWN, speed: 0 });
+  for (let i = 1; i <= 15; i++) controller.tick({ time: T0 + 0.5 + i * 0.033, pose: POSE.DOWN, speed: 0 });
+  assert.equal(controller.current, 'Stunned (Knocked Down)');
+  const weight = controller.action.getEffectiveWeight();
+  assert.ok(weight > 0.99, `faded-in clip weight ${weight}; 0 means the body is frozen`);
+  const total = mixer._actions.reduce((s, a) => s + a.getEffectiveWeight(), 0);
+  assert.ok(total > 0.99, `total weight on the body ${total}`);
+});
+
+test('run playback rate matches ground speed to the clip natural speed', () => {
+  const { controller } = makeController();
+  controller.tick({ time: T0, pose: POSE.RUN, speed: 3.36 });
+  controller.tick({ time: T0 + 0.1, pose: POSE.RUN, speed: 3.36 });
+  // Running in place falls back to 4.2 m/s natural speed: 3.36 / 4.2 = 0.8
+  assert.ok(Math.abs(controller.action.getEffectiveTimeScale() - 0.8) < 1e-6,
+    `rate ${controller.action.getEffectiveTimeScale()}`);
+});
+
+test('speed chooses the gait tier, with hysteresis at the boundary', () => {
+  const { controller } = makeLocoController();
+  const at = (k, speed, pose = POSE.RUN) => controller.tick({ time: T0 + k * 0.2, pose, speed });
+  at(0, 1.4);
+  assert.equal(controller.current, 'Jogging In Place');
+  at(1, 3.0);
+  assert.equal(controller.current, 'run-in-place');
+  at(2, 7.5);
+  assert.equal(controller.current, 'Sprint In Place');
+  // just under the run/sprint boundary (sqrt(4.2 * 4.8) = 4.49): stays a sprint
+  at(3, 4.4);
+  assert.equal(controller.current, 'Sprint In Place', 'no flapping right at the edge');
+  at(4, 0.1);
+  assert.equal(controller.current, 'Standing Idle', 'a near-stationary runner stands');
+});
+
+test('a braking player holds each gait briefly instead of crossfading through all of them', () => {
+  const { controller } = makeLocoController();
+  controller.tick({ time: T0, pose: POSE.RUN, speed: 7.5 });
+  assert.equal(controller.current, 'Sprint In Place');
+  // 7.5 -> 1.4 m/s in 0.1 s: too soon to change gait, the rate drops instead
+  controller.tick({ time: T0 + 0.1, pose: POSE.RUN, speed: 1.4 });
+  assert.equal(controller.current, 'Sprint In Place');
+  assert.ok(Math.abs(controller.action.getEffectiveTimeScale() - 0.6) < 1e-6, 'rate clamps while held');
+  controller.tick({ time: T0 + 0.25, pose: POSE.RUN, speed: 1.4 });
+  assert.equal(controller.current, 'Jogging In Place');
+});
+
+test('a moving player is not left gliding in a stance or block clip', () => {
+  const { controller } = makeLocoController();
+  controller.tick({ time: T0, pose: POSE.STANCE, speed: 0 });
+  assert.equal(controller.current, 'Football Stance');
+  controller.tick({ time: T0 + 0.3, pose: POSE.STANCE, speed: 4.2 });
+  assert.equal(controller.current, 'Running in place');
+  // a new pose code must persist MIN_POSE_HOLD before it takes the body
+  controller.tick({ time: T0 + 0.6, pose: POSE.BLOCK, speed: 0.3 });
+  controller.tick({ time: T0 + 0.7, pose: POSE.BLOCK, speed: 0.3 });
+  assert.equal(controller.current, 'Pushing In Place');
+  controller.tick({ time: T0 + 0.9, pose: POSE.BLOCK, speed: 3.0 });
+  assert.equal(controller.current, 'run-in-place');
+});
+
+test('moving against the facing direction plays the backward run', () => {
+  const { controller } = makeLocoController();
+  controller.tick({ time: T0, pose: POSE.RUN, speed: 2.6, travel: 1 });
+  assert.notEqual(controller.current, 'Running Backward in place');
+  controller.tick({ time: T0 + 0.3, pose: POSE.RUN, speed: 2.6, travel: -0.9 });
+  assert.equal(controller.current, 'Running Backward in place');
+  assert.ok(Math.abs(controller.action.getEffectiveTimeScale() - 1) < 1e-6);
+});
+
 test('a latched throw code hands the body to locomotion once the ball is gone', () => {
   const { controller } = makeController();
   controller.setCues([{ kind: 'throw', at: T0 + 1.0, anchorAt: T0 + 1.2 }]);
