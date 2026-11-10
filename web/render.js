@@ -208,7 +208,7 @@ function kickOnsets(rec) {
 }
 
 const LEG_LEN = 0.95; // hip to ground, metres
-function animate(root, pose, speed, dt, carrying, tk = null, dist = 0) {
+function animate(root, pose, speed, dt, carrying, tk = null, dist = 0, ctx = null) {
   const u = root.userData;
   const { legs, arms, torso, body } = u;
   if (pose === POSE.KICK && tk !== null && (tk < KICK_START || tk > KICK_END)) pose = POSE.RUN;
@@ -218,7 +218,9 @@ function animate(root, pose, speed, dt, carrying, tk = null, dist = 0) {
   // and the feet don't skate. Driven by distance moved, so it stops when paused.
   const vm = speed * YD;
   const swing = Math.max(0.18, Math.min(1.0, 0.2 + vm * 0.1)) * Math.min(1, vm / 1.0);
-  if (swing > 0.02) u.phase += Math.min(dist, 1.2) / (LEG_LEN * swing);
+  // moving against the heading (a backpedal the pose code did not flag) runs the cycle in reverse
+  const sgn = ctx && ctx.back ? -1 : 1;
+  if (swing > 0.02) u.phase += sgn * Math.min(dist, 1.2) / (LEG_LEN * swing);
   let lean = Math.min(0.38, speed * 0.04);
   let crouch = 0;
   let armF = [Math.sin(u.phase) * swing * 0.8, -Math.sin(u.phase) * swing * 0.8];
@@ -252,6 +254,9 @@ function animate(root, pose, speed, dt, carrying, tk = null, dist = 0) {
       lean = 0.25; crouch = 0.1; break;
   }
   if (carrying && pose !== POSE.DOWN) armF[1] = 1.4;
+  // contact: a wrapped ball carrier is driven back; a man locked up drives forward
+  if (ctx && ctx.role === 3 && pose !== POSE.DOWN) { lean = -0.25; crouch = 0.08; armF = [1.2, 1.2]; }
+  if (ctx && ctx.role === 1 && pose === POSE.BLOCK) { lean = 0.62; crouch = 0.18; }
   const k = 1 - Math.exp(-dt * 14);
   const kicking = tk !== null && tk >= KICK_START && tk <= KICK_END;
   if (kicking) {
@@ -519,11 +524,36 @@ export class Renderer {
     const f0 = rec.frames[k0], f1 = rec.frames[Math.min(rec.frames.length - 1, k0 + 1)];
     const L = (i) => f0[i] + (f1[i] - f0[i]) * a;
     const n = rec.roster.length;
+    const aux = rec.aux ? rec.aux[k0] : null, aux1 = rec.aux ? rec.aux[Math.min(rec.frames.length - 1, k0 + 1)] : null;
+    const AS = rec.auxStride || 5;
+    // 1. interpolated positions
+    const X = new Float64Array(n), Z = new Float64Array(n), X0 = new Float64Array(n), Z0 = new Float64Array(n);
+    for (let i = 0; i < n; i++) { X[i] = X0[i] = L(i * 6); Z[i] = Z0[i] = L(i * 6 + 1); }
+    // 2. keep bodies from drawing through each other. The physics lets padded discs
+    // overlap and ignores downed players entirely, so push overlapping pairs apart
+    // for display only (simulation output is untouched). A tackler and the man he
+    // wrapped are allowed to be close.
+    const down = (i) => f0[i * 6 + 4] === POSE.DOWN;
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          if (aux && aux[i * AS + 3] >= 2 && aux[i * AS + 4] === j) continue;
+          const min = down(i) || down(j) ? 0.8 : 0.52;
+          let dx = X[j] - X[i], dz = Z[j] - Z[i];
+          const d2 = dx * dx + dz * dz;
+          if (d2 >= min * min) continue;
+          const d = Math.sqrt(d2);
+          if (d < 1e-6) { dx = 1; dz = 0; } else { dx /= d; dz /= d; }
+          const push = (min - d) / 2;
+          X[i] -= dx * push; Z[i] -= dz * push; X[j] += dx * push; Z[j] += dz * push;
+        }
+      }
+    }
     for (let i = 0; i < n; i++) {
       const o = this.players.get(rec.roster[i].id);
       if (!o) continue;
       const b = i * 6;
-      const nx = L(b), nz = L(b + 1);
+      const nx = X[i], nz = Z[i];
       const moved = o.userData.seen ? Math.hypot(nx - o.position.x, nz - o.position.z) * YD : 0;
       o.userData.seen = true;
       o.position.set(nx, 0, nz);
@@ -531,13 +561,25 @@ export class Renderer {
       let dh = h1 - h0;
       while (dh > Math.PI) dh -= 2 * Math.PI;
       while (dh < -Math.PI) dh += 2 * Math.PI;
-      o.rotation.y = -(h0 + dh * a);
+      let yaw = h0 + dh * a;
+      const AL = (c) => aux[i * AS + c] + (aux1[i * AS + c] - aux[i * AS + c]) * a;
+      let ctx = null;
+      if (aux) {
+        const role = aux[i * AS + 3], partner = aux[i * AS + 4];
+        const vx = AL(0), vy = AL(1), sp = Math.hypot(vx, vy);
+        // blockers and tacklers square up to the man they are on
+        if ((role === 1 || role === 2) && partner >= 0) yaw = Math.atan2(Z[partner] - Z[i], X[partner] - X[i]);
+        ctx = { role, back: sp > 0.6 && vx * Math.cos(yaw) + vy * Math.sin(yaw) < -0.35 * sp };
+      }
+      o.rotation.y = -yaw;
       const onset = kickOnsets(rec)[i];
       const tk = onset >= 0 ? (t - rec.t0) - onset / rec.hz : null;
-      animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, tk, moved);
+      animate(o, f0[b + 4], L(b + 3), dt, f0[b + 5] > 0.5, tk, moved, ctx);
     }
     const B = n * 6;
-    const bx = L(B), by = L(B + 1), bz = L(B + 2) / YD;
+    let bx = L(B), by = L(B + 1);
+    const bz = L(B + 2) / YD;
+    for (let i = 0; i < n; i++) if (f0[i * 6 + 5] > 0.5) { bx += X[i] - X0[i]; by += Z[i] - Z0[i]; break; }
     this.ball.position.set(bx, Math.max(0.12, bz), by);
     this.ball.rotation.set(0, -f0[B + 4], 0);
     this.ballMesh.rotation.set(f0[B + 3] * 0.3, 0, f0[B + 5]);
