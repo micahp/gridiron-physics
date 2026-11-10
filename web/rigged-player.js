@@ -16,6 +16,7 @@ import * as THREE from './vendor/three.module.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 import { ensureController, isLocomotionClip } from './rigged-animation-controller.js';
+import { teamLogoUrl } from './team-logo.js';
 
 import { POSE } from './pose-codes.js';
 export { POSE };
@@ -221,6 +222,165 @@ function kitAtlasTexture(sourceMap, kit, number) {
   return tex;
 }
 
+// ---------------------------------------------------------- uniform detail
+//
+// Beyond the jersey: team gloves, striped socks, team-colored cleats, a pants stripe and a helmet with a stripe
+// and the team logo. The texture layouts were surveyed by painting every island a different colour and rendering.
+// Skin atlas (CORPO_Color, 2048 px): two glove islands and the two calf islands (the two big pink islands are the
+// arms); the calf islands are drawn with the knee at the top and the ankle notch at the bottom.
+const SURVEY = 2048 / 1932;                       // the survey images were shown at 1932 px
+const px = (v) => Math.round(v * SURVEY);
+const SKIN_GLOVES = [[10, 740, 560, 1450], [540, 760, 1110, 1450]].map((b) => b.map(px));
+const SKIN_CALVES = [[1125, 820, 1585, 1045], [1140, 1125, 1585, 1345]].map((b) => b.map(px));
+const SOCK_STRIPES = [[0.18, 0.31], [0.43, 0.56]];  // fractions of the calf, knee (0) to ankle (1)
+const colorDistance = (a, b) => {
+  const x = new THREE.Color(a), y = new THREE.Color(b);
+  return Math.abs(x.r - y.r) + Math.abs(x.g - y.g) + Math.abs(x.b - y.b);
+};
+
+/** Pure pixel pass over an RGBA skin atlas: team gloves (swoosh in the number colour) and striped socks on the calves. */
+export function recolorSkinAtlas(data, size, kit) {
+  const k = size / 2048;
+  const glove = new THREE.Color(kit.glove ?? kit.trim), swoosh = new THREE.Color(kit.number ?? '#ffffff');
+  const sockBase = new THREE.Color(kit.sock ?? kit.pants), sockStripe = new THREE.Color(kit.sockStripe ?? kit.trim);
+  for (const [x0, y0, x1, y1] of SKIN_GLOVES) {
+    for (let y = Math.floor(y0 * k); y < Math.min(size, Math.ceil(y1 * k)); y++) {
+      for (let x = Math.floor(x0 * k); x < Math.min(size, Math.ceil(x1 * k)); x++) {
+        const i = (y * size + x) * 4;
+        const L = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        if (L > 12 && L < 95) {          // dark glove cloth (the atlas background is pure black)
+          const sh = Math.max(0.6, Math.min(1.25, 0.55 + L / 70));
+          data[i] = 255 * glove.r * sh; data[i + 1] = 255 * glove.g * sh; data[i + 2] = 255 * glove.b * sh;
+        } else if (L >= 150) {           // the white grip swoosh
+          const lit = L / 235;
+          data[i] = 255 * swoosh.r * lit; data[i + 1] = 255 * swoosh.g * lit; data[i + 2] = 255 * swoosh.b * lit;
+        }
+      }
+    }
+  }
+  for (const [x0, y0, x1, y1] of SKIN_CALVES) {
+    const ya = Math.floor(y0 * k), yb = Math.ceil(y1 * k);
+    for (let y = ya; y < Math.min(size, yb); y++) {
+      const t = (y - ya) / Math.max(1, yb - ya);
+      const stripe = SOCK_STRIPES.some(([a, b]) => t >= a && t <= b);
+      const c = stripe ? sockStripe : sockBase;
+      for (let x = Math.floor(x0 * k); x < Math.min(size, Math.ceil(x1 * k)); x++) {
+        const i = (y * size + x) * 4;
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        if (r > 150 && g > 105 && b > 85 && r > b + 10) {       // skin-coloured pixel of the calf island
+          data[i] = 255 * c.r; data[i + 1] = 255 * c.g; data[i + 2] = 255 * c.b;
+        }
+      }
+    }
+  }
+  return data;
+}
+
+/** Pure pixel pass over the cleat atlas: dark leather takes the team colour, keeping its shading; stud holes stay dark. */
+export function recolorCleatAtlas(data, size, color) {
+  const c = new THREE.Color(color);
+  for (let i = 0; i < data.length; i += 4) {
+    const L = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    if (L < 6) continue;
+    const sh = Math.max(0.55, Math.min(1.2, 0.5 + L / 70));
+    data[i] = 255 * c.r * sh; data[i + 1] = 255 * c.g * sh; data[i + 2] = 255 * c.b * sh;
+  }
+  return data;
+}
+
+const detailCache = new Map();
+function recolored(key, sourceMap, size, pass, { flipY = false, anisotropy = 4 } = {}) {
+  if (typeof document === 'undefined' || !sourceMap?.image) return null;
+  if (detailCache.has(key)) return detailCache.get(key);
+  const img = sourceMap.image;
+  const n = Math.min(size, img.width || size);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = n;
+  const g = canvas.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0, n, n);
+  const px_ = g.getImageData(0, 0, n, n);
+  pass(px_.data, n);
+  g.putImageData(px_, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = flipY; // glTF UV convention
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = anisotropy;
+  tex.userData.sharedKitAtlas = true;
+  detailCache.set(key, tex);
+  return tex;
+}
+
+const skinTexture = (map, kit) => recolored(
+  `skin|${kit.glove ?? kit.trim}|${kit.number}|${kit.sock ?? kit.pants}|${kit.sockStripe ?? kit.trim}`, map, 2048, (d, n) => recolorSkinAtlas(d, n, kit));
+const cleatTexture = (map, kit) => {
+  const color = kit.cleat ?? kit.trim;
+  return recolored(`cleat|${color}`, map, 1024, (d, n) => recolorCleatAtlas(d, n, color));
+};
+
+// Helmet atlas (2048 px): the visible shell is the lower half. The crown's centre seam is x = 1000; the two sides are
+// mirror images about it (left side at x ~ 1450, right at x ~ 550, around y ~ 1500).
+const helmetCache = new Map();
+function helmetTexture(kit) {
+  if (typeof document === 'undefined') return null;
+  const logo = kit.logo ?? (kit.team ? teamLogoUrl(kit.team) : '');
+  const key = `${kit.helmet}|${kit.trim}|${logo}`;
+  if (helmetCache.has(key)) return helmetCache.get(key);
+  const N = 1024, k = N / 2048;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = N;
+  const g = canvas.getContext('2d');
+  const paint = (img) => {
+    g.fillStyle = kit.helmet;
+    g.fillRect(0, 0, N, N);
+    if (colorDistance(kit.trim, kit.helmet) > 0.3) {       // centre stripe, front to back
+      g.fillStyle = kit.trim;
+      g.fillRect(962 * k, 1000 * k, 76 * k, 800 * k);
+    }
+    if (img) {                                             // team logo on both sides (the right side is mirrored)
+      const s = 300 * k;
+      g.drawImage(img, 1450 * k - s / 2, 1480 * k - s / 2, s, s);
+      g.save(); g.translate(550 * k, 0); g.scale(-1, 1); g.drawImage(img, -s / 2, 1480 * k - s / 2, s, s); g.restore();
+    }
+  };
+  paint(null);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  tex.userData.sharedKitAtlas = true;
+  helmetCache.set(key, tex);
+  if (logo && typeof Image !== 'undefined') {
+    const img = new Image();
+    img.onload = () => { paint(img); tex.needsUpdate = true; };
+    img.src = logo;
+  }
+  return tex;
+}
+
+/**
+ * A stripe down the outside of each thigh, computed per pixel from the vertex's bind-pose position, so it is smooth
+ * on a mesh that is far too coarse for a per-vertex mask and does not depend on the (curved) UV layout.
+ * The outermost thigh sits at |x| ~ 0.20 m; the band is the outer ~6 cm, between the knee pad and the hip.
+ */
+function addPantsStripe(material, color) {
+  const stripeColor = { value: new THREE.Color(color) };
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.stripeColor = stripeColor;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vBindPos;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvBindPos = position;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 stripeColor;\nvarying vec3 vBindPos;')
+      .replace('#include <map_fragment>', `#include <map_fragment>
+        // outer thigh: the lateral surface (|x| past 0.178), cut to a fixed ~7 cm band about the leg's mid-depth (z ~ 0.045)
+        float stripeSide = smoothstep(0.172, 0.182, abs(vBindPos.x)) * (1.0 - smoothstep(0.030, 0.040, abs(vBindPos.z - 0.045)));
+        float stripeY = smoothstep(0.50, 0.545, vBindPos.y) * (1.0 - smoothstep(0.895, 0.93, vBindPos.y));
+        diffuseColor.rgb = mix(diffuseColor.rgb, stripeColor, stripeSide * stripeY);`);
+  };
+  material.customProgramCacheKey = () => 'pants-stripe';
+  material.userData.pantsStripe = true;
+}
+
 function fabricMaterial(source, color) {
   const material = source.clone();
   material.map = null; // discard the dark atlas with its baked #21 uniform
@@ -233,8 +393,9 @@ function fabricMaterial(source, color) {
 
 function helmetMaterial(source, kit) {
   const material = source.clone();
-  material.map = null;
-  material.color.set(kit.helmet);
+  const map = helmetTexture(kit);
+  material.map = map;                                     // the texture carries the colour, stripe and logo
+  material.color.set(map ? '#ffffff' : kit.helmet);
   material.roughness = 0.3;
   material.metalness = 0.18;
   material.userData.riggedPlayerOwned = true;
@@ -257,6 +418,8 @@ function applyRiggedKit(clone, kit, info) {
         material.color.set('#ffffff'); // the atlas already carries the colours
         material.roughness = 0.78;
         material.userData.riggedPlayerOwned = true;
+        const stripe = kit.stripe ?? kit.trim;
+        if (stripe && colorDistance(stripe, kit.pants) > 0.3) addPantsStripe(material, stripe);
         material.needsUpdate = true;
         object.material = material;
         return;
@@ -267,9 +430,20 @@ function applyRiggedKit(clone, kit, info) {
       object.material = [fabricMaterial(sources[uniformIndex], kit.pants), fabricMaterial(sources[uniformIndex], kit.jersey)];
       return;
     }
-    const apply = (source) => String(source.name || '').toUpperCase() === 'HELMET.001'
-      ? helmetMaterial(source, kit)
-      : source; // skin, face mask, straps, gloves, shoes and other gear stay intact
+    const apply = (source) => {
+      const name = String(source.name || '').toUpperCase();
+      if (name === 'HELMET.001') return helmetMaterial(source, kit);
+      const detail = name === 'CORPO_MAT' || name === 'LUVA_PARTE_BRILHANTE' ? skinTexture(source.map, kit)
+        : name === 'CHUTEIRA_MAT' ? cleatTexture(source.map, kit) : null;
+      if (detail) {
+        const material = source.clone();
+        material.map = detail;
+        material.userData.riggedPlayerOwned = true;
+        material.needsUpdate = true;
+        return material;
+      }
+      return source; // face mask, straps, eyes, studs and other gear stay intact
+    };
     object.material = Array.isArray(object.material) ? object.material.map(apply) : apply(object.material);
   });
 }
@@ -418,7 +592,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
 // running while watching the ball.
 const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const TRAVEL_POSES = new Set([POSE.RUN, POSE.BACKPEDAL, POSE.STANCE, POSE.BLOCK]);
-const MAX_TWIST = 1.2;       // radians the torso can stay turned from the hips
+const MAX_TWIST = 0.45;      // radians the torso can stay turned from the hips
 const HIP_TURN_RATE = 10;    // 1/s, exponential smoothing of the hip yaw
 
 /**
@@ -540,7 +714,8 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
       if (controller.tick({ time, pose, speed, carrying, travel, contact })) {
         // lean into acceleration and turns while he is moving under a locomotion clip; contact and set-piece clips
         // own their own posture
-        if (contact && contact.vx !== undefined && isLocomotionClip(controller.clipName)) {
+        // globalThis.__audit switches (scripts/audit-motion-live.mjs) turn a layer off to measure what each one contributes
+        if (contact && contact.vx !== undefined && isLocomotionClip(controller.clipName) && !globalThis.__audit?.noLean) {
           const L = bodyLean((u.lean ??= {}), { vx: contact.vx, vy: contact.vy, yaw: contact.bodyYaw ?? 0, time });
           u.body.rotation.z = -L.pitch;
           u.body.rotation.x = -L.roll;
@@ -548,7 +723,7 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
           u.body.rotation.z = 0; u.body.rotation.x = 0; u.lean = null;
         }
         const offset = u.travelYaw?.offset ?? 0;
-        twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
+        if (!globalThis.__audit?.noTwist) twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
         return;
       }
     }

@@ -1309,8 +1309,8 @@ export function simulatePlay(game, S, ctx = {}) {
         // a kicker gathers himself for the plant: ease to ~3.5 m/s over the last few yards instead of
         // hitting the ball at a full sprint
         const dl = Math.hypot(p.dv.x, p.dv.y), dBall = Math.sqrt(d2(p.p, ball));
-        const cap = Math.min(1, 0.4 + dBall / (6 * YD));
-        if (dl > 0) { const lim = Math.max(3.5, p.vmax * cap); if (dl > lim) p.dv = { x: (p.dv.x * lim) / dl, y: (p.dv.y * lim) / dl }; }
+        const cap = Math.min(1, 0.25 + dBall / (8 * YD));
+        if (dl > 0) { const lim = Math.max(2.2, p.vmax * cap); if (dl > lim) p.dv = { x: (p.dv.x * lim) / dl, y: (p.dv.y * lim) / dl }; }
         if (d2(p.p, ball) < 0.6 && !st.kicked) {
           st.kicked = true;
           p.pose = POSE.KICK;
@@ -1437,7 +1437,7 @@ export function simulatePlay(game, S, ctx = {}) {
       case 'fg_approach': {
         if (t < 0.55) { p.dv = { x: 0, y: 0 }; p.face = faceDownfield(p); return true; }
         const ball = { x: W.ball.x, y: W.ball.y };
-        p.dv = seek(p, ball, 0.45, 60);
+        p.dv = seek(p, ball, 0.28, 60);   // a field-goal kicker steps in at about 2.5 m/s and plants nearly still
         if ((d2(p.p, ball) < 0.65 || t > 1.5) && !st.kicked && st.placed) {
           st.kicked = true;
           p.pose = POSE.KICK;

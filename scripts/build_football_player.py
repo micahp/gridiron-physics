@@ -14,6 +14,9 @@ import football_clips as C
 LOCOMOTION = ['Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place', 'Running Backward in place',
               'running-backward-in-place', 'Standing Idle', 'Idle', 'Breathing Idle', 'Fist Pump', 'Kneel']
 ARM_LENGTH = 1.3
+# stock run cycles get a longer stride, calmer shoulders, a bigger arm pump and feet locked to the turf
+RUN_CYCLES = {'Jogging In Place', 'run-in-place', 'Running in place', 'Sprint In Place', 'Running Backward in place', 'running-backward-in-place'}
+RUN_GAIT = dict(legs=1.6, shins=1.25, spine=0.45, arms=1.7, lock_feet=True)
 
 
 def parse():
@@ -40,7 +43,10 @@ def main():
     baked = []
     for name in LOCOMOTION:
         if name in bpy.data.actions:
-            R.bake_relaxed_arms(arm, name, flex=0.40, abduct=0.28, elbow=0.55)
+            if name in RUN_CYCLES:   # a better gait as well as arms held off the body
+                R.bake_relaxed_arms(arm, name, flex=0.40, abduct=0.28, elbow=0.55, **RUN_GAIT)
+            else:
+                R.bake_relaxed_arms(arm, name, flex=0.40, abduct=0.28, elbow=0.55)
             baked.append(name)
 
     authored = {}

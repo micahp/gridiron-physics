@@ -348,13 +348,60 @@ def _fk_bases(arm, bases):
     return pose
 
 
-def bake_relaxed_arms(arm, src_name, flex=0.45, abduct=0.30, elbow=0.7, elbow_axis=0):
-    """Replace action `src_name` with a baked copy whose arms are held away from the body.
+def _mean_quat(qs):
+    """Average of rotations, flipping to one hemisphere first (good for the small oscillations of a gait cycle)."""
+    from mathutils import Quaternion
+    ref = qs[0]
+    w = x = y = z = 0.0
+    for q in qs:
+        sgn = 1.0 if q.dot(ref) >= 0 else -1.0
+        w += sgn * q.w; x += sgn * q.x; y += sgn * q.y; z += sgn * q.z
+    m = Quaternion((w, x, y, z))
+    m.normalize()
+    return m
 
-    The retargeted locomotion clips hang the arms straight down at the belt, so the hands meet at
-    the hips and read as hands behind the back. Every frame, push each upper arm out and forward
-    (world-space rotation, so it works at any point in the stride) and bend the elbow. The arm swing
-    already in the clip is kept; this only adds the offset.
+
+def _scale_about(mean, q, factor):
+    """Scale how far q swings away from `mean` (factor > 1 exaggerates the oscillation, < 1 calms it)."""
+    from mathutils import Quaternion
+    axis, angle = (mean.inverted() @ q).to_axis_angle()
+    return mean @ Quaternion(axis, angle * factor)
+
+
+# bones whose oscillation is rescaled in the run clips: longer stride, calmer shoulders, bigger arm pump
+RUN_SCALE = {
+    'thigh.L': 'legs', 'thigh.R': 'legs', 'shin.L': 'shins', 'shin.R': 'shins',
+    'spine': 'spine', 'spine.001': 'spine', 'spine.002': 'spine', 'spine.003': 'spine', 'Bone': 'spine', 'spine.006': 'spine',
+    'upper_arm.L': 'arms', 'upper_arm.R': 'arms',
+}
+
+
+def _lock_feet(arm, bases):
+    """Lower or raise the hips so the lowest foot point rests exactly on the turf (no sinking, no floating)."""
+    pose = _fk_bases(arm, bases)
+    low = 1e9
+    for name, end in FOOT_POINTS:
+        m = pose[name]
+        p = m.translation if end == 'head' else m @ Vector((0, arm.data.bones[name].length, 0))
+        low = min(low, p.z)
+    dz = GROUND_Z - low
+    root = arm.data.bones['spine']
+    q, loc = bases['spine']
+    bases['spine'] = (q, loc + root.matrix_local.to_3x3().inverted() @ (UP * dz))
+
+
+def bake_relaxed_arms(arm, src_name, flex=0.45, abduct=0.30, elbow=0.7, elbow_axis=0,
+                      legs=1.0, shins=1.0, spine=1.0, arms=1.0, lock_feet=False):
+    """Replace action `src_name` with a baked copy: arms held off the body, and (for run clips) a better gait.
+
+    Arms: the retargeted clips hang the arms straight down at the belt, so the hands meet at the hips and read as
+    hands behind the back; every frame the upper arm is pushed out and forward in world space and the elbow bent.
+
+    Gait (legs, shins, spine, arms are factors on each bone's swing about its own cycle mean; 1.0 leaves it alone):
+    the stock sprint's stride is far too short for the engine's 8 to 10 m/s (natural ground speed 4.2 m/s against a
+    playback rate capped at 1.6), so the feet skate; its torso rocks about +/-12 degrees while the arms barely
+    pump. legs > 1 lengthens the stride, spine < 1 calms the shoulders, arms > 1 pumps harder, and lock_feet
+    keeps the lowest foot on the turf every frame.
     """
     import math
     from mathutils import Quaternion
@@ -374,11 +421,20 @@ def bake_relaxed_arms(arm, src_name, flex=0.45, abduct=0.30, elbow=0.7, elbow_ax
     for f in frames:
         scene.frame_set(int(math.floor(f)), subframe=f - math.floor(f))
         samples.append({pb.name: (pb.rotation_quaternion.copy(), pb.location.copy()) for pb in arm.pose.bones})
+    factor = {'legs': legs, 'shins': shins, 'spine': spine, 'arms': arms}
+    means = {}
+    if any(v != 1.0 for v in factor.values()):
+        for bone, group in RUN_SCALE.items():
+            if factor[group] != 1.0:
+                means[bone] = _mean_quat([smp[bone][0] for smp in samples])
     dst_name = src_name
     src.name = src_name + '__orig'
     dst = new_action(arm, dst_name)
     for f, bases in zip(frames, samples):
         bases = {n: (q.copy(), l.copy()) for n, (q, l) in bases.items()}
+        for bone, mean in means.items():
+            q, loc = bases[bone]
+            bases[bone] = (_scale_about(mean, q, factor[RUN_SCALE[bone]]), loc)
         pose = _fk_bases(arm, bases)
         for side, sgn in (('L', 1.0), ('R', -1.0)):
             up, fore = f'upper_arm.{side}', f'forearm.{side}'
@@ -393,6 +449,8 @@ def bake_relaxed_arms(arm, src_name, flex=0.45, abduct=0.30, elbow=0.7, elbow_ax
             q, loc = bases[fore]
             bases[fore] = (q @ Quaternion(axis, elbow), loc)
             pose = _fk_bases(arm, bases)
+        if lock_feet:
+            _lock_feet(arm, bases)
         for pb in arm.pose.bones:
             pb.rotation_mode = 'QUATERNION'
             pb.rotation_quaternion, pb.location = bases[pb.name]

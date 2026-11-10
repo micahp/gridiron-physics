@@ -242,13 +242,13 @@ def kick():
                  hands_ik(pt(f=0.32, l=0.3, u=1.0), pt(f=-0.15, l=-0.3, u=1.0), pole_out=0.8))
     plant = pose(torso(2, head=8),
                  legs(cs(f=0.35, l=0.1, u=-0.93), cs(f=-0.3, u=-0.95), cs(f=-0.6, l=-0.1, u=-0.8), cs(f=-0.95, u=0.3)),
-                 hands_ik(pt(f=0.35, l=0.58, u=1.08), pt(f=-0.05, l=-0.32, u=1.0), pole_out=1.0, pole_back=0.0))
-    contact = pose(torso(-6, head=6),
+                 hands_ik(pt(f=0.30, l=0.40, u=0.98), pt(f=-0.02, l=-0.24, u=0.95), pole_out=1.0, pole_back=0.2))
+    contact = pose(torso(-2, head=6),
                    legs(cs(f=0.3, l=0.1, u=-0.95), cs(f=-0.25, u=-0.97), cs(f=0.85, l=-0.05, u=-0.5), cs(f=0.9, u=-0.4)),
-                   hands_ik(pt(f=0.28, l=0.62, u=1.0), pt(f=-0.12, l=-0.30, u=0.98), pole_out=1.0, pole_back=0.0))
-    follow = pose(torso(-12, head=2),
+                   hands_ik(pt(f=0.22, l=0.42, u=0.95), pt(f=-0.08, l=-0.22, u=0.95), pole_out=1.0, pole_back=0.2))
+    follow = pose(torso(-5, head=2),
                   legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.8, l=-0.05, u=0.45), cs(f=0.3, u=-0.9)),
-                  hands_ik(pt(f=0.12, l=0.62, u=1.05), pt(f=0.15, l=-0.15, u=1.15), pole_out=1.0, pole_back=0.0))
+                  hands_ik(pt(f=0.10, l=0.45, u=1.0), pt(f=0.20, l=-0.10, u=1.12), pole_out=1.0, pole_back=0.2))
     down = pose(torso(6, head=2),
                 legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.3, l=-0.1, u=-0.95), cs(f=-0.2, u=-0.97)),
                 hands_ik(pt(f=0.15, l=0.5, u=1.05), pt(f=0.1, l=-0.5, u=1.05), pole_out=0.9))
@@ -267,10 +267,10 @@ def punt():
                 hands_ik(pt(f=0.5, l=0.1, u=1.0), pt(f=0.5, l=-0.1, u=1.0), pole_out=0.5, pole_back=0.0))
     step = pose(torso(4, head=8), legs(cs(f=0.3, l=0.1, u=-0.94), cs(f=-0.25, u=-0.96), cs(f=-0.5, l=-0.1, u=-0.85), cs(f=-0.9, u=-0.2)),
                 hands_ik(pt(f=0.55, l=0.12, u=0.85), pt(f=0.55, l=-0.12, u=0.85), pole_out=0.5, pole_back=0.0))
-    contact = pose(torso(-10, head=4), legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.95, l=-0.05, u=0.2), cs(f=0.9, u=0.35)),
-                   hands_ik(pt(f=0.25, l=0.58, u=1.05), pt(f=-0.05, l=-0.32, u=1.0), pole_out=1.0, pole_back=0.0))
-    follow = pose(torso(-16, head=0), legs(cs(f=0.1, l=0.1, u=-0.99), cs(f=-0.1, u=-0.99), cs(f=0.7, l=-0.05, u=0.7), cs(f=0.6, u=0.4)),
-                  hands_ik(pt(f=0.1, l=0.62, u=1.1), pt(f=0.2, l=-0.18, u=1.1), pole_out=1.0, pole_back=0.0))
+    contact = pose(torso(-4, head=4), legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.95, l=-0.05, u=0.2), cs(f=0.9, u=0.35)),
+                   hands_ik(pt(f=0.20, l=0.42, u=1.0), pt(f=-0.02, l=-0.22, u=0.98), pole_out=1.0, pole_back=0.2))
+    follow = pose(torso(-7, head=0), legs(cs(f=0.1, l=0.1, u=-0.99), cs(f=-0.1, u=-0.99), cs(f=0.7, l=-0.05, u=0.7), cs(f=0.6, u=0.4)),
+                  hands_ik(pt(f=0.10, l=0.45, u=1.05), pt(f=0.2, l=-0.18, u=1.1), pole_out=1.0, pole_back=0.2))
     recover = pose(torso(6, head=2), legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.3, l=-0.1, u=-0.95), cs(f=-0.2, u=-0.97)),
                    hands_ik(pt(f=0.15, l=0.5, u=1.05), pt(f=0.1, l=-0.5, u=1.05), pole_out=0.9))
     return {'loop': False, 'keys': [

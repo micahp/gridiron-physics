@@ -60,8 +60,8 @@ export function kitsForMatchup(homeId, awayId, seed = '') {
   const away = WEEK7_TEAM_KITS[awayId]?.away;
   if (!home || !away) throw new Error(`No explicit Week 7 kit for ${homeId} or ${awayId}`);
   return {
-    [homeId]: { ...home, seed: String(seed), side: 'home' },
-    [awayId]: { ...away, seed: String(seed), side: 'away' },
+    [homeId]: { ...home, seed: String(seed), side: 'home', team: homeId },
+    [awayId]: { ...away, seed: String(seed), side: 'away', team: awayId },
   };
 }
 
@@ -76,12 +76,12 @@ export function kitsForGame(homeId, awayId, teams, seed = '') {
     [homeId]: {
       jersey: home.alt || home.color || '#33485b', pants: home.color || '#111111',
       helmet: home.color || '#33485b', number: '#ffffff', trim: home.color || '#33485b', mask: '#c8ccd2', sock: home.color || '#111111',
-      seed: String(seed), side: 'home',
+      seed: String(seed), side: 'home', team: homeId,
     },
     [awayId]: {
       jersey: '#f4f5f2', pants: '#f4f5f2', helmet: away.color || '#33485b',
       number: away.color || '#33485b', trim: away.alt || '#dbe9f2', mask: '#9aa3ad', sock: away.color || '#33485b',
-      seed: String(seed), side: 'away',
+      seed: String(seed), side: 'away', team: awayId,
     },
   };
 }

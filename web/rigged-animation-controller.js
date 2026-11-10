@@ -175,8 +175,10 @@ const gaitCache = new Map();
 export function measureGait(clips, clipName, model) {
   if (gaitCache.has(clipName)) return gaitCache.get(clipName);
   const clip = clips.get(clipName);
-  const footL = clip && findBone(model, 'footL');
-  const footR = clip && findBone(model, 'footR');
+  // the ball of the foot is what is actually on the ground in stance; the ankle travels over it, so a gait measured
+  // at the ankle understates the sweep and the controller then plays the clip too slowly for the ground speed
+  const footL = clip && (findBone(model, 'toeL') || findBone(model, 'footL'));
+  const footR = clip && (findBone(model, 'toeR') || findBone(model, 'footR'));
   if (!clip || !footL || !footR) {
     gaitCache.set(clipName, null);
     return null;
