@@ -6,7 +6,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../web/vendor/three.module.js';
-import { deriveCues, RiggedAnimationController, measureAnchor } from '../web/rigged-animation-controller.js';
+import { deriveCues, RiggedAnimationController, measureAnchor, footballClip, FB } from '../web/rigged-animation-controller.js';
 import { POSE } from '../web/rigged-player.js';
 
 const HZ = 30;
@@ -281,4 +281,48 @@ test('a latched throw code hands the body to locomotion once the ball is gone', 
   // the recording keeps saying THROW, and now he is jogging at 4 yd/s
   controller.tick({ time: T0 + 2.2, pose: POSE.THROW, speed: 4 });
   assert.equal(controller.current, 'Running in place', `expected locomotion, got ${controller.current}`);
+});
+
+// ------------------------------------------------------------ authored football clips
+const has = () => true;
+
+test('footballClip: stance depends on position, and a waiting RUN/BACKPEDAL code before the snap is a stance', () => {
+  const pick = (slot, pose, extra = {}) => footballClip({ pose, speed: 0.1, preSnap: true, contact: { role: 0, slot, kind: 'pass' }, hasClip: has, ...extra })?.clipName;
+  assert.equal(pick('LT', POSE.STANCE), FB.STANCE_3PT);
+  assert.equal(pick('LDT', POSE.STANCE), FB.STANCE_3PT);
+  assert.equal(pick('TE', POSE.RUN), FB.STANCE_3PT);
+  assert.equal(pick('QB', POSE.RUN), FB.QB_READY);
+  assert.equal(pick('WR1', POSE.RUN), FB.STANCE_2PT);
+  assert.equal(pick('MLB', POSE.BACKPEDAL), FB.STANCE_2PT);
+  // after the snap the same code is just running; a kickoff never gets a stance
+  assert.equal(footballClip({ pose: POSE.RUN, speed: 0.1, preSnap: false, contact: { role: 0, slot: 'WR1' }, hasClip: has }), null);
+});
+
+test('footballClip: blocks follow play type and position; contact roles pick tackle and carrier clips', () => {
+  const c = (slot, kind, role = 1) => ({ role, slot, kind });
+  assert.equal(footballClip({ pose: POSE.BLOCK, speed: 0.5, contact: c('LG', 'pass'), hasClip: has }).clipName, FB.BLOCK_PASS);
+  assert.equal(footballClip({ pose: POSE.BLOCK, speed: 0.5, contact: c('LG', 'run'), hasClip: has }).clipName, FB.BLOCK_RUN);
+  assert.equal(footballClip({ pose: POSE.BLOCK, speed: 0.5, contact: c('LDT', 'pass'), hasClip: has }).clipName, FB.BLOCK_RUN, 'defenders drive, they do not pass-set');
+  assert.equal(footballClip({ pose: POSE.BLOCK, speed: 4, contact: c('WR1', 'run', 0), hasClip: has }), null, 'sprinting to a block stays on the run gait');
+  assert.equal(footballClip({ pose: POSE.WRAP, speed: 1, contact: c('MLB', 'run', 2), hasClip: has }).clipName, FB.TACKLE);
+  assert.equal(footballClip({ pose: POSE.RUN, speed: 2, contact: c('RB', 'run', 3), hasClip: has }).clipName, FB.CARRY);
+  const fall = footballClip({ pose: POSE.DOWN, speed: 0, contact: c('RB', 'run', 0), hasClip: has });
+  assert.deepEqual(fall, { clipName: FB.FALL, loop: false });
+  // an older GLB without the authored clips falls back to the pose-code path
+  assert.equal(footballClip({ pose: POSE.DOWN, contact: null, hasClip: () => false }), null);
+});
+
+test('deriveCues turns a recorded handoff event into give/take cues on the correct sides', () => {
+  // giver at (50, 26) facing downfield (heading 0): left is -z, so a taker at z = 24 is on his left
+  const roster = [{ id: 'qb' }, { id: 'rb' }];
+  const frames = [];
+  for (let k = 0; k < 60; k++) frames.push([...frame(50, 26, 0, POSE.RUN), ...frame(50, 24, 0, POSE.RUN), 50, 26, 0.3, 0, 0, 0]);
+  const rec = { t0: T0, hz: HZ, roster, frames, events: [{ type: 'handoff', t: T0 + 1.0, from: 'qb', to: 'rb' }] };
+  const cues = deriveCues(rec);
+  const give = cues.get('qb').find((q) => q.kind === 'handoff_give');
+  const take = cues.get('rb').find((q) => q.kind === 'handoff_take');
+  assert.equal(give.side, 'L');
+  assert.equal(take.side, 'R', 'the giver is on the taker right-hand side');
+  assert.equal(give.anchorAt, T0 + 1.0);
+  assert.ok(give.at < give.anchorAt && take.at < take.anchorAt, 'clips start before the ball changes hands');
 });

@@ -50,3 +50,20 @@ Where should the source files live in git?
 1. Run the branch tests on this machine.
 2. Load the rigged player in the viewer and check pose and clip playback.
 3. Add or edit clips on the desktop, then rebuild the GLB.
+
+## Update: football model and clips (2026-11-09, later)
+
+The GLB is now rebuilt from the existing animated GLB with Blender 5.2, no FBX folder needed:
+
+    blender -b --python scripts/build_football_player.py -- --src web/assets/football-player-rigged-animated.glb --out <new.glb> --manifest web/assets/football-player-build.manifest.json
+
+**Run it against the v1 GLB, not the current one.** The build lengthens the arms and bakes the arm fix into the locomotion clips; running it on its own output would do both twice. Keep a copy of the source GLB you build from.
+
+- `scripts/football_rig.py`: pose solver. A pose is where each bone points, in character terms (`cs(forward, left, up)`), with two-bone IK for hands (`ik(pt(...))`) and automatic foot grounding. Do forward kinematics ourselves; reading `pose_bone.matrix` back in background mode returns stale values.
+- `scripts/football_clips.py`: the 12 `FB_*` clips as data. Edit a pose, rerun the build.
+- `scripts/preview_football_clips.py`: renders contact sheets to eyeball poses (`blender -b --python scripts/preview_football_clips.py -- <outdir> [clip ...]`).
+- Runtime: `footballClip()` in `web/rigged-animation-controller.js` picks the clip from slot, play type and contact role (replay aux channel). Handoff clips are timed to the engine's `handoff` event.
+- The runtime arm hack (`relaxArms`) is gone; the arms are fixed in the clips.
+- Engine: `rec.aux` (velocity, contact role and partner), `rec.kindGroup`, and `holdPreSnap` (default on). Before the snap, non-kick players no longer run their assignments; run plays shift about 0.1 yd, passes about 1.6 yd.
+
+Known gaps: no pass-rush or swim move, no get-up after the fall, no QB drop-back clip with the ball held to the chest, no helmet logos, no replacement model. Hands do not rotate to grip (palms are not oriented by the IK).

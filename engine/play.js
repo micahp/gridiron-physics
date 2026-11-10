@@ -1539,6 +1539,7 @@ export function simulatePlay(game, S, ctx = {}) {
   // game its own clock so a long return is not truncated as a technical stop.
   const maxT = S.kindGroup === 'kick' ? 20 : MAX_T;
   let snapped = false;
+  const holdPreSnap = ctx.holdPreSnap !== false;
   while (W.t < maxT) {
     if (!snapped && W.t >= 0) {
       snapped = true;
@@ -1697,6 +1698,10 @@ export function simulatePlay(game, S, ctx = {}) {
     }
     updateTackle();
     W.step(DT, (p) => {
+      // Before the snap nobody may run an assignment: the 0.9 s of recorded pre-snap used to give
+      // every player a free running start (linemen at 4+ m/s in a STANCE pose, blocks landing
+      // before the ball was snapped). Kicks keep their own run-up clock.
+      if (W.t < 0 && holdPreSnap && S.kindGroup !== 'kick') { p.dv = { x: 0, y: 0 }; return; }
       if (S.kindGroup === 'kick' && p.mode !== 'carry' && p.mode !== 'post' && p.mode !== 'pursue' && p.mode !== 'tackle_to') {
         if (kickBrain(p)) return;
       }
@@ -1718,7 +1723,7 @@ export function simulatePlay(game, S, ctx = {}) {
   const b = W.ball;
   const top = W.players.reduce((m, p) => (p.topSpeed > m.v ? { v: p.topSpeed, id: p.id } : m), { v: 0, id: null });
   return {
-    id: S.id, roster, stride: STRIDE, frames, aux, auxStride: AUX.stride, t0: -PRE, hz: REC_HZ, events: W.events,
+    id: S.id, roster, kindGroup: S.kindGroup ?? null, stride: STRIDE, frames, aux, auxStride: AUX.stride, t0: -PRE, hz: REC_HZ, events: W.events,
     end: { x: st.spot ? st.spot.x : b.x / YD, y: st.spot ? st.spot.y : b.y / YD, reason: st.whistle, t: st.deadT },
     expectEndX: st.endX ?? null,
     biggestHit: W.biggestHit, topSpeed: top, throwSpeed: st.throwSpeed ?? null,

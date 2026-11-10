@@ -446,45 +446,6 @@ function twistSpine(bones, angle) {
   }
 }
 
-// The retargeted clips hang the arms straight down against the hips (hands meet
-// at the belt line, which reads as hands clasped behind the back). After the
-// mixer has posed the body, push each upper arm out and forward and bend the
-// elbow, for the clips where the arms are just along for the ride.
-const ARM_SKIP = /catch|pass|throw|hike|kick|tackle|restrain|push|victory|fist|getting|stunned|jump|kneel|block|defender|hold/i;
-const ARM_ABDUCT = 0.30;  // radians away from the body
-const ARM_FLEX = 0.45;    // radians forward
-const ARM_ELBOW = -0.7;    // radians of forearm bend
-const _rootQ = new THREE.Quaternion();
-const _axW = new THREE.Vector3();
-function nudgeBone(bone, root, rotations, key) {
-  if (!bone?.parent) return;
-  const out = (bone.userData[key] ??= { q: new THREE.Quaternion(), set: false });
-  if (out.set && bone.quaternion.equals(out.q)) return; // mixer did not rewrite it (paused)
-  root.getWorldQuaternion(_rootQ);
-  bone.parent.getWorldQuaternion(_pq);
-  _worldDelta.identity();
-  for (const { axis, angle } of rotations) {
-    if (!axis) continue;
-    _axW.copy(axis).applyQuaternion(_rootQ);
-    _axisRotation.setFromAxisAngle(_axW, angle);
-    _worldDelta.premultiply(_axisRotation);
-  }
-  _q.copy(_pq).invert().multiply(_worldDelta).multiply(_pq);
-  bone.quaternion.premultiply(_q);
-  out.q.copy(bone.quaternion);
-  out.set = true;
-}
-function relaxArms(root, bones, clipName, scale = 1) {
-  if (!clipName || ARM_SKIP.test(clipName) || globalThis.__noArmFix) return;
-  const c = globalThis.__armCfg || {};
-  const flex = (c.flex ?? ARM_FLEX) * scale, abd = (c.abd ?? ARM_ABDUCT) * scale, elb = (c.elbow ?? ARM_ELBOW) * scale;
-  nudgeBone(bones.upL, root, [{ axis: AX_SIDE, angle: flex }, { axis: AX_FWD, angle: abd * (c.sL ?? -1) }], 'armFixOut');
-  nudgeBone(bones.upR, root, [{ axis: AX_SIDE, angle: flex }, { axis: AX_FWD, angle: abd * (c.sR ?? 1) }], 'armFixOut');
-  nudgeBone(bones.foreL, root, [{ axis: u_hingeAxis(root, 'foreL'), angle: elb }], 'armFixOut');
-  nudgeBone(bones.foreR, root, [{ axis: u_hingeAxis(root, 'foreR'), angle: elb }], 'armFixOut');
-}
-const u_hingeAxis = (root, key) => root.userData.hinge[key];
-
 // Compose world-space deltas first, then express the result relative to the bind
 // pose. A later shoulder axis must not replace an earlier flexion rotation.
 const _q = new THREE.Quaternion();
@@ -523,8 +484,7 @@ export function animateRigged(root, pose, speed, dt, carrying, playbackTime = nu
       // null is a real value here: it means "this play has no anchored clips"
       if (controller.cuesRaw !== (cues ?? null)) controller.setCues(cues);
       const time = playbackTime ?? (u.animTime = (u.animTime ?? 0) + dt);
-      if (controller.tick({ time, pose, speed, carrying, travel })) {
-        relaxArms(root, b, controller.clipName);
+      if (controller.tick({ time, pose, speed, carrying, travel, contact })) {
         const offset = u.travelYaw?.offset ?? 0;
         twistSpine(b, Math.max(-MAX_TWIST, Math.min(MAX_TWIST, offset)));
         return;

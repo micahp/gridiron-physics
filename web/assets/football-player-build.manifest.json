@@ -1,0 +1,118 @@
+{
+  "source": "animated-v1-backup.glb",
+  "output": "animated-v2.glb",
+  "arm_length_scale": 1.3,
+  "stock_clips": [
+    "Backpedal Right Turn",
+    "Breathing Idle",
+    "Change Direction",
+    "Defender 1",
+    "Defender 2",
+    "Fist Pump",
+    "Football Catch 1",
+    "Football Catch 2",
+    "Football Hike",
+    "Football Stance",
+    "Getting Up",
+    "Goalie Throw",
+    "Goalkeeper Catch",
+    "Goalkeeper Catch 2",
+    "Goalkeeper Drop Kick",
+    "Goalkeeper Overhand Throw",
+    "Idle",
+    "Idle (1)",
+    "Idle (2)",
+    "Idle To Sprint",
+    "Jogging In Place",
+    "Jump",
+    "Kneel",
+    "Push Start",
+    "Push Stop",
+    "Pushing Action Pose",
+    "Pushing In Place",
+    "Quarterback Pass",
+    "Receiver Catch",
+    "Restrain",
+    "Run Look Back",
+    "Running Backward in place",
+    "Running Jump",
+    "Running To Tackle",
+    "Running To Turn",
+    "Running While Holding Something",
+    "Running in place",
+    "Sprint In Place",
+    "Sprint Turn",
+    "Standing Block Idle Leaning Back",
+    "Standing Idle",
+    "Standing Up",
+    "Start Walking",
+    "Strike Foward Jog",
+    "Stunned (Knocked Down)",
+    "Turn Around And Run",
+    "Victory",
+    "run-in-place",
+    "running-backward-in-place"
+  ],
+  "arms_baked": [
+    "Jogging In Place",
+    "run-in-place",
+    "Running in place",
+    "Sprint In Place",
+    "Running Backward in place",
+    "running-backward-in-place",
+    "Standing Idle",
+    "Idle",
+    "Breathing Idle"
+  ],
+  "authored_clips": {
+    "FB_Stance_3pt": {
+      "loop": true,
+      "duration": 1.792
+    },
+    "FB_Stance_2pt": {
+      "loop": true,
+      "duration": 1.583
+    },
+    "FB_QB_Ready": {
+      "loop": true,
+      "duration": 2.0
+    },
+    "FB_Block_Pass": {
+      "loop": true,
+      "duration": 1.042
+    },
+    "FB_Block_Run": {
+      "loop": true,
+      "duration": 0.542
+    },
+    "FB_Tackle_Wrap": {
+      "loop": true,
+      "duration": 0.5
+    },
+    "FB_Carry_Struggle": {
+      "loop": true,
+      "duration": 0.458
+    },
+    "FB_Tackled_Fall": {
+      "loop": false,
+      "duration": 1.083
+    },
+    "FB_Handoff_Give_L": {
+      "loop": false,
+      "duration": 0.833
+    },
+    "FB_Handoff_Take_L": {
+      "loop": false,
+      "duration": 0.917
+    },
+    "FB_Handoff_Give_R": {
+      "loop": false,
+      "duration": 0.833
+    },
+    "FB_Handoff_Take_R": {
+      "loop": false,
+      "duration": 0.917
+    }
+  },
+  "clip_count": 61
+}

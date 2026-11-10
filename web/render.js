@@ -705,6 +705,8 @@ export class Renderer {
         if ((role === 1 || role === 2) && partner >= 0) yaw = Math.atan2(Z[partner] - Z[i], X[partner] - X[i]);
         ctx = { role, partner, back: sp > 0.6 && vx * Math.cos(yaw) + vy * Math.sin(yaw) < -0.35 * sp };
       }
+      if (ctx) { ctx.slot = rec.roster[i].slot ?? null; ctx.kind = rec.kindGroup ?? null; }
+      else ctx = { role: 0, partner: -1, back: false, slot: rec.roster[i].slot ?? null, kind: rec.kindGroup ?? null };
       o.rotation.y = -yaw;
       if (o.userData.rigged) {
         // direction of travel relative to the heading; hips turn toward it. The recorded

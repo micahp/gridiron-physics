@@ -57,6 +57,49 @@ const ANCHORED = new Map([
   ['Receiver Catch', { bone: 'handR', mode: 'reach' }],
 ]);
 
+// ------------------------------------------------------------ football clips
+//
+// Authored in Blender for this rig (scripts/football_clips.py), keyed on what the replay
+// actually says about a player: his position, the play type and his contact with another body
+// (replay aux channel). A pose code alone cannot tell a lineman's stance from a receiver's.
+const HAND_DOWN = /^(LT|LG|C|RG|RT|TE\d*|LEDGE|REDGE|LDT|RDT|NT|DT\d*|DE\d*)$/;
+const OFFENSIVE_LINE = /^(LT|LG|C|RG|RT|TE\d*)$/;
+export const FB = Object.freeze({
+  STANCE_3PT: 'FB_Stance_3pt', STANCE_2PT: 'FB_Stance_2pt', QB_READY: 'FB_QB_Ready',
+  BLOCK_PASS: 'FB_Block_Pass', BLOCK_RUN: 'FB_Block_Run', TACKLE: 'FB_Tackle_Wrap',
+  CARRY: 'FB_Carry_Struggle', FALL: 'FB_Tackled_Fall',
+});
+// seconds into each handoff clip at which the ball changes hands
+const HANDOFF_ANCHOR = Object.freeze({ give: 0.55, take: 0.6 });
+const ROLE = Object.freeze({ NONE: 0, ENGAGED: 1, TACKLER: 2, WRAPPED: 3 });
+
+/**
+ * Which authored football clip, if any, should own this player right now.
+ * Returns { clipName, loop } or null to leave the choice to the pose code / locomotion.
+ */
+export function footballClip({ pose, speed = 0, contact = null, preSnap = false, hasClip = () => true }) {
+  const ok = (clipName, loop) => (hasClip(clipName) ? { clipName, loop } : null);
+  const role = contact?.role ?? ROLE.NONE;
+  const slot = contact?.slot ?? null;
+  const pass = contact?.kind === 'pass';
+  if (pose === POSE.DOWN) return ok(FB.FALL, false);
+  if (pose === POSE.WRAP || role === ROLE.TACKLER) return ok(FB.TACKLE, true);
+  if (role === ROLE.WRAPPED) return ok(FB.CARRY, true);
+  if (role === ROLE.ENGAGED || (pose === POSE.BLOCK && speed < 1.6)) {
+    // an offensive lineman in pass protection sets; everyone else drives
+    const setting = pass && OFFENSIVE_LINE.test(slot || '') && speed < 1.6;
+    return ok(setting ? FB.BLOCK_PASS : FB.BLOCK_RUN, true);
+  }
+  // Before the snap the engine marks only the linemen STANCE; backs, receivers, the QB and the
+  // secondary sit at ~0 m/s with a RUN or BACKPEDAL code. Standing still before the snap IS a stance.
+  const waiting = pose === POSE.STANCE || (preSnap && (pose === POSE.RUN || pose === POSE.BACKPEDAL));
+  if (waiting && speed < 0.6) {
+    if (slot === 'QB') return ok(FB.QB_READY, true);
+    return ok(HAND_DOWN.test(slot || '') ? FB.STANCE_3PT : FB.STANCE_2PT, true);
+  }
+  return null;
+}
+
 const FADE_IN = 0.14;        // seconds, crossfade into any new clip
 const FADE_OUT = 0.18;       // seconds, crossfade back to locomotion
 const MIN_POSE_HOLD = 0.08;  // seconds a pose must persist before it interrupts
@@ -207,6 +250,23 @@ export function deriveCues(rec, { hz = rec?.hz || 30 } = {}) {
     if (!cues.has(id)) cues.set(id, []);
     cues.get(id).push(cue);
   };
+
+  // 0. handoffs: a recorded event naming both players. The giver's hands reach the taker's belly at
+  // the anchor frame of the clip, so the clip starts that long before the event.
+  const slotOf = new Map(rec.roster.map((r, i) => [r.id, i]));
+  for (const e of rec.events || []) {
+    if (e?.type !== 'handoff' || !e.from || !e.to) continue;
+    const k = index(e.t), gi = slotOf.get(e.from), ti = slotOf.get(e.to);
+    if (gi === undefined || ti === undefined) continue;
+    const f = rec.frames[k];
+    // which side of the giver the taker is on, and the reverse (field heading h: left = (sin h, -cos h))
+    const sideOf = (a, b) => {
+      const h = f[a * 6 + 2];
+      return ((f[b * 6] - f[a * 6]) * Math.sin(h) - (f[b * 6 + 1] - f[a * 6 + 1]) * Math.cos(h)) > 0 ? 'L' : 'R';
+    };
+    push(e.from, { kind: 'handoff_give', side: sideOf(gi, ti), at: e.t - HANDOFF_ANCHOR.give, anchorAt: e.t, source: 'event' });
+    push(e.to, { kind: 'handoff_take', side: sideOf(ti, gi), at: e.t - HANDOFF_ANCHOR.take, anchorAt: e.t, source: 'event' });
+  }
 
   // 1. recorded events: exact player and exact time
   for (const e of rec.events || []) {
@@ -440,7 +500,7 @@ export class RiggedAnimationController {
    * Advance from playback time, not frame time: 0 while paused, 2x at 2x.
    * Returns true when a clip owns the body (so the caller must not also pose it).
    */
-  tick({ time, pose, speed = 0, carrying = false, travel = null }) {
+  tick({ time, pose, speed = 0, carrying = false, travel = null, contact = null }) {
     const dt = this.time === null ? 0 : clamp(time - this.time, 0, MAX_STEP);
     this.time = time;
     if (!this.animation?.mixer) return false;
@@ -451,8 +511,13 @@ export class RiggedAnimationController {
     // has gone. Playing the clip forever is what made the quarterbacks look
     // possessed; once the follow-through is over the body belongs to locomotion.
     const anchoredOver = this.lastAnchorAt !== null && time > this.lastAnchorAt + FOLLOW_THROUGH;
+    // authored football clips own the body where the replay says what the player is doing (stance,
+    // block, tackle, tackled); otherwise locomotion picks a gait from his real speed
+    const football = footballClip({ pose, speed, contact, preSnap: time < 0 && contact?.kind !== 'kick', hasClip: (n) => this.clips.has(n) });
     let loco = null;
-    if ((anchoredOver && ANCHORED.has(selection?.clipName)) || this.wantsLocomotion(pose, speed)) {
+    if (football) {
+      selection = { clipName: football.clipName, loop: football.loop };
+    } else if ((anchoredOver && ANCHORED.has(selection?.clipName)) || this.wantsLocomotion(pose, speed)) {
       loco = this.pickLocomotion({ speed, pose, carrying, travel, time });
       if (loco) selection = { clipName: loco.clipName, loop: true };
     }
@@ -476,8 +541,7 @@ export class RiggedAnimationController {
     if (clipName && clipName !== this.clipName && canSwitch) {
       const assertedLoop = LOOPING.get(pose) ?? (getRiggedAnimationSelection(pose)?.loop === true);
       // locomotion clips are cycles whatever pose code asked for them
-      // locomotion clips are cycles whatever pose code asked for them
-      const loop = !!loco || assertedLoop || LOCO_CLIPS.has(clipName);
+      const loop = football ? football.loop : (!!loco || assertedLoop || LOCO_CLIPS.has(clipName));
       // Anchored one-shots are started by honourCues with a seek, not here.
       if (!ANCHORED.has(clipName)) this.play(clipName, { loop, priority, time });
     }
@@ -502,14 +566,19 @@ export class RiggedAnimationController {
       if (this.scheduled.has(key)) continue;
       if (time < cue.at) continue;
       this.scheduled.add(key);
-      const selection = cue.kind === 'throw'
+      const handoff = cue.kind === 'handoff_give' || cue.kind === 'handoff_take';
+      const selection = handoff ? null : cue.kind === 'throw'
         ? getRiggedAnimationSelection(POSE.THROW)
         : getRiggedAnimationSelection(POSE.CATCH);
-      const clipName = selection?.clipName;
+      const clipName = handoff
+        ? `FB_Handoff_${cue.kind === 'handoff_give' ? 'Give' : 'Take'}_${cue.side}`
+        : selection?.clipName;
       const clip = clipName && this.clips.get(clipName);
       if (!clip) continue;
       const spec = ANCHORED.get(clipName);
-      const anchor = spec ? measureAnchor(this.clips, clipName, spec, this.root) : 0;
+      const anchor = handoff
+        ? HANDOFF_ANCHOR[cue.kind === 'handoff_give' ? 'give' : 'take'] / clip.duration
+        : spec ? measureAnchor(this.clips, clipName, spec, this.root) : 0;
       // start the clip early enough that its anchor frame lands on the recorded
       // event; if we are already late, seek into it instead of restarting
       const anchorTime = anchor * clip.duration;      // where the release/reach sits in the clip
@@ -523,7 +592,7 @@ export class RiggedAnimationController {
       this.lastAnchorAt = cue.anchorAt;
       this.play(clipName, {
         loop: false,
-        priority: cue.kind === 'throw' ? POSE_PRIORITY[POSE.THROW] : POSE_PRIORITY[POSE.CATCH],
+        priority: handoff || cue.kind === 'throw' ? POSE_PRIORITY[POSE.THROW] : POSE_PRIORITY[POSE.CATCH],
         time,
         offset,
         lockUntil: cue.anchorAt + FOLLOW_THROUGH,
