@@ -96,9 +96,12 @@ export function splitUniformGeometry(geometry, threshold = 0.9) {
 // "#21" on the front and back. Instead of throwing it away and colouring by height,
 // repaint it per team: dark pixels take the jersey or pants colour (keeping the
 // fabric shading), white pixels take the trim colour, and the baked number is
-// covered (a per-player decal supplies the real one). Cached per kit.
+// covered and each player's real number is painted into the cloth itself, front and back, so it follows the
+// jersey exactly (no floating decal). The team repaint is cached per kit; the number pass per team + number.
 const ATLAS_PANTS = (x, y) => (x < 600 && y > 240) || (x < 260 && y < 250);
-const ATLAS_NUMBER_BOXES = [[668, 380, 890, 545], [685, 695, 915, 860]]; // baked "21", front and back (1024 atlas)
+const ATLAS_NUMBER_BOXES = [[668, 380, 890, 545], [685, 740, 915, 895]]; // baked "21", front and back (1024 atlas)
+// where the real number is painted: centre of the baked "21" on the front and on the back (1024 atlas)
+const ATLAS_NUMBER_AT = [[775, 462], [795, 818]];
 const atlasCache = new Map();
 const smooth = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 
@@ -148,10 +151,14 @@ export function recolorKitAtlas(data, size, kit) {
   return data;
 }
 
-function kitAtlasTexture(sourceMap, kit) {
-  if (typeof document === 'undefined' || !sourceMap?.image) return null;
+const baseCache = new Map();    // kit key -> repainted 1024 atlas canvas (no number)
+const numberCache = new Map();  // kit key + number -> texture, oldest first
+const NUMBER_TEX_SIZE = 1024;   // per-player atlas: full-res so the number stays sharp up close
+const MAX_NUMBER_TEX = 32;      // ~170 MB of GPU memory at most; a miss costs one drawImage plus the text
+
+function kitBaseCanvas(sourceMap, kit) {
   const key = kitAtlasKey(kit);
-  if (atlasCache.has(key)) return atlasCache.get(key);
+  if (baseCache.has(key)) return baseCache.get(key);
   const img = sourceMap.image;
   const size = Math.min(1024, img.width || 1024);
   const canvas = document.createElement('canvas');
@@ -161,12 +168,56 @@ function kitAtlasTexture(sourceMap, kit) {
   const px = g.getImageData(0, 0, size, size);
   recolorKitAtlas(px.data, size, kit);
   g.putImageData(px, 0, 0);
+  baseCache.set(key, canvas);
+  return canvas;
+}
+
+/** Paint a jersey number onto the front and back panels of an atlas drawn at `size` px. */
+export function paintJerseyNumber(g, size, number, kit) {
+  const text = String(number ?? '').trim();
+  if (!text) return;
+  const k = size / 1024;
+  g.save();
+  g.font = `900 ${text.length > 2 ? 120 : 165}px "Saira Condensed", "Arial Narrow", Arial, sans-serif`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.lineJoin = 'round';
+  g.strokeStyle = kit.trim;
+  g.fillStyle = kit.number;
+  g.scale(k, k);
+  g.lineWidth = 8;
+  for (const [cx, cy] of ATLAS_NUMBER_AT) {
+    g.strokeText(text, cx, cy + 6, 210);
+    g.fillText(text, cx, cy + 6, 210);
+  }
+  g.restore();
+}
+
+function kitAtlasTexture(sourceMap, kit, number) {
+  if (typeof document === 'undefined' || !sourceMap?.image) return null;
+  const key = `${kitAtlasKey(kit)}#${String(number ?? '').trim()}`;
+  if (numberCache.has(key)) {
+    const tex = numberCache.get(key);
+    numberCache.delete(key); numberCache.set(key, tex); // most recently used goes last
+    return tex;
+  }
+  const base = kitBaseCanvas(sourceMap, kit);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = NUMBER_TEX_SIZE;
+  const g = canvas.getContext('2d');
+  g.drawImage(base, 0, 0, NUMBER_TEX_SIZE, NUMBER_TEX_SIZE);
+  paintJerseyNumber(g, NUMBER_TEX_SIZE, number, kit);
   const tex = new THREE.CanvasTexture(canvas);
   tex.flipY = false; // glTF UV convention
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  tex.userData.sharedKitAtlas = true; // shared across players: never disposed per player
-  atlasCache.set(key, tex);
+  tex.anisotropy = 8;
+  tex.userData.sharedKitAtlas = true; // cached and shared: never disposed per player
+  numberCache.set(key, tex);
+  while (numberCache.size > MAX_NUMBER_TEX) {
+    const [oldKey, old] = numberCache.entries().next().value;
+    numberCache.delete(oldKey);
+    old.dispose();
+  }
   return tex;
 }
 
@@ -191,7 +242,7 @@ function helmetMaterial(source, kit) {
   return material;
 }
 
-function applyRiggedKit(clone, kit) {
+function applyRiggedKit(clone, kit, info) {
   if (!kit) return;
   clone.traverse((object) => {
     if (!object.isMesh || !object.material) return;
@@ -199,7 +250,7 @@ function applyRiggedKit(clone, kit) {
     const uniformIndex = sources.findIndex((material) => String(material.name || '').toUpperCase() === 'ROUPA_MAT');
     if (uniformIndex >= 0) {
       if (sources.length !== 1) throw new Error('Expected the apparel primitive to have its own material group');
-      const atlas = kitAtlasTexture(sources[uniformIndex].map, kit);
+      const atlas = kitAtlasTexture(sources[uniformIndex].map, kit, info?.jersey);
       if (atlas) {
         const material = sources[uniformIndex].clone();
         material.map = atlas;
@@ -221,53 +272,6 @@ function applyRiggedKit(clone, kit) {
       : source; // skin, face mask, straps, gloves, shoes and other gear stay intact
     object.material = Array.isArray(object.material) ? object.material.map(apply) : apply(object.material);
   });
-}
-
-function numberDecal(info, kit) {
-  if (typeof document === 'undefined') return null;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 256;
-  const context = canvas.getContext('2d');
-  const number = String(info.jersey ?? '').trim();
-  if (!number) return null;
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.font = '900 188px Arial, sans-serif';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-  context.lineJoin = 'round';
-  context.lineWidth = 20;
-  context.strokeStyle = kit.trim;
-  context.strokeText(number, 128, 132, 236);
-  context.fillStyle = kit.number;
-  context.fillText(number, 128, 132, 236);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
-  texture.userData.riggedPlayerOwned = true;
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, alphaTest: 0.04, side: THREE.DoubleSide, depthWrite: false, toneMapped: false });
-  material.userData.riggedPlayerOwned = true;
-  return material;
-}
-
-function attachNumberDecals(clone, bones, info, kit) {
-  const material = numberDecal(info, kit);
-  const torso = bones.chest || bones.hip;
-  if (!material || !torso) return;
-  // chest height (the body spans y 0.09-1.83); the back number is larger, as on a real jersey
-  const front = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.18), material);
-  front.position.set(0, 1.36, 0.2);
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.27), material);
-  front.geometry.userData.riggedPlayerOwned = true;
-  back.geometry.userData.riggedPlayerOwned = true;
-  front.userData.riggedNumberDecal = back.userData.riggedNumberDecal = true;
-  back.position.set(0, 1.36, -0.27);
-  back.rotation.y = Math.PI;
-  front.renderOrder = back.renderOrder = 2;
-  front.castShadow = back.castShadow = false;
-  clone.add(front, back);
-  clone.updateMatrixWorld(true);
-  torso.attach(front);
-  torso.attach(back);
 }
 
 let loaderPromise = null;
@@ -303,7 +307,7 @@ export function buildRiggedPlayer(gltf, info, kit) {
   root.add(body);
 
   const clone = cloneSkeleton(gltf.scene);
-  applyRiggedKit(clone, kit);
+  applyRiggedKit(clone, kit, info);
   const clips = new Map((gltf.animations || []).map((clip) => [clip.name, clip]));
   const mixer = clips.size ? new THREE.AnimationMixer(clone) : null;
   const bones = {};
@@ -361,7 +365,6 @@ export function buildRiggedPlayer(gltf, info, kit) {
     const b = bones[name] || bones[name.replace(/\./g, '')];
     if (b) bones[key] = b;
   }
-  attachNumberDecals(clone, bones, info, kit);
 
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.85, 1.05, 32),

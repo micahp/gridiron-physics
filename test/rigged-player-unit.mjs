@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../web/vendor/three.module.js';
-import { stablePhase, composeBindRelativeQuaternion, splitUniformGeometry, recolorKitAtlas, kitAtlasKey } from '../web/rigged-player.js';
+import { stablePhase, composeBindRelativeQuaternion, splitUniformGeometry, recolorKitAtlas, kitAtlasKey, paintJerseyNumber } from '../web/rigged-player.js';
 
 function quaternionClose(actual, expected, epsilon = 1e-8) {
   assert.ok(actual.angleTo(expected) < epsilon, `quaternions differ by ${actual.angleTo(expected)} radians`);
@@ -71,4 +71,23 @@ test('kitAtlasKey differs per team colours and is stable', () => {
   const a = { jersey: '#111', pants: '#222', trim: '#333', number: '#fff' };
   assert.equal(kitAtlasKey(a), kitAtlasKey({ ...a }));
   assert.notEqual(kitAtlasKey(a), kitAtlasKey({ ...a, jersey: '#112' }));
+});
+
+test('paintJerseyNumber writes the number once on the front panel and once on the back, scaled to the atlas size', () => {
+  const calls = [];
+  const g = {
+    save() {}, restore() {}, scale(x, y) { calls.push(['scale', x, y]); },
+    strokeText(t, x, y) { calls.push(['stroke', t, x, y]); }, fillText(t, x, y) { calls.push(['fill', t, x, y]); },
+  };
+  paintJerseyNumber(g, 512, '66', { trim: '#111', number: '#fff' });
+  const fills = calls.filter((c) => c[0] === 'fill');
+  assert.equal(fills.length, 2, 'front and back');
+  assert.ok(fills.every((c) => c[1] === '66'));
+  assert.deepEqual(calls.find((c) => c[0] === 'scale'), ['scale', 0.5, 0.5], 'coordinates are in 1024-atlas space and scaled to the canvas');
+  assert.ok(fills[0][2] < fills[1][2] + 100 && fills[0][3] < fills[1][3], 'front panel is above the back panel in the atlas');
+  // a blank number paints nothing (a player with no jersey number must not show "undefined")
+  calls.length = 0;
+  paintJerseyNumber(g, 512, undefined, { trim: '#111', number: '#fff' });
+  paintJerseyNumber(g, 512, '  ', { trim: '#111', number: '#fff' });
+  assert.equal(calls.length, 0);
 });
