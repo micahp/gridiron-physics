@@ -1251,9 +1251,14 @@ export function simulatePlay(game, S, ctx = {}) {
     const ku = (units[kickTeam] || []).filter((id) => P[id]);
     const du = (units[retTeam] || []).filter((id) => P[id]);
     const kickSpotF = -7;
-    const holder = spawn(S.holder, kickTeam, 'H', at(kickSpotF - 0.3, 0.6));
-    const kicker = spawn(S.kicker, kickTeam, 'K', at(kickSpotF - 2.6, 1.9));
+    // The holder kneels just behind and to one side of the ball spot; the kicker lines up well back on the
+    // OTHER side and comes at the ball on an angle, so his run never passes through the holder (he used to
+    // start directly behind him and kick through him).
+    const holder = spawn(S.holder, kickTeam, 'H', at(kickSpotF - 0.3, -0.65));
+    const kicker = spawn(S.kicker, kickTeam, 'K', at(kickSpotF - 2.9, 2.1));
     const snapper = spawn(S.snapper, kickTeam, 'LS', at(-0.5, 0));
+    // the kicker's plant foot ends up a hand's width from the holder: no body contact between them
+    if (kicker && holder) { kicker.ghosts = new Set([holder]); holder.ghosts = new Set([kicker]); }
     const line = ku.filter((id) => !byId.has(id));
     const ls = [1.4, -1.4, 2.8, -2.8, 4.2, -4.2, 5.4, -5.4];
     line.slice(0, 8).forEach((id, i) => spawn(id, kickTeam, 'FL' + i, at(-0.7, ls[i])));
@@ -1290,6 +1295,11 @@ export function simulatePlay(game, S, ctx = {}) {
       case 'kick_approach': {
         const ball = { x: W.ball.x, y: W.ball.y };
         p.dv = seek(p, ball, 0.8, 50);
+        // a kicker gathers himself for the plant: ease to ~3.5 m/s over the last few yards instead of
+        // hitting the ball at a full sprint
+        const dl = Math.hypot(p.dv.x, p.dv.y), dBall = Math.sqrt(d2(p.p, ball));
+        const cap = Math.min(1, 0.4 + dBall / (6 * YD));
+        if (dl > 0) { const lim = Math.max(3.5, p.vmax * cap); if (dl > lim) p.dv = { x: (p.dv.x * lim) / dl, y: (p.dv.y * lim) / dl }; }
         if (d2(p.p, ball) < 0.6 && !st.kicked) {
           st.kicked = true;
           p.pose = POSE.KICK;
@@ -1315,6 +1325,8 @@ export function simulatePlay(game, S, ctx = {}) {
         return true;
       }
       case 'kick_cover': {
+        // the kicker finishes his kick (about 0.8 s of follow-through) before he runs downfield
+        if (p === st.kicker && p.poseT != null && W.t - p.poseT < 0.8) { p.dv = { x: dir * 2.4, y: 0 }; return true; }
         if (p.engaged) { maybeShed(p, 1.5); const c = st.carrier; if (c) { const u = unit(c.p.x - p.p.x, c.p.y - p.p.y); p.dv = { x: u.x * 2, y: u.y * 2 }; } return true; }
         const c = st.carrier;
         if (c) { p.mode = 'pursue'; return false; }

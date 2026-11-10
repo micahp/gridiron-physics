@@ -205,9 +205,76 @@ def handoff_take():
     return {'loop': False, 'keys': [at(0.0, False), at(0.35, False), at(0.7, True), at(0.9, True)]}
 
 
+# --------------------------------------------------------------------- kicking
+KICK_CONTACT = 0.42   # seconds into FB_Kick at which the foot meets the ball
+PUNT_CONTACT = 0.40   # seconds into FB_Punt at which the foot meets the ball
+
+
+def kick():
+    # Right-footed placekick, 1.25 s: last stride, plant the left foot, cock the right leg back, swing through
+    # at KICK_CONTACT, high follow-through leaning back, step down, back to a jog. The arms stay out for balance.
+    run_a = pose(torso(10, head=4),
+                 legs(cs(f=0.5, l=0.1, u=-0.85), cs(f=-0.4, u=-0.9), cs(f=-0.35, l=-0.1, u=-0.93), cs(f=-0.7, u=-0.7)),
+                 hands_ik(pt(f=0.32, l=0.3, u=1.0), pt(f=-0.15, l=-0.3, u=1.0), pole_out=0.8))
+    plant = pose(torso(2, head=8),
+                 legs(cs(f=0.35, l=0.1, u=-0.93), cs(f=-0.3, u=-0.95), cs(f=-0.6, l=-0.1, u=-0.8), cs(f=-0.95, u=0.3)),
+                 hands_ik(pt(f=0.4, l=0.72, u=1.2), pt(f=-0.1, l=-0.55, u=1.15), pole_out=1.0, pole_back=0.0))
+    contact = pose(torso(-6, head=6),
+                   legs(cs(f=0.3, l=0.1, u=-0.95), cs(f=-0.25, u=-0.97), cs(f=0.85, l=-0.05, u=-0.5), cs(f=0.9, u=-0.4)),
+                   hands_ik(pt(f=0.2, l=0.85, u=1.1), pt(f=-0.25, l=-0.62, u=1.1), pole_out=1.0, pole_back=0.0))
+    follow = pose(torso(-12, head=2),
+                  legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.8, l=-0.05, u=0.45), cs(f=0.3, u=-0.9)),
+                  hands_ik(pt(f=0.1, l=0.9, u=1.15), pt(f=-0.2, l=-0.7, u=1.2), pole_out=1.0, pole_back=0.0))
+    down = pose(torso(6, head=2),
+                legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.3, l=-0.1, u=-0.95), cs(f=-0.2, u=-0.97)),
+                hands_ik(pt(f=0.15, l=0.5, u=1.05), pt(f=0.1, l=-0.5, u=1.05), pole_out=0.9))
+    jog = pose(torso(10, head=4), mirror(drive_legs(False, push=0.5)),
+               hands_ik(pt(f=-0.15, l=0.3, u=1.0), pt(f=0.32, l=-0.3, u=1.0), pole_out=0.8))
+    return {'loop': False, 'keys': [
+        {'t': 0.0, 'spec': run_a}, {'t': 0.2, 'spec': plant, 'hips': (0.0, 0, -0.03)},
+        {'t': KICK_CONTACT, 'spec': contact, 'hips': (-0.05, 0, -0.01)},
+        {'t': 0.7, 'spec': follow, 'hips': (-0.1, 0, 0.0)}, {'t': 0.95, 'spec': down}, {'t': 1.25, 'spec': jog}]}
+
+
+def punt():
+    # Punter, 1.2 s: ball held out in both hands, step and drop it, swing the right leg up to nearly horizontal at
+    # PUNT_CONTACT, high follow-through, recover.
+    hold = pose(torso(6, head=6), legs(cs(f=0.35, l=0.1, u=-0.93), cs(f=-0.3, u=-0.95), cs(f=-0.2, l=-0.1, u=-0.97), cs(f=-0.35, u=-0.93)),
+                hands_ik(pt(f=0.5, l=0.1, u=1.0), pt(f=0.5, l=-0.1, u=1.0), pole_out=0.5, pole_back=0.0))
+    step = pose(torso(4, head=8), legs(cs(f=0.3, l=0.1, u=-0.94), cs(f=-0.25, u=-0.96), cs(f=-0.5, l=-0.1, u=-0.85), cs(f=-0.9, u=-0.2)),
+                hands_ik(pt(f=0.55, l=0.12, u=0.85), pt(f=0.55, l=-0.12, u=0.85), pole_out=0.5, pole_back=0.0))
+    contact = pose(torso(-10, head=4), legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.95, l=-0.05, u=0.2), cs(f=0.9, u=0.35)),
+                   hands_ik(pt(f=0.1, l=0.85, u=1.15), pt(f=-0.15, l=-0.65, u=1.1), pole_out=1.0, pole_back=0.0))
+    follow = pose(torso(-16, head=0), legs(cs(f=0.1, l=0.1, u=-0.99), cs(f=-0.1, u=-0.99), cs(f=0.7, l=-0.05, u=0.7), cs(f=0.6, u=0.4)),
+                  hands_ik(pt(f=0.0, l=0.95, u=1.25), pt(f=-0.2, l=-0.75, u=1.25), pole_out=1.0, pole_back=0.0))
+    recover = pose(torso(6, head=2), legs(cs(f=0.2, l=0.1, u=-0.97), cs(f=-0.2, u=-0.98), cs(f=0.3, l=-0.1, u=-0.95), cs(f=-0.2, u=-0.97)),
+                   hands_ik(pt(f=0.15, l=0.5, u=1.05), pt(f=0.1, l=-0.5, u=1.05), pole_out=0.9))
+    return {'loop': False, 'keys': [
+        {'t': 0.0, 'spec': hold}, {'t': 0.2, 'spec': step, 'hips': (0.0, 0, -0.03)},
+        {'t': PUNT_CONTACT, 'spec': contact, 'hips': (-0.06, 0, -0.01)},
+        {'t': 0.65, 'spec': follow, 'hips': (-0.12, 0, 0.0)}, {'t': 1.2, 'spec': recover}]}
+
+
+def holder():
+    # Field-goal holder: down on the right knee, left foot forward, leaning over the spot, left hand pressing the
+    # ball down in front of him and the right hand steadying it. A small settle so it never reads as frozen.
+    def key(t, press):
+        return {'t': t, 'hips': (0.0, 0, 0), 'ground': False, 'spec': pose(
+            torso(22, head=30),
+            legs(cs(f=0.8, l=0.1, u=-0.6), cs(f=-0.1, u=-1.0), cs(f=0.05, l=-0.12, u=-1.0), cs(f=-1.0, l=0.0, u=-0.05)),
+            {'foot.R': cs(f=-1.0, u=-0.1)},
+            {'ik.L': ik(pt(f=0.62 + press, l=0.04, u=0.16), cs(l=0.8, f=-0.2, u=-0.5)),
+             'ik.R': ik(pt(f=0.50, l=-0.28, u=0.38), cs(l=-0.9, f=-0.3, u=-0.3))},
+        )}
+    return {'loop': True, 'keys': [key(0.0, 0.0), key(1.0, 0.03), key(2.0, 0.0)]}
+
+
 def all_clips():
     clips = {
         'FB_Idle': idle(),
+        'FB_Kick': kick(),
+        'FB_Punt': punt(),
+        'FB_Holder': holder(),
         'FB_Stance_3pt': stance_3pt(),
         'FB_Stance_2pt': stance_2pt(),
         'FB_QB_Ready': qb_ready(),

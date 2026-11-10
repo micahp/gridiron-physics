@@ -69,3 +69,9 @@ The GLB is now rebuilt from the existing animated GLB with Blender 5.2, no FBX f
 Default pose: `FB_Idle` (13th authored clip) replaces the stock Standing Idle, whose clasped hands read as hands behind the back. To audit any clip for hands behind the hips, sample it per frame and test both hand bones' forward offset from the hips (see the scan used in this session: forward offset < 0.02 m for both hands). Remaining offenders are `Idle (1)` (unused), the throw wind-up and the hike, where reaching back is the actual motion.
 
 Known gaps: no pass-rush or swim move, no get-up after the fall, no QB drop-back clip with the ball held to the chest, no helmet logos, no replacement model. Hands do not rotate to grip (palms are not oriented by the IK).
+
+## Update: kicking game (2026-11-09, later)
+
+- `FB_Kick`, `FB_Punt`, `FB_Holder` authored (16 authored clips total). The kick clips are timed to the engine's `kick` event (contact 0.42 s / 0.40 s into the clip); the engine stamps KICK at contact and never clears it, so a latched KICK code is treated as running once `FB_Kick` exists. Before this the kicker stayed on the finished clip's last frame, a straight standing pose, while sliding 30 yards.
+- Engine: the field-goal holder now kneels beside the kick line and the kicker comes in from the other side (he used to start directly behind the holder and run through him); kicker and holder are no-contact "ghosts" (`Player.ghosts`). The kickoff kicker eases to about 3.5 m/s into the ball and finishes his kick (0.8 s) before sprinting into coverage.
+- A missed tackle puts the tackler on the ground in the engine (`broken_tackle`); the kickoff kicker diving at the returner and falling is that, not a bug in the clips.

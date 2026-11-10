@@ -298,6 +298,7 @@ export class World {
       for (let j = i + 1; j < P.length; j++) {
         const b = P[j];
         if (b.down || a.engaged === b) continue;
+        if (a.ghosts?.has(b) || b.ghosts?.has(a)) continue; // e.g. kicker and holder: no contact by design
         const dx = b.p.x - a.p.x, dy = b.p.y - a.p.y;
         const R = a.r + b.r;
         const d2 = dx * dx + dy * dy;

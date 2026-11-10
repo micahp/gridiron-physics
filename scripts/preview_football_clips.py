@@ -19,7 +19,7 @@ for name, clip in C.all_clips().items():
         continue
     files = []
     keys = clip['keys']
-    pick = keys if len(keys) <= 3 else [keys[0], keys[len(keys) // 2], keys[-1]]
+    pick = keys if (len(keys) <= 3 or os.environ.get('FB_ALL')) else [keys[0], keys[len(keys) // 2], keys[-1]]
     for i, k in enumerate(pick):
         base = os.path.join(out, f'{name}-k{i}')
         R.render_pose(arm, k['spec'], k.get('hips', (0, 0, 0)), k.get('ground', True), base, views=('side', 'threeq'), size=(300, 380))

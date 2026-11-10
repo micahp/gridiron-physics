@@ -62,15 +62,17 @@ const ANCHORED = new Map([
 // Authored in Blender for this rig (scripts/football_clips.py), keyed on what the replay
 // actually says about a player: his position, the play type and his contact with another body
 // (replay aux channel). A pose code alone cannot tell a lineman's stance from a receiver's.
-const HAND_DOWN = /^(LT|LG|C|RG|RT|TE\d*|LEDGE|REDGE|LDT|RDT|NT|DT\d*|DE\d*)$/;
-const OFFENSIVE_LINE = /^(LT|LG|C|RG|RT|TE\d*)$/;
+const HAND_DOWN = /^(LT|LG|C|RG|RT|TE\d*|LEDGE|REDGE|LDT|RDT|NT|DT\d*|DE\d*|LS|FL\d+|PL\d+)$/;
+const OFFENSIVE_LINE = /^(LT|LG|C|RG|RT|TE\d*|LS|FL\d+|PL\d+)$/; // includes the field-goal and punt protection units
 export const FB = Object.freeze({
   STANCE_3PT: 'FB_Stance_3pt', STANCE_2PT: 'FB_Stance_2pt', QB_READY: 'FB_QB_Ready',
   BLOCK_PASS: 'FB_Block_Pass', BLOCK_RUN: 'FB_Block_Run', TACKLE: 'FB_Tackle_Wrap',
-  CARRY: 'FB_Carry_Struggle', FALL: 'FB_Tackled_Fall',
+  CARRY: 'FB_Carry_Struggle', FALL: 'FB_Tackled_Fall', KICK: 'FB_Kick', PUNT: 'FB_Punt', HOLDER: 'FB_Holder',
 });
 // seconds into each handoff clip at which the ball changes hands
 const HANDOFF_ANCHOR = Object.freeze({ give: 0.55, take: 0.6 });
+// seconds into FB_Kick / FB_Punt at which the foot meets the ball (scripts/football_clips.py)
+const KICK_ANCHOR = Object.freeze({ kick: 0.42, punt: 0.40 });
 const ROLE = Object.freeze({ NONE: 0, ENGAGED: 1, TACKLER: 2, WRAPPED: 3 });
 
 /**
@@ -83,11 +85,13 @@ export function footballClip({ pose, speed = 0, contact = null, preSnap = false,
   const slot = contact?.slot ?? null;
   const pass = contact?.kind === 'pass';
   if (pose === POSE.DOWN) return ok(FB.FALL, false);
+  // the field-goal holder kneels over the spot (the engine marks him KNEEL, then HOLD once the ball is down)
+  if (slot === 'H' && (pose === POSE.KNEEL || pose === POSE.HOLD)) return ok(FB.HOLDER, true);
   if (pose === POSE.WRAP || role === ROLE.TACKLER) return ok(FB.TACKLE, true);
   if (role === ROLE.WRAPPED) return ok(FB.CARRY, true);
   if (role === ROLE.ENGAGED || (pose === POSE.BLOCK && speed < 1.6)) {
     // an offensive lineman in pass protection sets; everyone else drives
-    const setting = pass && OFFENSIVE_LINE.test(slot || '') && speed < 1.6;
+    const setting = (pass || contact?.kind === 'kick') && OFFENSIVE_LINE.test(slot || '') && speed < 1.6;
     return ok(setting ? FB.BLOCK_PASS : FB.BLOCK_RUN, true);
   }
   // Before the snap the engine marks only the linemen STANCE; backs, receivers, the QB and the
@@ -268,6 +272,15 @@ export function deriveCues(rec, { hz = rec?.hz || 30 } = {}) {
     };
     push(e.from, { kind: 'handoff_give', side: sideOf(gi, ti), at: e.t - HANDOFF_ANCHOR.give, anchorAt: e.t, source: 'event' });
     push(e.to, { kind: 'handoff_take', side: sideOf(ti, gi), at: e.t - HANDOFF_ANCHOR.take, anchorAt: e.t, source: 'event' });
+  }
+
+  // 0b. kicks: the engine stamps KICK at contact and never clears it, so the pose code says nothing about when
+  // the kick happens; the 'kick' event does. The clip starts early enough that the foot meets the ball on it.
+  for (const e of rec.events || []) {
+    if (e?.type !== 'kick' || !e.by) continue;
+    const who = rec.roster.find((r) => r.id === e.by);
+    const punt = who?.slot === 'P';
+    push(e.by, { kind: 'kick', punt, at: e.t - (punt ? KICK_ANCHOR.punt : KICK_ANCHOR.kick), anchorAt: e.t, source: 'event' });
   }
 
   // 1. recorded events: exact player and exact time
@@ -503,7 +516,10 @@ export class RiggedAnimationController {
    * Advance from playback time, not frame time: 0 while paused, 2x at 2x.
    * Returns true when a clip owns the body (so the caller must not also pose it).
    */
-  tick({ time, pose, speed = 0, carrying = false, travel = null, contact = null }) {
+  tick({ time, pose: rawPose, speed = 0, carrying = false, travel = null, contact = null }) {
+    // KICK is stamped at contact and never cleared: with the authored FB_Kick the kick itself is played from the
+    // 'kick' event (honourCues), so afterwards a KICK code must not hold the body on a finished clip
+    const pose = rawPose === POSE.KICK && this.clips.has(FB.KICK) ? POSE.RUN : rawPose;
     const dt = this.time === null ? 0 : clamp(time - this.time, 0, MAX_STEP);
     this.time = time;
     if (!this.animation?.mixer) return false;
@@ -569,17 +585,22 @@ export class RiggedAnimationController {
       if (this.scheduled.has(key)) continue;
       if (time < cue.at) continue;
       this.scheduled.add(key);
+      const kick = cue.kind === 'kick';
       const handoff = cue.kind === 'handoff_give' || cue.kind === 'handoff_take';
-      const selection = handoff ? null : cue.kind === 'throw'
+      const selection = handoff || kick ? null : cue.kind === 'throw'
         ? getRiggedAnimationSelection(POSE.THROW)
         : getRiggedAnimationSelection(POSE.CATCH);
-      const clipName = handoff
-        ? `FB_Handoff_${cue.kind === 'handoff_give' ? 'Give' : 'Take'}_${cue.side}`
-        : selection?.clipName;
+      const clipName = kick
+        ? (cue.punt ? FB.PUNT : FB.KICK)
+        : handoff
+          ? `FB_Handoff_${cue.kind === 'handoff_give' ? 'Give' : 'Take'}_${cue.side}`
+          : selection?.clipName;
       const clip = clipName && this.clips.get(clipName);
       if (!clip) continue;
       const spec = ANCHORED.get(clipName);
-      const anchor = handoff
+      const anchor = kick
+        ? KICK_ANCHOR[cue.punt ? 'punt' : 'kick'] / clip.duration
+        : handoff
         ? HANDOFF_ANCHOR[cue.kind === 'handoff_give' ? 'give' : 'take'] / clip.duration
         : spec ? measureAnchor(this.clips, clipName, spec, this.root) : 0;
       // start the clip early enough that its anchor frame lands on the recorded
@@ -595,10 +616,10 @@ export class RiggedAnimationController {
       this.lastAnchorAt = cue.anchorAt;
       this.play(clipName, {
         loop: false,
-        priority: handoff || cue.kind === 'throw' ? POSE_PRIORITY[POSE.THROW] : POSE_PRIORITY[POSE.CATCH],
+        priority: kick ? POSE_PRIORITY[POSE.KICK] : handoff || cue.kind === 'throw' ? POSE_PRIORITY[POSE.THROW] : POSE_PRIORITY[POSE.CATCH],
         time,
         offset,
-        lockUntil: cue.anchorAt + FOLLOW_THROUGH,
+        lockUntil: kick ? cue.anchorAt + (clip.duration - anchorTime) : cue.anchorAt + FOLLOW_THROUGH, // a kick plays out in full
       });
     }
   }

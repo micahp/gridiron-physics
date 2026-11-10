@@ -339,3 +339,47 @@ test('a standing player defaults to the authored FB_Idle, not the stock clip tha
   old.controller.tick({ time: T0 + 0.2, pose: POSE.RUN, speed: 0.05 });
   assert.equal(old.controller.current, 'Standing Idle');
 });
+
+// ------------------------------------------------------------ kicking game
+test('footballClip: holder kneels over the spot; snapper and protection units get their own stances and sets', () => {
+  assert.equal(footballClip({ pose: POSE.KNEEL, contact: { role: 0, slot: 'H' }, hasClip: has }).clipName, FB.HOLDER);
+  assert.equal(footballClip({ pose: POSE.HOLD, contact: { role: 0, slot: 'H' }, hasClip: has }).clipName, FB.HOLDER);
+  // a QB kneel is not a holder: it falls through to the pose-code clip
+  assert.equal(footballClip({ pose: POSE.KNEEL, contact: { role: 0, slot: 'QB' }, hasClip: has }), null);
+  const pre = (slot, pose) => footballClip({ pose, speed: 0.1, preSnap: true, contact: { role: 0, slot, kind: 'kick' }, hasClip: has })?.clipName;
+  assert.equal(pre('LS', POSE.STANCE), FB.STANCE_3PT);
+  assert.equal(pre('FL3', POSE.STANCE), FB.STANCE_3PT);
+  const block = (slot) => footballClip({ pose: POSE.BLOCK, speed: 0.5, contact: { role: 1, slot, kind: 'kick' }, hasClip: has }).clipName;
+  assert.equal(block('FL2'), FB.BLOCK_PASS, 'field-goal protection sets, it does not drive');
+  assert.equal(block('PL4'), FB.BLOCK_PASS);
+});
+
+test('deriveCues turns a recorded kick into a cue that starts early enough for contact, punter on the punt clip', () => {
+  const roster = [{ id: 'k', slot: 'K' }, { id: 'p', slot: 'P' }];
+  const frames = [];
+  for (let k = 0; k < 90; k++) frames.push([...frame(40, 26, 3, POSE.RUN), ...frame(30, 26, 0, POSE.RUN), 40, 26, 0.2, 0, 0, 0]);
+  const rec = { t0: T0, hz: HZ, roster, frames, events: [{ type: 'kick', t: T0 + 1.5, by: 'k' }, { type: 'kick', t: T0 + 2.0, by: 'p' }] };
+  const cues = deriveCues(rec);
+  const k = cues.get('k').find((c) => c.kind === 'kick');
+  const p = cues.get('p').find((c) => c.kind === 'kick');
+  assert.equal(k.punt, false); assert.equal(p.punt, true);
+  assert.ok(Math.abs(k.at - (T0 + 1.5 - 0.42)) < 1e-9 && k.anchorAt === T0 + 1.5);
+  assert.ok(Math.abs(p.at - (T0 + 2.0 - 0.40)) < 1e-9);
+});
+
+test('a KICK code latched after contact does not hold the kicker on a finished clip while he runs', () => {
+  const { controller, clips } = makeLocoController();
+  clips.set('FB_Kick', makeClip('FB_Kick', 1.25));
+  const rec = { t0: T0, hz: HZ, roster: [{ id: 'k', slot: 'K' }], frames: [], events: [{ type: 'kick', t: T0 + 1.0, by: 'k' }] };
+  controller.setCues(deriveCues({ ...rec, frames: [[...frame(40, 26, 3, POSE.RUN), 40, 26, 0.2, 0, 0, 0]] }).get('k'));
+  let sawKick = false;
+  for (let i = 0; i < 80; i++) {
+    const time = T0 + i * 0.05;
+    controller.tick({ time, pose: time >= T0 + 1.0 ? POSE.KICK : POSE.RUN, speed: 6 });
+    if (controller.current === 'FB_Kick') sawKick = true;
+  }
+  assert.ok(sawKick, 'the kick plays around the kick event');
+  // 3 s after contact the engine still says KICK and he is sprinting: he must be running, not frozen on the kick
+  assert.notEqual(controller.current, 'FB_Kick');
+  assert.ok(['Sprint In Place', 'run-in-place', 'Running in place'].includes(controller.current), controller.current);
+});
