@@ -34,7 +34,13 @@ assert.equal(a.diagnostics.reconciliation.ok, true, a.diagnostics.reconciliation
 assert.equal(a.trajectory.stride, 22 * 6 + 6);
 assert.equal(a.trajectory.hz, 30);
 assert.equal(a.trajectory.roster.length, 22);
-assert.ok(Math.abs(a.result.final_ball_spot.x_yards - (a.situation.yardline_100 + a.result.yards_gained * a.situation.offense_direction)) < 1e-2);
+// The line of scrimmage is absolute x: yardline_100 counts toward the goal the offense attacks.
+for (const direction of [1, -1]) {
+  const play = simulateAutonomousPlay({ ...call, situation: { ...call.situation, offense_direction: direction } });
+  const lineX = direction === 1 ? 100 - play.situation.yardline_100 : play.situation.yardline_100;
+  assert.ok(Math.abs(play.result.final_ball_spot.x_yards - (lineX + play.result.yards_gained * direction)) < 1e-2,
+    `direction ${direction}: final spot disagrees with the line of scrimmage`);
+}
 
 // The invariant: an unrelated historical outcome cannot change the execution.
 const withHistory = { ...call, historical_record: { game_id: '2024-09-NE-CHI', yards: 99, endX: 99 } };
@@ -65,6 +71,21 @@ if (pass.status === 'complete') {
     `unexpected pass terminal ${pass.result.event}`);
   assert.equal(pass.diagnostics.reconciliation.ok, true, pass.diagnostics.reconciliation.problems.join('; '));
 }
+
+// Reconciliation must reject a record that no longer matches its own frames and events.
+const noWhistle = structuredClone(a);
+noWhistle.events = noWhistle.events.filter((e) => e.type !== 'whistle');
+assert.equal(reconcileResult(noWhistle).ok, false, 'a missing whistle is caught');
+
+const shortFrame = structuredClone(a);
+shortFrame.trajectory.frames[0] = shortFrame.trajectory.frames[0].slice(0, -1);
+assert.equal(reconcileResult(shortFrame).ok, false, 'a frame with the wrong stride is caught');
+
+const twoHolders = structuredClone(a);
+const midFrame = twoHolders.trajectory.frames[Math.floor(twoHolders.trajectory.frames.length / 2)];
+midFrame[5] = 1;
+midFrame[11] = 1;
+assert.equal(reconcileResult(twoHolders).ok, false, 'two ball holders in one frame are caught');
 
 console.log(`autonomous results ok: ${a.result.event} ${a.result.yards_gained} yd, `
   + `${a.participants.tacklers.length} tackler(s), ${variants.size} distinct results over 6 seeds, pass=${pass.result?.event}`);
