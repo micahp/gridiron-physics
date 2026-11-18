@@ -131,9 +131,30 @@ for (const s of [1, -1]) {
     sdf: (p) => sdCone(p, [0, 0, 0], [0, -0.245, 0], 0.056, 0.043),
     mat: (p) => (p[1] < -0.18 ? P.TAPE : P.SKIN),
   });
+  // gloved hand: palm with a cuff, four two-jointed fingers and a thumb
+  const fi = s > 0 ? 'fiR' : 'fiL', fi2 = s > 0 ? 'fi2R' : 'fi2L', th = s > 0 ? 'thR' : 'thL';
   part({
-    joint: wr, bounds: [[-0.07, -0.16, -0.05], [0.07, 0.02, 0.05]],
-    sdf: (p) => sdRoundBox(p, [0.005, -0.065, 0], [0.04, 0.068, 0.026], 0.022),
+    joint: wr, hand: true, bounds: [[-0.07, -0.12, -0.05], [0.07, 0.03, 0.05]],
+    sdf: (p) => Math.min(
+      sdRoundBox(p, [0.002, -0.055, 0], [0.044, 0.05, 0.021], 0.017),
+      sdCone(p, [0, 0.012, 0], [0, -0.02, 0], 0.042, 0.04),             // cuff
+    ),
+    mat: (p) => (p[1] > -0.012 ? P.TAPE : P.GLOVE),
+  });
+  const FX = [0.03, 0.0105, -0.0095, -0.0285], L1 = [0.046, 0.048, 0.046, 0.038], L2 = [0.04, 0.044, 0.041, 0.031];
+  part({
+    joint: fi, hand: true, thin: true, bounds: [[-0.05, -0.06, -0.025], [0.05, 0.015, 0.025]],
+    sdf: (p) => Math.min(...FX.map((x, k) => sdCone(p, [x, 0.004, 0], [x, -L1[k], 0], 0.0098, 0.0092))),
+    mat: () => P.GLOVE,
+  });
+  part({
+    joint: fi2, hand: true, thin: true, bounds: [[-0.05, -0.06, -0.025], [0.05, 0.015, 0.025]],
+    sdf: (p) => Math.min(...FX.map((x, k) => { const y0 = 0.046 - L1[k] + 0.002; return sdCone(p, [x, y0, 0], [x, y0 - L2[k], 0], 0.009, 0.0082); })),
+    mat: () => P.GLOVE,
+  });
+  part({
+    joint: th, hand: true, thin: true, bounds: [[-0.03, -0.07, -0.04], [0.05, 0.02, 0.04]],
+    sdf: (p) => sdCone(p, [0, 0, 0], [0.018, -0.05, -s * 0.012], 0.0125, 0.0098),
     mat: () => P.GLOVE,
   });
 }
@@ -182,6 +203,9 @@ function ballPart(J, where) {
   }
   return { world: true, center: at(joint, c), R: R(joint), r };
 }
+
+// the smooth skinned mesh (web/mesh/) is built from the same shapes
+export { parts as PARTS, bars as MASK_BARS, ballPart };
 
 // ---------------------------------------------------------------- voxeliser
 /**

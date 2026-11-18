@@ -45,6 +45,13 @@ export const JOINTS = {
   hipL: { parent: 'pelvis', off: [0, -0.03, -0.105], side: -1 },
   knL: { parent: 'hipL', off: [0, -0.45, 0], side: -1 },
   anL: { parent: 'knL', off: [0, -0.43, 0], side: -1 },
+  // hands: knuckles (all four fingers), middle joints, thumb. Curl comes from grip.
+  fiR: { parent: 'wrR', off: [0, -0.098, 0], side: 1 },
+  fi2R: { parent: 'fiR', off: [0, -0.046, 0], side: 1 },
+  thR: { parent: 'wrR', off: [0.036, -0.03, -0.008], side: 1 },
+  fiL: { parent: 'wrL', off: [0, -0.098, 0], side: -1 },
+  fi2L: { parent: 'fiL', off: [0, -0.046, 0], side: -1 },
+  thL: { parent: 'wrL', off: [0.036, -0.03, 0.008], side: -1 },
 };
 export const ORDER = Object.keys(JOINTS);
 
@@ -53,6 +60,7 @@ export const REST = {
   spine: [0, 0, 0], chest: [0, 0, 0], neck: [0, 0, 0], head: [0, 0, 0],
   shR: [0, 12 * D, 0], elR: 15 * D, wrR: [0, 0], shL: [0, 12 * D, 0], elL: 15 * D, wrL: [0, 0],
   hipR: [0, 4 * D, 0], knR: 4 * D, anR: 0, hipL: [0, 4 * D, 0], knL: 4 * D, anL: 0,
+  gripR: 0.35, gripL: 0.35,   // 0 open flat hand .. 1 tight fist
   ball: null,          // null | 'R' (tucked right) | 'L' | 'handR' | 'hands' | 'chest'
   flatR: false, flatL: false,   // force a foot level with the ground
 };
@@ -71,6 +79,10 @@ function localRot(name, p) {
     case 'wrR': case 'wrL': { const [f, d] = p[name]; return mul(Rz(f), Rx(-s * d)); }
     case 'knR': case 'knL': return Rz(-p[name]);
     case 'anR': case 'anL': return Rz(p[name]);
+    // fingers curl toward the palm (the palm faces the body: -z on the right hand)
+    case 'fiR': case 'fiL': return Rx(s * (p['grip' + name[2]] ?? 0.35) * 82 * D);
+    case 'fi2R': case 'fi2L': return Rx(s * (p['grip' + name[3]] ?? 0.35) * 96 * D);
+    case 'thR': case 'thL': { const g = p['grip' + name[2]] ?? 0.35; return mul(Ry(s * (12 + g * 52) * D), Rx(s * g * 30 * D)); }
   }
   return I3;
 }

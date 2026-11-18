@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mesh vs Voxel</title>
+<style>
+  :root { --bg: #0f1a12; --panel: rgba(10,16,12,.82); --ink: #f2f4ee; --dim: #a9b5a6; --acc: #f2b632; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.35 system-ui,-apple-system,Segoe UI,sans-serif; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+  #panel { position:fixed; top:10px; left:10px; background:var(--panel); padding:10px 12px; border-radius:10px; max-width:min(92vw,340px); }
+  #panel h1 { font-size:14px; margin:0 0 6px; letter-spacing:.04em; }
+  #panel label { display:inline-flex; gap:6px; align-items:center; margin:3px 10px 3px 0; color:var(--dim); }
+  #panel select { background:#1d2b20; color:var(--ink); border:1px solid #39503d; border-radius:6px; padding:3px 6px; font:inherit; }
+  #stats { margin-top:6px; color:var(--dim); font:12px ui-monospace,Consolas,monospace; white-space:pre; }
+  .lbl { position:fixed; transform:translate(-50%,0); font:700 12px system-ui; color:#fff; background:rgba(0,0,0,.5); padding:2px 8px; border-radius:4px; pointer-events:none; white-space:nowrap; }
+  #act { position:fixed; left:50%; bottom:14px; transform:translateX(-50%); font:700 15px system-ui; background:rgba(0,0,0,.5); padding:4px 12px; border-radius:6px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>VOXEL STACK vs SMOOTH MESH</h1>
+  <div><label>Action <select id="action"></select></label><label><input type="checkbox" id="cycle" checked> Cycle all</label></div>
+  <div>
+    <label>Voxel <select id="vox"><option>2</option><option>3</option><option>4</option></select> cm</label>
+    <label>Mesh grid <select id="grid"><option value="0.9">0.9</option><option value="1.2">1.2</option><option value="1.6">1.6</option><option value="2.2">2.2</option></select> cm</label>
+  </div>
+  <div><label><input type="checkbox" id="spin" checked> Spin</label><label>Speed <select id="speed"><option value="1">1x</option><option value="0.5">0.5x</option><option value="0.25">0.25x</option></select></label></div>
+  <div id="stats">building…</div>
+</div>
+<div id="act"></div>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { OrbitControls } from './web/vendor/OrbitControls.js';
+import { ACTIONS, ACTION_KEYS } from './web/stack/actions.js';
+import { bakeAll, StackRenderer } from './web/stack/stack-renderer.js';
+import { buildBody, MeshPlayer } from './web/mesh/body-mesh.js';
+import { fieldMesh } from './web/play/field.js';
+
+const q = new URLSearchParams(location.search);
+const VOX = +(q.get('v') || 3), GRID = +(q.get('grid') || 1.2);
+const STEP = q.get('step') ? +q.get('step') : 0;
+const FIXED_YAW = q.get('yaw') !== null ? +q.get('yaw') * Math.PI / 180 : null;
+const $ = (id) => document.getElementById(id);
+$('vox').value = String(VOX); $('grid').value = String(GRID);
+const reload = () => { const u = new URLSearchParams(location.search); u.set('v', $('vox').value); u.set('grid', $('grid').value); location.search = u.toString(); };
+$('vox').onchange = reload; $('grid').onchange = reload;
+for (const k of ACTION_KEYS) { const o = document.createElement('option'); o.textContent = k; $('action').appendChild(o); }
+if (q.get('action')) { $('action').value = q.get('action'); $('cycle').checked = false; }
+if (q.get('spin') === '0') $('spin').checked = false;
+if (q.get('speed')) $('speed').value = q.get('speed');
+
+const YD = 0.9144;
+const KIT = { jersey: '#5b2a17', trim: '#f2b632', number: '#f2b632', pants: '#e9c46a', pantStripe: '#5b2a17', helmet: '#5b2a17', helmetStripe: '#f2b632', mask: '#d9d4c4', sock: '#5b2a17', sockStripe: '#f2b632', glove: '#f2b632', cleat: '#161616' };
+const KIT2 = { jersey: '#f4f5f2', trim: '#13294b', number: '#13294b', pants: '#13294b', pantStripe: '#c7d3e3', helmet: '#13294b', helmetStripe: '#c7d3e3', mask: '#9aa4b1', sock: '#13294b', sockStripe: '#f4f5f2', glove: '#13294b', cleat: '#f0f0f0' };
+
+// ---------------------------------------------------------------- scene
+const canvas = $('c');
+const r = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: !!STEP });
+r.setPixelRatio(Math.min(2, devicePixelRatio));
+r.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x2a3a22, 1.4));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(20, 40, 15); scene.add(sun);
+const field = fieldMesh({ home: { name: 'Ridgeline', short: 'RSU', color: '#5b2a17', alt: '#f2b632' }, away: { name: 'Coastal', short: 'CTU', color: '#13294b', alt: '#c7d3e3' } });
+const fieldG = new THREE.Group(); fieldG.add(field); fieldG.scale.setScalar(YD); fieldG.position.set(-30 * YD, 0, -26.67 * YD); scene.add(fieldG);
+const cam = new THREE.PerspectiveCamera(36, 1, 0.1, 400);
+cam.position.set(-4.6, 1.9, 0);
+const orbit = new OrbitControls(cam, canvas); orbit.target.set(0, 0.95, 0); orbit.enableDamping = true;
+if (q.get('cam')) { const c = q.get('cam').split(',').map(Number); cam.position.set(c[0], c[1], c[2]); orbit.target.set(c[3], c[4], c[5]); }
+if (q.get('fov')) cam.fov = +q.get('fov');
+const resize = () => { r.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+const shadowGeo = new THREE.CircleGeometry(0.42, 24); shadowGeo.rotateX(-Math.PI / 2);
+const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false });
+const SEP = 0.95;
+for (const z of [-SEP, SEP]) { const s = new THREE.Mesh(shadowGeo, shadowMat); s.position.set(0, 0.012, z); s.renderOrder = 1; scene.add(s); }
+
+// ---------------------------------------------------------------- build both
+await new Promise((res) => setTimeout(res, 30));
+const bake = bakeAll(VOX / 100);
+const sr = new StackRenderer(bake, { maxPlayers: 2, sub: 3, kits: [KIT, KIT2] });
+scene.add(sr.mesh);
+const body = buildBody(GRID / 100);
+const mp = new MeshPlayer(body, { kit: KIT, skin: 0.45, number: 22 });
+scene.add(mp.root);
+window.__body = { tris: body.tris, verts: body.verts, ms: Math.round(body.ms) };
+
+const lbl = (text) => { const el = document.createElement('div'); el.className = 'lbl'; el.textContent = text; document.body.appendChild(el); return el; };
+const L = [lbl(`VOXEL STACK · ${VOX} cm`), lbl(`SMOOTH MESH · ${body.tris.toLocaleString()} tris`)];
+
+// ---------------------------------------------------------------- loop
+let last = performance.now(), T = 0, fpsAcc = 0, fpsN = 0, fps = 0, ai = 0, aT = 0;
+function step(now) {
+  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (STEP) dt = window.__adv ? (window.__adv = 0, STEP) : 0;
+  else dt *= +$('speed').value;
+  T += dt; aT += dt;
+  fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; }
+  let name = $('action').value;
+  if ($('cycle').checked) {
+    name = ACTION_KEYS[ai];
+    const a = ACTIONS[name];
+    const span = a.loop ? Math.max(2.4, a.dur * 2) : a.dur + 0.9;
+    if (aT > span) { aT = 0; ai = (ai + 1) % ACTION_KEYS.length; name = ACTION_KEYS[ai]; $('action').value = name; }
+  }
+  const a = ACTIONS[name];
+  const yaw = FIXED_YAW !== null ? FIXED_YAW : $('spin').checked ? T * 0.5 + 0.6 : Math.PI * 0.8;
+  let tt, u;
+  if (a.loop) { tt = aT; u = ((aT / a.dur) % 1 + 1) % 1; }
+  else { tt = Math.min(aT, a.dur); u = a.frames === 1 ? 0 : Math.min(1, aT / a.dur); }
+  sr.update([{ x: 0, z: -SEP, yaw, frame: sr.frameOf(name, tt), team: 0, skin: 0.45, number: 22 }]);
+  mp.setPose(a.fn(u), 0, SEP, yaw);
+  $('act').textContent = name;
+  orbit.update();
+  r.render(scene, cam);
+  [[-SEP, L[0]], [SEP, L[1]]].forEach(([z, el]) => {
+    const v = new THREE.Vector3(0, 2.2, z).project(cam);
+    el.style.left = `${(v.x * 0.5 + 0.5) * innerWidth}px`; el.style.top = `${(-v.y * 0.5 + 0.5) * innerHeight}px`;
+  });
+  if (fpsN === 0) {
+    $('stats').textContent = `${fps.toFixed(0)} fps\nvoxel: ${bake.frames.length} baked frames, ${(bake.AW * bake.AH * 2 / 1048576).toFixed(0)} MB, ${bake.ms.toFixed(0)} ms\nmesh: ${body.tris.toLocaleString()} tris, ${body.verts.toLocaleString()} verts, built ${body.ms.toFixed(0)} ms\nmesh poses live every frame (no baking)`;
+    window.__lab = { fps };
+  }
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+window.__labReady = true;
+</script>
+</body>
+</html>

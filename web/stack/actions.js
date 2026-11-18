@@ -28,11 +28,12 @@ function run(ph, o = {}) {
     hipL: [L.hip, 5 * D, 0], knL: L.kn, anL: L.an,
     shR: [arm(L.hip), 10 * D, 18 * D], elR: (82 + 14 * S(TAU * ph)) * D, wrR: [-10 * D, 0],
     shL: [arm(R.hip), 10 * D, 18 * D], elL: (82 - 14 * S(TAU * ph)) * D, wrL: [-10 * D, 0],
+    gripR: 0.55, gripL: 0.55,
   };
-  if (o.carry === 'R') { p.shR = deg([16, 12, 14]); p.elR = 118 * D; p.wrR = deg([-25, 0]); p.ball = 'R'; p.chest[2] -= 5 * D; }
-  if (o.carry === 'L') { p.shL = deg([16, 12, 14]); p.elL = 118 * D; p.wrL = deg([-25, 0]); p.ball = 'L'; p.chest[2] += 5 * D; }
-  if (o.stiff === 'L') { p.shL = deg([82, 28, -10]); p.elL = 6 * D; p.wrL = deg([72, 0]); p.chest[2] = -14 * D; p.spine[1] = -6 * D; }
-  if (o.stiff === 'R') { p.shR = deg([82, 28, -10]); p.elR = 6 * D; p.wrR = deg([72, 0]); p.chest[2] = 14 * D; p.spine[1] = 6 * D; }
+  if (o.carry === 'R') { p.shR = deg([16, 12, 14]); p.elR = 118 * D; p.wrR = deg([-25, 0]); p.ball = 'R'; p.gripR = 0.85; p.chest[2] -= 5 * D; }
+  if (o.carry === 'L') { p.shL = deg([16, 12, 14]); p.elL = 118 * D; p.wrL = deg([-25, 0]); p.ball = 'L'; p.gripL = 0.85; p.chest[2] += 5 * D; }
+  if (o.stiff === 'L') { p.shL = deg([82, 28, -10]); p.elL = 6 * D; p.wrL = deg([72, 0]); p.gripL = 0.02; p.chest[2] = -14 * D; p.spine[1] = -6 * D; }
+  if (o.stiff === 'R') { p.shR = deg([82, 28, -10]); p.elR = 6 * D; p.wrR = deg([72, 0]); p.gripR = 0.02; p.chest[2] = 14 * D; p.spine[1] = 6 * D; }
   return p;
 }
 
@@ -84,7 +85,7 @@ const STANCE2 = {
 const STANCE3 = {
   root: { pitch: 66 * D }, spine: [8 * D, 0, 0], chest: [4 * D, 0, 0], neck: [-64 * D, 0, 0],
   hipR: deg([104, 16, 0]), knR: 84 * D, flatR: true, hipL: deg([116, 14, 0]), knL: 96 * D, flatL: true,
-  shR: deg([84, 8, 0]), elR: 4 * D, wrR: deg([-60, 0]), shL: deg([46, 14, 10]), elL: 72 * D,
+  shR: deg([84, 8, 0]), elR: 4 * D, wrR: deg([-60, 0]), gripR: 0.12, shL: deg([46, 14, 10]), elL: 72 * D,
 };
 const SHOTGUN = {
   root: { pitch: 12 * D }, spine: [5 * D, 0, 0], neck: [-8 * D, 0, 0],
@@ -110,6 +111,7 @@ function block(ph) {
     root: { pitch: 34 * D, lift: 0.01 * Math.max(0, S(TAU * ph * 2)) }, spine: [8 * D, 0, 0], neck: [-34 * D, 0, 0],
     hipR: [hip(ph), 14 * D, 0], knR: kn(ph), flatR: true, hipL: [hip(ph + 0.5), 14 * D, 0], knL: kn(ph + 0.5), flatL: true,
     shR: deg([80, 16, 16]), elR: 34 * D, wrR: deg([-48, 0]), shL: deg([80, 16, 16]), elL: 34 * D, wrL: deg([-48, 0]),
+    gripR: 0.25, gripL: 0.25,
   };
 }
 function passPro(ph) {
@@ -120,6 +122,7 @@ function passPro(ph) {
     hipL: [(42 + 6 * S(TAU * ph)) * D, 16 * D, 0], knL: 60 * D, flatL: true,
     shR: [(58 + 14 * punch) * D, 14 * D, 22 * D], elR: (96 - 52 * punch) * D, wrR: [-40 * D * punch, 0],
     shL: [(58 + 14 * punch) * D, 14 * D, 22 * D], elL: (96 - 52 * punch) * D, wrL: [-40 * D * punch, 0],
+    gripR: 0.3, gripL: 0.3,
   };
 }
 
@@ -230,10 +233,10 @@ export const ACTIONS = {
   },
   throw: {
     dur: 0.8, frames: 12, fn: keys([
-      { t: 0, ...SHOTGUN, ball: 'chest', shR: deg([40, 10, 34]), elR: 110 * D, shL: deg([40, 10, 34]), elL: 110 * D },
-      { t: 0.28, root: { pitch: 6 * D, yaw: 20 * D }, chest: [0, -4 * D, 32 * D], ball: 'handR', shR: deg([24, 84, -40]), elR: 104 * D, wrR: deg([-20, 0]), shL: deg([60, 30, 20]), elL: 60 * D, hipR: deg([20, 12, 0]), knR: 40 * D, flatR: true, hipL: deg([16, 8, 0]), knL: 26 * D, flatL: true },
-      { t: 0.38, root: { pitch: 14 * D, yaw: -8 * D }, chest: [6 * D, 6 * D, -28 * D], ball: 'handR', shR: deg([104, 70, 10]), elR: 30 * D, wrR: deg([20, 0]), shL: deg([10, 30, 20]), elL: 90 * D, hipR: deg([-10, 12, 0]), knR: 30 * D, hipL: deg([34, 8, 0]), knL: 24 * D, flatL: true },
-      { t: 0.44, root: { pitch: 16 * D, yaw: -12 * D }, chest: [8 * D, 6 * D, -34 * D], ball: null, shR: deg([96, 44, 30]), elR: 24 * D, shL: deg([0, 30, 20]), elL: 90 * D, hipR: deg([-12, 12, 0]), knR: 34 * D, hipL: deg([34, 8, 0]), knL: 26 * D, flatL: true },
+      { t: 0, ...SHOTGUN, ball: 'chest', shR: deg([40, 10, 34]), elR: 110 * D, shL: deg([40, 10, 34]), elL: 110 * D, gripR: 0.6, gripL: 0.6 },
+      { t: 0.28, root: { pitch: 6 * D, yaw: 20 * D }, chest: [0, -4 * D, 32 * D], ball: 'handR', gripR: 0.7, gripL: 0.3, shR: deg([24, 84, -40]), elR: 104 * D, wrR: deg([-20, 0]), shL: deg([60, 30, 20]), elL: 60 * D, hipR: deg([20, 12, 0]), knR: 40 * D, flatR: true, hipL: deg([16, 8, 0]), knL: 26 * D, flatL: true },
+      { t: 0.38, root: { pitch: 14 * D, yaw: -8 * D }, chest: [6 * D, 6 * D, -28 * D], ball: 'handR', gripR: 0.6, shR: deg([104, 70, 10]), elR: 30 * D, wrR: deg([20, 0]), shL: deg([10, 30, 20]), elL: 90 * D, hipR: deg([-10, 12, 0]), knR: 30 * D, hipL: deg([34, 8, 0]), knL: 24 * D, flatL: true },
+      { t: 0.44, root: { pitch: 16 * D, yaw: -12 * D }, chest: [8 * D, 6 * D, -34 * D], ball: null, gripR: 0.15, shR: deg([96, 44, 30]), elR: 24 * D, shL: deg([0, 30, 20]), elL: 90 * D, hipR: deg([-12, 12, 0]), knR: 34 * D, hipL: deg([34, 8, 0]), knL: 26 * D, flatL: true },
       { t: 0.78, root: { pitch: 18 * D, yaw: -16 * D }, chest: [10 * D, 4 * D, -40 * D], ball: null, shR: deg([60, 18, 64]), elR: 40 * D, shL: deg([-10, 20, 10]), elL: 80 * D, hipR: deg([-4, 12, 0]), knR: 50 * D, anR: -30 * D, hipL: deg([30, 8, 0]), knL: 28 * D, flatL: true },
       { t: 1, ...SHOTGUN, ball: null },
     ]),
@@ -241,17 +244,17 @@ export const ACTIONS = {
   catch: {
     dur: 0.55, frames: 10, fn: keys([
       { t: 0, ...run(0.2, { amp: 0.95 }), ball: null },
-      { t: 0.4, ...run(0.5, { amp: 0.9 }), shR: deg([118, 14, 30]), elR: 34 * D, wrR: deg([-30, 0]), shL: deg([118, 14, 30]), elL: 34 * D, wrL: deg([-30, 0]), ball: null, neck: [-10 * D, 0, 0] },
-      { t: 0.58, ...run(0.7, { amp: 0.9 }), shR: deg([96, 14, 34]), elR: 58 * D, shL: deg([96, 14, 34]), elL: 58 * D, ball: 'hands' },
+      { t: 0.4, ...run(0.5, { amp: 0.9 }), shR: deg([118, 14, 30]), elR: 34 * D, wrR: deg([-30, 0]), shL: deg([118, 14, 30]), elL: 34 * D, wrL: deg([-30, 0]), ball: null, neck: [-10 * D, 0, 0], gripR: 0.04, gripL: 0.04 },
+      { t: 0.58, ...run(0.7, { amp: 0.9 }), shR: deg([96, 14, 34]), elR: 58 * D, shL: deg([96, 14, 34]), elL: 58 * D, ball: 'hands', gripR: 0.5, gripL: 0.5 },
       { t: 1, ...run(0.95, { amp: 0.95, carry: 'R' }) },
     ]),
   },
   catchHigh: {
     dur: 0.7, frames: 12, fn: keys([
       { t: 0, ...run(0.2, { amp: 0.95 }), ball: null },
-      { t: 0.3, root: { pitch: 4 * D }, hipR: deg([60, 8, 0]), knR: 80 * D, hipL: deg([20, 8, 0]), knL: 50 * D, shR: deg([60, 14, 0]), elR: 50 * D, shL: deg([60, 14, 0]), elL: 50 * D },
-      { t: 0.52, root: { lift: 0.45, pitch: -6 * D }, neck: [-30 * D, 0, 0], hipR: deg([40, 8, 0]), knR: 60 * D, anR: -30 * D, hipL: deg([6, 8, 0]), knL: 20 * D, anL: -40 * D, shR: deg([170, 10, 20]), elR: 14 * D, shL: deg([170, 10, 20]), elL: 14 * D, ball: 'hands' },
-      { t: 0.75, root: { lift: 0.12, pitch: 4 * D }, hipR: deg([30, 8, 0]), knR: 40 * D, hipL: deg([20, 8, 0]), knL: 30 * D, shR: deg([90, 14, 30]), elR: 80 * D, shL: deg([90, 14, 30]), elL: 80 * D, ball: 'chest' },
+      { t: 0.3, root: { pitch: 4 * D }, hipR: deg([60, 8, 0]), knR: 80 * D, hipL: deg([20, 8, 0]), knL: 50 * D, shR: deg([60, 14, 0]), elR: 50 * D, shL: deg([60, 14, 0]), elL: 50 * D, gripR: 0.05, gripL: 0.05 },
+      { t: 0.52, root: { lift: 0.45, pitch: -6 * D }, neck: [-30 * D, 0, 0], hipR: deg([40, 8, 0]), knR: 60 * D, anR: -30 * D, hipL: deg([6, 8, 0]), knL: 20 * D, anL: -40 * D, shR: deg([170, 10, 20]), elR: 14 * D, shL: deg([170, 10, 20]), elL: 14 * D, ball: 'hands', gripR: 0.5, gripL: 0.5 },
+      { t: 0.75, root: { lift: 0.12, pitch: 4 * D }, hipR: deg([30, 8, 0]), knR: 40 * D, hipL: deg([20, 8, 0]), knL: 30 * D, shR: deg([90, 14, 30]), elR: 80 * D, shL: deg([90, 14, 30]), elL: 80 * D, ball: 'chest', gripR: 0.6, gripL: 0.6 },
       { t: 1, ...run(0.1, { amp: 0.85, carry: 'R' }) },
     ]),
   },
@@ -266,8 +269,8 @@ export const ACTIONS = {
   handoffTake: {
     dur: 0.7, frames: 10, fn: keys([
       { t: 0, ...run(0.0, { amp: 0.8 }) },
-      { t: 0.35, ...run(0.5, { amp: 0.8 }), shL: deg([92, 22, 44]), elL: 104 * D, shR: deg([8, 16, 40]), elR: 92 * D, ball: null },
-      { t: 0.6, ...run(0.9, { amp: 0.8 }), shL: deg([80, 22, 44]), elL: 110 * D, shR: deg([8, 16, 40]), elR: 92 * D, ball: 'chest' },
+      { t: 0.35, ...run(0.5, { amp: 0.8 }), shL: deg([92, 22, 44]), elL: 104 * D, shR: deg([8, 16, 40]), elR: 92 * D, ball: null, gripR: 0.1, gripL: 0.1 },
+      { t: 0.6, ...run(0.9, { amp: 0.8 }), shL: deg([80, 22, 44]), elL: 110 * D, shR: deg([8, 16, 40]), elR: 92 * D, ball: 'chest', gripR: 0.6, gripL: 0.6 },
       { t: 1, ...run(0.4, { amp: 0.9, carry: 'R' }) },
     ]),
   },

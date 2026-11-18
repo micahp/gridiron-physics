@@ -15,8 +15,11 @@ import { POSE } from '../pose-codes.js';
 import { fieldMesh, goalPosts, strip, W, HASH_IN } from './field.js';
 import { Input } from './input.js';
 import { GameSprites } from '../stack/game-sprites.js';
+import { GameMeshes } from '../mesh/game-meshes.js';
+import { makeBall, BALL_R } from '../mesh/body-mesh.js';
+import { TACKLE_GAP } from '../mesh/tackles.js';
 
-export const BUILD = 'play-2026-11-18-stack';
+export const BUILD = 'play-2026-11-18-mesh';
 const YD = 0.9144;
 const G = 9.81 / YD;                    // gravity, yd/s^2
 const QUARTER = 4 * 60;                 // seconds per quarter (short game)
@@ -40,6 +43,10 @@ const SPEED = {   // top speed yd/s
   LEDGE: 7.0, LDT: 6.4, RDT: 6.4, REDGE: 7.0, LB1: 7.5, LB2: 7.4, CB1: 8.3, CB2: 8.2, NB: 8.1, FS: 8.1, SS: 8.0,
 };
 const SPRINT = 1.1;                    // carrier sprint multiplier
+const PILE_DECAY = 2.6;                // 1/s: how fast a falling pile loses its slide
+// body mass (kg) by position: decides who wins the collision
+const MASS = { LT: 142, LG: 145, C: 138, RG: 145, RT: 142, TE: 116, QB: 100, RB: 98, WR1: 90, WR2: 88, SLOT: 84,
+  LEDGE: 122, LDT: 140, RDT: 140, REDGE: 122, LB1: 108, LB2: 106, CB1: 88, CB2: 87, NB: 86, FS: 93, SS: 96 };
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -49,6 +56,7 @@ export class Game {
     this.canvas = canvas;
     this.hud = hud;
     this.auto = new URLSearchParams(location.search).has('auto');
+    this.closeCam = new URLSearchParams(location.search).get('cam') === 'close';
     this.input = new Input(hud.controls);
     this.t = 0;
     this.players = [];
@@ -77,6 +85,7 @@ export class Game {
     const sun = new THREE.DirectionalLight('#fff4e0', 1.9);
     sun.position.set(20, 80, 60);
     scene.add(sun);
+    this.sun = sun;
     const surround = new THREE.Mesh(new THREE.PlaneGeometry(500, 300), new THREE.MeshStandardMaterial({ color: '#2b5a26', roughness: 1 }));
     surround.rotation.x = -Math.PI / 2;
     surround.position.set(50, -0.03, W / 2);
@@ -136,12 +145,36 @@ export class Game {
     const q = new URLSearchParams(location.search);
     this.useRig = q.has('rig');
     const gltf = this.useRig ? await loadRiggedPlayer() : null;
-    if (!this.useRig) {
+    const mobile = matchMedia('(pointer: coarse)').matches;
+    if (!this.useRig && q.has('stack')) {
       // sprite-stacked players: bake every action once (voxel size in cm via ?vox=)
       await new Promise((res) => setTimeout(res, 20));
-      const mobile = matchMedia('(pointer: coarse)').matches;
       const vox = +(q.get('vox') || (mobile ? 4 : 3)) / 100;
       this.sprites = new GameSprites(this.scene, { voxel: vox, blobGeo: this.blobGeo, blobMat: this.blobMat });
+    } else if (!this.useRig) {
+      // smooth skinned players built from scratch (mesh grid in cm via ?grid=)
+      await new Promise((res) => setTimeout(res, 20));
+      const grid = +(q.get('grid') || (mobile ? 2.2 : 1.6)) / 100;
+      this.meshes = new GameMeshes(this.scene, { grid, blobGeo: this.blobGeo, blobMat: this.blobMat });
+      // the real-size ball, placed by matrix every frame
+      this.ball.clear();
+      this.ballMesh = makeBall();
+      this.ball.add(this.ballMesh);
+      this.ball.matrixAutoUpdate = false;
+      this.ballFx = { q: new THREE.Quaternion(), w: new THREE.Vector3(), from: null, holder: null, m: new THREE.Matrix4() };
+      if (!mobile && !q.has('noshadow')) {
+        this.r3.shadowMap.enabled = true;
+        this.r3.shadowMap.type = THREE.PCFSoftShadowMap;
+        const sun = this.sun;
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(2048, 2048);
+        Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 200 });
+        sun.shadow.bias = -0.0004;
+        sun.shadow.normalBias = 0.02;
+        this.scene.add(sun.target);
+        this.scene.traverse((o) => { if (o.isMesh && o.material?.isMeshStandardMaterial) o.receiveShadow = true; });
+        this.blobMat.opacity = 0.55;
+      }
     }
     const ringGeo = new THREE.RingGeometry(0.85, 1.05, 32);
     const makeInfo = (i) => ({ id: `p${i}`, jersey: NUMBERS[i], physics: { height: i < 5 || (i >= 11 && i < 15) ? 1.95 : 1.86 } });
@@ -169,6 +202,7 @@ export class Game {
     }
     this.qb = this.players[6];
     this.rb = this.players[7];
+    if (this.meshes) this.meshes.attach(this);
     this.phase = 'title';
   }
 
@@ -215,7 +249,7 @@ export class Game {
     const set = (p, x, z, yaw) => {
       p.x = x; p.z = z; p.vx = 0; p.vz = 0; p.yaw = yaw; p.pose = POSE.STANCE;
       p.role = ROLE.NONE; p.partner = null; p.down = 0; p.stun = 0; p.cd = 0; p.shedAt = 0; p.carrying = false;
-      p.cues = []; p.assign = null; p.route = null; p.state = null; p.miss = 0;
+      p.cues = []; p.assign = null; p.route = null; p.state = null; p.miss = 0; p.tackle = null;
       p.obj.userData.ring.visible = false;
     };
     const wide = (dz) => clamp(bz + dz, 3.5, W - 3.5);
@@ -261,8 +295,9 @@ export class Game {
       pl.mesh = { x: L - 3.1, z: bz + 0.9, at: this.t + 0.95 };
       this.qb.state = 'toMesh';
       this.rb.state = 'toMesh';
-      const give = { kind: 'handoff_give', side: 'R', at: pl.mesh.at - 0.55, anchorAt: pl.mesh.at, source: 'event' };
-      const take = { kind: 'handoff_take', side: 'L', at: pl.mesh.at - 0.6, anchorAt: pl.mesh.at, source: 'event' };
+      // timed so the quarterback lets go and the back clamps down at the same instant
+      const give = { kind: 'handoff_give', side: 'R', at: pl.mesh.at - 0.357, anchorAt: pl.mesh.at, source: 'event' };
+      const take = { kind: 'handoff_take', side: 'L', at: pl.mesh.at - 0.333, anchorAt: pl.mesh.at, source: 'event' };
       this.qb.cues.push(give);
       this.rb.cues.push(take);
       const A = ['LEDGE', 'LDT', 'LB1', 'RDT', 'REDGE', 'LB2'];   // LT LG C RG RT TE
@@ -361,7 +396,13 @@ export class Game {
     const L = this.drive.los;
     // ---- offense
     for (const p of P) {
-      if (p.down > 0) { p.down -= dt; p.vx *= 0.8; p.vz *= 0.8; p.pose = POSE.DOWN; if (p.down <= 0 && !pl.over) p.pose = POSE.RUN; continue; }
+      if (p.down > 0) {
+        // a tackled pile slides on its momentum; anyone else stops where he fell
+        const dec = Math.exp(-dt * (p.tackle ? PILE_DECAY : 13));
+        p.down -= dt; p.vx *= dec; p.vz *= dec; p.pose = POSE.DOWN;
+        if (p.down <= 0 && !pl.over) p.pose = POSE.RUN;
+        continue;
+      }
       if (p.stun > 0) { p.stun -= dt; p.vx *= 0.85; p.vz *= 0.85; continue; }
     }
     if (!pl.over) {
@@ -723,19 +764,36 @@ export class Game {
     if (!c || pl.over) return;
     if (pl.wrap) {
       const w = pl.wrap;
-      // dragging the tackler: slow, but a press can still break it
+      // dragging the tackler: the hit's momentum bleeds into a slow fight for
+      // yards (the runner's legs one way, the tackler's drive the other), but a
+      // press can still break it
       const a = Math.atan2(c.vz, c.vx);
-      this.steer(c, Math.cos(a) * 1.8, Math.sin(a) * 1.8, 0, dt, 20);
       const tk = w.by;
-      tk.x = c.x - Math.cos(w.ang) * 0.7; tk.z = c.z - Math.sin(w.ang) * 0.7;
+      if (w.V) {
+        const hx = Math.cos(c.yaw), hz = Math.sin(c.yaw), ex = Math.cos(w.ang), ez = Math.sin(w.ang);
+        const gx = hx * 1.5 + ex * 0.9, gz = hz * 1.5 + ez * 0.9;
+        const k = 1 - Math.exp(-dt * 4);
+        c.vx += (gx - c.vx) * k; c.vz += (gz - c.vz) * k;
+        c.face = c.yaw;
+        // the tackler settles into the clip's spot behind the push, no teleport
+        const gap = TACKLE_GAP[w.style] || 0.62;
+        const k2 = 1 - Math.exp(-dt * 16);
+        tk.x += (c.x - ex * gap - tk.x) * k2; tk.z += (c.z - ez * gap - tk.z) * k2;
+        tk.yaw += wrap(w.ang - tk.yaw) * k2;
+        tk.face = tk.yaw;
+      } else {
+        this.steer(c, Math.cos(a) * 1.8, Math.sin(a) * 1.8, 0, dt, 20);
+        tk.x = c.x - Math.cos(w.ang) * 0.7; tk.z = c.z - Math.sin(w.ang) * 0.7;
+        tk.face = Math.atan2(c.z - tk.z, c.x - tk.x);
+      }
       tk.vx = c.vx; tk.vz = c.vz;
-      tk.face = Math.atan2(c.z - tk.z, c.x - tk.x);
       if (c === this.controlled && (this.input.take('juke') || this.input.take('stiff')) && w.tries < 2) {
         w.tries++;
         if (Math.random() < 0.28) {
           this.hud.flash('BROKE IT!');
           this.sfx('cheer');
           tk.role = ROLE.NONE; c.role = ROLE.NONE; tk.partner = c.partner = null;
+          tk.tackle = c.tackle = null;
           tk.down = 1.1; tk.cues.push({ kind: 'fall_variant', clip: FB.FALL, at: t, anchorAt: t });
           pl.wrap = null;
           c.vx += Math.cos(a) * 3; c.vz += Math.sin(a) * 3;
@@ -769,16 +827,32 @@ export class Game {
 
   tryTackle(d, c, p) {
     const t = this.t, pl = this.play;
+    if (pl.wrap || pl.over) return;          // one tackle at a time
     d.cd = t + 0.9;
     if (Math.random() < p) {
-      // wrap up: a short struggle, then he goes down
-      const ang = Math.atan2(c.z - d.z, c.x - d.x);
-      const front = Math.cos(ang - Math.atan2(c.vz, c.vx)) < -0.2 * (Math.hypot(c.vx, c.vz) > 1 ? 1 : 0);
+      // wrap up: a short struggle, then he goes down. The push direction comes
+      // from the relative velocity (who hit whom), the pair then carries the
+      // combined momentum of both bodies.
+      const vrx = d.vx - c.vx, vrz = d.vz - c.vz, vr = Math.hypot(vrx, vrz);
+      let ang = vr > 1.5 ? Math.atan2(vrz, vrx) : Math.atan2(c.z - d.z, c.x - d.x);
+      const th = wrap(ang - c.yaw), ath = Math.abs(th);
+      const fall = ath < Math.PI * 0.3 ? 'fwd' : ath > Math.PI * 0.7 ? 'back' : th > 0 ? 'R' : 'L';
+      if (this.meshes) ang = c.yaw + { fwd: 0, back: Math.PI, R: Math.PI / 2, L: -Math.PI / 2 }[fall];   // the paired clip's angle
+      const front = fall === 'back';
+      const dist = Math.hypot(c.x - d.x, c.z - d.z), dsp = Math.hypot(d.vx, d.vz);
+      const style = dist > 1.05 || (fall === 'fwd' && dsp > 6.2 && Math.random() < 0.5) ? 'dive' : 'wrap';
+      const mc = MASS[c.slot] || 95, md = MASS[d.slot] || 100;
+      const V = { x: (mc * c.vx + md * d.vx) / (mc + md), z: (mc * c.vz + md * d.vz) / (mc + md) };
+      const hit = clamp((vr - 4.5) / 4.5, 0, 1);
       d.role = ROLE.TACKLER; c.role = ROLE.WRAPPED; d.partner = c; c.partner = d;
       d.pose = POSE.WRAP;
-      const fast = Math.hypot(d.vx, d.vz) > 6;
+      const fast = dsp > 6;
       d.cues.push({ kind: 'oneshot', clip: fast ? FB.TACKLE_DIVE : FB.TACKLE_FORM, at: t - 0.15, anchorAt: t + 0.15, source: 'tackle' });
-      pl.wrap = { by: d, until: t + (c === this.controlled ? 0.55 : 0.35), ang, tries: 0, front };
+      const hold = hit > 0.6 && front ? 0.14 : style === 'dive' ? 0.22 : c === this.controlled ? 0.55 : 0.35;
+      pl.wrap = { by: d, until: t + hold, ang, tries: 0, front, fall, style, V, hit, t0: t, tFall: null };
+      d.tackle = { role: 'tackler', w: pl.wrap }; c.tackle = { role: 'carrier', w: pl.wrap };
+      c.vx = V.x; c.vz = V.z; d.vx = V.x; d.vz = V.z;
+      if (hit > 0.6) this.hud.flash('BIG HIT');
       this.sfx('pads');
     } else {
       // missed: he lunges at where the runner was and goes to the turf
@@ -800,10 +874,21 @@ export class Game {
     c.down = 9; tk.down = 9;
     c.pose = POSE.DOWN; tk.pose = POSE.DOWN;
     c.role = tk.role = ROLE.NONE;
+    const w = pl.wrap;
     pl.wrap = null;
-    // falling forward gains a little; going down backward gives a little up
-    const a = Math.atan2(c.vz, c.vx);
-    const spot = c.x + (front ? -0.3 : 0.6 * Math.max(0, Math.cos(a)));
+    let spot;
+    if (w?.V) {
+      // the pile slides on with what momentum is left; the ball ends where the
+      // carrier's body lands (ahead of him going forward, behind going back)
+      w.tFall = t;
+      tk.vx = c.vx; tk.vz = c.vz;
+      const reach = { fwd: 0.55, back: -0.35, R: 0.05, L: 0.05 }[w.fall];
+      spot = c.x + c.vx / PILE_DECAY + Math.cos(w.ang) * reach;
+    } else {
+      // falling forward gains a little; going down backward gives a little up
+      const a = Math.atan2(c.vz, c.vx);
+      spot = c.x + (front ? -0.3 : 0.6 * Math.max(0, Math.cos(a)));
+    }
     pl.by = tk.slot; pl.at = +(t - pl.t0).toFixed(2);
     if (c === this.qb && !pl.carrier) this.endPlay('sack', spot);
     else this.endPlay('tackle', spot);
@@ -831,6 +916,7 @@ export class Game {
       const r = pl.pendingRelease; pl.pendingRelease = null;
       if (this.ballState.holder === this.qb && this.qb.down <= 0) this.releasePass(r.to);
     }
+    if (this.meshes) { this.moveBallMesh(dt); return; }
     if (bs.flight) {
       const f = bs.flight, u = t - f.t0;
       bs.x = f.x0 + f.vx * u; bs.z = f.z0 + f.vz * u; bs.y = f.y0 + f.vy * u - 0.5 * G * u * u;
@@ -859,6 +945,88 @@ export class Game {
     this.ball.rotation.set(bs.flight ? bs.spin : 0, -bs.yaw, bs.flight ? -0.25 : 0.3);
   }
 
+  /** Ball with mesh players: in the hands the pose puts it, flown nose-first into the catcher's hands, real bounces. */
+  moveBallMesh(dt) {
+    const bs = this.ballState, t = this.t, fx = this.ballFx, M = fx.m;
+    const R = BALL_R.map((r) => r / YD);
+    const pos = new THREE.Vector3(), quat = new THREE.Quaternion(), scl = new THREE.Vector3();
+    const sm = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+    if (bs.flight) {
+      const f = bs.flight, u = t - f.t0;
+      let x = f.x0 + f.vx * u, z = f.z0 + f.vz * u, y = f.y0 + f.vy * u - 0.5 * G * u * u;
+      // the last fraction of a second: fly into the hands that will catch it
+      const who = f.catcher || f.receiver;
+      if (who && (f.catcher || Math.hypot(who.x - f.to.x, who.z - f.to.z) < 1.7)) {
+        const win = Math.min(0.22, f.T * 0.6), w = sm((u - (f.T - win)) / win);
+        if (w > 0) {
+          const h = f.catcher ? pos.setFromMatrixPosition(this.meshes.ballWorld(who, M)) : this.meshes.handsWorld(who, pos);
+          x += (h.x - f.to.x) * w; y += (h.y - f.to.y) * w; z += (h.z - f.to.z) * w;
+        }
+      }
+      bs.x = x; bs.y = y; bs.z = z;
+      // nose along the velocity, spiralling about its long axis
+      const a = new THREE.Vector3(f.vx, f.vy - G * u, f.vz).normalize();
+      bs.spin += dt * (f.pass ? 36 : 6);
+      const up = new THREE.Vector3(0, 1, 0);
+      const b = up.sub(a.clone().multiplyScalar(a.y)).normalize();
+      const c = new THREE.Vector3().crossVectors(a, b);
+      const b2 = b.clone().multiplyScalar(Math.cos(bs.spin)).addScaledVector(c, Math.sin(bs.spin));
+      const c2 = new THREE.Vector3().crossVectors(a, b2);
+      M.makeBasis(a.multiplyScalar(R[0]), b2.multiplyScalar(R[1]), c2.multiplyScalar(R[2])).setPosition(x, y, z);
+      if (u >= f.T) {
+        bs.flight = null;
+        if (f.pass) this.resolvePass(f);
+        else if (f.catcher) this.giveBall(f.catcher);
+        else { bs.y = 0.15; }
+      }
+    } else if (bs.holder) {
+      this.meshes.ballWorld(bs.holder, M);
+      if (fx.holder !== bs.holder) {
+        // a new pair of hands: slide the ball across instead of popping
+        this.ball.matrix.decompose(pos, quat, scl);
+        fx.from = { p: pos.clone(), q: quat.clone(), t0: t };
+        fx.holder = bs.holder;
+      }
+      if (fx.from) {
+        const w = sm((t - fx.from.t0) / 0.12);
+        M.decompose(pos, quat, scl);
+        pos.lerpVectors(fx.from.p, pos, w);
+        quat.slerpQuaternions(fx.from.q, quat, w);
+        M.compose(pos, quat, scl);
+        if (w >= 1) fx.from = null;
+      }
+      pos.setFromMatrixPosition(M);
+      bs.x = pos.x; bs.y = pos.y; bs.z = pos.z;
+    } else if (bs.loose) {
+      // loose ball: gravity, bounces that lose energy, tumbling
+      const L = bs.loose;
+      if (L.vy === undefined) L.vy = 1.2;
+      if (!L.w) L.w = new THREE.Vector3(rand(-16, 16), rand(-5, 5), rand(-16, 16));
+      if (t - L.t0 < 3) {
+        L.vy -= G * dt;
+        bs.x += L.vx * dt; bs.y += L.vy * dt; bs.z += L.vz * dt;
+        const rest = R[1];
+        if (bs.y < rest) {
+          bs.y = rest;
+          if (L.vy < -0.6) { L.vy = -L.vy * 0.42; L.vx *= 0.7; L.vz *= 0.7; L.w.multiplyScalar(0.6); L.w.x += rand(-8, 8); L.w.z += rand(-8, 8); }
+          else { L.vy = 0; L.vx *= 0.92; L.vz *= 0.92; L.w.multiplyScalar(0.9); }
+        }
+        const wl = L.w.length();
+        if (wl > 1e-3) fx.q.premultiply(quat.setFromAxisAngle(pos.copy(L.w).divideScalar(wl), wl * dt));
+      }
+      M.compose(pos.set(bs.x, bs.y, bs.z), fx.q, scl.set(R[0], R[1], R[2]));
+    } else {
+      // spotted on the ground, laces up, pointing downfield
+      fx.q.identity();
+      M.compose(pos.set(bs.x, R[1], bs.z), fx.q, scl.set(R[0], R[1], R[2]));
+      fx.holder = null;
+    }
+    if (!bs.holder) fx.holder = null;
+    if (bs.flight || bs.holder) { M.decompose(pos, quat, scl); fx.q.copy(quat); }
+    this.ball.matrix.copy(M);
+    this.ball.matrixWorldNeedsUpdate = true;
+  }
+
   throwTo(r) {
     const pl = this.play, t = this.t;
     if (pl.thrown) return;
@@ -871,7 +1039,9 @@ export class Game {
 
   releasePass(r) {
     const pl = this.play, t = this.t, qb = this.qb;
-    const from = { x: qb.x + 0.3, y: 2.2, z: qb.z };
+    // the ball leaves from the throwing hand at the release frame
+    const hand = this.meshes ? new THREE.Vector3().setFromMatrixPosition(this.meshes.ballWorld(qb)) : null;
+    const from = hand ? { x: hand.x, y: hand.y, z: hand.z } : { x: qb.x + 0.3, y: 2.2, z: qb.z };
     // lead the receiver: where he will be when the ball gets there
     let T = 0.6, ax = r.x, az = r.z;
     for (let k = 0; k < 4; k++) {
@@ -925,7 +1095,9 @@ export class Game {
     }
     // incomplete: the ball hits the turf and skips
     const bs = this.ballState;
-    bs.loose = { vx: f.vx * 0.25, vz: f.vz * 0.25, t0: t };
+    // off the hands it pops up and dies; otherwise it keeps flying to the turf
+    bs.loose = dr < 1.7 ? { vx: f.vx * 0.12 + rand(-1, 1), vy: rand(1.8, 3.2), vz: f.vz * 0.12 + rand(-1, 1), t0: t }
+      : { vx: f.vx * 0.95, vy: f.vy - G * f.T, vz: f.vz * 0.95, t0: t };
     this.endPlay('inc', this.drive.los);
   }
 
@@ -1069,6 +1241,17 @@ export class Game {
   // ------------------------------------------------------------------ draw
   draw(dt) {
     const P = this.players;
+    if (this.meshes) {
+      for (const p of P) p.obj.position.set(p.x, 0, p.z);
+      this.meshes.update(this, dt);
+      if (this.r3.shadowMap.enabled) {
+        const f = this.cam.focus;
+        this.sun.position.set(f.x + 18, 70, f.z + 40);
+        this.sun.target.position.set(f.x + 6, 0, f.z);
+        this.sun.target.updateMatrixWorld();
+      }
+      return;
+    }
     if (this.sprites) {
       for (const p of P) p.obj.position.set(p.x, 0, p.z);
       this.sprites.update(this, dt);
@@ -1132,6 +1315,7 @@ export class Game {
       if (bs.flight) { fx = bs.x; fz = bs.z; }
     }
     if (portrait) { dist *= 1.45; height *= 1.6; ahead *= 1.2; }
+    if (this.closeCam && this.phase !== 'presnap' && this.phase !== 'playcall') { dist = 6.5; height = 3.2; ahead = 1.2; }
     const k = 1 - Math.exp(-dt * 4);
     cam.focus.x += (fx - cam.focus.x) * k;
     cam.focus.z += ((fz * 0.75 + (W / 2) * 0.25) - cam.focus.z) * k;

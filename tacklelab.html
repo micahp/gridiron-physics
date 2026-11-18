@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tackle Lab</title>
+<style>
+  :root { --bg: #0f1a12; --panel: rgba(10,16,12,.82); --ink: #f2f4ee; --dim: #a9b5a6; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.35 system-ui,-apple-system,Segoe UI,sans-serif; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+  #panel { position:fixed; top:10px; left:10px; background:var(--panel); padding:10px 12px; border-radius:10px; max-width:min(92vw,360px); }
+  #panel h1 { font-size:14px; margin:0 0 6px; letter-spacing:.04em; }
+  #panel label { display:inline-flex; gap:6px; align-items:center; margin:3px 10px 3px 0; color:var(--dim); }
+  #panel select { background:#1d2b20; color:var(--ink); border:1px solid #39503d; border-radius:6px; padding:3px 6px; font:inherit; }
+  #note { margin-top:6px; color:var(--dim); font-size:12px; }
+  #act { position:fixed; left:50%; bottom:14px; transform:translateX(-50%); font:700 15px system-ui; background:rgba(0,0,0,.5); padding:4px 12px; border-radius:6px; text-align:center; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>PAIRED TACKLES</h1>
+  <div><label>Tackle <select id="pick"></select></label><label><input type="checkbox" id="cycle" checked> Cycle</label></div>
+  <div><label>Speed <select id="speed"><option value="1">1x</option><option value="0.5">0.5x</option><option value="0.25">0.25x</option></select></label></div>
+  <div id="note">Same code path as the game: push direction from relative velocity, fall picked by the angle of the hit, the pair carries both players' momentum, the tackler slides into the clip's spot instead of teleporting. Drag to orbit.</div>
+</div>
+<div id="act"></div>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { OrbitControls } from './web/vendor/OrbitControls.js';
+import { ACTIONS } from './web/stack/actions.js';
+import { fill } from './web/stack/skeleton.js';
+import { buildBody, MeshPlayer, makeBall, BALL_R } from './web/mesh/body-mesh.js';
+import { tacklePose, TACKLE_GAP } from './web/mesh/tackles.js';
+import { lerpPose } from './web/mesh/game-meshes.js';
+import { KITS } from './web/stack/game-sprites.js';
+import { fieldMesh } from './web/play/field.js';
+
+const q = new URLSearchParams(location.search);
+const STEP = q.get('step') ? +q.get('step') : 0;
+const $ = (id) => document.getElementById(id);
+const YD = 0.9144;
+const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+
+// tackles to show: carrier runs +x; the defender comes in at `from` (deg, relative to the carrier's heading)
+const CASES = [
+  { name: 'From behind: wrap, carrier falls forward', from: 180, vc: 5.5, vd: 7.6, mc: 98, md: 96 },
+  { name: 'Head-on: form tackle, carrier on his back', from: 0, vc: 3.2, vd: 3.4, mc: 98, md: 108 },
+  { name: 'Head-on big hit: lifted and planted', from: 0, vc: 6.6, vd: 6.8, mc: 90, md: 108 },
+  { name: 'From his left (pursuit angle): knocked onto his right side', from: -90, vc: 5.5, vd: 5.5, mc: 98, md: 106, lead: true },
+  { name: 'From his right (pursuit angle): knocked onto his left side', from: 90, vc: 5.5, vd: 5.5, mc: 98, md: 106, lead: true },
+  { name: 'Diving at the legs from behind', from: 180, vc: 6.2, vd: 7.8, mc: 90, md: 88, style: 'dive' },
+  { name: 'Diving at the legs from the side', from: -90, vc: 6.0, vd: 6.0, mc: 90, md: 88, style: 'dive', lead: true },
+];
+for (const [i, c] of CASES.entries()) { const o = document.createElement('option'); o.value = i; o.textContent = c.name; $('pick').appendChild(o); }
+if (q.get('case')) { $('pick').value = q.get('case'); $('cycle').checked = false; }
+if (q.get('speed')) $('speed').value = q.get('speed');
+
+// ---------------------------------------------------------------- scene
+const canvas = $('c');
+const r = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: !!STEP });
+r.setPixelRatio(Math.min(2, devicePixelRatio));
+r.outputColorSpace = THREE.SRGBColorSpace;
+r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;
+r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+scene.add(new THREE.HemisphereLight(0xeef2ff, 0x33452c, 1.4));
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.9); sun.position.set(12, 30, 18); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 80 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+scene.add(sun); scene.add(sun.target);
+const field = fieldMesh({ home: { name: 'Ridgeline', short: 'RSU', color: '#5b2a17', alt: '#f2b632' }, away: { name: 'Coastal', short: 'CTU', color: '#13294b', alt: '#c7d3e3' } });
+field.traverse((o) => { if (o.isMesh) o.receiveShadow = true; });
+const fieldG = new THREE.Group(); fieldG.add(field); fieldG.scale.setScalar(YD); fieldG.position.set(-40 * YD, 0, -26.67 * YD); scene.add(fieldG);
+const cam = new THREE.PerspectiveCamera(34, 1, 0.1, 400);
+const orbit = new OrbitControls(cam, canvas); orbit.enableDamping = true;
+cam.position.set(4.5, 3.2, 8.5); orbit.target.set(6.5, 0.7, 0);
+const resize = () => { r.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+
+await new Promise((res) => setTimeout(res, 30));
+const body = buildBody(0.016);
+const C = new MeshPlayer(body, { kit: KITS[0], skin: 0.55, number: 22, ownBall: false });
+const T = new MeshPlayer(body, { kit: KITS[1], skin: 0.25, number: 52, scale: 1.0, ownBall: false });
+scene.add(C.root, T.root);
+const ball = makeBall(); ball.matrixAutoUpdate = false; scene.add(ball);
+
+// ---------------------------------------------------------------- the same rules as the game (metres here)
+let sim;
+function reset(ci) {
+  const k = CASES[ci];
+  const tc = 1.0;                                   // contact at t = 1 s
+  const reach = 0.95;
+  const a = k.from * Math.PI / 180;                 // defender's position angle around the carrier
+  const contact = { x: k.vc * tc, z: 0 };
+  // defender runs straight at the contact point from that side
+  // straight at the contact point, or (lead) matching the runner's speed upfield while closing from the side
+  const vdx = k.lead ? k.vc : -Math.cos(a) * k.vd, vdz = -Math.sin(a) * k.vd;
+  const dirx = vdx / k.vd, dirz = vdz / k.vd;
+  const dx = contact.x + Math.cos(a) * reach, dz = contact.z + Math.sin(a) * reach;
+  sim = {
+    k, t: 0, contacted: false, w: null,
+    c: { x: 0, z: 0, vx: k.vc, vz: 0, yaw: 0, phase: 0, key: '', last: null, from: null },
+    d: { x: dx - vdx * tc, z: dz - vdz * tc, vx: vdx, vz: vdz, yaw: Math.atan2(vdz, vdx), phase: 0.5, key: '', last: null, from: null },
+  };
+  $('act').textContent = k.name;
+}
+function contact() {
+  const { c, d, k } = sim;
+  const vrx = d.vx - c.vx, vrz = d.vz - c.vz, vr = Math.hypot(vrx, vrz) / YD;          // yd/s, as in the game
+  let ang = vr > 1.5 ? Math.atan2(vrz, vrx) : Math.atan2(c.z - d.z, c.x - d.x);
+  const th = wrap(ang - c.yaw), ath = Math.abs(th);
+  const fall = ath < Math.PI * 0.3 ? 'fwd' : ath > Math.PI * 0.7 ? 'back' : th > 0 ? 'R' : 'L';
+  ang = c.yaw + { fwd: 0, back: Math.PI, R: Math.PI / 2, L: -Math.PI / 2 }[fall];
+  const style = k.style || 'wrap';
+  const V = { x: (k.mc * c.vx + k.md * d.vx) / (k.mc + k.md), z: (k.mc * c.vz + k.md * d.vz) / (k.mc + k.md) };
+  const hit = Math.min(1, Math.max(0, (vr - 4.5) / 4.5));
+  const hold = hit > 0.6 && fall === 'back' ? 0.14 : style === 'dive' ? 0.22 : 0.35;
+  sim.w = { t0: sim.t, until: sim.t + hold, ang, fall, style, V, hit, tFall: null };
+  c.vx = d.vx = V.x; c.vz = d.vz = V.z;
+  sim.contacted = true;
+}
+const STRIDE = { carry: 4.1, sprint: 4.3 };
+function locoPose(p, name, dt) {
+  const sp = Math.hypot(p.vx, p.vz);
+  p.phase += (sp / STRIDE[name]) * dt;
+  return fill(ACTIONS[name].fn(((p.phase % 1) + 1) % 1));
+}
+function blend(p, key, pose, t, dur = 0.12) {
+  if (key !== p.key) { if (p.last) { p.from = p.last; p.fromT = t; } p.key = key; }
+  if (p.from) { const u = Math.min(1, (t - p.fromT) / dur), w = u * u * (3 - 2 * u); if (u >= 1) p.from = null; else pose = lerpPose(p.from, pose, w); }
+  p.last = pose; return pose;
+}
+
+let ci = +$('pick').value; reset(ci);
+$('pick').onchange = () => { ci = +$('pick').value; reset(ci); };
+let last = performance.now();
+const camGoal = new THREE.Vector3(), M = new THREE.Matrix4();
+function step(now) {
+  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (STEP) dt = window.__adv ? (window.__adv = 0, STEP) : 0; else dt *= +$('speed').value;
+  const { c, d } = sim;
+  sim.t += dt;
+  const t = sim.t;
+  if (!sim.contacted && Math.hypot(c.x - d.x, c.z - d.z) < 0.98) contact();
+  const w = sim.w;
+  if (w) {
+    if (w.tFall == null) {
+      // struggle: the hit's momentum bleeds into the fight for yards
+      const hx = Math.cos(c.yaw), hz = Math.sin(c.yaw), ex = Math.cos(w.ang), ez = Math.sin(w.ang);
+      const gx = (hx * 1.5 + ex * 0.9) * YD, gz = (hz * 1.5 + ez * 0.9) * YD;
+      const k = 1 - Math.exp(-dt * 4);
+      c.vx += (gx - c.vx) * k; c.vz += (gz - c.vz) * k;
+      const gap = TACKLE_GAP[w.style] * YD, k2 = 1 - Math.exp(-dt * 16);
+      d.x += (c.x - ex * gap - d.x) * k2; d.z += (c.z - ez * gap - d.z) * k2;
+      d.yaw += wrap(w.ang - d.yaw) * k2;
+      d.vx = c.vx; d.vz = c.vz;
+      if (t >= w.until) w.tFall = t;
+    } else {
+      const dec = Math.exp(-dt * 2.6);
+      c.vx *= dec; c.vz *= dec; d.vx = c.vx; d.vz = c.vz;
+    }
+  }
+  c.x += c.vx * dt; c.z += c.vz * dt;
+  if (!w || w.tFall == null || true) { d.x += d.vx * dt; d.z += d.vz * dt; }
+  let pc, pd;
+  if (w) {
+    const ph = w.tFall != null ? 'fall' : 'hold';
+    pc = blend(c, 'c' + ph, tacklePose(w, 'carrier', t), t, ph === 'hold' ? 0.12 : 0.1);
+    pd = blend(d, 'd' + ph, tacklePose(w, 'tackler', t), t, ph === 'hold' ? 0.12 : 0.1);
+  } else {
+    pc = blend(c, 'carry', locoPose(c, 'carry', dt), t);
+    pd = blend(d, 'sprint', locoPose(d, 'sprint', dt), t);
+  }
+  C.setPose(pc, c.x, c.z, c.yaw);
+  T.setPose(pd, d.x, d.z, d.yaw);
+  scene.updateMatrixWorld();
+  ball.matrix.copy(C.toWorld(C.hasBall ? C.ballM : C.ballAt('R'), M));
+  ball.matrixWorldNeedsUpdate = true;
+  // follow the pile
+  camGoal.set(c.x, 0.7, c.z);
+  const before = orbit.target.clone();
+  orbit.target.lerp(camGoal, 1 - Math.exp(-dt * 4));
+  cam.position.add(orbit.target.clone().sub(before));     // follow without swinging the view
+  sun.position.set(c.x + 10, 30, c.z + 16); sun.target.position.set(c.x, 0, c.z); sun.target.updateMatrixWorld();
+  if (t > 4.2) {
+    if ($('cycle').checked) { ci = (ci + 1) % CASES.length; $('pick').value = ci; }
+    reset(ci);
+    const off = cam.position.clone().sub(orbit.target);
+    orbit.target.set(0, 0.7, 0); cam.position.copy(orbit.target).add(off);
+  }
+  orbit.update();
+  r.render(scene, cam);
+  window.__lab = { t, w: w && { fall: w.fall, style: w.style, hit: +w.hit.toFixed(2), tFall: w.tFall }, c: { x: +c.x.toFixed(2) }, d: { x: +d.x.toFixed(2) } };
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+window.__labReady = true;
+</script>
+</body>
+</html>

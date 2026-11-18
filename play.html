@@ -126,7 +126,7 @@ canvas#view { position: fixed; inset: 0; width: 100vw; height: 100vh; display: b
     <p>You have the ball. Ridgeline State against Coastal Tech, four 4-minute quarters. Call a play, hike it, then run with the stick: <b>JUKE</b> to make a tackler miss, <b>STIFF</b> to push one off, hold <b>SPRINT</b> to open up. On a pass, tap a number over a receiver to throw to him.</p>
     <button class="go" id="go" disabled>LOADING PLAYERS…</button>
     <p class="tiny">Keyboard: arrows/WASD move · Space hike/juke · E stiff arm · Shift sprint · 1-5 throw</p>
-    <p class="tiny">Players: original sprite-stacked voxel models (add ?rig for the old 3D model, "American Football Player" by Hikky, CC BY 3.0). Sounds: Kenney (CC0), Gregor Quendel crowd (CC0).</p>
+    <p class="tiny">Players: original smooth skinned models built from scratch (add ?stack for the voxel version, ?rig for the old 3D model, "American Football Player" by Hikky, CC BY 3.0). Sounds: Kenney (CC0), Gregor Quendel crowd (CC0).</p>
   </div>
   <div class="screen off" id="final"></div>
 </div>
@@ -261,9 +261,12 @@ game.input.bindButton(btn.stiff, 'stiff');
 game.input.bindButton(btn.sprint, 'sprint', { hold: true });
 
 let last = performance.now();
+const STEP = +new URLSearchParams(location.search).get('step') || 0;   // test hook: fixed steps on demand
+window.__adv = 0;
 function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000);
+  let dt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  if (STEP) { if (!window.__adv) { requestAnimationFrame(loop); return; } window.__adv--; dt = STEP; }
   try { game.frame(dt); } catch (err) { console.error(err); }
   requestAnimationFrame(loop);
 }
