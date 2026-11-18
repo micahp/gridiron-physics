@@ -17,6 +17,11 @@ export function solveTackler(w, t, dt, recv, att, { ik = true, collide = true } 
   if (collide) {
     const at = { ...att.place, x: att.place.x + sep[0], z: att.place.z + sep[2] };
     w.lastDepth = resolveContact(w, capsules(fk(pose), at), recvBody, dt);
+    // can't be made valid within the push limits: adapt instead of forcing it
+    // (spec: the hold ends early and the pair goes down from where it is)
+    const lim = w.spec?.limits?.penetration_m ?? 0.04;
+    w.stuck = w.lastDepth > lim + 0.015 ? (w.stuck || 0) + 1 : 0;
+    if (w.stuck > 4 && w.tFall == null && !w.adapted) { w.until = Math.min(w.until, t); w.adapted = 'early_fall'; }
   }
   const k = att.place.scale || 1;
   const place = { ...att.place, x: att.place.x + sep[0], z: att.place.z + sep[2], ground: (att.place.ground || 0) };

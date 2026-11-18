@@ -196,7 +196,7 @@ function runScenario(sc) {
     palm_gap_max_m: +m.gap.toFixed(3), palm_sink_max_m: +m.sink.toFixed(3), palm_gap_mean_m: m.gapN ? +(m.gapSum / m.gapN).toFixed(3) : null,
     arm_clear_min_m: m.armClear < 1e8 ? +m.armClear.toFixed(3) : null,
     pen_hold_m: +m.pen.hold.toFixed(3), pen_fall_m: +m.pen.fall.toFixed(3), pen_hold_where: m.penWhere.hold, pen_fall_where: m.penWhere.fall,
-    foot_slide_m: +m.slide.toFixed(3), max_root_speed_mps: +m.pop.toFixed(2),
+    foot_slide_m: +m.slide.toFixed(3), max_root_speed_mps: +m.pop.toFixed(2), adapted: w.adapted || null,
     align_shift_m: +(w.shifted || 0).toFixed(3), align_turn_deg: +(((w.turned || 0) / D)).toFixed(1),
   });
   r.fail = [];
@@ -214,12 +214,22 @@ const SETS = {
   frontal: { angles: [330, 345, 0, 15, 30], speeds: [[2, 3], [5.5, 6], [7.5, 8]], leads: [false], sizes: [[1, 1], [0.96, 1.04], [1.04, 0.96]], offsets: [0, 0.15] },
   full: { angles: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330], speeds: [[2, 3], [5.5, 6], [7.5, 8]], leads: [false, true], sizes: [[1, 1], [0.96, 1.04], [1.04, 0.96]], offsets: [0, 0.3] },
 };
+SETS.mirror = SETS.full;
 const G = SETS[SET];
 const DBG = opt('only', null);
 const scenarios = [];
 for (const from of G.angles) for (const [vc, vd] of G.speeds) for (const lead of G.leads) for (const [scaleC, scaleD] of G.sizes) for (const offset of G.offsets) {
   if (lead && (from === 0 || from === 180)) continue;   // a lead angle only means something from the side
   scenarios.push({ from, vc, vd, lead, scaleC, scaleD, offset, mc: 95 * scaleC ** 3, md: 100 * scaleD ** 3 });
+}
+if (opt('set', '') === 'mirror' || args.includes('--mirror')) {
+  // every scenario and its mirror image (approach from the other side, aim offset flipped)
+  const base = scenarios.splice(0);
+  for (const sc of base) {
+    if (sc.from === 0 || sc.from === 180) { if (sc.offset === 0) continue; }
+    scenarios.push({ ...sc, pair: scenarios.length >> 1, side: 'a' });
+    scenarios.push({ ...sc, from: (360 - sc.from) % 360, offset: -sc.offset, pair: (scenarios.length - 1) >> 1, side: 'b' });
+  }
 }
 const t0 = Date.now();
 const results = (DBG ? scenarios.filter((x) => [x.from, x.vc, x.vd, x.scaleC, x.scaleD, x.offset].join(',') === DBG) : scenarios).map(runScenario);
@@ -230,9 +240,27 @@ console.log(`tackle.${STYLE}  set ${SET}  IK ${USE_IK ? 'on' : 'off'}  collide $
 console.log(`scenarios ${n} | selected ${sel.length} (${(100 * sel.length / n).toFixed(0)}% coverage) | rejected ${n - sel.length}`);
 console.log(`valid execution: ${ok.length}/${sel.length} pass (${sel.length ? (100 * ok.length / sel.length).toFixed(0) : 0}%)`);
 console.log('rejection reasons:', JSON.stringify(tally(results.filter((r) => !r.selected), (r) => r.rejected)));
+console.log('adapted at runtime:', JSON.stringify(tally(sel, (r) => (r.adapted ? [r.adapted] : []))));
+const has = (r, p) => r.fail.some((f) => f.startsWith(p));
+console.log(`by stage (selected): hold contact ok ${sel.filter((r) => !has(r, 'contact')).length}/${sel.length} | hold collision ok ${sel.filter((r) => !has(r, 'penetration:hold')).length}/${sel.length} | fall collision ok ${sel.filter((r) => !has(r, 'penetration:fall')).length}/${sel.length} | completed action ok ${ok.length}/${sel.length}`);
 console.log('failures (selected only):', JSON.stringify(tally(sel, (r) => r.fail)));
 for (const k of ['palm_gap_max_m', 'palm_sink_max_m', 'arm_clear_min_m', 'pen_hold_m', 'pen_fall_m', 'max_root_speed_mps', 'align_turn_deg', 'foot_slide_m', 'run_slide_m'])
   console.log(`  ${k.padEnd(20)} median ${q(sel, k, 0.5)}  p90 ${q(sel, k, 0.9)}  max ${q(sel, k, 1)}`);
 console.log('by fall (selected):', JSON.stringify(Object.fromEntries(Object.entries(tally(sel, (r) => [r.fall])).map(([k, v]) => [k, `${sel.filter((r) => r.fall === k && !r.fail.length).length}/${v}`]))));
 const out = opt('json', null);
 if (out) fs.writeFileSync(out, JSON.stringify({ style: STYLE, set: SET, ik: USE_IK, collide: COLLIDE, spec: SPEC, results }, null, 1));
+
+if (results[0]?.pair != null) {
+  const pairs = {};
+  for (const r of results) (pairs[r.pair] || (pairs[r.pair] = {}))[r.side] = r;
+  const P = Object.values(pairs).filter((p) => p.a && p.b);
+  const status = (r) => (!r.selected ? 'rejected' : r.fail.length ? 'fail' : 'pass');
+  const asym = P.filter((p) => status(p.a) !== status(p.b));
+  console.log(`mirror pairs ${P.length}: same outcome ${P.length - asym.length}, different ${asym.length}`);
+  const why = {};
+  for (const p of asym) { const k = `${status(p.a)}(${p.a.fall || '-'}) vs ${status(p.b)}(${p.b.fall || '-'})`; why[k] = (why[k] || 0) + 1; }
+  console.log('asymmetric pairs:', JSON.stringify(why));
+  const fails = {};
+  for (const p of asym) for (const r of [p.a, p.b]) if (r.selected && r.fail.length) for (const f of r.fail) fails[f + ' [' + r.fall + ']'] = (fails[f + ' [' + r.fall + ']'] || 0) + 1;
+  console.log('what fails on the failing side:', JSON.stringify(fails));
+}

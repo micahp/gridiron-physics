@@ -5,7 +5,8 @@
 //
 //   loop actions: t is the cycle phase 0..1; dur is seconds per cycle
 //   one-shots:    t runs 0..1 over dur seconds
-import { D, curve, sampleKeys, fill } from './skeleton.js';
+import { D, curve, sampleKeys, fill, fk } from './skeleton.js';
+import { reachLeg } from '../mesh/footlock.js';
 
 const deg = (a) => a.map((x) => (typeof x === 'number' ? x * D : x));
 const S = Math.sin, TAU = Math.PI * 2;
@@ -37,46 +38,79 @@ export function run(ph, o = {}) {
   return p;
 }
 
+const WALK_BASE = {
+  root: { pitch: 2 * D }, spine: [2 * D, 0, 0],
+  hipR: deg([12, 4, 0]), knR: 14 * D, flatR: true, hipL: deg([12, 4, 0]), knL: 14 * D, flatL: true,
+};
 function walk(ph) {
-  const hip = (q) => (6 + 22 * Math.cos(TAU * q)) * D;
-  const kn = (q) => (8 + 52 * bump(q, 0.75, 0.1) + 12 * bump(q, 0.12, 0.07)) * D;
-  const an = (q) => (4 * Math.cos(TAU * q) - 14 * bump(q, 0.55, 0.06)) * D;
-  return {
-    root: { pitch: 2 * D, yaw: -4 * D * Math.cos(TAU * ph), lift: 0, roll: 1.5 * D * S(TAU * ph) },
-    spine: [2 * D, 0, 0], chest: [0, 0, 5 * D * Math.cos(TAU * ph)],
-    hipR: [hip(ph), 4 * D, 0], knR: kn(ph), anR: an(ph),
-    hipL: [hip(ph + 0.5), 4 * D, 0], knL: kn(ph + 0.5), anL: an(ph + 0.5),
-    shR: [-(hip(ph + 0.5) - 6 * D) * 0.8, 10 * D, 0], elR: 22 * D,
-    shL: [-(hip(ph) - 6 * D) * 0.8, 10 * D, 0], elL: 22 * D,
-  };
+  // foot-path walk (footGait): planted feet stay put at any walking speed
+  const p = footGait(ph, WALK_BASE, { axis: [1, 0], half: 0.36, lift: 0.08, duty: 0.62, strike: 12, toeoff: -30 });
+  p.root = { ...p.root, yaw: -4 * D * Math.cos(TAU * ph), roll: 1.5 * D * S(TAU * ph) };
+  p.chest = [0, 0, 5 * D * Math.cos(TAU * ph)];
+  p.shR = [-14 * D * Math.cos(TAU * ph), 10 * D, 0]; p.elR = 22 * D;
+  p.shL = [14 * D * Math.cos(TAU * ph), 10 * D, 0]; p.elL = 22 * D;
+  return p;
 }
 
+/**
+ * Foot-path gait, in the player's own frame. Each foot cycles through
+ *   touchdown  first 12% of stance: the foot flattens from heel- or toe-first contact
+ *   stance     planted: it moves back under the body in a straight line at the
+ *              body's speed, so in the world it stays put (validator: foot slide)
+ *   toe-off    last 18% of stance: the heel lifts, the foot rolls onto the toes
+ *   swing      it travels forward along `axis` (the direction of travel) with a lift
+ * Leg IK places each ankle on its path; the ankle angle is the levelled-foot
+ * angle plus the phase's roll. Stride per cycle = 2 * half / duty.
+ *   strike: foot angle at touchdown (deg, + toes up), toeoff: at toe-off (deg, - toes down)
+ */
+function footGait(ph, base, { axis = [1, 0], half = 0.25, lift = 0.09, duty = 0.6, strike = 10, toeoff = -28 }) {
+  const p = fill(base);
+  const J0 = fk(p);
+  for (const [s, off] of [['R', 0], ['L', 0.5]]) {
+    const a0 = J0['an' + s].p;
+    const q = (((ph + off) % 1) + 1) % 1;
+    let u, y = 0, roll = 0;
+    if (q < duty) {
+      u = 1 - (2 * q) / duty;                                   // planted: front to back
+      const qs = q / duty;
+      if (qs < 0.12) roll = strike * (1 - qs / 0.12);           // touchdown
+      else if (qs > 0.82) roll = toeoff * ((qs - 0.82) / 0.18);   // toe-off
+    } else {
+      const k = (q - duty) / (1 - duty);
+      u = -1 + 2 * k * k * (3 - 2 * k); y = lift * Math.sin(Math.PI * k);
+      roll = toeoff * (1 - k) + strike * k;                      // swing: from toe-off back to the strike angle
+    }
+    Object.assign(p, reachLeg(p, s, [a0[0] + axis[0] * half * u, a0[1] + y, a0[2] + axis[1] * half * u], 8));
+    const flat = -(-(p.root?.pitch || 0) + p['hip' + s][0] - p['kn' + s]);
+    p['an' + s] = flat + roll * D; p['flat' + s] = false;
+  }
+  return p;
+}
+
+const BACKPEDAL_BASE = {
+  root: { pitch: 24 * D }, spine: [6 * D, 0, 0], neck: [-26 * D, 0, 0],
+  hipR: deg([46, 9, 0]), knR: 70 * D, flatR: true, hipL: deg([46, 9, 0]), knL: 70 * D, flatL: true,
+};
 function backpedal(ph) {
-  // stance while the hip flexes (the foot travels forward under a body moving
-  // back); in the swing half the knee folds to pick the foot up off the turf
-  const swing = (q) => Math.max(0, -Math.cos(TAU * q));
-  const hip = (q) => (40 + 26 * S(TAU * q) + 10 * swing(q)) * D;
-  const kn = (q) => (62 + 18 * S(TAU * q + 1.3) + 48 * swing(q)) * D;
-  return {
-    root: { pitch: 26 * D, lift: 0.03 * (bump(ph, 0.2, 0.06) + bump(ph, 0.7, 0.06)), roll: 3 * D * S(TAU * ph) },
-    spine: [6 * D, 0, 0], chest: [0, 0, 4 * D * S(TAU * ph)], neck: [-28 * D, 0, 0],
-    hipR: [hip(ph), 9 * D, 0], knR: kn(ph), flatR: true,
-    hipL: [hip(ph + 0.5), 9 * D, 0], knL: kn(ph + 0.5), flatL: true,
-    shR: [(20 - 30 * S(TAU * ph)) * D, 16 * D, 12 * D], elR: 88 * D,
-    shL: [(20 + 30 * S(TAU * ph)) * D, 16 * D, 12 * D], elL: 88 * D,
-  };
+  // moving backward: the planted foot travels forward under him
+  const p = footGait(ph, BACKPEDAL_BASE, { axis: [-1, 0], half: 0.3, lift: 0.1, duty: 0.58, strike: -14, toeoff: -22 });   // toes land first going backward
+  p.root = { ...p.root, roll: 3 * D * S(TAU * ph) };
+  p.chest = [0, 0, 4 * D * S(TAU * ph)];
+  p.shR = [(20 - 30 * S(TAU * ph)) * D, 16 * D, 12 * D]; p.elR = 88 * D;
+  p.shL = [(20 + 30 * S(TAU * ph)) * D, 16 * D, 12 * D]; p.elL = 88 * D;
+  return p;
 }
 
-/** Lateral shuffle toward dir (+1 the player's right, -1 left), square to the line. */
+const SHUFFLE_BASE = {
+  root: { pitch: 18 * D }, spine: [10 * D, 0, 0], neck: [-26 * D, 0, 0],
+  hipR: deg([46, 20, 0]), knR: 64 * D, flatR: true, hipL: deg([46, 20, 0]), knL: 64 * D, flatL: true,
+  shR: deg([38, 20, 14]), elR: 84 * D, shL: deg([38, 20, 14]), elL: 84 * D,
+};
+/** Lateral shuffle toward dir (+1 the player's right, -1 left), square to the line; the feet never cross. */
 function shuffle(ph, dir) {
-  const w = S(TAU * ph);
-  return {
-    root: { pitch: 18 * D, roll: dir * 4 * D * w, lift: 0.04 * Math.max(0, -w), z: dir * 0.05 * Math.cos(TAU * ph) },
-    spine: [10 * D, -dir * 3 * D, 0], neck: [-26 * D, 0, 0],
-    hipR: [(46 - 6 * w) * D, (17 + 17 * w) * D, 0], knR: (64 - 10 * w) * D, flatR: true,
-    hipL: [(46 - 6 * w) * D, (17 + 17 * w) * D, 0], knL: (64 - 10 * w) * D, flatL: true,
-    shR: deg([38, 20, 14]), elR: 84 * D, shL: deg([38, 20, 14]), elL: 84 * D,
-  };
+  const p = footGait(ph, SHUFFLE_BASE, { axis: [0, dir], half: 0.16, lift: 0.07, duty: 0.62, strike: 0, toeoff: -16 });
+  p.spine = [10 * D, -dir * 3 * D, 0];
+  return p;
 }
 
 // ---------------------------------------------------------------- stances

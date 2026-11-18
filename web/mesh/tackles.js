@@ -92,9 +92,25 @@ function wrapDrive(s, phase, amp = 0.4) {
 const WRAP_FALL = (onTop) => [
   { t: 0, ...wrapDrive(1, 0.25) },
   { t: 0.45, root: { pitch: 62 * D, lift: 0.02, x: 0.08 }, spine: [10 * D, 0, 0], neck: [-40 * D, 0, -10 * D], hipR: deg([70, 10, 0]), knR: 100 * D, anR: -30 * D, hipL: deg([40, 10, 0]), knL: 70 * D, anL: -30 * D, shR: deg([96, 26, 44]), elR: 70 * D, shL: deg([96, 26, 44]), elL: 70 * D, gripR: 0.9, gripL: 0.9 },
-  { t: 1, root: { pitch: 86 * D, x: 0.15, lift: onTop }, neck: [-55 * D, 0, -14 * D], spine: [-2 * D, 0, 0], hipR: deg([10, 10, 0]), knR: 40 * D, anR: -50 * D, hipL: deg([24, 10, 0]), knL: 60 * D, anL: -50 * D, shR: deg([130, 36, 40]), elR: 64 * D, shL: deg([130, 36, 40]), elL: 64 * D, gripR: 0.9, gripL: 0.9 },
+  { t: 1, root: { pitch: 86 * D, x: 0.15, lift: onTop }, neck: [-55 * D, 0, -14 * D], spine: [-2 * D, 0, 0], hipR: deg([10, 10, 0]), knR: 40 * D, anR: -50 * D, hipL: deg([24, 10, 0]), knL: 60 * D, anL: -50 * D, shR: deg([118, 66, 18]), elR: 72 * D, shL: deg([118, 66, 18]), elL: 72 * D, gripR: 0.3, gripL: 0.3 },   // arms out, bracing either side of him
 ];
 const WRAP_FALLS = { fwd: WRAP_FALL(0.16), back: WRAP_FALL(0.2), R: WRAP_FALL(0.18), L: WRAP_FALL(0.18) };
+// the tackler's arms through the fall, authored: hold the wrap, let go as the
+// bodies rotate, open out, reach for the turf either side of the carrier and
+// brace. The IK only makes small corrections around this path (ik.js 'protect').
+const ARMS_FALL = [
+  { t: 0, shR: deg([74, 30, 48]), elR: 78 * D, shL: deg([74, 30, 48]), elL: 78 * D, gripR: 0.9, gripL: 0.9 },
+  { t: 0.28, shR: deg([88, 38, 42]), elR: 70 * D, shL: deg([88, 38, 42]), elL: 70 * D, gripR: 0.8, gripL: 0.8 },
+  { t: 0.5, shR: deg([104, 56, 26]), elR: 52 * D, shL: deg([104, 56, 26]), elL: 52 * D, gripR: 0.35, gripL: 0.35 },
+  { t: 0.72, shR: deg([114, 66, 16]), elR: 40 * D, shL: deg([114, 66, 16]), elL: 40 * D, wrR: deg([40, 0]), wrL: deg([40, 0]), gripR: 0.15, gripL: 0.15 },
+  { t: 1, shR: deg([118, 66, 18]), elR: 72 * D, shL: deg([118, 66, 18]), elL: 72 * D, wrR: deg([20, 0]), wrL: deg([20, 0]), gripR: 0.3, gripL: 0.3 },
+];
+const ARM_KEYS = ['shR', 'elR', 'wrR', 'gripR', 'shL', 'elL', 'wrL', 'gripL'];
+function withFallArms(p, f) {
+  const a = sampleKeys(ARMS_FALL, f);
+  for (const k of ARM_KEYS) p[k] = a[k];
+  return p;
+}
 
 function diveGrab(s) {
   const p = fill(ACTIONS.dive.fn(0.5 + 0.22 * s));
@@ -128,7 +144,7 @@ export function tacklePose(w, role, t) {
     p.ball = 'R'; return p;
   }
   if (w.style === 'dive') return falling ? fill(sampleKeys([{ t: 0, ...diveGrab(1) }, { t: 1, ...DIVE_END }], f)) : diveGrab(s);
-  return falling ? mix(() => fill(sampleKeys(WRAP_FALLS[ca], f)), () => fill(sampleKeys(WRAP_FALLS[cb], f)), k) : fill(wrapDrive(s, w.phD ?? 0, w.amp ?? 0.4));
+  return falling ? withFallArms(mix(() => fill(sampleKeys(WRAP_FALLS[ca], f)), () => fill(sampleKeys(WRAP_FALLS[cb], f)), k), f) : fill(wrapDrive(s, w.phD ?? 0, w.amp ?? 0.4));
 }
 
 /** Tackler's distance behind the carrier along the push direction (yards). */

@@ -80,6 +80,7 @@ export function makeTackle({ c, d, mc = 95, md = 100, t, u = 1, style: forced = 
 
 /** One step of the struggle: the hit's momentum bleeds into the fight for yards; the tackler settles into the clip's spot. */
 export function stepStruggle(w, c, d, dt, u = 1) {
+  if (!(dt > 0)) return { shift: 0, turn: 0 };      // paused frame
   w.age += dt;
   const hx = Math.cos(c.yaw), hz = Math.sin(c.yaw), ex = Math.cos(w.ang), ez = Math.sin(w.ang);
   const gx = (hx * 1.5 + ex * 0.9) * u, gz = (hz * 1.5 + ez * 0.9) * u;
@@ -89,7 +90,9 @@ export function stepStruggle(w, c, d, dt, u = 1) {
   // the tackler closes the last of the gap at his own closing speed (his
   // momentum does the work); only what is left over is corrected
   const along = (c.x - d.x) * ex + (c.z - d.z) * ez;
-  const close = Math.max(0, Math.min(w.closing, (along - gap) / dt));
+  // ...decelerating into contact (about 4 g) rather than stopping dead at the gap
+  const room = Math.max(0, along - gap);
+  const close = Math.max(0, Math.min(w.closing, Math.sqrt(2 * 40 * (u / M_PER_YD) * room), room / dt));
   d.vx = c.vx + ex * close; d.vz = c.vz + ez * close;
   const k2 = 1 - Math.exp(-dt * 12);
   const nx = d.x + d.vx * dt, nz = d.z + d.vz * dt;           // where his own motion takes him
@@ -123,6 +126,7 @@ export function stepStruggle(w, c, d, dt, u = 1) {
 
 /** One step of the fall: the pile slides on what momentum is left. */
 export function stepFall(c, d, dt) {
+  if (!(dt > 0)) return;
   const dec = Math.exp(-dt * PILE_DECAY);
   c.vx *= dec; c.vz *= dec; d.vx = c.vx; d.vz = c.vz;
 }

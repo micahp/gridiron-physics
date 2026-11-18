@@ -20,8 +20,8 @@ const smooth = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const LO = [-60 * D, -30 * D, -80 * D, 0], HI = [185 * D, 130 * D, 80 * D, 150 * D];
 const W_PALM = 1, W_CLEAR = 3, W_STAY = 0.06;
 // clearance is measured from the arm's centre line, so it includes the arm's own thickness
-const ARM_R = [0.07, 0.06, 0.05, 0.035];           // upper arm, elbow, forearm, palm
-const MARGIN = 0.008;
+const ARM_R = [0.072, 0.066, 0.06, 0.054, 0.05, 0.046, 0.035];   // along the arm (upper arm .. forearm), then the palm
+const MARGIN = 0.02;
 
 /** Palm centre (on the palm side) of a hand, body space. */
 export function palmPoint(J, side) {
@@ -55,7 +55,8 @@ function capDist(p, caps) {
 /** Arm points that must stay clear: upper-arm middle, elbow, forearm middle (+ the palm when it has no target). */
 function armPoints(J, side, withPalm) {
   const sh = J['sh' + side], el = J['el' + side];
-  const pts = [tw(sh.R, sh.p, [0, -0.15, 0]), el.p, tw(el.R, el.p, [0, -0.13, 0])];
+  // every ~7 cm along the upper arm and forearm, so nothing slips between samples
+  const pts = [tw(sh.R, sh.p, [0, -0.08, 0]), tw(sh.R, sh.p, [0, -0.17, 0]), el.p, tw(el.R, el.p, [0, -0.07, 0]), tw(el.R, el.p, [0, -0.14, 0]), tw(el.R, el.p, [0, -0.21, 0])];
   if (withPalm) pts.push(palmPoint(J, side));
   return pts;
 }
@@ -79,7 +80,7 @@ export function solveArm(pose, side, goal, iters = 8) {
       const d = goal.dist(placeToWorld(goal.place, p)) - ARM_R[i];
       r.push(W_CLEAR * Math.max(0, MARGIN - d));
     });
-    for (let k = 0; k < 4; k++) r.push(W_STAY * (y[k] - x0[k]));
+    for (let k = 0; k < 4; k++) r.push((goal.stay ?? W_STAY) * (y[k] - x0[k]));
     return r;
   };
   for (let it = 0; it < iters; it++) {
@@ -126,9 +127,15 @@ export function applyContactIK(pose, w, t, ctx) {
   let targets = [null, null];
   if (cs.palm > 0) {
     // contact targets on the carrier: waist sides for a wrap, thighs for a dive
+    // wrap: two points on the waist, either side of the line from the carrier to
+    // the tackler and a little past it (arms around the body, not through it)
+    const rp = ctx.recvPlace, ry = rp.yaw;
+    const bx = (a.x - rp.x) * Math.cos(ry) + (a.z - rp.z) * Math.sin(ry), bz = -(a.x - rp.x) * Math.sin(ry) + (a.z - rp.z) * Math.cos(ry);
+    const phi = Math.atan2(bz, bx), WR = [0.15, 0.185];      // waist half-depth, half-width (+ a little air)
+    const around = (s) => { const q = phi + s * 1.78; return [WR[0] * Math.cos(q), 0.1, WR[1] * Math.sin(q)]; };
     const pts = w.style === 'dive'
       ? [tw(J.hipR.R, J.hipR.p, [0.02, -0.3, 0.0]), tw(J.hipL.R, J.hipL.p, [0.02, -0.3, 0.0])]
-      : [tw(J.spine.R, J.spine.p, [0, 0.1, 0.175]), tw(J.spine.R, J.spine.p, [0, 0.1, -0.175])];
+      : [tw(J.spine.R, J.spine.p, around(1)), tw(J.spine.R, J.spine.p, around(-1))];
     targets = pts.map((p) => {
       const wp = placeToWorld(ctx.recvPlace, p);
       const rx = wp[0] - a.x, rz = wp[2] - a.z;
@@ -138,7 +145,7 @@ export function applyContactIK(pose, w, t, ctx) {
   const out = { ...pose };
   w.armClear = 1e9;
   for (const [side, tgt] of [['R', targets[0]], ['L', targets[1]]]) {
-    const sol = solveArm(pose, side, { target: tgt, palmW: cs.palm, caps: true, dist: ctx.recvDist, place: a });
+    const sol = solveArm(pose, side, { target: tgt, palmW: cs.palm, caps: true, dist: ctx.recvDist, place: a, stay: cs.state === 'protect' ? 0.25 : W_STAY });
     out['sh' + side] = sol['sh' + side]; out['el' + side] = sol['el' + side];
     w.armClear = Math.min(w.armClear, sol.clear);
   }

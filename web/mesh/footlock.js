@@ -20,7 +20,7 @@ function toWorld(place, b) {
 const sole = (J, side) => { const j = J['an' + side]; const l = [0.05, -0.075, 0]; return [j.p[0] + j.R[0] * l[0] + j.R[1] * l[1], j.p[1] + j.R[3] * l[0] + j.R[4] * l[1], j.p[2] + j.R[6] * l[0] + j.R[7] * l[1]]; };
 
 /** Bend one leg so its ankle reaches target (body space). */
-function reachLeg(pose, side, target, iters = 6) {
+export function reachLeg(pose, side, target, iters = 6) {
   const hip = 'hip' + side, kn = 'kn' + side;
   let x = [pose[hip][0], pose[hip][1], pose[kn]];
   const err = (y) => { const J = fk({ ...pose, [hip]: [y[0], y[1], pose[hip][2]], [kn]: y[2] }); const a = J['an' + side].p; return [a[0] - target[0], a[1] - target[1], a[2] - target[2]]; };

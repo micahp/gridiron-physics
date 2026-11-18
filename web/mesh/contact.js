@@ -68,6 +68,7 @@ export function separation(capsA, capsB) {
  */
 export function resolveContact(w, capsA, capsB, dt) {
   const sep = w.sep || (w.sep = [0, 0, 0]);
+  if (!(dt > 0)) return w.lastDepth || 0;          // paused frame
   // a few relaxation passes: push out of the deepest overlap, re-test from there
   const moved = [0, 0, 0];
   let first = 0;
@@ -78,7 +79,18 @@ export function resolveContact(w, capsA, capsB, dt) {
     if (depth < 0.003) break;
     moved[0] += push[0]; moved[1] += Math.max(0, push[1]) + (push[1] < 0 ? 0 : 0); moved[2] += push[2];
   }
-  if (first > 0.003) { sep[0] += moved[0]; sep[1] += moved[1]; sep[2] += moved[2]; }
+  if (first > 0.003) {
+    // the push is a body being shoved, not a teleport: speed at most 5 m/s across
+    // and 2 m/s up, built up no faster than a hard collision (150 m/s^2, ~15 g)
+    const v = w.sepV || (w.sepV = [0, 0, 0]);
+    const want = [moved[0] / dt, moved[1] / dt, moved[2] / dt];
+    const h = Math.hypot(want[0], want[2]);
+    if (h > 5) { want[0] *= 5 / h; want[2] *= 5 / h; }
+    want[1] = Math.min(want[1], 2);
+    const dv = [want[0] - v[0], want[1] - v[1], want[2] - v[2]], dl = Math.hypot(...dv), am = 150 * dt;
+    if (dl > am) for (let i = 0; i < 3; i++) dv[i] *= am / dl;
+    for (let i = 0; i < 3; i++) { v[i] += dv[i]; sep[i] += v[i] * dt; }
+  } else if (w.sepV) w.sepV = [0, 0, 0];
   else { const r = Math.exp(-dt * 1.5); sep[0] *= r; sep[1] *= r; sep[2] *= r; }   // ease back once clear
   sep[1] = Math.max(0, sep[1]);
   return first;

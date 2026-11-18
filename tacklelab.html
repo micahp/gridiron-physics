@@ -55,8 +55,14 @@ const CASES = [
   { name: 'Diving at the legs from behind', from: 180, vc: 6.2, vd: 7.8, mc: 90, md: 88, style: 'dive' },
   { name: 'Diving at the legs from the side', from: -90, vc: 6.0, vd: 6.0, mc: 90, md: 88, style: 'dive', lead: true },
 ];
+// ?sc=from,vc,vd,lead,scaleC,scaleD,offset replays one validator scenario exactly
+if (q.get('sc')) {
+  const [from, vc, vd, lead, sC, sD, off] = q.get('sc').split(',');
+  CASES.unshift({ name: `validator scenario ${q.get('sc')}`, from: +from, vc: +vc, vd: +vd, lead: lead === 'true' || lead === '1', scaleC: +sC, scaleD: +sD, offset: +off, mc: 95 * (+sC) ** 3, md: 100 * (+sD) ** 3, exact: true });
+}
 for (const [i, c] of CASES.entries()) { const o = document.createElement('option'); o.value = i; o.textContent = c.name; $('pick').appendChild(o); }
 if (q.get('case')) { $('pick').value = q.get('case'); $('cycle').checked = false; }
+if (q.get('sc')) { $('pick').value = 0; $('cycle').checked = false; }
 if (q.get('speed')) $('speed').value = q.get('speed');
 
 // ---------------------------------------------------------------- scene
@@ -84,8 +90,8 @@ addEventListener('resize', resize); resize();
 
 await new Promise((res) => setTimeout(res, 30));
 const body = buildBody(0.016);
-const C = new MeshPlayer(body, { kit: KITS[0], skin: 0.55, number: 22, ownBall: false });
-const T = new MeshPlayer(body, { kit: KITS[1], skin: 0.25, number: 52, scale: 1.0, ownBall: false });
+const C = new MeshPlayer(body, { kit: KITS[0], skin: 0.55, number: 22, ownBall: false, scale: CASES[0].scaleC || 1 });
+const T = new MeshPlayer(body, { kit: KITS[1], skin: 0.25, number: 52, ownBall: false, scale: CASES[0].scaleD || 1 });
 scene.add(C.root, T.root);
 const ball = makeBall(); ball.matrixAutoUpdate = false; scene.add(ball);
 
@@ -94,9 +100,9 @@ let sim;
 function reset(ci) {
   const k = CASES[ci];
   const tc = 1.0;                                   // contact at t = 1 s
-  const reach = 0.95;
+  const reach = 1.0 * YD;                           // the game's (and the validator's) tackle reach
   const a = k.from * Math.PI / 180;                 // defender's position angle around the carrier
-  const contact = { x: k.vc * tc, z: 0 };
+  const contact = { x: k.vc * tc, z: k.offset || 0 };
   // defender runs straight at the contact point from that side
   // straight at the contact point, or (lead) matching the runner's speed upfield while closing from the side
   const vdx = k.lead ? k.vc : -Math.cos(a) * k.vd, vdz = -Math.sin(a) * k.vd;
@@ -114,8 +120,9 @@ function contact() {
   // the same runtime as the game (web/mesh/tackle-sim.js)
   const sel = selectTackle({ c, d, u: YD, prefer: [k.style || 'wrap'] });
   sim.sel = sel;
-  sim.w = makeTackle({ c, d, mc: k.mc, md: k.md, t: sim.t, u: YD, style: k.style || 'wrap' });
   sim.contacted = true;
+  if (!sel.action) { $('act').textContent = `${k.name}: REJECTED by the spec (${sel.checks[k.style || 'wrap'].reasons.join(', ')})`; return; }
+  sim.w = makeTackle({ c, d, mc: k.mc, md: k.md, t: sim.t, u: YD, style: sel.action });
 }
 const STRIDE = { carry: 4.1, sprint: 4.3 };
 function locoPose(p, name, dt) {
@@ -139,7 +146,7 @@ function step(now) {
   const { c, d } = sim;
   sim.t += dt;
   const t = sim.t;
-  if (!sim.contacted && Math.hypot(c.x - d.x, c.z - d.z) < 0.98) contact();
+  if (!sim.contacted && Math.hypot(c.x - d.x, c.z - d.z) < 1.0 * YD) contact();
   const w = sim.w;
   if (w) {
     if (w.tFall == null) { stepStruggle(w, c, d, dt, YD); if (t >= w.until) w.tFall = t; }
@@ -161,13 +168,13 @@ function step(now) {
   if (w) {
     // palms onto the carrier (IK), tackler's body pushed out of the carrier's (collision)
     const r = solveTackler(w, t, dt,
-      { J: C.J, place: { x: c.x, z: c.z, yaw: c.yaw, scale: 1, ground: C.inner.position.y } },
-      { pose: pd, place: { x: d.x, z: d.z, yaw: d.yaw, scale: 1, ground: T.inner.position.y } });
+      { J: C.J, place: { x: c.x, z: c.z, yaw: c.yaw, scale: C.root.scale.x, ground: C.inner.position.y } },
+      { pose: pd, place: { x: d.x, z: d.z, yaw: d.yaw, scale: T.root.scale.x, ground: T.inner.position.y } });
     pd = r.pose; dx = r.x; dz = r.z;
   }
   T.setPose(pd, dx, dz, d.yaw);
   if (w) {
-    pc = solveCarrierArm(w, t, { pose: pc, place: { x: c.x, z: c.z, yaw: c.yaw, scale: 1, ground: C.inner.position.y } }, { J: T.J, place: { x: dx, z: dz, yaw: d.yaw, scale: 1, ground: T.inner.position.y } });
+    pc = solveCarrierArm(w, t, { pose: pc, place: { x: c.x, z: c.z, yaw: c.yaw, scale: C.root.scale.x, ground: C.inner.position.y } }, { J: T.J, place: { x: dx, z: dz, yaw: d.yaw, scale: T.root.scale.x, ground: T.inner.position.y } });
     C.setPose(pc, c.x, c.z, c.yaw);
   }
   scene.updateMatrixWorld();
