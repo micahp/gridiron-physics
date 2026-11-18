@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b1016">
+<title>Gridiron Saturday</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Inter:wght@500;600;700&display=swap">
+<style>
+:root {
+  --night: #0b1016; --panel: rgba(10, 14, 20, 0.86); --line: rgba(255, 255, 255, 0.14);
+  --gold: #f5d33a; --home: #5b2a17; --homeAlt: #f2b632; --away: #13294b; --awayAlt: #c7d3e3;
+  --f-display: 'Saira Condensed', 'Arial Narrow', sans-serif; --f-ui: Inter, system-ui, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--night); color: #fff; font-family: var(--f-ui); touch-action: none; user-select: none; -webkit-user-select: none; }
+canvas#view { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+#hud { position: fixed; inset: 0; pointer-events: none; }
+#hud > * { pointer-events: auto; }
+
+/* scorebug, bottom centre like a broadcast */
+.bug { position: absolute; left: 50%; bottom: max(10px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+  display: flex; align-items: stretch; height: 40px; border-radius: 6px; overflow: hidden; pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,.45); font-family: var(--f-display); }
+.bug .tm { display: flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; min-width: 104px; }
+.bug .tm.home { background: var(--home); color: var(--homeAlt); }
+.bug .tm.away { background: var(--away); color: var(--awayAlt); justify-content: flex-end; padding: 0 12px 0 10px; }
+.bug .nm { font-weight: 800; font-size: 20px; letter-spacing: .04em; }
+.bug .sc { font-weight: 800; font-size: 28px; color: #fff; min-width: 26px; text-align: center; }
+.bug .mid { background: var(--panel); display: flex; align-items: center; gap: 12px; padding: 0 12px; font-weight: 700; font-size: 17px; letter-spacing: .03em; }
+.bug .mid .dd { color: var(--gold); }
+.bug .poss { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+/* centre messages */
+.banner { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(.9); font: 800 clamp(34px, 8vw, 72px)/1 var(--f-display);
+  letter-spacing: .04em; text-shadow: 0 4px 18px rgba(0,0,0,.6); opacity: 0; transition: opacity .2s, transform .25s; pointer-events: none; white-space: nowrap; }
+.banner.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.flash { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); font: 800 26px var(--f-display); letter-spacing: .06em; color: var(--gold);
+  text-shadow: 0 2px 10px rgba(0,0,0,.7); opacity: 0; transition: opacity .15s; pointer-events: none; }
+.flash.on { opacity: 1; }
+.toast { position: absolute; left: 50%; top: max(12px, env(safe-area-inset-top)); transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line);
+  padding: 8px 14px; border-radius: 6px; font: 600 13px var(--f-ui); opacity: 0; transition: opacity .3s; pointer-events: none; max-width: 92vw; text-align: center; }
+.toast.on { opacity: 1; }
+
+/* play call */
+.call { position: absolute; left: 50%; bottom: 66px; transform: translateX(-50%); display: none; gap: 10px; }
+.call.on { display: flex; }
+.card { width: 150px; padding: 12px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); cursor: pointer; text-align: left; color: #fff; }
+.card:active { transform: scale(.97); }
+.card b { display: block; font: 800 22px/1 var(--f-display); letter-spacing: .03em; }
+.card span { display: block; margin-top: 4px; font: 600 11px var(--f-ui); color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .08em; }
+.card svg { width: 100%; height: 54px; margin-top: 8px; }
+.card.alt { border-color: rgba(245,211,58,.45); }
+
+/* controls */
+.stick-zone { position: absolute; left: 0; bottom: 0; width: 45vw; height: 62vh; touch-action: none; }
+.stick-base { position: absolute; left: 34px; bottom: 70px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.18); opacity: .55; }
+.stick-base.live { opacity: 1; bottom: auto; }
+.stick-knob { position: absolute; left: 40px; top: 40px; width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.55); }
+.btns { position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: 70px; display: grid; grid-template-columns: 78px 78px; gap: 12px; }
+.btn { width: 78px; height: 78px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); background: rgba(10,14,20,.6); color: #fff;
+  font: 800 16px var(--f-display); letter-spacing: .05em; display: flex; align-items: center; justify-content: center; touch-action: none; }
+.btn.down { background: rgba(245,211,58,.85); color: #111; }
+.btn.big { grid-column: span 2; width: 100%; border-radius: 40px; background: #1f9d55; border-color: #6ee7a8; font-size: 24px; }
+.btn.hide { display: none; }
+
+/* receiver bubbles */
+.bub { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(10,14,20,.8); border: 2px solid var(--gold);
+  color: var(--gold); font: 800 20px var(--f-display); display: flex; align-items: center; justify-content: center; touch-action: none; }
+.bub small { position: absolute; top: 40px; font: 700 10px var(--f-ui); color: #fff; white-space: nowrap; }
+
+/* title + final */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+  background: radial-gradient(ellipse at center, rgba(11,16,22,.55), rgba(11,16,22,.92)); }
+.screen h1 { margin: 0; font: 800 clamp(44px, 10vw, 92px)/.9 var(--f-display); letter-spacing: .02em; }
+.screen h1 em { font-style: normal; color: var(--gold); }
+.screen p { margin: 0; color: rgba(255,255,255,.75); font-size: 14px; max-width: 520px; padding: 0 16px; }
+.screen .go { font: 800 22px var(--f-display); letter-spacing: .08em; padding: 14px 36px; border-radius: 40px; background: var(--gold); color: #111; border: 0; cursor: pointer; }
+.screen .go[disabled] { opacity: .5; }
+.screen .tiny { font-size: 11px; color: rgba(255,255,255,.45); }
+.screen.off { display: none; }
+.call, .btns { z-index: 5; } #bubs { position: absolute; inset: 0; pointer-events: none; z-index: 6; } #bubs .bub { pointer-events: auto; }
+.screen { z-index: 10; } .banner, .flash, .toast { z-index: 8; }
+.bug .mid span { white-space: nowrap; }
+@media (max-width: 640px) {
+  .bug { height: 34px; }
+  .bug .tm { min-width: 0; padding: 0 7px; gap: 5px; }
+  .bug .nm { font-size: 15px; } .bug .sc { font-size: 22px; min-width: 18px; }
+  .bug .mid { gap: 7px; padding: 0 8px; font-size: 13px; }
+  .btn { width: 66px; height: 66px; font-size: 14px; } .btns { grid-template-columns: 66px 66px; }
+}
+.rotate { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; font: 600 12px var(--f-ui); display: none; pointer-events: none; z-index: 8; white-space: nowrap; }
+@media (orientation: portrait) { .rotate.on { display: block; } }
+.stamp { position: absolute; right: 6px; top: 4px; font: 10px monospace; color: rgba(255,255,255,.5); pointer-events: none; }
+#gp-build-stamp { display: none; }
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="hud">
+  <div class="bug" id="bug">
+    <div class="tm home"><span class="nm" id="hn">RSU</span><span class="poss"></span><span class="sc" id="hs">0</span></div>
+    <div class="mid"><span id="qt">Q1 4:00</span><span class="dd" id="dd">1st &amp; 10</span><span id="bo">OWN 25</span></div>
+    <div class="tm away"><span class="sc" id="as">0</span><span class="nm" id="an">CTU</span></div>
+  </div>
+  <div class="call" id="call"></div>
+  <div class="btns" id="btns">
+    <button class="btn big hide" id="b-hike">HIKE</button>
+    <button class="btn hide" id="b-sprint">SPRINT</button>
+    <button class="btn hide" id="b-juke">JUKE</button>
+    <button class="btn hide" id="b-stiff">STIFF</button>
+  </div>
+  <div id="bubs"></div>
+  <div class="banner" id="banner"></div>
+  <div class="flash" id="flash"></div>
+  <div class="toast" id="toast"></div>
+  <div class="stamp" id="stamp"></div>
+  <div class="rotate" id="rotate">Turn your phone sideways to see the whole field</div>
+  <div class="screen" id="title">
+    <h1>GRIDIRON <em>SATURDAY</em></h1>
+    <p>You have the ball. Ridgeline State against Coastal Tech, four 4-minute quarters. Call a play, hike it, then run with the stick: <b>JUKE</b> to make a tackler miss, <b>STIFF</b> to push one off, hold <b>SPRINT</b> to open up. On a pass, tap a number over a receiver to throw to him.</p>
+    <button class="go" id="go" disabled>LOADING PLAYERS…</button>
+    <p class="tiny">Keyboard: arrows/WASD move · Space hike/juke · E stiff arm · Shift sprint · 1-5 throw</p>
+    <p class="tiny">Player model "American Football Player" by Hikky (CC BY 3.0, BlendSwap). Sounds: Kenney (CC0), Gregor Quendel crowd (CC0).</p>
+  </div>
+  <div class="screen off" id="final"></div>
+</div>
+<script type="module">
+import { Game, BUILD, TEAMS } from './web/play/game.js';
+
+const $ = (id) => document.getElementById(id);
+document.documentElement.style.setProperty('--home', TEAMS.home.color);
+document.documentElement.style.setProperty('--homeAlt', TEAMS.home.alt);
+document.documentElement.style.setProperty('--away', TEAMS.away.color);
+document.documentElement.style.setProperty('--awayAlt', TEAMS.away.alt);
+$('hn').textContent = TEAMS.home.short; $('an').textContent = TEAMS.away.short;
+$('stamp').textContent = `build ${BUILD}`;
+
+// ---------------------------------------------------------------- sound
+const SOUNDS = { snap: 'snap.ogg', whistle: 'whistle.ogg', pads: ['pads-1.ogg', 'pads-2.ogg'], cheer: 'crowd-cheer.ogg', bigcheer: 'crowd-big-cheer.ogg', bed: 'stadium-bed.ogg' };
+let actx = null; const buffers = {};
+async function initAudio() {
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    await actx.resume();
+    const load = async (f) => { const r = await fetch(`web/audio/${f}`); return actx.decodeAudioData(await r.arrayBuffer()); };
+    for (const [k, v] of Object.entries(SOUNDS)) {
+      Promise.all((Array.isArray(v) ? v : [v]).map(load)).then((b) => {
+        buffers[k] = b;
+        if (k === 'bed') play('bed', { loop: true, gain: 0.35 });
+      }).catch(() => {});
+    }
+  } catch { actx = null; }
+}
+function play(name, { loop = false, gain = 0.8 } = {}) {
+  const list = buffers[name];
+  if (!actx || !list) return;
+  const src = actx.createBufferSource();
+  src.buffer = list[Math.floor(Math.random() * list.length)];
+  src.loop = loop;
+  const g = actx.createGain(); g.gain.value = gain;
+  src.connect(g).connect(actx.destination);
+  src.start();
+}
+
+// ------------------------------------------------------------------ HUD
+const ORD = ['', '1st', '2nd', '3rd', '4th'];
+let lastBug = '';
+let bannerT = 0, flashT = 0, toastT = 0;
+const call = $('call');
+const btn = { hike: $('b-hike'), sprint: $('b-sprint'), juke: $('b-juke'), stiff: $('b-stiff') };
+const fieldPos = (x) => (x < 50 ? `OWN ${Math.round(x)}` : x > 50 ? `OPP ${Math.round(100 - x)}` : 'MIDFIELD');
+const diagram = (kind) => kind === 'run'
+  ? '<svg viewBox="0 0 150 54"><g stroke="#fff" stroke-width="2" fill="none"><path d="M75 46 L82 30 L92 10" stroke="#f5d33a" stroke-width="3"/><path d="M40 28 l0 -8M58 28 l4 -10M75 28 l6 -12M92 28 l4 -10M110 28 l2 -10"/></g><g fill="#fff"><circle cx="40" cy="30" r="3"/><circle cx="58" cy="30" r="3"/><circle cx="75" cy="30" r="3"/><circle cx="92" cy="30" r="3"/><circle cx="110" cy="30" r="3"/><circle cx="75" cy="46" r="3.5" fill="#f5d33a"/></g></svg>'
+  : '<svg viewBox="0 0 150 54"><g stroke="#f5d33a" stroke-width="2.5" fill="none"><path d="M12 44 L12 4"/><path d="M138 44 L138 22 L132 26"/><path d="M38 44 L38 36 L70 18"/><path d="M112 44 L112 34 L140 34"/><path d="M75 50 L50 46 L30 40"/></g><g fill="#fff"><circle cx="12" cy="46" r="3"/><circle cx="138" cy="46" r="3"/><circle cx="38" cy="46" r="3"/><circle cx="112" cy="46" r="3"/><circle cx="75" cy="50" r="3"/></g></svg>';
+
+const hud = {
+  controls: $('hud'),
+  sound: (n) => play(n, { gain: n === 'bigcheer' ? 0.9 : n === 'cheer' ? 0.6 : 0.8 }),
+  playcall(fourth, los) {
+    const cards = [
+      ['run', 'INSIDE ZONE', 'Run · handoff right'],
+      ['pass', 'SPREAD SHOT', 'Pass · go, curl, slant, out, flat'],
+    ];
+    if (fourth) {
+      cards.push(['punt', 'PUNT', 'Give it away deep']);
+      if (los >= 55) cards.push(['fg', 'FIELD GOAL', `${Math.round(100 - los + 17)} yards`]);
+    }
+    call.innerHTML = '';
+    for (const [k, b, s] of cards) {
+      const el = document.createElement('button');
+      el.className = `card${k === 'punt' || k === 'fg' ? ' alt' : ''}`;
+      el.innerHTML = `<b>${b}</b><span>${s}</span>${k === 'run' || k === 'pass' ? diagram(k) : ''}`;
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); play('pads', { gain: 0.15 }); game.callPlay(k); });
+      call.appendChild(el);
+    }
+    call.classList.add('on');
+    for (const b of Object.values(btn)) b.classList.add('hide');
+  },
+  hidePlaycall() { call.classList.remove('on'); },
+  presnap() {
+    for (const b of Object.values(btn)) b.classList.add('hide');
+    btn.hike.classList.remove('hide');
+  },
+  live(kind) {
+    btn.hike.classList.add('hide');
+    btn.sprint.classList.remove('hide'); btn.juke.classList.remove('hide'); btn.stiff.classList.remove('hide');
+    void kind;
+  },
+  bubbles(list) {
+    const root = $('bubs');
+    if (!list.length) { if (root.childElementCount) root.innerHTML = ''; return; }
+    while (root.childElementCount < list.length) {
+      const k = root.childElementCount;
+      const el = document.createElement('div');
+      el.className = 'bub';
+      el.innerHTML = `${k + 1}<small></small>`;
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); game.input.press(`throw${k}`); });
+      root.appendChild(el);
+    }
+    list.forEach((b, k) => {
+      const el = root.children[k];
+      el.style.left = `${b.scr.x}px`; el.style.top = `${b.scr.y}px`;
+      el.style.display = b.scr.on ? 'flex' : 'none';
+      el.querySelector('small').textContent = b.p.slot === 'SLOT' ? 'SLOT' : b.p.slot.replace(/\d/, '');
+    });
+  },
+  flash(text) { const el = $('flash'); el.textContent = text; el.classList.add('on'); clearTimeout(flashT); flashT = setTimeout(() => el.classList.remove('on'), 900); },
+  banner(text, color = '#fff') { const el = $('banner'); el.textContent = text; el.style.color = color; el.classList.add('on'); clearTimeout(bannerT); bannerT = setTimeout(() => el.classList.remove('on'), 1700); },
+  toast(text) { const el = $('toast'); el.textContent = text; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 3800); },
+  scorebug(g) {
+    const m = Math.max(0, Math.floor(g.clock / 60)), s = Math.max(0, Math.floor(g.clock % 60));
+    const d = g.drive;
+    const toGo = d.los + d.toGo >= 100 ? 'Goal' : Math.max(1, Math.round(d.toGo));
+    const key = `${g.score.home}|${g.score.away}|${g.quarter}|${m}:${s}|${d.down}|${toGo}|${Math.round(d.los)}`;
+    if (key === lastBug) return;
+    lastBug = key;
+    $('hs').textContent = g.score.home; $('as').textContent = g.score.away;
+    $('qt').textContent = `Q${Math.min(4, g.quarter)} ${m}:${String(s).padStart(2, '0')}`;
+    $('dd').textContent = `${ORD[Math.min(4, d.down)]} & ${toGo}`;
+    $('bo').textContent = fieldPos(d.los);
+  },
+  final(score) {
+    const el = $('final');
+    const won = score.home > score.away, tie = score.home === score.away;
+    el.innerHTML = `<h1>FINAL</h1><p style="font:800 40px var(--f-display);color:#fff">${TEAMS.home.short} ${score.home} · ${TEAMS.away.short} ${score.away}</p><p>${tie ? 'A tie.' : won ? 'You win.' : 'Coastal Tech wins this one.'}</p><button class="go" id="again">PLAY AGAIN</button>`;
+    el.classList.remove('off');
+    $('again').addEventListener('click', () => { el.classList.add('off'); game.over = false; game.start(); });
+  },
+};
+const game = new Game($('view'), hud);
+window.__play = game;
+game.input.bindButton(btn.hike, 'hike');
+game.input.bindButton(btn.juke, 'juke');
+game.input.bindButton(btn.stiff, 'stiff');
+game.input.bindButton(btn.sprint, 'sprint', { hold: true });
+
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  try { game.frame(dt); } catch (err) { console.error(err); }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+game.load().then(() => {
+  const go = $('go');
+  go.disabled = false;
+  go.textContent = 'KICK IT OFF';
+  const begin = () => { initAudio(); $('title').classList.add('off'); game.start(); $('rotate').classList.add('on'); setTimeout(() => $('rotate').classList.remove('on'), 6000); };
+  go.addEventListener('click', begin);
+  if (game.auto) begin();
+}).catch((err) => { $('go').textContent = 'Could not load the players'; console.error(err); });
+</script>
+</body>
+</html>
