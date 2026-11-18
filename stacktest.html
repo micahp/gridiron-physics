@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sprite-stack test</title>
+<style>
+  html,body{margin:0;height:100%;background:#1c2a1c;color:#fff;font:13px system-ui,sans-serif;overflow:hidden}
+  canvas{display:block;width:100%;height:100%}
+  #hud{position:fixed;left:10px;top:8px;text-shadow:0 1px 2px #000;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">loading…</div>
+<script type="module">
+// Live sprite stack of the real animated football player.
+// Left: the normal skinned model. Right: the same skeleton pose drawn as N flat
+// slices (re-cut every frame). Each slice is a top-down render of the cross
+// section at that height, so animation stays real while the look is chunky.
+//   ?n=48 slices  ?t=40 px per slice  ?clip=3 seconds per pose  ?pose=run
+import * as THREE from './web/vendor/three.module.js';
+import { loadRiggedPlayer, buildRiggedPlayer, animateRigged } from './web/rigged-player.js';
+import { POSE } from './web/pose-codes.js';
+
+const q = new URLSearchParams(location.search);
+const N = +(q.get('n') || 48), T = +(q.get('t') || 40), HOLD = +(q.get('clip') || 3);
+const COLS = 8, ROWS = Math.ceil(N / COLS);
+
+const canvas = document.getElementById('c');
+const r = new THREE.WebGLRenderer({ canvas, antialias: false });
+r.setPixelRatio(Math.min(2, devicePixelRatio));
+r.setClearColor(0x2d5a2a);
+const hud = document.getElementById('hud');
+
+const kit = (jersey, pants, helmet, number, trim, mask, sock = pants) => ({ jersey, pants, helmet, number, trim, mask, sock });
+const KIT = kit('#5b2a17', '#e9c46a', '#5b2a17', '#f2b632', '#f2b632', '#f2b632', '#5b2a17');
+const gltf = await loadRiggedPlayer();
+const info = { id: 'p0', jersey: 22, physics: { height: 1.88 } };
+
+// --- the display scene
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x446644, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(3, 8, 5); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x3a7a35 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const normal = buildRiggedPlayer(gltf, info, KIT);
+scene.add(normal);
+
+// --- the slicing scene (separate copy of the player so it can be cut freely)
+const sliceScene = new THREE.Scene();
+const src = buildRiggedPlayer(gltf, info, KIT);
+sliceScene.add(src);
+src.updateMatrixWorld(true);
+const box = new THREE.Box3().setFromObject(src);
+const H = (box.max.y - box.min.y) * 1.06, Y0 = box.min.y - 0.02 * H;
+const HALF = H * 0.62;                      // half-width of each slice window
+const camS = new THREE.OrthographicCamera(-HALF, HALF, HALF, -HALF, 0.01, H * 3);
+camS.up.set(0, 0, -1);
+camS.position.set(0, Y0 + H * 2, 0);
+camS.lookAt(0, 0, 0);
+
+// swap in flat "cap" materials: colour from the original texture, alpha = 1 only
+// where the nearest surface is a back face (i.e. the ray is inside the solid)
+const orig = new Map();
+const capCache = new Map();
+const cap = (m) => {
+  if (capCache.has(m)) return capCache.get(m);
+  const c = new THREE.MeshBasicMaterial({ map: m.map || null, color: m.color ? m.color.clone() : 0xffffff, side: THREE.DoubleSide, blending: THREE.NoBlending, transparent: false });
+  c.onBeforeCompile = (s) => {
+    s.fragmentShader = s.fragmentShader.replace('#include <dithering_fragment>', '#include <dithering_fragment>\n gl_FragColor.a = gl_FrontFacing ? 0.0 : 1.0;');
+  };
+  capCache.set(m, c);
+  return c;
+};
+const meshes = [];
+src.traverse((o) => { if (o.isMesh) { meshes.push(o); orig.set(o, o.material); } });
+
+const rt = new THREE.WebGLRenderTarget(COLS * T, ROWS * T, { magFilter: THREE.NearestFilter, minFilter: THREE.NearestFilter, generateMipmaps: false });
+rt.texture.colorSpace = THREE.SRGBColorSpace;
+const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
+
+function cut() {
+  for (const m of meshes) m.material = Array.isArray(orig.get(m)) ? orig.get(m).map(cap) : cap(orig.get(m));
+  r.setRenderTarget(rt);
+  r.setScissorTest(false);
+  r.setClearColor(0x000000, 0);
+  r.clear();
+  r.setScissorTest(true);
+  r.clippingPlanes = [plane];
+  for (let k = 0; k < N; k++) {
+    plane.constant = Y0 + ((k + 1) / N) * H;
+    const x = (k % COLS) * T, y = (ROWS - 1 - Math.floor(k / COLS)) * T;
+    r.setViewport(x, y, T, T);
+    r.setScissor(x, y, T, T);
+    r.render(sliceScene, camS);
+  }
+  r.clippingPlanes = [];
+  r.setScissorTest(false);
+  r.setRenderTarget(null);
+  r.setViewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+  r.setClearColor(0x2d5a2a, 1);
+  for (const m of meshes) m.material = orig.get(m);
+}
+
+// --- the stack: N horizontal quads, each showing its tile of the atlas
+const stack = new THREE.Group();
+const stackMat = new THREE.MeshBasicMaterial({ map: rt.texture, alphaTest: 0.5, side: THREE.DoubleSide, vertexColors: true });
+const step = H / N;
+for (let k = 0; k < N; k++) {
+  const g = new THREE.PlaneGeometry(HALF * 2, HALF * 2);
+  const u0 = (k % COLS) / COLS, v0 = Math.floor(k / COLS) / ROWS;
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    uv.setXY(i, u0 + uv.getX(i) / COLS, 1 - (v0 + (1 - uv.getY(i)) / ROWS));
+  }
+  const shade = 0.68 + 0.32 * (k / N);              // poor-man's lighting: lower slices darker
+  const col = new Float32Array(g.attributes.position.count * 3).fill(shade);
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.Mesh(g, stackMat);
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = Y0 + ((k + 1) / N) * H - step * 0.5;
+  stack.add(m);
+}
+scene.add(stack);
+
+const cam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+const POSES = q.get('pose') ? [q.get('pose')] : ['RUN', 'STANCE', 'BLOCK', 'WRAP', 'DOWN', 'CELEBRATE'];
+const resize = () => {
+  const w = innerWidth, h = innerHeight;
+  r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix();
+};
+addEventListener('resize', resize); resize();
+
+const sp = { x: 0, z: 0 };
+let last = performance.now(), t = 0, acc = 0, frames = 0, poseIdx = 0, tPose = 0;
+const ms = [];
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt; tPose += dt;
+  if (tPose > HOLD) { tPose = 0; poseIdx = (poseIdx + 1) % POSES.length; }
+  const pose = POSE[POSES[poseIdx]] ?? POSE.RUN;
+  const speed = pose === POSE.RUN ? 6 : 0;
+  const ctx = { role: 0, partner: -1, back: false, slot: 'RB', kind: 'run', vx: speed, vy: 0, bodyYaw: 0 };
+  for (const o of [normal, src]) {
+    animateRigged(o, pose, speed, dt, false, t, [], speed ? 1 : null, ctx);
+  }
+  normal.position.set(-1.1, 0, 0); stack.position.set(1.1, 0, 0);
+  src.position.set(0, 0, 0); src.rotation.y = 0;
+  src.updateMatrixWorld(true);
+  const turn = (t * 0.5) % (Math.PI * 2);               // slow spin to show it holds up from every side
+  normal.rotation.y = turn; stack.rotation.y = turn;
+  const t0 = performance.now();
+  cam.position.set(0, +(q.get("h") || 4.2), 6.2); cam.lookAt(0, 0.9, 0);
+  cut();
+  r.render(scene, cam);
+  ms.push(performance.now() - t0); if (ms.length > 60) ms.shift();
+  if (++frames % 20 === 0) {
+    const a = ms.reduce((x, y) => x + y, 0) / ms.length;
+    hud.textContent = `${POSES[poseIdx]} · ${N} slices @ ${T}px · cut+draw ${a.toFixed(1)} ms/frame (CPU submit)`;
+    window.__t = { n: N, t: T, ms: a, pose: POSES[poseIdx] };
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__ready = true;
+</script>
+</body>
+</html>

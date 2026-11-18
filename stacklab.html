@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sprite Stack Lab</title>
+<style>
+  :root { --bg: #0f1a12; --panel: rgba(10,16,12,.82); --ink: #f2f4ee; --dim: #a9b5a6; --acc: #f2b632; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.35 system-ui,-apple-system,Segoe UI,sans-serif; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+  #panel { position:fixed; top:10px; left:10px; background:var(--panel); padding:10px 12px; border-radius:10px; max-width:min(92vw,330px); }
+  #panel h1 { font-size:14px; margin:0 0 6px; letter-spacing:.04em; }
+  #panel label { display:inline-flex; gap:6px; align-items:center; margin:3px 10px 3px 0; color:var(--dim); }
+  #panel select, #panel button { background:#1d2b20; color:var(--ink); border:1px solid #39503d; border-radius:6px; padding:3px 6px; font:inherit; }
+  #panel button.on { border-color:var(--acc); color:var(--acc); }
+  #stats { margin-top:6px; color:var(--dim); font:12px ui-monospace,Consolas,monospace; white-space:pre; }
+  #keys { margin-top:6px; color:var(--dim); font-size:12px; }
+  .lbl { position:fixed; transform:translate(-50%,0); font:600 11px system-ui; color:#fff; background:rgba(0,0,0,.45); padding:1px 6px; border-radius:4px; pointer-events:none; white-space:nowrap; }
+  #actions { position:fixed; right:10px; bottom:10px; display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; max-width:60vw; }
+  #actions button { background:rgba(20,30,22,.85); color:var(--ink); border:1px solid #4a6a4e; border-radius:8px; padding:8px 10px; font:600 12px system-ui; }
+  #actions button:active { border-color:var(--acc); }
+  #hide { position:fixed; top:10px; right:10px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>SPRITE STACK LAB</h1>
+  <div>
+    <label>Mode <select id="mode"><option value="gallery">Every action</option><option value="drive">Drive (omni-directional)</option></select></label>
+  </div>
+  <div>
+    <label>Voxel <select id="vox"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select> cm</label>
+    <label>Layers/voxel <select id="sub"><option>1</option><option>2</option><option>3</option></select></label>
+  </div>
+  <div>
+    <label>Camera <select id="cam"><option value="game">Game</option><option value="close">Close</option><option value="free">Free orbit</option></select></label>
+    <label><input type="checkbox" id="spin" checked> Spin</label>
+  </div>
+  <div id="stats">baking…</div>
+  <div id="keys"></div>
+</div>
+<div id="actions"></div>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { OrbitControls } from './web/vendor/OrbitControls.js';
+import { ACTIONS, ACTION_KEYS } from './web/stack/actions.js';
+import { bakeAll, StackRenderer } from './web/stack/stack-renderer.js';
+import { fieldMesh } from './web/play/field.js';
+
+const q = new URLSearchParams(location.search);
+const VOX = +(q.get('v') || 3), SUB = +(q.get('sub') || 3);
+const MODE = q.get('mode') || 'gallery', CAM = q.get('cam') || (MODE === 'drive' ? 'game' : 'close');
+const $ = (id) => document.getElementById(id);
+$('vox').value = String(VOX); $('sub').value = String(SUB); $('mode').value = MODE; $('cam').value = CAM;
+const reload = () => { const u = new URLSearchParams(location.search); u.set('v', $('vox').value); u.set('sub', $('sub').value); u.set('mode', $('mode').value); u.set('cam', $('cam').value); location.search = u.toString(); };
+for (const id of ['vox', 'sub', 'mode', 'cam']) $(id).onchange = reload;
+
+const YD = 0.9144;
+const KITS = [
+  { jersey: '#5b2a17', trim: '#f2b632', number: '#f2b632', pants: '#e9c46a', pantStripe: '#5b2a17', helmet: '#5b2a17', helmetStripe: '#f2b632', mask: '#d9d4c4', sock: '#5b2a17', sockStripe: '#f2b632', glove: '#f2b632', cleat: '#161616' },
+  { jersey: '#f4f5f2', trim: '#13294b', number: '#13294b', pants: '#13294b', pantStripe: '#c7d3e3', helmet: '#13294b', helmetStripe: '#c7d3e3', mask: '#9aa4b1', sock: '#13294b', sockStripe: '#f4f5f2', glove: '#13294b', cleat: '#f0f0f0' },
+];
+
+// ---------------------------------------------------------------- scene
+const canvas = $('c');
+const r = new THREE.WebGLRenderer({ canvas, antialias: true });
+r.setPixelRatio(Math.min(2, devicePixelRatio));
+r.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+scene.fog = new THREE.Fog('#9fb8d0', 70, 160);
+scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x2a3a22, 1.4));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(20, 40, 15); scene.add(sun);
+const field = fieldMesh({ home: { name: 'Ridgeline', short: 'RSU', color: '#5b2a17', alt: '#f2b632' }, away: { name: 'Coastal', short: 'CTU', color: '#13294b', alt: '#c7d3e3' } });
+const fieldG = new THREE.Group(); fieldG.add(field); fieldG.scale.setScalar(YD); fieldG.position.set(-30 * YD, 0, -26.67 * YD); scene.add(fieldG);
+const cam = new THREE.PerspectiveCamera(42, 1, 0.1, 400);
+const orbit = new OrbitControls(cam, canvas); orbit.enableDamping = true; orbit.enabled = CAM === 'free';
+const resize = () => { r.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); };
+addEventListener('resize', resize); resize();
+
+// blob shadows
+const shadowGeo = new THREE.CircleGeometry(0.42, 24); shadowGeo.rotateX(-Math.PI / 2);
+const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false });
+const shadows = new THREE.InstancedMesh(shadowGeo, shadowMat, 48); shadows.renderOrder = 1; scene.add(shadows);
+const tmpM = new THREE.Matrix4();
+
+// ---------------------------------------------------------------- bake
+await new Promise((res) => setTimeout(res, 30));
+const bake = bakeAll(VOX / 100);
+const sr = new StackRenderer(bake, { maxPlayers: 40, sub: SUB, kits: KITS });
+scene.add(sr.mesh);
+const mb = (bake.AW * bake.AH * 2 / 1048576).toFixed(1);
+window.__bake = { ms: Math.round(bake.ms), mb: +mb, frames: bake.frames.length, AH: bake.AH };
+
+// ---------------------------------------------------------------- players
+const NUMS = [22, 7, 88, 1, 55, 72, 44, 91, 3, 24, 11, 64, 52, 99, 31, 66, 20, 4, 13, 85, 9, 75, 28, 56];
+const players = [];
+const mk = (o) => { const p = { x: 0, z: 0, yaw: 0, vx: 0, vz: 0, team: 0, skin: 0.4, number: 22, action: 'ready', t: 0, phase: 0, one: null, ...o }; players.push(p); return p; };
+const labels = [];
+
+const ONLY = q.get('only') ? q.get('only').split(',') : null;
+const FIXED_YAW = q.get('yaw') !== null ? +q.get('yaw') * Math.PI / 180 : null;
+const STEP = q.get('step') ? +q.get('step') : 0;
+if (MODE === 'gallery') {
+  const list = ONLY || ACTION_KEYS;
+  const COLS = ONLY ? list.length : 7, SP = ONLY ? 2.2 : 2.4;
+  list.forEach((name, i) => {
+    const c = i % COLS, rw = Math.floor(i / COLS);
+    const p = mk({ x: ONLY ? 0 : (rw - 1.5) * SP * 1.2, z: (c - (COLS - 1) / 2) * SP, action: name, team: i % 2, skin: (i * 0.37) % 1, number: NUMS[i % NUMS.length], yawOff: ONLY ? 0 : i * 0.6 });
+    const el = document.createElement('div'); el.className = 'lbl'; el.textContent = name; document.body.appendChild(el);
+    labels.push({ el, p });
+  });
+} else {
+  // one controlled carrier and defenders that always face him while moving any direction
+  mk({ x: 0, z: 0, team: 0, number: 22, skin: 0.55, carry: true, ctl: true });
+  const spots = [[8, -4], [10, 4], [14, 0], [6, 8], [6, -9]];
+  spots.forEach(([x, z], i) => mk({ x, z, team: 1, number: [24, 31, 52, 3, 21][i], skin: (i * 0.29 + 0.1) % 1, ai: true, home: { x, z } }));
+}
+
+// ---------------------------------------------------------------- locomotion picker (omni-directional)
+const STRIDE = { walk: 1.6, jog: 2.7, sprint: 4.3, carry: 4.1, carryL: 4.1, stiffL: 4.1, stiffR: 4.1, backpedal: 1.45, shuffleR: 1.05, shuffleL: 1.05, block: 0.9, passPro: 0.9 };
+function locomotion(p, dt) {
+  const sp = Math.hypot(p.vx, p.vz);
+  if (sp < 0.3) { p.action = p.idle || 'ready'; p.phase += dt / ACTIONS[p.action].dur; return; }
+  const c = Math.cos(p.yaw), s = Math.sin(p.yaw);
+  const lx = p.vx * c + p.vz * s, lz = -p.vx * s + p.vz * c;
+  const ang = Math.atan2(lz, lx) * 180 / Math.PI;
+  let a;
+  if (Math.abs(ang) < 55) a = p.carry ? (p.stiff ? 'stiffL' : 'carry') : sp > 6 ? 'sprint' : sp > 2.3 ? 'jog' : 'walk';
+  else if (Math.abs(ang) > 125) a = 'backpedal';
+  else a = ang > 0 ? 'shuffleR' : 'shuffleL';
+  p.action = a;
+  p.phase += (sp / STRIDE[a]) * dt;
+}
+
+// ---------------------------------------------------------------- input (drive mode)
+const keys = new Set();
+addEventListener('keydown', (e) => { keys.add(e.key.toLowerCase()); if (e.key.startsWith('Arrow') || e.key === ' ') e.preventDefault(); trigger(e.key.toLowerCase()); });
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+let faceMode = 'motion';
+const ONE = { j: 'jukeL', l: 'jukeR', t: 'dive', y: 'wrap', g: 'fallFwd', b: 'fallBack', c: 'catch', v: 'catchHigh', r: 'throw', h: 'handoffTake', u: 'getUp', p: 'celebrate', m: 'swim', n: 'rip' };
+function trigger(k) {
+  if (MODE !== 'drive') return;
+  const me = players[0];
+  if (k === 'f') { faceMode = { motion: 'downfield', downfield: 'motion' }[faceMode]; return; }
+  if (ONE[k]) me.one = { action: ONE[k], t: 0 };
+}
+if (MODE === 'drive') {
+  $('keys').innerHTML = 'WASD/arrows move · Shift sprint · F facing (motion / always downfield)<br>K hold stiff arm · J/L juke · T dive · Y wrap · G/B fall · U get up · C/V catch · R throw · H take handoff · M swim · N rip · P celebrate';
+  const box = $('actions');
+  for (const [k, a] of Object.entries(ONE)) { const b = document.createElement('button'); b.textContent = a; b.onpointerdown = (e) => { e.preventDefault(); trigger(k); }; box.appendChild(b); }
+  const fb = document.createElement('button'); fb.textContent = 'facing'; fb.onpointerdown = () => trigger('f'); box.appendChild(fb);
+  // touch stick on the left half
+  let sid = null, sx = 0, sy = 0;
+  canvas.addEventListener('pointerdown', (e) => { if (e.clientX < innerWidth * 0.5 && sid === null) { sid = e.pointerId; sx = e.clientX; sy = e.clientY; } });
+  canvas.addEventListener('pointermove', (e) => { if (e.pointerId === sid) { touch.x = Math.max(-1, Math.min(1, (e.clientX - sx) / 60)); touch.y = Math.max(-1, Math.min(1, -(e.clientY - sy) / 60)); } });
+  canvas.addEventListener('pointerup', (e) => { if (e.pointerId === sid) { sid = null; touch.x = touch.y = 0; } });
+} else {
+  $('keys').textContent = 'Every action below is a separate from-scratch animation, drawn as a sprite stack and spun through every facing.';
+}
+const touch = { x: 0, y: 0 };
+
+// ---------------------------------------------------------------- loop
+let last = performance.now(), T = 0, fpsAcc = 0, fpsN = 0, fps = 0;
+const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+function step(now) {
+  let dt = Math.min(0.05, (now - last) / 1000); last = now; if (STEP) dt = window.__adv ? (window.__adv = 0, STEP) : 0; T += dt;
+  fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; }
+  const draw = [];
+  if (MODE === 'gallery') {
+    for (const p of players) {
+      const a = ACTIONS[p.action];
+      p.yaw = FIXED_YAW !== null ? FIXED_YAW : $('spin').checked ? T * 0.55 + p.yawOff : Math.PI * 0.75;
+      let frame;
+      if (a.loop) frame = sr.frameOf(p.action, T + p.yawOff);
+      else { const cyc = a.dur + 0.6; const tt = (T + p.yawOff) % cyc; frame = sr.frameOf(p.action, tt); }
+      draw.push({ ...p, frame });
+    }
+  } else {
+    const me = players[0];
+    let ix = 0, iy = 0;
+    if (keys.has('a') || keys.has('arrowleft')) ix -= 1; if (keys.has('d') || keys.has('arrowright')) ix += 1;
+    if (keys.has('w') || keys.has('arrowup')) iy += 1; if (keys.has('s') || keys.has('arrowdown')) iy -= 1;
+    if (!ix && !iy) { ix = touch.x; iy = touch.y; }
+    const mag = Math.min(1, Math.hypot(ix, iy));
+    const top = keys.has('shift') ? 8.6 : 6.4;
+    // camera looks down +x: stick up = +x, right = +z
+    const want = { x: iy * top, z: ix * top };
+    const busy = me.one && !['catch', 'handoffTake', 'swim', 'rip', 'jukeL', 'jukeR'].includes(me.one.action);
+    const acc = 9 * dt;
+    const goal = busy ? { x: me.vx * 0.9, z: me.vz * 0.9 } : (mag > 0.05 ? want : { x: 0, z: 0 });
+    const dvx = goal.x - me.vx, dvz = goal.z - me.vz, dl = Math.hypot(dvx, dvz);
+    if (dl > acc) { me.vx += dvx / dl * acc; me.vz += dvz / dl * acc; } else { me.vx = goal.x; me.vz = goal.z; }
+    me.stiff = keys.has('k');
+    for (const p of players.slice(1)) {
+      // defenders: keep a cushion, mirror laterally, always face the carrier
+      const dx = me.x - p.x, dz = me.z - p.z, d = Math.hypot(dx, dz);
+      const tx = me.x + 5 + (p.home.x - 8) * 0.4, tz = me.z + (p.home.z) * 0.6;
+      let gx = tx - p.x, gz = tz - p.z; const gl = Math.hypot(gx, gz);
+      const s = Math.min(6.2, gl * 1.6);
+      gx = gl > 0.01 ? gx / gl * s : 0; gz = gl > 0.01 ? gz / gl * s : 0;
+      const ex = gx - p.vx, ez = gz - p.vz, el = Math.hypot(ex, ez), aa = 8 * dt;
+      if (el > aa) { p.vx += ex / el * aa; p.vz += ez / el * aa; } else { p.vx = gx; p.vz = gz; }
+      p.faceTo = Math.atan2(dz, dx);
+      p.idle = 'ready';
+    }
+    for (const p of players) {
+      p.x += p.vx * dt; p.z += p.vz * dt;
+      const sp = Math.hypot(p.vx, p.vz);
+      let target = p.yaw;
+      if (p.ai) target = p.faceTo;
+      else if (faceMode === 'downfield') target = 0;
+      else if (sp > 0.6) target = Math.atan2(p.vz, p.vx);
+      let dy = ((target - p.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      const rate = 7 / (1 + sp * 0.18);
+      p.yaw += Math.sign(dy) * Math.min(Math.abs(dy), rate * dt);
+      let frame;
+      if (p.one) {
+        p.one.t += dt;
+        const a = ACTIONS[p.one.action];
+        frame = sr.frameOf(p.one.action, p.one.t);
+        if (p.one.t >= a.dur) {
+          if (p.one.action === 'dive' || p.one.action === 'fallFwd') { p.idle = 'prone'; p.down = true; }
+          else if (p.one.action === 'fallBack') { p.idle = 'supine'; p.down = true; }
+          else if (p.one.action === 'getUp') p.down = false;
+          p.one = null;
+        }
+      }
+      if (!p.one) {
+        if (p.down) { p.vx *= 0.8; p.vz *= 0.8; frame = sr.frameOf(p.idle, T); }
+        else { locomotion(p, dt); frame = sr.frameAtPhase(p.action, p.phase); }
+      }
+      draw.push({ ...p, frame });
+    }
+  }
+  sr.update(draw);
+  draw.forEach((p, i) => { tmpM.makeTranslation(p.x, 0.012, p.z); shadows.setMatrixAt(i, tmpM); });
+  shadows.count = draw.length; shadows.instanceMatrix.needsUpdate = true;
+
+  // camera
+  if (CAM !== 'free') {
+    let fx = 0, fz = 0, dist, h;
+    if (MODE === 'drive') { fx = players[0].x + (CAM === 'game' ? 3 : 1.2); fz = players[0].z * (CAM === 'game' ? 0.85 : 1); }
+    else { fx = 0; fz = 0; }
+    if (CAM === 'game') { dist = 9.6; h = 5.7; } else { dist = MODE === 'gallery' ? (ONLY ? 1.6 + ONLY.length * 1.3 : 14) : 6.2; h = MODE === 'gallery' ? (ONLY ? 0.85 + (1.6 + ONLY.length * 1.3) * 0.62 : 9) : 3.6; }
+    camLook.set(fx, MODE === 'gallery' ? (ONLY ? 0.85 : 0.6) : 0.9, fz);
+    camPos.set(fx - dist, h, fz);
+    cam.position.lerp(camPos, MODE === 'drive' ? 1 - Math.exp(-dt * 5) : 1);
+    cam.lookAt(camLook);
+  } else orbit.update();
+  r.render(scene, cam);
+  for (const { el, p } of labels) {
+    const v = new THREE.Vector3(p.x, 2.15, p.z).project(cam);
+    el.style.left = `${(v.x * 0.5 + 0.5) * innerWidth}px`; el.style.top = `${(-v.y * 0.5 + 0.5) * innerHeight}px`;
+  }
+  if (fpsN === 0) {
+    $('stats').textContent = `voxel ${VOX} cm · ${SUB} quad/layer · ${fps.toFixed(0)} fps\n${bake.frames.length} frames / ${ACTION_KEYS.length} actions baked in ${bake.ms.toFixed(0)} ms\natlas ${bake.AW}x${bake.AH} = ${mb} MB · ${Math.round(bake.voxels / bake.frames.length)} cells/frame` + (MODE === 'drive' ? `\nfacing: ${faceMode} · ${players[0].one ? players[0].one.action : players[0].down ? players[0].idle : players[0].action}` : '');
+    window.__lab = { fps, frames: bake.frames.length, ms: bake.ms, mb: +mb, AW: bake.AW, AH: bake.AH, me: players[0] && { action: players[0].action, x: players[0].x } };
+  }
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+window.__labReady = true;
+window.__keys = keys; window.__trigger = trigger;
+</script>
+</body>
+</html>

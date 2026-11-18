@@ -14,8 +14,9 @@ import { buildNflDome } from '../nfl-dome.js';
 import { POSE } from '../pose-codes.js';
 import { fieldMesh, goalPosts, strip, W, HASH_IN } from './field.js';
 import { Input } from './input.js';
+import { GameSprites } from '../stack/game-sprites.js';
 
-export const BUILD = 'play-2026-11-17a';
+export const BUILD = 'play-2026-11-18-stack';
 const YD = 0.9144;
 const G = 9.81 / YD;                    // gravity, yd/s^2
 const QUARTER = 4 * 60;                 // seconds per quarter (short game)
@@ -35,8 +36,8 @@ const OFF_SLOTS = ['LT', 'LG', 'C', 'RG', 'RT', 'TE', 'QB', 'RB', 'WR1', 'WR2', 
 const DEF_SLOTS = ['LEDGE', 'LDT', 'RDT', 'REDGE', 'LB1', 'LB2', 'CB1', 'CB2', 'NB', 'FS', 'SS'];
 const NUMBERS = [72, 64, 55, 66, 77, 88, 7, 22, 1, 11, 4, 91, 97, 93, 99, 44, 52, 24, 21, 3, 31, 28];
 const SPEED = {   // top speed yd/s
-  LT: 5.6, LG: 5.4, C: 5.5, RG: 5.4, RT: 5.6, TE: 6.8, QB: 6.9, RB: 7.5, WR1: 8.0, WR2: 7.9, SLOT: 8.0,
-  LEDGE: 7.0, LDT: 6.4, RDT: 6.4, REDGE: 7.0, LB1: 7.5, LB2: 7.4, CB1: 8.1, CB2: 8.0, NB: 8.0, FS: 7.9, SS: 7.8,
+  LT: 5.6, LG: 5.4, C: 5.5, RG: 5.4, RT: 5.6, TE: 6.8, QB: 6.9, RB: 7.5, WR1: 7.6, WR2: 7.6, SLOT: 7.7,
+  LEDGE: 7.0, LDT: 6.4, RDT: 6.4, REDGE: 7.0, LB1: 7.5, LB2: 7.4, CB1: 8.3, CB2: 8.2, NB: 8.1, FS: 8.1, SS: 8.0,
 };
 const SPRINT = 1.1;                    // carrier sprint multiplier
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -132,19 +133,38 @@ export class Game {
   }
 
   async load() {
-    const gltf = await loadRiggedPlayer();
+    const q = new URLSearchParams(location.search);
+    this.useRig = q.has('rig');
+    const gltf = this.useRig ? await loadRiggedPlayer() : null;
+    if (!this.useRig) {
+      // sprite-stacked players: bake every action once (voxel size in cm via ?vox=)
+      await new Promise((res) => setTimeout(res, 20));
+      const mobile = matchMedia('(pointer: coarse)').matches;
+      const vox = +(q.get('vox') || (mobile ? 4 : 3)) / 100;
+      this.sprites = new GameSprites(this.scene, { voxel: vox, blobGeo: this.blobGeo, blobMat: this.blobMat });
+    }
+    const ringGeo = new THREE.RingGeometry(0.85, 1.05, 32);
     const makeInfo = (i) => ({ id: `p${i}`, jersey: NUMBERS[i], physics: { height: i < 5 || (i >= 11 && i < 15) ? 1.95 : 1.86 } });
     for (let i = 0; i < 22; i++) {
       const off = i < 11;
       const slot = off ? OFF_SLOTS[i] : DEF_SLOTS[i - 11];
-      const o = buildRiggedPlayer(gltf, makeInfo(i), off ? KITS.home : KITS.away);
-      const blob = new THREE.Mesh(this.blobGeo, this.blobMat);
-      blob.position.y = 0.02;
-      o.add(blob);
+      let o;
+      if (this.useRig) {
+        o = buildRiggedPlayer(gltf, makeInfo(i), off ? KITS.home : KITS.away);
+        const blob = new THREE.Mesh(this.blobGeo, this.blobMat);
+        blob.position.y = 0.02;
+        o.add(blob);
+      } else {
+        o = new THREE.Group();
+        const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: '#f5d33a', transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
+        ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.visible = false;
+        o.add(ring);
+        o.userData = { ring, bones: {} };
+      }
       this.scene.add(o);
       this.players.push({
         i, off, slot, obj: o, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, pose: POSE.STANCE, cues: [],
-        top: SPEED[slot], role: ROLE.NONE, partner: null,
+        top: SPEED[slot], role: ROLE.NONE, partner: null, number: NUMBERS[i],
       });
     }
     this.qb = this.players[6];
@@ -365,18 +385,32 @@ export class Game {
       p.z = clamp(p.z, -6, W + 6);
       const sp = Math.hypot(p.vx, p.vz);
       if (p.face !== undefined && p.face !== null) {
-        p.yaw += wrap(p.face - p.yaw) * Math.min(1, dt * 10);
+        this.turn(p, p.face, dt, 9);
       } else if (sp > 0.6 && p.pose !== POSE.DOWN) {
-        p.yaw += wrap(Math.atan2(p.vz, p.vx) - p.yaw) * Math.min(1, dt * (p.carrying ? 12 : 8));
+        this.turn(p, Math.atan2(p.vz, p.vx), dt, p.carrying ? 7 : 6);
       }
       p.face = null;
     }
     this.separate();
   }
 
+  /** Turn toward a heading with a rate limit that drops as speed rises. */
+  turn(p, target, dt, maxRate) {
+    const sp = Math.hypot(p.vx, p.vz);
+    const rate = maxRate / (1 + sp * 0.22);                       // rad/s
+    const d = wrap(target - p.yaw);
+    const step = Math.min(Math.abs(d), rate * dt * (0.4 + Math.min(1, Math.abs(d) * 1.2)));
+    p.yaw += Math.sign(d) * step;
+  }
+
   /** Accelerate toward a desired velocity (yd/s) with a limit (yd/s^2). */
   steer(p, dvx, dvz, _unused, dt, accel = 12) {
-    const ax = dvx - p.vx, az = dvz - p.vz, a = Math.hypot(ax, az), lim = accel * dt;
+    // Athletes can't change velocity instantly: cap acceleration, taper it with
+    // speed (hard to gain the last yard/s), allow braking a bit harder than pushing.
+    const ax = dvx - p.vx, az = dvz - p.vz, a = Math.hypot(ax, az);
+    const sp = Math.hypot(p.vx, p.vz), want = Math.hypot(dvx, dvz);
+    const taper = 1 - 0.35 * Math.min(1, sp / 8.5);
+    const lim = Math.min(accel, 10) * (want < sp ? 0.75 : taper) * dt * (want < sp ? 1.5 : 1);
     if (a > lim) { p.vx += (ax / a) * lim; p.vz += (az / a) * lim; } else { p.vx = dvx; p.vz = dvz; }
   }
 
@@ -812,7 +846,10 @@ export class Game {
       if (h) {
         const v = h.getWorldPosition(new THREE.Vector3());
         bs.x = v.x; bs.y = Math.max(0.2, v.y); bs.z = v.z;
-      } else { bs.x = bs.holder.x; bs.y = 1.1; bs.z = bs.holder.z; }
+      } else {
+        const hy = bs.holder.yaw;   // no hand bone: carry it in front of the chest
+        bs.x = bs.holder.x + Math.cos(hy) * 0.32; bs.y = 1.2; bs.z = bs.holder.z + Math.sin(hy) * 0.32;
+      }
       bs.yaw = bs.holder.yaw;
     } else if (bs.loose) {
       const f = bs.loose; const u = t - f.t0;
@@ -1032,6 +1069,13 @@ export class Game {
   // ------------------------------------------------------------------ draw
   draw(dt) {
     const P = this.players;
+    if (this.sprites) {
+      for (const p of P) p.obj.position.set(p.x, 0, p.z);
+      this.sprites.update(this, dt);
+      const h = this.ballState.holder;
+      this.ball.visible = !(h && !this.ballState.flight && h.spriteBall);
+      return;
+    }
     for (const p of P) {
       const o = p.obj;
       o.position.set(p.x, 0, p.z);
