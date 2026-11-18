@@ -14,6 +14,8 @@ import { FB } from '../rigged-animation-controller.js';
 import { KITS } from '../stack/game-sprites.js';
 import { buildBody, MeshPlayer } from './body-mesh.js';
 import { tacklePose } from './tackles.js';
+import { lerpPose } from './pose-blend.js';
+import { solveTackler } from './pair.js';
 
 const YD = 0.9144;
 const ROLE_ENGAGED = 1;
@@ -48,19 +50,7 @@ function cueAction(c) {
   return null;
 }
 
-/** Blend two filled poses (angles and root fields linearly; flags from b). */
-export function lerpPose(a, b, w) {
-  if (w >= 1) return b;
-  const o = {};
-  for (const k in b) {
-    const x = a[k], y = b[k];
-    if (Array.isArray(y)) o[k] = y.map((v, i) => (x?.[i] ?? v) + (v - (x?.[i] ?? v)) * w);
-    else if (y && typeof y === 'object') { o[k] = {}; for (const r in y) o[k][r] = (x?.[r] ?? y[r]) + (y[r] - (x?.[r] ?? y[r])) * w; }
-    else if (typeof y === 'number') o[k] = (typeof x === 'number' ? x : y) + (y - (typeof x === 'number' ? x : y)) * w;
-    else o[k] = y;
-  }
-  return o;
-}
+export { lerpPose };
 
 const CARRY_ARM = { shR: deg([16, 12, 14]), elR: 118 * D, wrR: deg([-25, 0]), gripR: 0.85, ball: 'R' };
 const QB_HOLD = { shR: deg([40, 10, 34]), elR: 110 * D, shL: deg([40, 10, 34]), elL: 110 * D, gripR: 0.6, gripL: 0.6, ball: 'chest' };
@@ -92,6 +82,7 @@ export class GameMeshes {
     const t = game.t, live = !['presnap', 'playcall', 'title', 'loading'].includes(game.phase);
     const pass = game.play?.kind === 'pass';
     const holder = game.ballState.flight ? null : game.ballState.holder;
+    const poses = [];
     game.players.forEach((p, i) => {
       const sk = p.mk || (p.mk = { seen: new Set(), cuesRef: null, one: null, phase: Math.random(), downPose: 'prone', wasDown: false, jukeRef: 0, stiffUntil: 0, stiffSide: 'L', key: '', last: null, from: null, fromT: 0, fromDur: 0.15, where: null });
       if (sk.cuesRef !== p.cues) { sk.cuesRef = p.cues; sk.seen.clear(); sk.one = null; }
@@ -162,12 +153,28 @@ export class GameMeshes {
       }
       sk.last = pose;
       if (pose.ball) sk.where = pose.ball;
-      const mp = this.mp[i];
-      mp.setPose(pose, p.x * YD, p.z * YD, p.yaw);
+      poses[i] = pose;
+    });
+    // paired tackles: the carrier first, then the tackler's palms onto him and his body out of him
+    const order = game.players.map((p, i) => i).sort((a, b) => (game.players[a].tackle?.role === 'tackler') - (game.players[b].tackle?.role === 'tackler'));
+    for (const i of order) {
+      const p = game.players[i], mp = this.mp[i];
+      let pose = poses[i], x = p.x * YD, z = p.z * YD;
+      if (p.tackle?.role === 'tackler') {
+        const ci = game.players.findIndex((q) => q.tackle?.w === p.tackle.w && q.tackle.role === 'carrier');
+        if (ci >= 0) {
+          const q = game.players[ci], cm = this.mp[ci];
+          const recv = { J: cm.J, place: { x: q.x * YD, z: q.z * YD, yaw: q.yaw, scale: cm.root.scale.x, ground: cm.inner.position.y } };
+          const att = { pose, place: { x, z, yaw: p.yaw, scale: mp.root.scale.x, ground: mp.inner.position.y } };
+          const r = solveTackler(p.tackle.w, t, dt, recv, att);
+          pose = r.pose; x = r.x; z = r.z;
+        }
+      }
+      mp.setPose(pose, x, z, p.yaw);
       p.meshBall = mp.hasBall;
       this.m.makeTranslation(p.x, 0.02, p.z);
       this.blobs.setMatrixAt(i, this.m);
-    });
+    }
     this.blobs.count = game.players.length;
     this.blobs.instanceMatrix.needsUpdate = true;
     this.group.updateMatrixWorld(true);

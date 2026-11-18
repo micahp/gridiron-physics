@@ -31,8 +31,10 @@ import { OrbitControls } from './web/vendor/OrbitControls.js';
 import { ACTIONS } from './web/stack/actions.js';
 import { fill } from './web/stack/skeleton.js';
 import { buildBody, MeshPlayer, makeBall, BALL_R } from './web/mesh/body-mesh.js';
-import { tacklePose, TACKLE_GAP } from './web/mesh/tackles.js';
-import { lerpPose } from './web/mesh/game-meshes.js';
+import { tacklePose } from './web/mesh/tackles.js';
+import { makeTackle, stepStruggle, stepFall } from './web/mesh/tackle-sim.js';
+import { solveTackler } from './web/mesh/pair.js';
+import { lerpPose } from './web/mesh/pose-blend.js';
 import { KITS } from './web/stack/game-sprites.js';
 import { fieldMesh } from './web/play/field.js';
 
@@ -108,17 +110,8 @@ function reset(ci) {
 }
 function contact() {
   const { c, d, k } = sim;
-  const vrx = d.vx - c.vx, vrz = d.vz - c.vz, vr = Math.hypot(vrx, vrz) / YD;          // yd/s, as in the game
-  let ang = vr > 1.5 ? Math.atan2(vrz, vrx) : Math.atan2(c.z - d.z, c.x - d.x);
-  const th = wrap(ang - c.yaw), ath = Math.abs(th);
-  const fall = ath < Math.PI * 0.3 ? 'fwd' : ath > Math.PI * 0.7 ? 'back' : th > 0 ? 'R' : 'L';
-  ang = c.yaw + { fwd: 0, back: Math.PI, R: Math.PI / 2, L: -Math.PI / 2 }[fall];
-  const style = k.style || 'wrap';
-  const V = { x: (k.mc * c.vx + k.md * d.vx) / (k.mc + k.md), z: (k.mc * c.vz + k.md * d.vz) / (k.mc + k.md) };
-  const hit = Math.min(1, Math.max(0, (vr - 4.5) / 4.5));
-  const hold = hit > 0.6 && fall === 'back' ? 0.14 : style === 'dive' ? 0.22 : 0.35;
-  sim.w = { t0: sim.t, until: sim.t + hold, ang, fall, style, V, hit, tFall: null };
-  c.vx = d.vx = V.x; c.vz = d.vz = V.z;
+  // the same runtime as the game (web/mesh/tackle-sim.js)
+  sim.w = makeTackle({ c, d, mc: k.mc, md: k.md, t: sim.t, u: YD, style: k.style || 'wrap' });
   sim.contacted = true;
 }
 const STRIDE = { carry: 4.1, sprint: 4.3 };
@@ -146,24 +139,11 @@ function step(now) {
   if (!sim.contacted && Math.hypot(c.x - d.x, c.z - d.z) < 0.98) contact();
   const w = sim.w;
   if (w) {
-    if (w.tFall == null) {
-      // struggle: the hit's momentum bleeds into the fight for yards
-      const hx = Math.cos(c.yaw), hz = Math.sin(c.yaw), ex = Math.cos(w.ang), ez = Math.sin(w.ang);
-      const gx = (hx * 1.5 + ex * 0.9) * YD, gz = (hz * 1.5 + ez * 0.9) * YD;
-      const k = 1 - Math.exp(-dt * 4);
-      c.vx += (gx - c.vx) * k; c.vz += (gz - c.vz) * k;
-      const gap = TACKLE_GAP[w.style] * YD, k2 = 1 - Math.exp(-dt * 16);
-      d.x += (c.x - ex * gap - d.x) * k2; d.z += (c.z - ez * gap - d.z) * k2;
-      d.yaw += wrap(w.ang - d.yaw) * k2;
-      d.vx = c.vx; d.vz = c.vz;
-      if (t >= w.until) w.tFall = t;
-    } else {
-      const dec = Math.exp(-dt * 2.6);
-      c.vx *= dec; c.vz *= dec; d.vx = c.vx; d.vz = c.vz;
-    }
+    if (w.tFall == null) { stepStruggle(w, c, d, dt, YD); if (t >= w.until) w.tFall = t; }
+    else stepFall(c, d, dt);
   }
   c.x += c.vx * dt; c.z += c.vz * dt;
-  if (!w || w.tFall == null || true) { d.x += d.vx * dt; d.z += d.vz * dt; }
+  d.x += d.vx * dt; d.z += d.vz * dt;
   let pc, pd;
   if (w) {
     const ph = w.tFall != null ? 'fall' : 'hold';
@@ -174,7 +154,15 @@ function step(now) {
     pd = blend(d, 'sprint', locoPose(d, 'sprint', dt), t);
   }
   C.setPose(pc, c.x, c.z, c.yaw);
-  T.setPose(pd, d.x, d.z, d.yaw);
+  let dx = d.x, dz = d.z;
+  if (w) {
+    // palms onto the carrier (IK), tackler's body pushed out of the carrier's (collision)
+    const r = solveTackler(w, t, dt,
+      { J: C.J, place: { x: c.x, z: c.z, yaw: c.yaw, scale: 1, ground: C.inner.position.y } },
+      { pose: pd, place: { x: d.x, z: d.z, yaw: d.yaw, scale: 1, ground: T.inner.position.y } });
+    pd = r.pose; dx = r.x; dz = r.z;
+  }
+  T.setPose(pd, dx, dz, d.yaw);
   scene.updateMatrixWorld();
   ball.matrix.copy(C.toWorld(C.hasBall ? C.ballM : C.ballAt('R'), M));
   ball.matrixWorldNeedsUpdate = true;

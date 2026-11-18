@@ -16,7 +16,7 @@ const HIP = curve([[0, 34], [0.14, 12], [0.3, -24], [0.5, 10], [0.7, 62], [0.86,
 const KNEE = curve([[0, 22], [0.12, 42], [0.3, 24], [0.46, 88], [0.58, 118], [0.75, 66], [0.9, 26]]);
 const ANK = curve([[0, 6], [0.12, 18], [0.3, -30], [0.5, -12], [0.7, 12], [0.9, 8]]);
 
-function run(ph, o = {}) {
+export function run(ph, o = {}) {
   const amp = o.amp ?? 1, lean = o.lean ?? 10;
   const leg = (q) => ({ hip: HIP(q) * amp + (1 - amp) * 12 * D, kn: KNEE(q) * (0.55 + 0.45 * amp), an: ANK(q) * amp });
   const R = leg(ph), L = leg(ph + 0.5);

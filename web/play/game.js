@@ -17,7 +17,7 @@ import { Input } from './input.js';
 import { GameSprites } from '../stack/game-sprites.js';
 import { GameMeshes } from '../mesh/game-meshes.js';
 import { makeBall, BALL_R } from '../mesh/body-mesh.js';
-import { TACKLE_GAP } from '../mesh/tackles.js';
+import { makeTackle, stepStruggle } from '../mesh/tackle-sim.js';
 
 export const BUILD = 'play-2026-11-18-mesh';
 const YD = 0.9144;
@@ -770,23 +770,16 @@ export class Game {
       const a = Math.atan2(c.vz, c.vx);
       const tk = w.by;
       if (w.V) {
-        const hx = Math.cos(c.yaw), hz = Math.sin(c.yaw), ex = Math.cos(w.ang), ez = Math.sin(w.ang);
-        const gx = hx * 1.5 + ex * 0.9, gz = hz * 1.5 + ez * 0.9;
-        const k = 1 - Math.exp(-dt * 4);
-        c.vx += (gx - c.vx) * k; c.vz += (gz - c.vz) * k;
-        c.face = c.yaw;
-        // the tackler settles into the clip's spot behind the push, no teleport
-        const gap = TACKLE_GAP[w.style] || 0.62;
-        const k2 = 1 - Math.exp(-dt * 16);
-        tk.x += (c.x - ex * gap - tk.x) * k2; tk.z += (c.z - ez * gap - tk.z) * k2;
-        tk.yaw += wrap(w.ang - tk.yaw) * k2;
-        tk.face = tk.yaw;
+        // shared runtime (web/mesh/tackle-sim.js): momentum bleeds into the fight
+        // for yards, the tackler closes the last of the gap at his own speed
+        stepStruggle(w, c, tk, dt, 1);
+        c.face = c.yaw; tk.face = tk.yaw;
       } else {
         this.steer(c, Math.cos(a) * 1.8, Math.sin(a) * 1.8, 0, dt, 20);
         tk.x = c.x - Math.cos(w.ang) * 0.7; tk.z = c.z - Math.sin(w.ang) * 0.7;
         tk.face = Math.atan2(c.z - tk.z, c.x - tk.x);
+        tk.vx = c.vx; tk.vz = c.vz;
       }
-      tk.vx = c.vx; tk.vz = c.vz;
       if (c === this.controlled && (this.input.take('juke') || this.input.take('stiff')) && w.tries < 2) {
         w.tries++;
         if (Math.random() < 0.28) {
@@ -833,25 +826,15 @@ export class Game {
       // wrap up: a short struggle, then he goes down. The push direction comes
       // from the relative velocity (who hit whom), the pair then carries the
       // combined momentum of both bodies.
-      const vrx = d.vx - c.vx, vrz = d.vz - c.vz, vr = Math.hypot(vrx, vrz);
-      let ang = vr > 1.5 ? Math.atan2(vrz, vrx) : Math.atan2(c.z - d.z, c.x - d.x);
-      const th = wrap(ang - c.yaw), ath = Math.abs(th);
-      const fall = ath < Math.PI * 0.3 ? 'fwd' : ath > Math.PI * 0.7 ? 'back' : th > 0 ? 'R' : 'L';
-      if (this.meshes) ang = c.yaw + { fwd: 0, back: Math.PI, R: Math.PI / 2, L: -Math.PI / 2 }[fall];   // the paired clip's angle
-      const front = fall === 'back';
-      const dist = Math.hypot(c.x - d.x, c.z - d.z), dsp = Math.hypot(d.vx, d.vz);
-      const style = dist > 1.05 || (fall === 'fwd' && dsp > 6.2 && Math.random() < 0.5) ? 'dive' : 'wrap';
-      const mc = MASS[c.slot] || 95, md = MASS[d.slot] || 100;
-      const V = { x: (mc * c.vx + md * d.vx) / (mc + md), z: (mc * c.vz + md * d.vz) / (mc + md) };
-      const hit = clamp((vr - 4.5) / 4.5, 0, 1);
+      const dsp = Math.hypot(d.vx, d.vz);
+      const w = makeTackle({ c, d, mc: MASS[c.slot] || 95, md: MASS[d.slot] || 100, t, u: 1, controlled: c === this.controlled });
+      w.by = d;
+      const hit = w.hit;
       d.role = ROLE.TACKLER; c.role = ROLE.WRAPPED; d.partner = c; c.partner = d;
       d.pose = POSE.WRAP;
-      const fast = dsp > 6;
-      d.cues.push({ kind: 'oneshot', clip: fast ? FB.TACKLE_DIVE : FB.TACKLE_FORM, at: t - 0.15, anchorAt: t + 0.15, source: 'tackle' });
-      const hold = hit > 0.6 && front ? 0.14 : style === 'dive' ? 0.22 : c === this.controlled ? 0.55 : 0.35;
-      pl.wrap = { by: d, until: t + hold, ang, tries: 0, front, fall, style, V, hit, t0: t, tFall: null };
-      d.tackle = { role: 'tackler', w: pl.wrap }; c.tackle = { role: 'carrier', w: pl.wrap };
-      c.vx = V.x; c.vz = V.z; d.vx = V.x; d.vz = V.z;
+      d.cues.push({ kind: 'oneshot', clip: dsp > 6 ? FB.TACKLE_DIVE : FB.TACKLE_FORM, at: t - 0.15, anchorAt: t + 0.15, source: 'tackle' });
+      pl.wrap = w;
+      d.tackle = { role: 'tackler', w }; c.tackle = { role: 'carrier', w };
       if (hit > 0.6) this.hud.flash('BIG HIT');
       this.sfx('pads');
     } else {
@@ -883,7 +866,7 @@ export class Game {
       w.tFall = t;
       tk.vx = c.vx; tk.vz = c.vz;
       const reach = { fwd: 0.55, back: -0.35, R: 0.05, L: 0.05 }[w.fall];
-      spot = c.x + c.vx / PILE_DECAY + Math.cos(w.ang) * reach;
+      spot = c.x + c.vx / PILE_DECAY + Math.cos(w.real ?? w.ang) * reach;
     } else {
       // falling forward gains a little; going down backward gives a little up
       const a = Math.atan2(c.vz, c.vx);
