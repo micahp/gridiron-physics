@@ -17,7 +17,7 @@ import { Input } from './input.js';
 import { GameSprites } from '../stack/game-sprites.js';
 import { GameMeshes } from '../mesh/game-meshes.js';
 import { makeBall, BALL_R } from '../mesh/body-mesh.js';
-import { makeTackle, stepStruggle } from '../mesh/tackle-sim.js';
+import { makeTackle, selectTackle, stepStruggle } from '../mesh/tackle-sim.js';
 
 export const BUILD = 'play-2026-11-18-mesh';
 const YD = 0.9144;
@@ -743,6 +743,7 @@ export class Game {
 
   pursue(d, c, spd, dt) {
     const dist = Math.hypot(c.x - d.x, c.z - d.z);
+    if (dist < 3) d.face = Math.atan2(c.z - d.z, c.x - d.x);   // square up to the ball carrier before contact
     const lead = clamp(dist / Math.max(1, spd) * 0.9, 0, 1.4);
     this.toward(d, c.x + c.vx * lead, c.z + c.vz * lead, spd, dt, 13, 0);
   }
@@ -813,12 +814,23 @@ export class Game {
         const side = ((d.x - c.x) * Math.sin(fwd) - (d.z - c.z) * Math.cos(fwd)) > 0 ? 'L' : 'R';
         if (side === c.stiffSide) p = 0.22;
       }
-      this.tryTackle(d, c, p);
+      // the interaction spec decides whether a tackle can start from here at all
+      const sel = selectTackle({ c, d, u: 1 });
+      if (!sel.action) {
+        if (dist < 0.75) {
+          // too close to line up a tackle: a glancing bump instead (spec fallback)
+          d.cd = t + 0.5; d.stun = 0.25;
+          c.vx *= 0.82; c.vz *= 0.82;
+          this.sfx('pads');
+        }
+        continue;                                   // otherwise he keeps pursuing and squares up
+      }
+      this.tryTackle(d, c, p, sel.action);
       if (pl.wrap || pl.over) return;
     }
   }
 
-  tryTackle(d, c, p) {
+  tryTackle(d, c, p, style = null) {
     const t = this.t, pl = this.play;
     if (pl.wrap || pl.over) return;          // one tackle at a time
     d.cd = t + 0.9;
@@ -827,7 +839,7 @@ export class Game {
       // from the relative velocity (who hit whom), the pair then carries the
       // combined momentum of both bodies.
       const dsp = Math.hypot(d.vx, d.vz);
-      const w = makeTackle({ c, d, mc: MASS[c.slot] || 95, md: MASS[d.slot] || 100, t, u: 1, controlled: c === this.controlled });
+      const w = makeTackle({ c, d, mc: MASS[c.slot] || 95, md: MASS[d.slot] || 100, t, u: 1, controlled: c === this.controlled, style });
       w.by = d;
       const hit = w.hit;
       d.role = ROLE.TACKLER; c.role = ROLE.WRAPPED; d.partner = c; c.partner = d;

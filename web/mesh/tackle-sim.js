@@ -3,11 +3,49 @@
 // yard (1 in the game, 0.9144 in metre scenes). Players are { x, z, vx, vz, yaw }.
 import { TACKLE_GAP } from './tackles.js';
 import { SPECS } from './interactions.js';
+import { strideOf } from './stride.js';
+import { run } from '../stack/actions.js';
 
 export const PILE_DECAY = 2.6;      // 1/s: how fast a falling pile loses its slide
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const CANON = { fwd: 0, back: Math.PI, R: Math.PI / 2, L: -Math.PI / 2 };
+
+const M_PER_YD = 0.9144;
+
+/**
+ * Selection: which interactions may run from this geometry. An action is
+ * eligible only if the runtime can line the pair up inside the spec's align
+ * limits (residual root shift after the tackler's own closing motion, and the
+ * turn to face the carrier) and the closing speed is in range. Nothing is
+ * forced: with no eligible action the caller keeps playing (the defender keeps
+ * pursuing) or takes the spec's fallback.
+ *   returns { action: 'wrap' | 'dive' | null, checks: { style: { ok, shift_m, turn_deg, closing_mps, reasons } } }
+ */
+export function selectTackle({ c, d, u = 1, prefer = ['wrap', 'dive'] }) {
+  const dx = c.x - d.x, dz = c.z - d.z, dist = Math.hypot(dx, dz) || 1e-6;
+  const nx = dx / dist, nz = dz / dist;
+  const closing = (d.vx - c.vx) * nx + (d.vz - c.vz) * nz;            // scene units/s
+  const turn = Math.abs(wrap(Math.atan2(nz, nx) - d.yaw)) * 180 / Math.PI;
+  const m = M_PER_YD / u;                                              // scene units -> metres
+  const checks = {};
+  let action = null;
+  for (const style of prefer) {
+    const S = SPECS[style], A = S.phases.align;
+    const gap = (TACKLE_GAP[style] || 0.62) * u;
+    const covered = Math.max(0, closing) * A.duration_s;               // his own motion during the align window
+    const shift_m = Math.abs(dist - gap) > covered ? (Math.abs(dist - gap) - covered) * m : 0;
+    const closing_mps = closing * m;
+    const reasons = [];
+    if (shift_m > A.max_root_shift_m) reasons.push('align_shift');
+    if (turn > A.max_rotation_deg) reasons.push('align_turn');
+    if (closing_mps < S.selection.closing_speed_mps[0] || closing_mps > S.selection.closing_speed_mps[1]) reasons.push('closing_speed');
+    if (dist * m > S.selection.trigger_distance_m + 0.25) reasons.push('too_far');
+    checks[style] = { ok: !reasons.length, shift_m: +shift_m.toFixed(3), turn_deg: +turn.toFixed(1), closing_mps: +closing_mps.toFixed(2), reasons };
+    if (!action && !reasons.length) action = style;
+  }
+  return { action, checks };
+}
 
 /**
  * Start a tackle between carrier c and defender d. Sets both velocities to the
@@ -34,7 +72,8 @@ export function makeTackle({ c, d, mc = 95, md = 100, t, u = 1, style: forced = 
   c.vx = d.vx = V.x; c.vz = d.vz = V.z;
   return {
     spec: SPECS[style], t0: t, until: t + hold, tFall: null, ang, real, fall, theta: snap ? null : th, style, V, hit, tries: 0, front: fall === 'back',
-    closing, age: 0, phC: 0.15, phD: 0.25,
+    // gait phases carry over from each player's running cycle (no mid-stride jump)
+    closing, age: 0, phC: c.phase ?? 0.15, phD: d.phase ?? 0.25,
     start: { dx: d.x, dz: d.z, dyaw: d.yaw, cx: c.x, cz: c.z },
   };
 }
@@ -55,14 +94,30 @@ export function stepStruggle(w, c, d, dt, u = 1) {
   const k2 = 1 - Math.exp(-dt * 12);
   const nx = d.x + d.vx * dt, nz = d.z + d.vz * dt;           // where his own motion takes him
   const tx = c.x + c.vx * dt - ex * Math.max(gap, along - close * dt), tz = c.z + c.vz * dt - ez * Math.max(gap, along - close * dt);
-  const sx = (tx - nx) * k2, sz = (tz - nz) * k2, sy = wrap(w.ang - d.yaw) * k2;
+  let sx = (tx - nx) * k2, sz = (tz - nz) * k2;
+  // root correction is bounded by the spec: its budget inside the align window,
+  // afterwards no faster than a shuffle step (0.6 m/s)
+  const A0 = w.spec?.phases?.align || { duration_s: 0.12, max_root_shift_m: 0.22 };
+  const budget = w.age <= A0.duration_s ? Math.max(0, A0.max_root_shift_m * u / M_PER_YD - (w.shifted || 0)) : 0.6 * u / M_PER_YD * dt;
+  const sl = Math.hypot(sx, sz);
+  if (sl > budget) { sx *= budget / sl; sz *= budget / sl; }
+  w.shifted = (w.shifted || 0) + Math.min(sl, budget);
+  // turning to face the carrier is bounded: the spec's limit inside the align
+  // window, then a body's natural turn rate (about 150 deg/s)
+  const A = w.spec?.phases?.align || { duration_s: 0.12, max_rotation_deg: 25 };
+  let sy = wrap(w.ang - d.yaw) * k2;
+  const cap = w.age <= A.duration_s ? Math.max(0, A.max_rotation_deg * Math.PI / 180 - (w.turned || 0)) : 2.6 * dt;
+  sy = Math.max(-cap, Math.min(cap, sy));
+  w.turned = (w.turned || 0) + Math.abs(sy);
   d.x += sx; d.z += sz; d.yaw += sy;
   // legs churn at the pace the pile really moves, so planted feet don't skate
   const spd = Math.hypot(c.vx, c.vz) / u * 0.9144;
   // stride shrinks as the pile slows (gait amplitude), cadence follows speed
-  w.amp = Math.min(1, Math.max(0.35, spd / 6));
-  w.phC += Math.max(0.5, spd / (4.1 * w.amp)) * dt;
-  w.phD += Math.max(0.5, spd / (4.3 * w.amp)) * dt;
+  w.amp = Math.round(Math.min(1, Math.max(0.35, spd / 6)) * 20) / 20;
+  const strideC = strideOf('carry@' + w.amp, (p) => run(p, { amp: w.amp, lean: 14, carry: 'R' }));
+  const strideD = strideOf('run@' + w.amp, (p) => run(p, { amp: w.amp, lean: 14 }));
+  w.phC += (spd / strideC) * dt;           // legs move exactly as fast as the pile: planted feet stay put
+  w.phD += (spd / strideD) * dt;
   return { shift: Math.hypot(sx, sz), turn: Math.abs(sy) };   // correction this step, beyond his own motion
 }
 

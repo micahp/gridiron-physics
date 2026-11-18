@@ -52,8 +52,11 @@ function walk(ph) {
 }
 
 function backpedal(ph) {
-  const hip = (q) => (40 + 26 * S(TAU * q)) * D;
-  const kn = (q) => (66 + 30 * S(TAU * q + 1.3)) * D;
+  // stance while the hip flexes (the foot travels forward under a body moving
+  // back); in the swing half the knee folds to pick the foot up off the turf
+  const swing = (q) => Math.max(0, -Math.cos(TAU * q));
+  const hip = (q) => (40 + 26 * S(TAU * q) + 10 * swing(q)) * D;
+  const kn = (q) => (62 + 18 * S(TAU * q + 1.3) + 48 * swing(q)) * D;
   return {
     root: { pitch: 26 * D, lift: 0.03 * (bump(ph, 0.2, 0.06) + bump(ph, 0.7, 0.06)), roll: 3 * D * S(TAU * ph) },
     spine: [6 * D, 0, 0], chest: [0, 0, 4 * D * S(TAU * ph)], neck: [-28 * D, 0, 0],

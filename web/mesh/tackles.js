@@ -80,12 +80,12 @@ function wrapDrive(s, phase, amp = 0.4) {
     shR: deg([74, 30, 48]), elR: 78 * D, wrR: deg([-16, 0]), gripR: 0.9,
     shL: deg([74, 30, 48]), elL: 78 * D, wrL: deg([-16, 0]), gripL: 0.9,
   };
-  const k = Math.min(1, Math.max(0, (amp - 0.4) / 0.5));
+  const k = 1;   // the calibrated running stride at every speed (amplitude shrinks as the pile slows)
   for (const j of ['hipR', 'hipL', 'knR', 'knL', 'anR', 'anL']) {
     const x = drive[j] ?? 0, y = legs[j];
     drive[j] = Array.isArray(y) ? y.map((v, i) => (x[i] ?? 0) + (v - (x[i] ?? 0)) * k) : x + (y - x) * k;
   }
-  if (k > 0.5) { drive.flatR = false; drive.flatL = false; }
+  drive.flatR = false; drive.flatL = false;
   drive.root.lift += (legs.root.lift || 0) * k;
   return drive;
 }

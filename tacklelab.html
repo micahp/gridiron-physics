@@ -32,9 +32,10 @@ import { ACTIONS } from './web/stack/actions.js';
 import { fill } from './web/stack/skeleton.js';
 import { buildBody, MeshPlayer, makeBall, BALL_R } from './web/mesh/body-mesh.js';
 import { tacklePose } from './web/mesh/tackles.js';
-import { makeTackle, stepStruggle, stepFall } from './web/mesh/tackle-sim.js';
-import { solveTackler } from './web/mesh/pair.js';
+import { makeTackle, selectTackle, stepStruggle, stepFall } from './web/mesh/tackle-sim.js';
+import { solveTackler, solveCarrierArm } from './web/mesh/pair.js';
 import { lerpPose } from './web/mesh/pose-blend.js';
+import { strideOf } from './web/mesh/stride.js';
 import { KITS } from './web/stack/game-sprites.js';
 import { fieldMesh } from './web/play/field.js';
 
@@ -111,13 +112,15 @@ function reset(ci) {
 function contact() {
   const { c, d, k } = sim;
   // the same runtime as the game (web/mesh/tackle-sim.js)
+  const sel = selectTackle({ c, d, u: YD, prefer: [k.style || 'wrap'] });
+  sim.sel = sel;
   sim.w = makeTackle({ c, d, mc: k.mc, md: k.md, t: sim.t, u: YD, style: k.style || 'wrap' });
   sim.contacted = true;
 }
 const STRIDE = { carry: 4.1, sprint: 4.3 };
 function locoPose(p, name, dt) {
   const sp = Math.hypot(p.vx, p.vz);
-  p.phase += (sp / STRIDE[name]) * dt;
+  p.phase += (sp / strideOf(name, ACTIONS[name].fn)) * dt;
   return fill(ACTIONS[name].fn(((p.phase % 1) + 1) % 1));
 }
 function blend(p, key, pose, t, dur = 0.12) {
@@ -163,6 +166,10 @@ function step(now) {
     pd = r.pose; dx = r.x; dz = r.z;
   }
   T.setPose(pd, dx, dz, d.yaw);
+  if (w) {
+    pc = solveCarrierArm(w, t, { pose: pc, place: { x: c.x, z: c.z, yaw: c.yaw, scale: 1, ground: C.inner.position.y } }, { J: T.J, place: { x: dx, z: dz, yaw: d.yaw, scale: 1, ground: T.inner.position.y } });
+    C.setPose(pc, c.x, c.z, c.yaw);
+  }
   scene.updateMatrixWorld();
   ball.matrix.copy(C.toWorld(C.hasBall ? C.ballM : C.ballAt('R'), M));
   ball.matrixWorldNeedsUpdate = true;

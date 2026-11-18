@@ -89,3 +89,22 @@ export function placeToWorld(place, b) {
   const c = Math.cos(place.yaw), s = Math.sin(place.yaw), k = place.scale || 1, g = place.ground || 0;
   return [place.x + k * (b[0] * c - b[2] * s), k * (b[1] + g), place.z + k * (b[0] * s + b[2] * c)];
 }
+
+// ---- the real body, for limb clearance (the same shapes the mesh is built from)
+import { PARTS } from '../stack/body.js';
+const SOLID = PARTS.filter((p) => !p.thin || p.hand);
+/** Signed distance (metres) from a world point to a placed, posed body. */
+export function bodyDistance(J, place, w) {
+  const c = Math.cos(place.yaw), s = Math.sin(place.yaw), k = place.scale || 1;
+  const dx = w[0] - place.x, dz = w[2] - place.z;
+  const b = [(dx * c + dz * s) / k, w[1] / k - (place.ground || 0), (-dx * s + dz * c) / k];
+  let d = 1;
+  for (const pt of SOLID) {
+    const j = J[pt.joint], R = j.R, x = b[0] - j.p[0], y = b[1] - j.p[1], z = b[2] - j.p[2];
+    const q = [R[0] * x + R[3] * y + R[6] * z, R[1] * x + R[4] * y + R[7] * z, R[2] * x + R[5] * y + R[8] * z];
+    if (Math.abs(q[0]) > 0.6 || Math.abs(q[1]) > 0.7 || Math.abs(q[2]) > 0.6) continue;
+    const e = pt.sdf(q);
+    if (e < d) d = e;
+  }
+  return d * k;
+}

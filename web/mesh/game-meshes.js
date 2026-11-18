@@ -15,11 +15,13 @@ import { KITS } from '../stack/game-sprites.js';
 import { buildBody, MeshPlayer } from './body-mesh.js';
 import { tacklePose } from './tackles.js';
 import { lerpPose } from './pose-blend.js';
-import { solveTackler } from './pair.js';
+import { solveTackler, solveCarrierArm } from './pair.js';
+import { strideOf } from './stride.js';
 
 const YD = 0.9144;
 const ROLE_ENGAGED = 1;
-const STRIDE = { walk: 1.6, jog: 2.7, sprint: 4.3, carry: 4.1, carryL: 4.1, stiffL: 4.1, stiffR: 4.1, backpedal: 1.45, shuffleR: 1.05, shuffleL: 1.05 };
+// gaits whose cycle is driven by distance travelled (stride measured in stride.js)
+const GAITS = new Set(['walk', 'jog', 'sprint', 'carry', 'carryL', 'stiffL', 'stiffR', 'backpedal', 'shuffleR', 'shuffleL']);
 const LINE = /^(LT|LG|C|RG|RT|TE|LEDGE|LDT|RDT|REDGE)$/;
 const SCALE = { LT: 1.04, LG: 1.04, C: 1.03, RG: 1.04, RT: 1.04, TE: 1.02, QB: 1.0, RB: 0.97, WR1: 0.99, WR2: 0.99, SLOT: 0.96, LEDGE: 1.02, LDT: 1.03, RDT: 1.03, REDGE: 1.02, LB1: 1.0, LB2: 1.0, CB1: 0.97, CB2: 0.97, NB: 0.96, FS: 0.98, SS: 0.99 };
 // where the hands hold the ball when an action doesn't say
@@ -93,6 +95,9 @@ export class GameMeshes {
         key = a; pose = this.at(a, t + i * 0.37);
       } else if (p.tackle) {
         const w = p.tackle.w;
+        // the pair's leg cycles start where each player's running cycle was
+        const pk = p.tackle.role === 'carrier' ? 'phC' : 'phD';
+        if (!w[pk + 'Synced']) { w[pk] = sk.phase; w[pk + 'Synced'] = true; }
         key = `tackle:${p.tackle.role}:${w.tFall != null && t >= w.tFall ? 'fall' : 'hold'}`;
         pose = tacklePose(w, p.tackle.role, t);
         blendDur = key.endsWith('hold') ? 0.12 : 0.1;
@@ -132,7 +137,7 @@ export class GameMeshes {
           } else {
             const a = this.locomotion(p, sk, dt, t);
             key = a;
-            pose = a in STRIDE ? fill(ACTIONS[a].fn(((sk.phase % 1) + 1) % 1)) : this.at(a, t + i * 0.37);
+            pose = GAITS.has(a) ? fill(ACTIONS[a].fn(((sk.phase % 1) + 1) % 1)) : this.at(a, t + i * 0.37);
           }
           // the ball holder always has it somewhere: tuck it if the action doesn't say
           if (p === holder && !pose.ball && !now) {
@@ -168,6 +173,10 @@ export class GameMeshes {
           const att = { pose, place: { x, z, yaw: p.yaw, scale: mp.root.scale.x, ground: mp.inner.position.y } };
           const r = solveTackler(p.tackle.w, t, dt, recv, att);
           pose = r.pose; x = r.x; z = r.z;
+          // then the carrier's free arm, clear of the tackler where he now is
+          mp.setPose(pose, x, z, p.yaw);
+          const cp = solveCarrierArm(p.tackle.w, t, { pose: poses[ci], place: recv.place }, { J: mp.J, place: { x, z, yaw: p.yaw, scale: mp.root.scale.x, ground: mp.inner.position.y } });
+          cm.setPose(cp, recv.place.x, recv.place.z, q.yaw);
         }
       }
       mp.setPose(pose, x, z, p.yaw);
@@ -195,7 +204,7 @@ export class GameMeshes {
       else a = sp > 5.6 ? 'sprint' : sp > 2.2 ? 'jog' : 'walk';
     } else if (ang > 125) a = 'backpedal';
     else a = lz > 0 ? 'shuffleR' : 'shuffleL';
-    sk.phase += (sp / STRIDE[a]) * dt;
+    sk.phase += (sp / strideOf(a, ACTIONS[a].fn)) * dt;     // stride measured from the gait: the standing foot stays put
     return a;
   }
 
