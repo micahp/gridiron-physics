@@ -53,16 +53,18 @@ export function bodyParts(f, ballC = BALL.c) {
     { kind: 'jersey', box: { c: P('chest'), h: [0.138, 0.16, 0.178], rr: 0.075 } },
     { kind: 'jersey', a: P('shR'), b: P('shL'), r: 0.07 },
     { kind: 'shorts', a: P('hipR'), b: P('hipL'), r: 0.13 },
-    { kind: 'jersey', a: P('shR'), b: P('elR'), r: 0.05 },
+    { kind: 'skin', a: P('shR'), b: P('elR'), r: 0.05 },   // bare arm: no sleeve
     { kind: 'skin', a: P('elR'), b: P('wrR'), r: 0.042 },
     { kind: 'skin', a: P('wrR'), b: P('palmR'), r: 0.045 },
-    { kind: 'jersey', a: P('shL'), b: P('elL'), r: 0.05 },
+    { kind: 'skin', a: P('shL'), b: P('elL'), r: 0.05 },
     { kind: 'skin', a: P('elL'), b: P('wrL'), r: 0.042 },
     { kind: 'skin', a: P('wrL'), b: P('palmL'), r: 0.045 },
-    { kind: 'shorts', a: P('hipR'), b: P('knR'), r: 0.075 },
+    { kind: 'shorts', a: P('hipR'), b: lerp3(P('hipR'), P('knR'), 0.45), r: 0.075 },
+    { kind: 'skin', a: lerp3(P('hipR'), P('knR'), 0.45), b: P('knR'), r: 0.07 },   // bare thigh below the shorts
     { kind: 'sock', a: P('knR'), b: P('anR'), r: 0.052 },
     { kind: 'shoe', a: P('anR'), b: P('toeR'), r: 0.042 },
-    { kind: 'shorts', a: P('hipL'), b: P('knL'), r: 0.075 },
+    { kind: 'shorts', a: P('hipL'), b: lerp3(P('hipL'), P('knL'), 0.45), r: 0.075 },
+    { kind: 'skin', a: lerp3(P('hipL'), P('knL'), 0.45), b: P('knL'), r: 0.07 },
     { kind: 'sock', a: P('knL'), b: P('anL'), r: 0.052 },
     { kind: 'shoe', a: P('anL'), b: P('toeL'), r: 0.042 },
     { kind: 'ball', c: ballC, r: BALL.r },
@@ -70,6 +72,8 @@ export function bodyParts(f, ballC = BALL.c) {
 }
 
 // Signed distance to a part, and the outward normal at the nearest surface point.
+function lerp3(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+
 function partHit(p, part, out) {
   if (part.box) {
     // rounded box: signed distance, normal from the centre (fine for shading a torso)
