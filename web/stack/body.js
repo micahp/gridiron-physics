@@ -206,6 +206,7 @@ function ballPart(J, where) {
 
 // the smooth skinned mesh (web/mesh/) is built from the same shapes
 export { parts as PARTS, bars as MASK_BARS, ballPart };
+export { sdRoundBox, sdEllipsoid, sdCone };
 
 // ---------------------------------------------------------------- voxeliser
 /**

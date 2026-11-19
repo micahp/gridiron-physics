@@ -31,7 +31,7 @@ const toWorld = (R, p, l) => [p[0] + R[0] * l[0] + R[1] * l[1] + R[2] * l[2], p[
  * Extract one smooth skinned surface from a set of shapes.
  *   h: grid spacing, K: smooth-union radius, sigma: skin-weight falloff (all metres)
  */
-function surface(J, list, h, K, sigma) {
+export function surface(J, list, h, K, sigma, ctx = { order: ORDER, numberJoint: 'chest' }) {
   const solid = list.map((p) => {
     const j = J[p.joint];
     const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
@@ -39,9 +39,9 @@ function surface(J, list, h, K, sigma) {
       const w = toWorld(j.R, j.p, [p.bounds[c & 1][0], p.bounds[(c >> 1) & 1][1], p.bounds[(c >> 2) & 1][2]]);
       for (let a = 0; a < 3; a++) { mn[a] = Math.min(mn[a], w[a]); mx[a] = Math.max(mx[a], w[a]); }
     }
-    return { ...p, R: j.R, P: j.p, mn, mx, bone: ORDER.indexOf(p.joint) };
+    return { ...p, R: j.R, P: j.p, mn, mx, bone: ctx.order.indexOf(p.joint) };
   });
-  const chestPart = solid.find((p) => p.joint === 'chest' && p.prio === 1);
+  const chestPart = solid.find((p) => p.joint === ctx.numberJoint && p.prio === 1);
   const inBox = (s, w, pad) => w[0] > s.mn[0] - pad && w[0] < s.mx[0] + pad && w[1] > s.mn[1] - pad && w[1] < s.mx[1] + pad && w[2] > s.mn[2] - pad && w[2] < s.mx[2] + pad;
   const field = (w) => {
     let d = 0.1;
@@ -136,7 +136,7 @@ function surface(J, list, h, K, sigma) {
   // ---- skin weights, palette index and number-plate coordinates per vertex
   const skinI = new Uint16Array(nv * 4), skinW = new Float32Array(nv * 4);
   const pal = new Float32Array(nv), num = new Float32Array(nv * 3);
-  const acc = new Float32Array(ORDER.length);
+  const acc = new Float32Array(ctx.order.length);
   for (let v = 0; v < nv; v++) {
     const w = [pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]];
     acc.fill(0);
@@ -223,7 +223,7 @@ export function buildBody(h = 0.016) {
   };
 }
 
-function jointMatrix(j, m = new THREE.Matrix4()) {
+export function jointMatrix(j, m = new THREE.Matrix4()) {
   const R = j.R, p = j.p;
   return m.set(R[0], R[1], R[2], p[0], R[3], R[4], R[5], p[1], R[6], R[7], R[8], p[2], 0, 0, 0, 1);
 }
