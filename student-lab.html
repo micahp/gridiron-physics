@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Student Player Lab</title>
+<style>
+  :root { --bg: #0f1a12; --panel: rgba(10,16,12,.85); --ink: #f2f4ee; --dim: #a9b5a6; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 13px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #panel { position: fixed; top: 10px; left: 10px; background: var(--panel); padding: 10px 12px; border-radius: 10px; width: min(92vw, 360px); max-height: 90vh; overflow: auto; }
+  #panel h1 { font-size: 14px; margin: 0 0 6px; letter-spacing: .04em; }
+  #readout { margin-top: 8px; white-space: pre; color: var(--dim); font-variant-numeric: tabular-nums; font-size: 12px; }
+  #err { position: fixed; bottom: 10px; left: 10px; right: 10px; background: #5a1010; padding: 8px 10px; border-radius: 8px; display: none; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>GAME STUDENT PLAYER (Male_Casual.fbx)</h1>
+  <div><select id="clip"><option value="Man_Idle">Idle</option><option value="Man_Walk">Walk</option><option value="Man_Run">Run</option></select></div>
+  <div id="readout">loading…</div>
+</div>
+<div id="err"></div>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { FBXLoader } from './web/vendor/FBXLoader.js';
+
+const showErr = (e) => { const el = document.getElementById('err'); el.style.display = 'block'; el.textContent = String((e && e.stack) || e); };
+window.addEventListener('error', (e) => showErr(e.error || e.message));
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.shadowMap.enabled = true;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.05, 80);
+camera.position.set(0, 1.1, 5.2);
+camera.lookAt(0, 0.95, 0);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x665544, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(3, 6, 4); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: '#c99a5b', roughness: 0.9 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+
+let mixer = null;
+new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
+  fbx.scale.setScalar(1);
+  scene.add(fbx);
+  const meshes = [], mats = new Set();
+  fbx.traverse((o) => {
+    if (o.isMesh) { meshes.push(o.name || '(unnamed)'); for (const m of [].concat(o.material)) mats.add(`${m.name}`); }
+  });
+  const box = new THREE.Box3().setFromObject(fbx);
+  const h = box.max.y - box.min.y;
+  fbx.position.y -= box.min.y;                 // stand on the floor
+  const s = 1.81 / Math.max(h, 1e-6);          // show the game's 1.81 m body height
+  fbx.scale.setScalar(s);
+  fbx.position.y = -box.min.y * s;
+  // the game's colours for the student (court_player_model.gd build_student, court_game.gd look)
+  const COL = { Skin: '#7a573d', Shirt: '#eab84d', Pants: '#1f3368', Socks: '#f2f2f2', Shoes: '#f2f2f2', Hair: '#141210' };
+  fbx.traverse((o) => { if (o.isMesh) for (const m of [].concat(o.material)) if (COL[m.name]) { m.color.set(COL[m.name]); m.map = null; m.needsUpdate = true; } });
+  const clips = fbx.animations || [];
+  mixer = new THREE.AnimationMixer(fbx);
+  const actionsByName = {};
+  for (const c of clips) actionsByName[c.name.replace('HumanArmature|', '')] = mixer.clipAction(c);
+  const play = (name) => { const a = actionsByName[name]; if (!a) return; for (const x of Object.values(actionsByName)) x.fadeOut(0.2); a.reset().fadeIn(0.2).play(); };
+  play('Man_Idle');
+  document.getElementById('clip').addEventListener('change', (e) => play(e.target.value));
+  document.getElementById('readout').textContent =
+    `raw height ${h.toFixed(2)} (scaled to 1.81 m)\n` +
+    `meshes: ${meshes.join(', ')}\n` +
+    `materials: ${[...mats].join(', ')}\n` +
+    `clips: ${clips.map((c) => c.name).join(', ') || 'none'}`;
+}, undefined, (e) => showErr(e));
+
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+const clock = new THREE.Clock();
+function frame() {
+  if (mixer) mixer.update(clock.getDelta());
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
