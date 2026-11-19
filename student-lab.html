@@ -228,6 +228,30 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   // or the mixer skips those tracks (this is why Man_Sitting never sat down)
   const clips = (fbx.animations || []).map((c) => new THREE.AnimationClip(c.name.replace('HumanArmature|', ''), c.duration,
     c.tracks.map((t) => { const nt = t.clone(); nt.name = t.name.replace(/^HumanArmature\|/, ''); return nt; })));
+  // Man_Standing: ease the leg tracks to the bind pose over its last 40%, so the legs end straight
+  const easeLegsStraight = (c) => {
+    const d = c.duration;
+    c.tracks = c.tracks.map((t) => {
+      const m = /^(UpperLeg|LowerLeg)([LR])\.quaternion$/.exec(t.name);
+      if (!m) return t;
+      // straight-leg target: the leg rotations of Man_Idle's first frame (the bind pose has bent knees)
+      const idleT = (clips.find((x) => x.name === 'Man_Idle') || { tracks: [] }).tracks.find((x) => x.name === t.name);
+      if (!idleT) return t;
+      const rest = new THREE.Quaternion(idleT.values[0], idleT.values[1], idleT.values[2], idleT.values[3]);
+      // resample the track across the whole clip (the source keys only its first frame), then ease toward straight
+      const it = t.createInterpolant(), N = Math.max(2, Math.round(d * 30)), times = [], out = [];
+      for (let k = 0; k <= N; k++) {
+        const tt = (d * k) / N;
+        let f = tt <= 0.6 * d ? 0 : Math.min(1, (tt - 0.6 * d) / (0.4 * d));
+        f = f * f * (3 - 2 * f);
+        const o = it.evaluate(tt);
+        const q = new THREE.Quaternion(o[0], o[1], o[2], o[3]).slerp(rest, f);
+        times.push(tt); out.push(q.x, q.y, q.z, q.w);
+      }
+      return new THREE.QuaternionKeyframeTrack(t.name, times, out);
+    });
+  };
+  for (const c of clips) if (c.name === 'Man_Standing') easeLegsStraight(c);
   const bones = []; fbx.traverse((o) => { if (o.isBone) bones.push(o.name); });
   mixer = new THREE.AnimationMixer(fbx);
   const actionsByName = {};
