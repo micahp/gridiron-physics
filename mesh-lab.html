@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Basketball Mesh Lab</title>
+<style>
+  :root { --bg: #0f1a12; --panel: rgba(10,16,12,.85); --ink: #f2f4ee; --dim: #a9b5a6; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 13px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #panel { position: fixed; top: 10px; left: 10px; background: var(--panel); padding: 10px 12px; border-radius: 10px; width: min(92vw, 340px); }
+  #panel h1 { font-size: 14px; margin: 0 0 6px; letter-spacing: .04em; }
+  #panel select, #panel button { background: #1d2b20; color: var(--ink); border: 1px solid #39503d; border-radius: 6px; padding: 4px 8px; font: inherit; margin: 2px 4px 2px 0; }
+  #readout { margin-top: 8px; white-space: pre; color: var(--dim); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>BASKETBALL MESH · SKINNED</h1>
+  <div>
+    <select id="pose">
+      <option value="neutral">neutral</option>
+      <option value="stance">stance</option>
+      <option value="dribble">dribble</option>
+      <option value="refJumpShot">jump shot (recorded)</option>
+    </select>
+    <select id="view">
+      <option value="front">front</option>
+      <option value="side">side</option>
+      <option value="rear">rear</option>
+      <option value="three">three-quarter</option>
+    </select>
+  </div>
+  <div><input id="t" type="range" min="0" max="1" step="0.005" value="0" style="width:100%"></div>
+  <div id="readout"></div>
+</div>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { buildBasketballBody, BasketballMeshPlayer } from './web/basketball/body-mesh.js';
+import { poseOf } from './web/basketball/library.js';
+import { fill } from './web/basketball/skeleton.js';
+
+const $ = (id) => document.getElementById(id);
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.shadowMap.enabled = true;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.05, 50);
+scene.add(new THREE.HemisphereLight(0xeef2ff, 0x33452c, 1.4));
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.8); sun.position.set(3, 6, 4); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshStandardMaterial({ color: '#c99a5b', roughness: 0.9 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+const H = 0.02;
+const t0 = performance.now();
+const base = buildBasketballBody(H);
+const player = new BasketballMeshPlayer(base, { kit: { jersey: '#e8b230', trim: '#ffffff', pants: '#1e3a7a', sock: '#f0f0ec', cleat: '#1c1c1e', belt: '#141414', number: '#1c1c1e' }, skin: 0.4, number: 7 });
+scene.add(player.root);
+
+const VIEWS = {
+  front: [[6.5, 1.1, 0], 0],          // the player faces +x
+  side: [[0, 1.1, 6.5], 0],
+  rear: [[-6.5, 1.1, 0], 0],
+  three: [[4.6, 1.5, 4.6], 0],
+};
+// The skeleton's +x is forward. The camera looks at the player from the named side.
+function setView(name) {
+  const [pos] = VIEWS[name];
+  camera.position.set(pos[0], pos[1], pos[2]);
+  camera.lookAt(0, 0.92, 0);
+}
+setView('front');
+
+function poseFor(name, t) {
+  if (name === 'neutral') return fill({});
+  return poseOf(name, t);
+}
+function show() {
+  const name = $('pose').value, t = +$('t').value;
+  const p = poseFor(name, t);
+  player.setPose(p, 0, 0, 0);
+  $('readout').textContent =
+    `${name}  t ${t.toFixed(2)}\n` +
+    `mesh: ${base.verts} vertices, ${base.tris} triangles (grid ${H} m)\n` +
+    `built in ${base.ms.toFixed(0)} ms`;
+}
+$('pose').addEventListener('change', () => { $('t').value = 0; show(); });
+$('t').addEventListener('input', show);
+$('view').addEventListener('change', (e) => setView(e.target.value));
+show();
+
+function frame() {
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
