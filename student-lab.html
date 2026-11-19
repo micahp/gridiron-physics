@@ -209,6 +209,17 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   });
   fbx.updateMatrixWorld(true);
   fbx.traverse((o) => { if (o.isBone) { studentBones[o.name] = o; studentRestW[o.name] = o.getWorldQuaternion(new THREE.Quaternion()); studentRestPos[o.name] = o.position.clone(); } });
+  // rest world pose of each shin and foot, so each foot can be carried by its shin (the rig parents the feet to the root)
+  window.__fbxRestY = fbx.position.y;
+  window.__ankleRest = {};
+  for (const sd of ['L', 'R']) {
+    const lo = studentBones['LowerLeg' + sd], ft = studentBones['Foot' + sd];
+    if (!lo || !ft) continue;
+    window.__ankleRest[sd] = {
+      lowerP: lo.getWorldPosition(new THREE.Vector3()), lowerQ: lo.getWorldQuaternion(new THREE.Quaternion()),
+      footP: ft.getWorldPosition(new THREE.Vector3()), footQ: ft.getWorldQuaternion(new THREE.Quaternion()),
+    };
+  }
   // the clips name their tracks 'HumanArmature|Body.position'; the bone is just 'Body', so the prefix must go
   // or the mixer skips those tracks (this is why Man_Sitting never sat down)
   const clips = (fbx.animations || []).map((c) => new THREE.AnimationClip(c.name.replace('HumanArmature|', ''), c.duration,
@@ -220,7 +231,28 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   for (const c of clips) actionsByName[c.name] = mixer.clipAction(c);
   window.__actions = actionsByName;
   window.__fbx = fbx; window.__sb = studentBones;
-  const play = (name) => { const a = actionsByName[name]; if (!a) return; for (const x of Object.values(actionsByName)) x.fadeOut(0.2); a.reset().fadeIn(0.2).play(); };
+  // per CMU clip: lift the body so the lowest foot point over the whole clip sits on the floor (this keeps the jump lift)
+  const floorOff = (window.__floorOff = {});
+  window.__activeClip = null;
+  const calibrateFloor = (name) => {
+    const a = actionsByName[name]; if (!a || !window.__ankleRest || !window.__ankleRest.L) return;
+    const dur = a.getClip().duration, saved = a.time; let minY = Infinity;
+    for (let t = 0; t <= dur; t += 1 / 30) {
+      a.time = t; mixer.update(0);
+      window.__fbx.position.y = window.__fbxRestY; window.__fbx.updateMatrixWorld(true);
+      attachFoot('L'); attachFoot('R');
+      for (const n of ['FootL', 'FootR']) { const v = new THREE.Vector3(); window.__sb[n].getWorldPosition(v); minY = Math.min(minY, v.y); }
+    }
+    a.time = saved; mixer.update(0);
+    floorOff[name] = -minY;
+  };
+  const play = (name) => {
+    const a = actionsByName[name]; if (!a) return;
+    for (const x of Object.values(actionsByName)) x.fadeOut(0.2);
+    a.reset().fadeIn(0.2).play();
+    window.__activeClip = name;
+    if (!(name in floorOff)) setTimeout(() => calibrateFloor(name), 600);
+  };
   // CMU clips: each file has its own rig rest; hips translation is scaled by the ratio of hip heights
   const cmuFiles = ['jumpshot', 'layup', 'dribble_run'];
   const gl = new GLTFLoader();
@@ -264,18 +296,33 @@ bones: ${bones.join(', ')}
 
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
 const clock = new THREE.Clock();
+// place each foot at its shin's ankle, carrying the shin's animated rotation change onto the foot
+function attachFoot(sd) {
+  const R = window.__ankleRest[sd];
+  const lo = window.__sb['LowerLeg' + sd], ft = window.__sb['Foot' + sd];
+  lo.updateWorldMatrix(true, false);
+  const lowP = lo.getWorldPosition(new THREE.Vector3());
+  const lowQ = lo.getWorldQuaternion(new THREE.Quaternion());
+  const dQ = lowQ.clone().multiply(R.lowerQ.clone().invert());          // shin's rotation change since rest
+  const off = R.footP.clone().sub(R.lowerP).applyQuaternion(dQ);         // rest ankle offset, rotated with the shin
+  const tP = lowP.clone().add(off);
+  const tQ = dQ.clone().multiply(R.footQ.clone());                       // foot world orientation
+  const par = ft.parent; par.updateWorldMatrix(true, false);
+  const pInv = par.matrixWorld.clone().invert();
+  const parQ = par.getWorldQuaternion(new THREE.Quaternion());
+  ft.position.copy(tP.applyMatrix4(pInv));
+  ft.quaternion.copy(parQ.clone().invert().multiply(tQ));
+  ft.updateWorldMatrix(true, false);
+}
 function frame() {
   if (mixer) mixer.update(clock.getDelta());
-  // keep the feet on the floor: set the body height so the lowest foot touches y = 0
-  if (window.__fbx) {
-    const f = window.__fbx;
-    f.position.y = 0; f.updateMatrixWorld(true);
-    let low = 1e9;
-    for (const n of ['FootL', 'FootR', 'FootL_end', 'FootR_end']) {
-      const b = window.__sb && window.__sb[n]; if (!b) continue;
-      const v = new THREE.Vector3(); b.getWorldPosition(v); low = Math.min(low, v.y);
-    }
-    if (low < 1e8) f.position.y = -low + (f.userData.restY || 0);
+  // body height comes from the clip's hip track (Body.position); the feet follow their shins. No per-frame
+  // grounding: pinning the lowest foot to the floor cancelled the jump lift.
+  if (window.__fbx && window.__ankleRest && window.__ankleRest.L && window.__ankleRest.R) {
+    window.__fbx.position.y = window.__fbxRestY + (window.__floorOff[window.__activeClip] || 0);
+    window.__fbx.updateMatrixWorld(true);
+    attachFoot('L');
+    attachFoot('R');
   }
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
