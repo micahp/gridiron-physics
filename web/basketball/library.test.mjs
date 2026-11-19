@@ -27,7 +27,7 @@ const all = Object.fromEntries(actions.map((a) => [a, frames(a)]));
 
 // --- rules every action must pass
 for (const name of actions) {
-  if (!LIBRARY[name].airborne) check(`${name}: both feet on the floor in every frame (toes within 1 mm)`, () => {
+  if (!LIBRARY[name].airborne && !LIBRARY[name].reference) check(`${name}: both feet on the floor in every frame (toes within 1 mm)`, () => {
     let worst = 0;
     for (const fr of all[name]) worst = Math.max(worst, Math.abs(fr.f.toeR.p[1]), Math.abs(fr.f.toeL.p[1]));
     assert.ok(worst < 0.001, `a toe was ${(worst * 1000).toFixed(2)} mm off the floor`);
@@ -48,7 +48,8 @@ for (const name of actions) {
 
   // A fast arm strike peaks near 5 to 8 m/s; a dribble push is far slower.
   // swipe: a fast arm strike (5 to 8 m/s); pass, catch, shot, block: 4 m/s; dribble and stance: 2.5 m/s
-  const SPEED_LIMIT = name === 'swipe' ? 8 : ['dribble', 'lowDribble', 'crossover', 'stance', 'defendInPlace', 'defendSlide'].includes(name) ? 2.5 : ['overheadPass', 'oneHandPass', 'bouncePass'].includes(name) ? 6 : 4;
+  // refJumpShot: 1.5 x the reference's own peak hand speed (5.1 m/s in CMU 124_05)
+  const SPEED_LIMIT = name === 'refJumpShot' ? 7.7 : name === 'swipe' ? 8 : ['dribble', 'lowDribble', 'crossover', 'stance', 'defendInPlace', 'defendSlide'].includes(name) ? 2.5 : ['overheadPass', 'oneHandPass', 'bouncePass'].includes(name) ? 6 : 4;
   check(`${name}: the palm never moves faster than ${SPEED_LIMIT} m/s`, () => {
     const dt = 1 / FPS;
     let worst = 0;
@@ -167,6 +168,25 @@ for (const name of Object.keys(LIBRARY)) {
   });
 }
 
+// --- the reference jump shot: feet on the floor while it is grounded (load, and after landing)
+// The reference's shot stance is weighted on one foot: the other toe sits 7 to 12 mm up in the recording.
+// So: the lowest foot is on the floor (under 3 mm), and the other is no more than 2.5 cm up.
+check('refJumpShot: while grounded (load and after landing) one foot is on the floor and the other is within 2.5 cm', () => {
+  const grounded = all.refJumpShot.filter((fr) => fr.t < 0.2 || fr.t > 0.92);
+  let lowest = 0, other = 0;
+  for (const fr of grounded) {
+    const a = Math.abs(fr.f.toeR.p[1]), b = Math.abs(fr.f.toeL.p[1]);
+    lowest = Math.max(lowest, Math.min(a, b));
+    other = Math.max(other, Math.max(a, b));
+  }
+  // 3 mm: the 5-frame smoothing and the frame-to-frame interpolation leave ~2 mm
+  assert.ok(lowest < 0.003, `the lower foot was ${(lowest * 1000).toFixed(2)} mm off the floor`);
+  assert.ok(other < 0.025, `the other foot was ${(other * 1000).toFixed(1)} mm off the floor`);
+});
+check('refJumpShot: the jump is real (feet leave the floor by at least 15 cm at the top)', () => {
+  const up = Math.max(...all.refJumpShot.map((fr) => Math.min(fr.f.toeR.p[1], fr.f.toeL.p[1])));
+  assert.ok(up >= 0.15, `feet ${(up * 100).toFixed(1)} cm up`);
+});
 check('unknown action names are refused', () => {
   assert.throws(() => poseOf('layup', 0), /unknown action/);
 });

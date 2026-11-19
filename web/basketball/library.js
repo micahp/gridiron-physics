@@ -9,6 +9,7 @@
 // checks in library.test.mjs pass.
 import { fk, D, LIMITS } from './skeleton.js';
 import { swipe, STRIKE_T, SWIPE_SECONDS } from './actions.js';
+import { REF as REF_JUMP_SHOT } from './refs/cmu_124_05_jumpshot.js';
 
 const ease = (x) => x * x * (3 - 2 * x);
 const key = (t, a, b) => a + (b - a) * ease(Math.min(1, Math.max(0, t)));
@@ -148,6 +149,23 @@ function oneHandPass(t) {
     shL: [40 * D, 14 * D, 0], elL: 100 * D, wrL: [0, 0] };
 }
 
+/** Sample a retargeted reference clip at normalised time t (0..1). Angles and lift are linear. */
+export function sampleRef(frames, t) {
+  const x = Math.min(1, Math.max(0, t)) * (frames.length - 1);
+  const a = Math.floor(x), b = Math.min(frames.length - 1, a + 1), w = x - a;
+  const lerp = (u, v) => u + (v - u) * w;
+  const A = frames[a], B = frames[b];
+  const out = {};
+  for (const k of Object.keys(A)) {
+    if (k === 't') continue;
+    const va = A[k], vb = B[k];
+    if (typeof va === 'number') out[k] = lerp(va, vb);
+    else if (Array.isArray(va)) out[k] = va.map((v, i) => lerp(v, vb[i]));
+    else if (va && typeof va === 'object') out[k] = Object.fromEntries(Object.keys(va).map((q) => [q, lerp(va[q], vb[q])]));
+  }
+  return out;
+}
+
 export const BALL_R = 0.12;      // ball radius, m
 const PALM_R = 0.045;            // palm joint sphere, m
 const unit = (v) => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
@@ -177,28 +195,36 @@ export function holdCentre(f, attach) {
 }
 
 export const LIBRARY = {
-  defendInPlace: { seconds: 1.0, pose: defendInPlace, contact: null },
-  defendSlide: { seconds: 1.0, pose: defendSlide, contact: null },
-  fadeaway: { seconds: 1.4, pose: fadeaway, contact: null, airborne: (t) => ({ lift: 0.2 * bump(t, 0.2, 0.8), x: -0.22 * bump(t, 0.2, 0.8) }),
+  // Reference-derived: CMU mocap subject 124 trial 5, a basketball jump shot, retargeted by
+  // tools/basketball/bvh_retarget.mjs. Not a hand-set pose: the joint angles come from the recording.
+  refJumpShot: {
+    seconds: REF_JUMP_SHOT.frames[REF_JUMP_SHOT.frames.length - 1].t, reference: true,
+    source: 'CMU mocap 124_05 (basketball jump shot)',
+    pose: (t) => sampleRef(REF_JUMP_SHOT.frames, t), contact: null,
+    ball: { attach: 'palmR', release: REF_JUMP_SHOT.release.fraction, kind: 'arc', to: 'hoop', dt: 0.8 },
+  },
+  defendInPlace: { source: 'hand-authored', seconds: 1.0, pose: defendInPlace, contact: null },
+  defendSlide: { source: 'hand-authored', seconds: 1.0, pose: defendSlide, contact: null },
+  fadeaway: { source: 'hand-authored', seconds: 1.4, pose: fadeaway, contact: null, airborne: (t) => ({ lift: 0.2 * bump(t, 0.2, 0.8), x: -0.22 * bump(t, 0.2, 0.8) }),
     ball: { attach: 'palmR', release: 0.6, kind: 'arc', to: 'hoop', dt: 0.9 } },
-  floater: { seconds: 1.2, pose: floater, contact: null, airborne: (t) => ({ lift: 0.12 * bump(t, 0.2, 0.7), x: 0 }),
+  floater: { source: 'hand-authored', seconds: 1.2, pose: floater, contact: null, airborne: (t) => ({ lift: 0.12 * bump(t, 0.2, 0.7), x: 0 }),
     ball: { attach: 'palmR', release: 0.5, kind: 'arc', to: 'hoop', dt: 0.7, short: true } },
-  lowDribble: { seconds: 0.6, pose: lowDribble, contact: null, ball: { kind: 'dribble' } },
-  crossover: { seconds: 0.9, pose: crossover, contact: null, ball: { kind: 'dribble' } },
-  bouncePass: { seconds: 1.2, pose: bouncePass, contact: null,
+  lowDribble: { source: 'hand-authored', seconds: 0.6, pose: lowDribble, contact: null, ball: { kind: 'dribble' } },
+  crossover: { source: 'hand-authored', seconds: 0.9, pose: crossover, contact: null, ball: { kind: 'dribble' } },
+  bouncePass: { source: 'hand-authored', seconds: 1.2, pose: bouncePass, contact: null,
     ball: { attach: 'mid', release: 0.6, kind: 'bounce', vel: [3.0, -1.0, 0] } },
-  overheadPass: { seconds: 1.2, pose: overheadPass, contact: null,
+  overheadPass: { source: 'hand-authored', seconds: 1.2, pose: overheadPass, contact: null,
     ball: { attach: 'mid', release: 0.6, kind: 'pass', vel: [4.5, -0.8, 0] } },
-  oneHandPass: { seconds: 1.0, pose: oneHandPass, contact: null,
+  oneHandPass: { source: 'hand-authored', seconds: 1.0, pose: oneHandPass, contact: null,
     ball: { attach: 'palmR', release: 0.6, kind: 'pass', vel: [5.0, 0.0, 0] } },
-  chestPass: { seconds: 1.2, pose: chestPass, contact: null, ball: { attach: 'mid', release: 0.6, kind: 'pass', vel: [4.0, 0, 0] } },
-  catch: { seconds: 1.0, pose: catchBall, contact: null, ball: { kind: 'catch' } },
-  shot: { seconds: 1.4, pose: jumpShot, contact: null, airborne: jumpLift,
+  chestPass: { source: 'hand-authored', seconds: 1.2, pose: chestPass, contact: null, ball: { attach: 'mid', release: 0.6, kind: 'pass', vel: [4.0, 0, 0] } },
+  catch: { source: 'hand-authored', seconds: 1.0, pose: catchBall, contact: null, ball: { kind: 'catch' } },
+  shot: { source: 'hand-authored', seconds: 1.4, pose: jumpShot, contact: null, airborne: jumpLift,
     ball: { attach: 'palmR', release: 0.55, kind: 'arc', to: 'hoop', dt: 0.8 } },
-  block: { seconds: 1.0, pose: block, contact: null },
-  stance: { seconds: 1, pose: () => stance(), contact: null },
-  dribble: { seconds: 0.6, pose: dribble, contact: { t: 0, point: 'palmR' }, ball: { kind: 'dribble' } },
-  swipe: { seconds: SWIPE_SECONDS, pose: (t) => ({ ...stance(), ...swipe(t) }), contact: { t: STRIKE_T, point: 'palmR' } },
+  block: { source: 'hand-authored', seconds: 1.0, pose: block, contact: null },
+  stance: { source: 'hand-authored', seconds: 1, pose: () => stance(), contact: null },
+  dribble: { source: 'hand-authored', seconds: 0.6, pose: dribble, contact: { t: 0, point: 'palmR' }, ball: { kind: 'dribble' } },
+  swipe: { source: 'hand-authored', seconds: SWIPE_SECONDS, pose: (t) => ({ ...stance(), ...swipe(t) }), contact: { t: STRIKE_T, point: 'palmR' } },
 };
 
 /**
@@ -209,6 +235,7 @@ export function poseOf(name, t) {
   const a = LIBRARY[name];
   if (!a) throw new Error(`unknown action "${name}"`);
   const tt = Math.min(1, Math.max(0, t));
+  if (a.reference) return a.pose(tt);       // reference clips carry their own root height
   const g = grounded(a.pose(tt));
   if (a.airborne) { const o = a.airborne(tt); g.root = { ...g.root, lift: g.root.lift + (o.lift || 0), x: (g.root.x || 0) + (o.x || 0) }; }
   return g;
