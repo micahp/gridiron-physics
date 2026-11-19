@@ -187,6 +187,35 @@ check('refJumpShot: the jump is real (feet leave the floor by at least 15 cm at 
   const up = Math.max(...all.refJumpShot.map((fr) => Math.min(fr.f.toeR.p[1], fr.f.toeL.p[1])));
   assert.ok(up >= 0.15, `feet ${(up * 100).toFixed(1)} cm up`);
 });
+// --- a jump shot is a sequence, not just a pose: load, takeoff, release near the top, landing
+{
+  const S = LIBRARY.refJumpShot.seconds, N = 260;
+  let load = [-1, 0], wrist = [-1e9, 0], peak = [-1, 0], takeoff = -1, landing = -1;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, s = t * S;
+    const k = LIBRARY.refJumpShot.pose(t).knR;
+    if (k > load[0]) load = [k, s];
+    const f = frame('refJumpShot', t);
+    const sole = Math.min(f.toeR.p[1], f.toeL.p[1]);
+    if (sole > 0.02 && takeoff < 0) takeoff = s;
+    if (sole > 0.02) landing = s;
+    if (f.wrR.p[1] > wrist[0]) wrist = [f.wrR.p[1], s];
+    if (sole > peak[0]) peak = [sole, s];
+  }
+  check('jump shot: the load (deepest knee bend) comes before takeoff', () => {
+    assert.ok(load[1] < takeoff, `load at ${load[1].toFixed(2)} s, takeoff at ${takeoff.toFixed(2)} s`);
+  });
+  check('jump shot: takeoff comes before the release (highest wrist)', () => {
+    assert.ok(takeoff < wrist[1], `takeoff ${takeoff.toFixed(2)} s, release ${wrist[1].toFixed(2)} s`);
+  });
+  check('jump shot: the release is within 0.15 s of the body peak (the shot is released near the top)', () => {
+    assert.ok(Math.abs(wrist[1] - peak[1]) < 0.15, `release ${wrist[1].toFixed(2)} s, peak ${peak[1].toFixed(2)} s`);
+  });
+  check('jump shot: the feet land after the release, within 0.35 s of it', () => {
+    assert.ok(landing > wrist[1] && landing - wrist[1] < 0.35, `release ${wrist[1].toFixed(2)} s, landing ${landing.toFixed(2)} s`);
+  });
+}
+
 check('unknown action names are refused', () => {
   assert.throws(() => poseOf('layup', 0), /unknown action/);
 });
