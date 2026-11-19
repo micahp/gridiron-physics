@@ -2,8 +2,8 @@
 //
 // Body space: +x forward (facing), +y up, +z the player's right. Metres.
 // Segment lengths are the football body's measured lengths (web/stack/skeleton.js)
-// so both sports share one body: thigh 0.45, shin 0.43, upper arm 0.29,
-// forearm 0.26, hips to head 0.70 (a 1.81 m standing body).
+// Arms are the CMU subject 124 measurements (upper arm 0.303 m, forearm 0.189 m, elbow to
+// wrist joint). Legs and torso are the football body's: thigh 0.45, shin 0.43, hips to head 0.70.
 //
 // Joints a pose sets (radians unless noted):
 //   root:   { pitch (+ forward), roll (+ right), yaw (+ right), lift, x, z }
@@ -51,13 +51,13 @@ export const JOINTS = {
   neck: { parent: 'chest', off: [0, 0.31, 0], side: 0 },
   head: { parent: 'neck', off: [0.01, 0.09, 0], side: 0 },
   shR: { parent: 'chest', off: [-0.01, 0.235, 0.215], side: 1 },
-  elR: { parent: 'shR', off: [0, -0.29, 0], side: 1 },
-  prR: { parent: 'elR', off: [0, -0.26, 0], side: 1 },   // forearm twist sits at the wrist's parent
+  elR: { parent: 'shR', off: [0, -0.303, 0], side: 1 },
+  prR: { parent: 'elR', off: [0, -0.189, 0], side: 1 },   // forearm twist sits at the wrist's parent
   wrR: { parent: 'prR', off: [0, 0, 0], side: 1 },
   palmR: { parent: 'wrR', off: [0, -0.08, 0.02], side: 1 },
   shL: { parent: 'chest', off: [-0.01, 0.235, -0.215], side: -1 },
-  elL: { parent: 'shL', off: [0, -0.29, 0], side: -1 },
-  prL: { parent: 'elL', off: [0, -0.26, 0], side: -1 },
+  elL: { parent: 'shL', off: [0, -0.303, 0], side: -1 },
+  prL: { parent: 'elL', off: [0, -0.189, 0], side: -1 },
   wrL: { parent: 'prL', off: [0, 0, 0], side: -1 },
   palmL: { parent: 'wrL', off: [0, -0.08, -0.02], side: -1 },
   hipR: { parent: 'pelvis', off: [0, -0.03, 0.105], side: 1 },

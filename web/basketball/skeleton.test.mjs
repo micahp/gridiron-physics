@@ -1,7 +1,7 @@
 // Assertions for the basketball skeleton. Run: node web/basketball/skeleton.test.mjs
 // Each block is one aspect (see the court-rig-realism skill): geometry, feet,
 // joint limits, hand touch point. Limits are human ranges; segment lengths are
-// the football body's measured lengths.
+// the CMU subject 124 arm (upper arm 0.303, forearm 0.189) and the football body's legs.
 import assert from 'node:assert/strict';
 import { fk, D, LIMITS } from './skeleton.js';
 
@@ -33,11 +33,11 @@ function randomPose() {
   };
 }
 
-check('segment lengths match the football body (0.5 mm)', () => {
+check('segment lengths match the CMU subject 124 arm (0.5 mm)', () => {
   const f = fk({});
   const pairs = {
     thigh: ['hipR', 'knR', 0.45], shin: ['knR', 'anR', 0.43],
-    upperArm: ['shR', 'elR', 0.29], forearm: ['elR', 'prR', 0.26],
+    upperArm: ['shR', 'elR', 0.303], forearm: ['elR', 'prR', 0.189],
   };
   for (const [name, [a, b, want]] of Object.entries(pairs)) {
     const got = dist(f[a].p, f[b].p);
@@ -96,10 +96,10 @@ check('palm touch point: 0.08 m from the wrist, every pose (no guessing at call 
   }
 });
 
-check('shoulder reaches the ball: arm straight out forward is 0.55 m shoulder to wrist', () => {
+check('shoulder reaches the ball: arm straight out forward is 0.492 m shoulder to wrist (0.303 + 0.189)', () => {
   const f = fk({ shR: [90 * D, 0, 0], elR: 0, prR: 0 });
   const d = dist(f.shR.p, f.wrR.p);
-  assert.ok(Math.abs(d - 0.55) < MM, `arm ${d.toFixed(4)} m`);
+  assert.ok(Math.abs(d - 0.492) < MM, `arm ${d.toFixed(4)} m`);
 });
 
 console.log(failures ? `\n${failures} failing` : '\nall basketball skeleton checks passed');
