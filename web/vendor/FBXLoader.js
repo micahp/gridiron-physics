@@ -3003,6 +3003,31 @@ class AnimationParser {
 	// PI, so we'll interpolate large rotations
 	interpolateRotations( curvex, curvey, curvez, eulerOrder ) {
 
+		// LOCAL PATCH (gridiron-physics): the axes can be keyed at different times (Blender drops redundant keys per
+		// axis), but the loop below reads all three axes by the same key index. With fewer Y keys than X keys, the
+		// later keys read as undefined and are skipped, so the track ends early (Man_Clapping's right arm stopped at
+		// 1.0 s of 1.67 s). Put all three axes on the union of their key times first, interpolating linearly.
+		const allTimes = this.getTimesForAllAxes( { x: curvex, y: curvey, z: curvez } );
+		const sampleAt = ( curve, t ) => {
+
+			const ts = curve.times, vs = curve.values, n = ts.length;
+			if ( t <= ts[ 0 ] ) return vs[ 0 ];
+			if ( t >= ts[ n - 1 ] ) return vs[ n - 1 ];
+			let k = 1;
+			while ( ts[ k ] < t ) k ++;
+			const f = ( t - ts[ k - 1 ] ) / ( ts[ k ] - ts[ k - 1 ] );
+			return vs[ k - 1 ] + ( vs[ k ] - vs[ k - 1 ] ) * f;
+
+		};
+		const onAllTimes = ( curve ) => ( { times: allTimes, values: allTimes.map( ( t ) => sampleAt( curve, t ) ) } );
+		if ( curvex.times.length !== allTimes.length || curvey.times.length !== allTimes.length || curvez.times.length !== allTimes.length ) {
+
+			curvex = onAllTimes( curvex );
+			curvey = onAllTimes( curvey );
+			curvez = onAllTimes( curvez );
+
+		}
+
 		const times = [];
 		const values = [];
 
