@@ -98,6 +98,31 @@ const load = (url) => new Promise((ok, bad) => loader.load(url, ok, undefined, b
 Promise.all([load('./web/college/player.glb'), load('./web/college/ual_standard.glb')]).then(([player, anim]) => {
   character = player.scene;
   character.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  // The game's colours for the player (court_player_model.gd build, court_game.gd look):
+  //   skin = brown tone (0.48, 0.34, 0.24); jersey gold (0.92, 0.72, 0.30); shorts navy (0.12, 0.20, 0.42);
+  //   socks and shoes near-white (0.95); hair near-black (0.08, 0.07, 0.06); default hair = Hair_Buzzed.
+  const C = {
+    skin: new THREE.Color(0.48, 0.34, 0.24), jersey: new THREE.Color(0.92, 0.72, 0.3),
+    shorts: new THREE.Color(0.12, 0.2, 0.42), shoe: new THREE.Color(0.95, 0.95, 0.95), hair: new THREE.Color(0.08, 0.07, 0.06),
+  };
+  character.traverse((o) => {
+    if (!o.isMesh) return;
+    if (o.name.startsWith('Hair_')) o.visible = o.name === 'Hair_Buzzed';
+    for (const m of [].concat(o.material)) {
+      if (m.name === 'MI_Superhero_Male' && o.name === 'Uniform') {
+        // the game's cloth shader: vertex colour R above 0.5 is jersey, below is shorts
+        m.map = null; m.color.set(0xffffff);
+        m.onBeforeCompile = (sh) => {
+          sh.uniforms.jersey = { value: C.jersey }; sh.uniforms.shorts = { value: C.shorts };
+          sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>',
+            'diffuseColor.rgb = mix(shorts, jersey, step(0.5, vColor.r));');
+          sh.fragmentShader = 'uniform vec3 jersey; uniform vec3 shorts;\n' + sh.fragmentShader;
+        };
+        m.vertexColors = true; m.needsUpdate = true;
+      } else if (m.name === 'MI_Superhero_Male') { m.map = null; m.color.copy(C.skin); m.needsUpdate = true; }
+      else if (m.name.startsWith('MI_Hair')) { m.map = null; m.color.copy(C.hair); m.needsUpdate = true; }
+    }
+  });
   scene.add(character);
   character.traverse((o) => { if (o.isBone) playerRest[sanitize(o.name)] = o.quaternion.clone(); });
   anim.scene.traverse((o) => { if (o.name) animRest[sanitize(o.name)] = o.quaternion.clone(); });
@@ -105,7 +130,9 @@ Promise.all([load('./web/college/player.glb'), load('./web/college/ual_standard.
   for (const clip of anim.animations) actions[clip.name] = mixer.clipAction(retarget(clip));
   play('Idle_Loop');
   const box = new THREE.Box3().setFromObject(character);
-  $('readout').textContent = `college game player (player.glb)\n${(box.max.y - box.min.y).toFixed(2)} m bounds at rest\nclips from ual_standard.glb`;
+  const mats = [];
+  character.traverse((o) => { if (o.isMesh) for (const m of [].concat(o.material)) mats.push(`${o.name}:${m.name}:${m.color.getHexString()}:map=${m.map ? 'y' : 'n'}`); });
+  $('readout').textContent = `college game player (player.glb)\n${(box.max.y - box.min.y).toFixed(2)} m bounds at rest\nclips from ual_standard.glb\n` + mats.join('\n');
 }).catch((e) => showErr(e));
 
 function play(name) {
