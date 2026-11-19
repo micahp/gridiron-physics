@@ -41,7 +41,7 @@ function norm(v) {
 }
 
 /** Body parts for a skeleton pose. Each: { kind, a, b (segment) or c (sphere centre), r }. */
-export function bodyParts(f) {
+export function bodyParts(f, ballC = BALL.c) {
   const P = (n) => f[n].p;
   const head = P('head');
   return [
@@ -62,7 +62,7 @@ export function bodyParts(f) {
     { kind: 'shorts', a: P('hipL'), b: P('knL'), r: 0.075 },
     { kind: 'sock', a: P('knL'), b: P('anL'), r: 0.052 },
     { kind: 'shoe', a: P('anL'), b: P('toeL'), r: 0.042 },
-    { kind: 'ball', c: BALL.c, r: BALL.r },
+    { kind: 'ball', c: ballC, r: BALL.r },
   ];
 }
 
@@ -93,9 +93,9 @@ function partHit(p, part, out) {
  * layer k, row r, col i at index ((k*G + r)*G + i)*4 }. Row r runs from the +z edge
  * (r = 0) to the -z edge, so a plane's texture reads the right way up from above.
  */
-export function rasterise(pose) {
+export function rasterise(pose, ballC = BALL.c) {
   const f = fk(pose);
-  const parts = bodyParts(f).map(boxed);
+  const parts = bodyParts(f, ballC).map(boxed);
   const data = new Uint8ClampedArray(NL * G * G * 4);
   const hit = { d: 0, nx: 0, ny: 0, nz: 0 };
   const p = [0, 0, 0];

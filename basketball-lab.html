@@ -21,7 +21,7 @@
 <canvas id="c"></canvas>
 <div id="panel">
   <h1>BASKETBALL LAB · SWIPE (SPRITE STACK)</h1>
-  <div><select id="action"><option value="swipe">swipe</option><option value="dribble">dribble</option><option value="stance">stance</option></select><button id="play">Play</button><button id="reset">Reset</button></div>
+  <div><select id="action"><option value="clip" selected>clip (auto)</option><option value="swipe">swipe</option><option value="dribble">dribble</option><option value="stance">stance</option></select><button id="play">Play</button><button id="reset">Reset</button></div>
   <input id="t" type="range" min="0" max="1" step="0.005" value="0">
   <div id="readout"></div>
   <div id="note">Sprite stack: the body is rasterised from the basketball skeleton into 78 height layers (25 mm), each drawn as four planes. Yellow dot: the palm joint. Drag to orbit.</div>
@@ -33,7 +33,7 @@ import { OrbitControls } from './web/vendor/OrbitControls.js';
 import { rasterise, VOXEL, G, X0, Z0, NL, BALL } from './web/basketball/sprite.js';
 import { fk, D } from './web/basketball/skeleton.js';
 import { SWIPE_SECONDS, STRIKE_T } from './web/basketball/actions.js';
-import { LIBRARY, poseOf } from './web/basketball/library.js';
+import { LIBRARY, poseOf, holdCentre } from './web/basketball/library.js';
 
 const showErr = (e) => { const el = document.getElementById('err'); el.style.display = 'block'; el.textContent = String(e && e.stack || e); };
 window.addEventListener('error', (e) => showErr(e.error || e.message));
@@ -85,8 +85,113 @@ const ballRing = new THREE.Mesh(new THREE.SphereGeometry(BALL.r, 16, 12), new TH
 ballRing.position.set(BALL.c[0], BALL.c[1], BALL.c[2]);
 scene.add(ballRing);
 
-let t = 0, playing = false, lastT = -1, action = 'swipe';
+// ---- automatic clip sequence. Every segment is one library action. Its ball rule
+// (library.js `ball`) decides where the ball is: dribbled, held, released along a
+// shot arc, passed, or bounced. Free flight uses gravity and a floor bounce.
+const SEQ = [
+  { a: 'stance', d: 0.8 }, { a: 'defendInPlace', d: 1.6 }, { a: 'defendSlide', d: 1.6 },
+  { a: 'dribble', d: 2.4 }, { a: 'lowDribble', d: 2.0 }, { a: 'crossover', d: 1.8 },
+  { a: 'swipe', d: 1.0 },
+  { a: 'chestPass', d: 1.6 }, { a: 'bouncePass', d: 1.6 }, { a: 'overheadPass', d: 1.6 }, { a: 'oneHandPass', d: 1.4 },
+  { a: 'catch', d: 1.6 }, { a: 'shot', d: 2.0 }, { a: 'fadeaway', d: 2.0 }, { a: 'floater', d: 1.8 }, { a: 'block', d: 1.4 },
+];
+const SEQ_LEN = SEQ.reduce((n, s) => n + s.d, 0);
+const GRAV = 9.8, FLOOR_E = 0.72;
+const HOOP = [3.2, 3.05, 0];
+const ballS = { x: 0.5, y: BALL.r, z: 0.3, vx: 0, vy: 0, vz: 0, held: false, free: true, struck: false };
+let clipT = 0, lastU = -1, prevPalmY = null, segAt = -1, releaseDone = false, releasePos = null;
+function segmentAt(u) {
+  let acc = 0;
+  for (let i = 0; i < SEQ.length; i++) {
+    if (u < acc + SEQ[i].d) return { i, a: SEQ[i].a, local: u - acc, d: SEQ[i].d };
+    acc += SEQ[i].d;
+  }
+  const L = SEQ[SEQ.length - 1];
+  return { i: SEQ.length - 1, a: L.a, local: L.d, d: L.d };
+}
+const palmMid = (f) => [(f.palmR.p[0] + f.palmL.p[0]) / 2, (f.palmR.p[1] + f.palmL.p[1]) / 2, (f.palmR.p[2] + f.palmL.p[2]) / 2];
+function setBall(x, y, z) { ballS.x = x; ballS.y = y; ballS.z = z; }
+function clipFrame(dt) {
+  clipT += dt;
+  const u = clipT % SEQ_LEN;
+  if (u < lastU) { setBall(0.5, BALL.r, 0.3); Object.assign(ballS, { vx: 0, vy: 0, vz: 0, held: false, free: true, struck: false }); prevPalmY = null; segAt = -1; }
+  lastU = u;
+  const sg = segmentAt(u);
+  const info = LIBRARY[sg.a].ball || {};
+  const tt = sg.a === 'dribble' || sg.a === 'lowDribble' || sg.a === 'crossover' ? (sg.local % 0.6) / 0.6
+    : (sg.a === 'stance' || sg.a === 'defendInPlace' || sg.a === 'defendSlide') ? (sg.local % 1.0)
+    : Math.min(1, sg.local / LIBRARY[sg.a].seconds);
+  const p = poseOf(sg.a, tt);
+  const f = fk(p);
+  const palmP = f.palmR.p;
+  const palmVy = prevPalmY === null ? 0 : (palmP[1] - prevPalmY) / Math.max(dt, 1e-3);
+  prevPalmY = palmP[1];
+  const mid = palmMid(f);
+  const isDribble = info.kind === 'dribble';
+  if (sg.i !== segAt) {
+    segAt = sg.i; releaseDone = false;
+    if (isDribble) { setBall(palmP[0], palmP[1] - 0.12, palmP[2]); Object.assign(ballS, { vy: 0, held: true, free: false, pushed: false }); }
+    else if (ballS.held) { ballS.held = false; ballS.free = true; }
+  }
+  if (isDribble) {
+    // the hand catches the ball only as it rises back from the floor, and releases it at the bottom of the push
+    if (!ballS.held && ballS.vy > 0 && Math.hypot(ballS.x - palmP[0], ballS.z - palmP[2]) < 0.18 &&
+        ballS.y <= palmP[1] - 0.05 && ballS.y >= palmP[1] - 0.6) { ballS.held = true; ballS.free = false; }
+    if (ballS.held) {
+      setBall(palmP[0], palmP[1] - 0.12, palmP[2]); ballS.vy = palmVy;
+      if (palmVy < -0.05) ballS.pushed = true;                       // the hand has pushed down
+      if (ballS.pushed && palmVy >= 0) { ballS.held = false; ballS.free = true; }   // released at the bottom of the push
+    }
+  } else if (sg.a === 'swipe') {
+    ballS.free = false;
+    if (tt < STRIKE_T) { setBall(BALL.c[0], BALL.c[1], BALL.c[2]); ballS.vx = ballS.vy = ballS.vz = 0; }
+    else if (!ballS.struck) { ballS.struck = true; ballS.free = true; Object.assign(ballS, { vx: 3.2, vy: 1.6, vz: 0.4 }); }
+  } else if (sg.a === 'catch') {
+    const e = Math.min(1, tt / 0.6), k = e * e * (3 - 2 * e);
+    if (tt < 0.6) setBall(2.0 + (mid[0] - 2.0) * k, 1.25 + (mid[1] - 1.25) * k, 0.1 + (mid[2] - 0.1) * k);
+    else setBall(mid[0], mid[1], mid[2]);
+    ballS.free = false;
+  } else if (info.attach) {
+    const at = holdCentre(f, info.attach);   // the ball's surface sits on the hand(s), never between them
+    if (info.release === undefined || tt < info.release) { setBall(at[0], at[1], at[2]); ballS.free = false; ballS.vx = ballS.vy = ballS.vz = 0; }
+    else if (!releaseDone) {
+      releaseDone = true; ballS.free = true;
+      releasePos = [at[0], at[1], at[2]];
+      if (info.kind === 'arc') {
+        // launch so the ball reaches the hoop after info.dt seconds
+        const T = info.dt;
+        Object.assign(ballS, { vx: (HOOP[0] - releasePos[0]) / T, vz: (HOOP[2] - releasePos[2]) / T, vy: (HOOP[1] - releasePos[1] + 0.5 * GRAV * T * T) / T });
+      } else if (info.vel) {
+        Object.assign(ballS, { vx: info.vel[0], vy: info.vel[1], vz: info.vel[2] });
+      }
+    }
+  }
+  // free flight: gravity and a floor bounce, whenever the ball is not held
+  if (ballS.free && !ballS.held && !(sg.a === 'swipe' && !ballS.struck)) {
+    ballS.vy -= GRAV * dt;
+    ballS.x += (ballS.vx || 0) * dt; ballS.y += ballS.vy * dt; ballS.z += (ballS.vz || 0) * dt;
+    if (ballS.y <= BALL.r) { ballS.y = BALL.r; ballS.vy = -ballS.vy * FLOOR_E; ballS.vx *= 0.85; ballS.vz *= 0.85; }
+  }
+  const ballC = [ballS.x, ballS.y, ballS.z];
+  const { data } = rasterise(p, ballC);
+  for (let k = 0; k < NL; k++) {
+    const { buf, tex } = layerTex[k];
+    buf.set(data.subarray(k * LAYER_BYTES, (k + 1) * LAYER_BYTES));
+    tex.needsUpdate = true;
+  }
+  palm.position.set(palmP[0], palmP[1], palmP[2]);
+  ballRing.position.set(ballC[0], ballC[1], ballC[2]);
+  $('readout').textContent =
+    `clip ${sg.i + 1}/${SEQ.length}: ${sg.a}   t ${clipT.toFixed(1)} s
+` +
+    `ball height ${ballS.y.toFixed(2)} m   palm height ${palmP[1].toFixed(2)} m
+` +
+    `toe lift R ${(Math.abs(f.toeR.p[1]) * 1000).toFixed(1)} mm  L ${(Math.abs(f.toeL.p[1]) * 1000).toFixed(1)} mm`;
+}
+
+let t = 0, playing = false, lastT = -1, action = 'clip';
 function pose(tt) {
+  if (action === 'clip') return;
   if (tt === lastT) return;
   lastT = tt;
   const { data } = rasterise(poseOf(action, tt));
@@ -111,12 +216,13 @@ function pose(tt) {
 $('t').addEventListener('input', (e) => { t = +e.target.value; playing = false; $('play').textContent = 'Play'; pose(t); });
 $('play').addEventListener('click', () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; if (playing && t >= 1) t = 0; });
 $('reset').addEventListener('click', () => { t = 0; playing = false; $('play').textContent = 'Play'; $('t').value = 0; pose(0); });
-$('action').addEventListener('change', (e) => { action = e.target.value; t = 0; playing = false; lastT = -1; $('play').textContent = 'Play'; $('t').value = 0; pose(0); });
+$('action').addEventListener('change', (e) => { action = e.target.value; t = 0; playing = false; lastT = -1; clipT = 0; lastU = -1; $('play').textContent = 'Play'; $('t').value = 0; pose(0); });
 
 let last = performance.now();
 function frame(now) {
-  const dt = (now - last) / 1000; last = now;
-  if (playing) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (action === 'clip') clipFrame(dt);
+  else if (playing) {
     t = Math.min(1, t + dt / (LIBRARY[action] ? LIBRARY[action].seconds : SWIPE_SECONDS));
     $('t').value = t;
     if (t >= 1) { playing = false; $('play').textContent = 'Play'; }

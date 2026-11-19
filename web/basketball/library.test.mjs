@@ -27,7 +27,7 @@ const all = Object.fromEntries(actions.map((a) => [a, frames(a)]));
 
 // --- rules every action must pass
 for (const name of actions) {
-  check(`${name}: both feet on the floor in every frame (toes within 1 mm)`, () => {
+  if (!LIBRARY[name].airborne) check(`${name}: both feet on the floor in every frame (toes within 1 mm)`, () => {
     let worst = 0;
     for (const fr of all[name]) worst = Math.max(worst, Math.abs(fr.f.toeR.p[1]), Math.abs(fr.f.toeL.p[1]));
     assert.ok(worst < 0.001, `a toe was ${(worst * 1000).toFixed(2)} mm off the floor`);
@@ -47,7 +47,8 @@ for (const name of actions) {
   });
 
   // A fast arm strike peaks near 5 to 8 m/s; a dribble push is far slower.
-  const SPEED_LIMIT = name === 'swipe' ? 8 : 2.5;
+  // swipe: a fast arm strike (5 to 8 m/s); pass, catch, shot, block: 4 m/s; dribble and stance: 2.5 m/s
+  const SPEED_LIMIT = name === 'swipe' ? 8 : ['dribble', 'lowDribble', 'crossover', 'stance', 'defendInPlace', 'defendSlide'].includes(name) ? 2.5 : ['overheadPass', 'oneHandPass', 'bouncePass'].includes(name) ? 6 : 4;
   check(`${name}: the palm never moves faster than ${SPEED_LIMIT} m/s`, () => {
     const dt = 1 / FPS;
     let worst = 0;
@@ -112,6 +113,59 @@ check('swipe: the elbow bend stays within 2 degrees (the elbow holds)', () => {
   }
   assert.ok(hi - lo < 2, `elbow bend varied ${(hi - lo).toFixed(2)} deg`);
 });
+
+// --- v1 expansion
+const range = (fs, fn) => { const v = fs.map(fn); return Math.max(...v) - Math.min(...v); };
+check('defend in place: the right hand is active (palm travels at least 15 cm over the clip)', () => {
+  const r = range(all.defendInPlace, (fr) => fr.f.palmR.p[0]) + range(all.defendInPlace, (fr) => fr.f.palmR.p[1]);
+  assert.ok(r >= 0.15, `palm range ${(r * 100).toFixed(1)} cm`);
+});
+check('defend sliding: the body moves laterally (root shifts at least 30 cm across the clip)', () => {
+  const r = range(all.defendSlide, (fr) => fr.pose.root.z);
+  assert.ok(r >= 0.3, `root travelled ${(r * 100).toFixed(1)} cm`);
+});
+check('defend sliding: the arm stays active too (palm moves at least 15 cm)', () => {
+  const r = range(all.defendSlide, (fr) => fr.f.palmR.p[1]) + range(all.defendSlide, (fr) => fr.f.palmR.p[0]);
+  assert.ok(r >= 0.15, `palm range ${(r * 100).toFixed(1)} cm`);
+});
+// height of the lowest sole above the floor, per frame: how far the body is off the ground
+const soleUp = (fs) => Math.max(...fs.map((fr) => Math.min(fr.f.toeR.p[1], fr.f.toeL.p[1])));
+check('fadeaway: the body leaves the floor and moves back (feet at least 15 cm up, root at least 15 cm back)', () => {
+  assert.ok(soleUp(all.fadeaway) >= 0.15, `feet ${soleUp(all.fadeaway).toFixed(2)} m up`);
+  const back = Math.min(...all.fadeaway.map((fr) => fr.pose.root.x));
+  assert.ok(back <= -0.15, `root ${back.toFixed(2)} m`);
+});
+check('floater: a small hop (6 to 15 cm up)', () => {
+  const up = soleUp(all.floater);
+  assert.ok(up >= 0.06 && up <= 0.15, `hop ${up.toFixed(2)} m`);
+});
+check('low dribble: the push stays between 0.8 and 0.95 m (below the waist)', () => {
+  const ys = all.lowDribble.map((fr) => fr.f.palmR.p[1]);
+  assert.ok(Math.min(...ys) >= 0.8 && Math.max(...ys) <= 0.95, `palm ${Math.min(...ys).toFixed(2)} to ${Math.max(...ys).toFixed(2)} m`);
+});
+check('crossover: the hand travels across the midline (shoulder abduction goes negative)', () => {
+  const min = Math.min(...all.crossover.map((fr) => fr.pose.shR[1]));
+  assert.ok(min < 0, `abduction minimum ${(min / D).toFixed(1)} deg`);
+});
+
+// --- a hand-held ball must touch the hands
+import { holdCentre, BALL_R } from './library.js';
+const PALM = 0.045;
+for (const name of Object.keys(LIBRARY)) {
+  const ball = LIBRARY[name].ball;
+  if (!ball || !ball.attach) continue;
+  const holdUntil = ball.release ?? 1;
+  check(`${name}: while the ball is held, its surface touches the hand${ball.attach === 'mid' ? 's' : ''} (gap under 2 cm)`, () => {
+    let worst = 0;
+    for (const fr of all[name]) {
+      if (fr.t >= holdUntil) break;
+      const c = holdCentre(fr.f, ball.attach);
+      worst = Math.max(worst, Math.abs(dist(c, fr.f.palmR.p) - (BALL_R + PALM)));
+      if (ball.attach === 'mid') worst = Math.max(worst, Math.abs(dist(c, fr.f.palmL.p) - (BALL_R + PALM)));
+    }
+    assert.ok(worst < 0.02, `worst gap ${(worst * 100).toFixed(1)} cm`);
+  });
+}
 
 check('unknown action names are refused', () => {
   assert.throws(() => poseOf('layup', 0), /unknown action/);
