@@ -48,7 +48,9 @@ export function bodyParts(f, ballC = BALL.c) {
     { kind: 'skin', c: [head[0] + 0.01, head[1] + 0.05, head[2]], r: 0.095 },   // face and skull
     { kind: 'hair', c: [head[0] - 0.005, head[1] + 0.12, head[2]], r: 0.1 },      // hair cap on top and back
     { kind: 'skin', a: P('neck'), b: head, r: 0.05 },
-    { kind: 'jersey', a: P('chest'), b: P('pelvis'), r: 0.15 },
+    // torso: a broad chest over a narrower waist, so it tapers instead of being one tube
+    { kind: 'jersey', a: P('chest'), b: P('spine'), r: 0.158 },
+    { kind: 'jersey', a: P('spine'), b: P('pelvis'), r: 0.128 },
     { kind: 'jersey', a: P('shR'), b: P('shL'), r: 0.07 },
     { kind: 'shorts', a: P('hipR'), b: P('hipL'), r: 0.13 },
     { kind: 'jersey', a: P('shR'), b: P('elR'), r: 0.05 },
