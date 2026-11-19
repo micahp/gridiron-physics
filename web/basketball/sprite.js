@@ -48,9 +48,9 @@ export function bodyParts(f, ballC = BALL.c) {
     { kind: 'skin', c: [head[0] + 0.01, head[1] + 0.05, head[2]], r: 0.095 },   // face and skull
     { kind: 'hair', c: [head[0] - 0.005, head[1] + 0.12, head[2]], r: 0.1 },      // hair cap on top and back
     { kind: 'skin', a: P('neck'), b: head, r: 0.05 },
-    // torso: a broad chest over a narrower waist, so it tapers instead of being one tube
-    { kind: 'jersey', a: P('chest'), b: P('spine'), r: 0.158 },
-    { kind: 'jersey', a: P('spine'), b: P('pelvis'), r: 0.128 },
+    // torso: the football body's proportions, as rounded boxes: abdomen (half 0.118 x 0.12 x 0.152) and chest (0.138 x 0.16 x 0.178)
+    { kind: 'jersey', box: { c: P('spine'), h: [0.118, 0.12, 0.152], rr: 0.065 } },
+    { kind: 'jersey', box: { c: P('chest'), h: [0.138, 0.16, 0.178], rr: 0.075 } },
     { kind: 'jersey', a: P('shR'), b: P('shL'), r: 0.07 },
     { kind: 'shorts', a: P('hipR'), b: P('hipL'), r: 0.13 },
     { kind: 'jersey', a: P('shR'), b: P('elR'), r: 0.05 },
@@ -71,6 +71,16 @@ export function bodyParts(f, ballC = BALL.c) {
 
 // Signed distance to a part, and the outward normal at the nearest surface point.
 function partHit(p, part, out) {
+  if (part.box) {
+    // rounded box: signed distance, normal from the centre (fine for shading a torso)
+    const [bx, by, bz] = part.box.c, [hx, hy, hz] = part.box.h, rr = part.box.rr;
+    const q = [Math.abs(p[0] - bx) - hx + rr, Math.abs(p[1] - by) - hy + rr, Math.abs(p[2] - bz) - hz + rr];
+    const out2 = Math.hypot(Math.max(q[0], 0), Math.max(q[1], 0), Math.max(q[2], 0));
+    out.d = out2 + Math.min(Math.max(q[0], q[1], q[2]), 0) - rr;
+    const ex = p[0] - bx, ey = p[1] - by, ez = p[2] - bz, L = Math.hypot(ex, ey, ez) || 1;
+    out.nx = ex / L; out.ny = ey / L; out.nz = ez / L;
+    return out.d;
+  }
   let cx, cy, cz;
   if (part.c) {
     cx = part.c[0]; cy = part.c[1]; cz = part.c[2];
@@ -151,6 +161,10 @@ function NUMBER_ON(p) {
 
 // Bounding box of a part, expanded by its radius: used to skip it cheaply.
 function boxed(part) {
+  if (part.box) {
+    const { c, h, rr } = part.box;
+    return { ...part, lo: [c[0] - h[0] - rr, c[1] - h[1] - rr, c[2] - h[2] - rr], hi: [c[0] + h[0] + rr, c[1] + h[1] + rr, c[2] + h[2] + rr] };
+  }
   const pts = part.c ? [part.c] : [part.a, part.b];
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (const q of pts) for (let j = 0; j < 3; j++) { lo[j] = Math.min(lo[j], q[j] - part.r); hi[j] = Math.max(hi[j], q[j] + part.r); }
