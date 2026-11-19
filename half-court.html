@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Half Court 2v2</title>
+<style>
+  :root { --bg: #0f1a12; --panel: rgba(10,16,12,.85); --ink: #f2f4ee; --dim: #a9b5a6; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 13px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #panel { position: fixed; top: 10px; left: 10px; background: var(--panel); padding: 10px 12px; border-radius: 10px; width: min(92vw, 300px); }
+  #panel h1 { font-size: 14px; margin: 0 0 6px; letter-spacing: .04em; }
+  #readout { margin-top: 8px; white-space: pre; color: var(--dim); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>HALF COURT · 2 v 2</h1>
+  <div>Skinned mesh players on the football surface pipeline. Stance is the library pose; the ball is held by the offence.</div>
+  <div id="readout"></div>
+</div>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { OrbitControls } from './web/vendor/OrbitControls.js';
+import { buildBasketballBody, BasketballMeshPlayer } from './web/basketball/body-mesh.js';
+import { poseOf } from './web/basketball/library.js';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.shadowMap.enabled = true;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.05, 80);
+camera.position.set(5.5, 3.2, 5.5);
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(1.8, 0.9, 0);
+controls.update();
+scene.add(new THREE.HemisphereLight(0xeef2ff, 0x33452c, 1.3));
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.8); sun.position.set(4, 8, 5); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.camera.left = -6; sun.shadow.camera.right = 6; sun.shadow.camera.top = 6; sun.shadow.camera.bottom = -6;
+scene.add(sun);
+
+// Half court: a painted hardwood floor with the key, free-throw circle and baseline, and the hoop.
+const COURT = { x0: -1.5, x1: 8.5, z0: -4.5, z1: 4.5 };
+function courtTexture() {
+  const cv = document.createElement('canvas'); cv.width = 1400; cv.height = 900;
+  const g = cv.getContext('2d');
+  const X = (x) => (x - COURT.x0) / (COURT.x1 - COURT.x0) * cv.width;
+  const Z = (z) => (COURT.z1 - z) / (COURT.z1 - COURT.z0) * cv.height;
+  const m = (metres) => metres / (COURT.x1 - COURT.x0) * cv.width;
+  g.fillStyle = '#c99a5b'; g.fillRect(0, 0, cv.width, cv.height);
+  g.strokeStyle = 'rgba(120,80,40,0.25)'; g.lineWidth = 2;
+  for (let z = -4.5; z <= 4.5; z += 0.2) { g.beginPath(); g.moveTo(0, Z(z)); g.lineTo(cv.width, Z(z)); g.stroke(); }
+  g.strokeStyle = '#ffffff'; g.lineWidth = Math.max(3, m(0.05));
+  const baseX = 6.85;                          // the baseline, behind the rim at x = 6.2
+  g.strokeRect(X(COURT.x0), Z(COURT.z1), X(baseX) - X(COURT.x0), Z(COURT.z0) - Z(COURT.z1));
+  g.strokeRect(X(baseX - 4.9), Z(2.45), X(baseX) - X(baseX - 4.9), Z(-2.45) - Z(2.45));   // key
+  g.beginPath(); g.arc(X(baseX - 4.9), Z(0), m(1.8), -Math.PI / 2, Math.PI / 2); g.stroke();   // free-throw circle
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(COURT.x1 - COURT.x0, COURT.z1 - COURT.z0), new THREE.MeshStandardMaterial({ map: courtTexture(), roughness: 0.85 }));
+floor.rotation.x = -Math.PI / 2; floor.position.set((COURT.x0 + COURT.x1) / 2, 0, 0); floor.receiveShadow = true; scene.add(floor);
+
+const RIM = [6.2, 3.05, 0];
+const hoop = new THREE.Group();
+const board = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.05, 1.8), new THREE.MeshStandardMaterial({ color: '#f4f4f0' }));
+board.position.set(6.4, 3.2, 0); board.castShadow = true; hoop.add(board);
+const rim = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.02, 8, 24), new THREE.MeshStandardMaterial({ color: '#e0572a' }));
+rim.rotation.x = Math.PI / 2; rim.position.set(RIM[0], RIM[1], RIM[2]); hoop.add(rim);
+const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.05, 10), new THREE.MeshStandardMaterial({ color: '#777' }));
+pole.position.set(6.9, 1.52, 0); hoop.add(pole);
+scene.add(hoop);
+
+// Four players, two teams. Each has the same skinned body; the kit differs.
+const H = 0.02;
+const base = buildBasketballBody(H);
+const KITS = {
+  blue: { jersey: '#1f4fb4', trim: '#ffffff', pants: '#f2f2ee', sock: '#f2f2ee', cleat: '#1c1c1e', belt: '#141414', number: '#ffffff' },
+  gold: { jersey: '#e8b230', trim: '#1c1c1e', pants: '#1c1c1e', sock: '#1c1c1e', cleat: '#1c1c1e', belt: '#141414', number: '#1c1c1e' },
+};
+const LINEUP = [
+  { name: 'A', kit: 'blue', num: 7, x: 3.4, z: 1.1, yaw: 0, pose: 'stance' },
+  { name: 'B', kit: 'blue', num: 23, x: 4.6, z: -1.2, yaw: 0, pose: 'stance' },
+  { name: 'C', kit: 'gold', num: 3, x: 5.8, z: 1.0, yaw: Math.PI, pose: 'stance' },
+  { name: 'D', kit: 'gold', num: 11, x: 6.6, z: -1.1, yaw: Math.PI, pose: 'stance' },
+];
+const players = LINEUP.map((p) => {
+  const pl = new BasketballMeshPlayer(base, { kit: KITS[p.kit], skin: 0.4, number: p.num });
+  scene.add(pl.root);
+  pl.setPose(poseOf(p.pose, 0), p.x, p.z, p.yaw);
+  pl.mesh.castShadow = true;
+  return pl;
+});
+
+$('readout'); // placeholder so the id exists
+function $(id) { return document.getElementById(id); }
+document.getElementById('readout').textContent = `4 players, ${base.verts} vertices each, grid ${H} m`;
+
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+function frame() { controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
