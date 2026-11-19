@@ -45,7 +45,8 @@ export function bodyParts(f, ballC = BALL.c) {
   const P = (n) => f[n].p;
   const head = P('head');
   return [
-    { kind: 'hair', c: [head[0] + 0.005, head[1] + 0.12, head[2]], r: 0.105 },
+    { kind: 'skin', c: [head[0] + 0.01, head[1] + 0.05, head[2]], r: 0.095 },   // face and skull
+    { kind: 'hair', c: [head[0] - 0.005, head[1] + 0.12, head[2]], r: 0.1 },      // hair cap on top and back
     { kind: 'skin', a: P('neck'), b: head, r: 0.05 },
     { kind: 'jersey', a: P('chest'), b: P('pelvis'), r: 0.15 },
     { kind: 'jersey', a: P('shR'), b: P('shL'), r: 0.07 },
