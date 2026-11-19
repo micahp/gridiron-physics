@@ -45,6 +45,9 @@ camera.lookAt(0, 0.95, 0);
 const orbit = new OrbitControls(camera, canvas);
 orbit.target.set(0, 0.95, 0);
 orbit.enableDamping = true;
+// wheel-drag zooms the camera; without limits it could dolly through the figure and make it disappear
+orbit.minDistance = 1.5;
+orbit.maxDistance = 12;
 orbit.update();
 scene.add(new THREE.HemisphereLight(0xffffff, 0x665544, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(3, 6, 4); scene.add(sun);
