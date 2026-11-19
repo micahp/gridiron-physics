@@ -66,7 +66,7 @@ const SEGMENTS = [
   ['LeftUpLeg', 'LeftLeg', 'UpperLegL'], ['LeftLeg', 'LeftFoot', 'LowerLegL'],
   ['RightUpLeg', 'RightLeg', 'UpperLegR'], ['RightLeg', 'RightFoot', 'LowerLegR'],
 ];
-function retargetWorld(clip, cmuScene, hipScale) {
+function retargetWorld(clip, cmuScene) {
   cmuScene.updateMatrixWorld(true);
   const cBones = {}; cmuScene.traverse((o) => { if (o.isBone) cBones[o.name] = o; });
   const cRestW = {}, cRestP = {}, cLocalRest = {};
@@ -86,6 +86,7 @@ function retargetWorld(clip, cmuScene, hipScale) {
   const outTimes = [];
   const outRot = {}; for (const seg of SEGMENTS) outRot[seg[2]] = [];
   const outPos = [];
+  const hipHs = [];
   // student rest: world quats and world positions
   const sBone = {}; for (const seg of SEGMENTS) sBone[seg[2]] = studentBones[seg[2]];
   const sRestP = {}; for (const seg of SEGMENTS) { const b = studentBones[seg[2]]; if (b) { const v = new THREE.Vector3(); b.getWorldPosition(v); sRestP[seg[2]] = v; } }
@@ -127,7 +128,7 @@ function retargetWorld(clip, cmuScene, hipScale) {
       let base = new THREE.Vector3(0, 0, 0);
       if (pName) base = cPos(pName).clone();
       const rest = cPosRest[n].clone();
-      if (n === 'Hips' && interp['Hips'] && interp['Hips'].position) { const r = interp['Hips'].position.evaluate(time); rest.set(r[0] * hipScale, r[1] * hipScale, r[2] * hipScale); }
+      if (n === 'Hips' && interp['Hips'] && interp['Hips'].position) { const r = interp['Hips'].position.evaluate(time); rest.set(r[0], r[1], r[2]); }
       const pW = pName ? cWorld(pName) : new THREE.Quaternion();
       cP[n] = base.add(rest.applyQuaternion(pW));
       return cP[n];
@@ -161,18 +162,23 @@ function retargetWorld(clip, cmuScene, hipScale) {
       const local = pW.clone().invert().multiply(sDes[sn]);
       outRot[sn].push(local.x, local.y, local.z, local.w);
     }
-    // Hips translation: the CMU hips move the body through the clip
-    if (interp['Hips'] && interp['Hips'].position) {
-      const r = interp['Hips'].position.evaluate(time);
-      outPos.push(r[0] * hipScale, r[1] * hipScale, r[2] * hipScale);
-    }
+    // hip height above the lowest foot, measured per frame from the CMU skeleton (glTF units; only the ratio is used)
+    const hipH = cPos('Hips').y - Math.min(cPos('LeftFoot').y, cPos('RightFoot').y);
+    hipHs.push(hipH);
+  }
+  // Body.position.y follows the CMU hip height as a ratio of its frame-0 value, so units never need converting.
+  // The body dips into squats and rises into the jump; the feet are still grounded per frame in frame().
+  const h0 = hipHs[0];
+  const bRest = studentRestPos['Body'];
+  if (bRest && h0 > 1e-6) {
+    for (let i = 0; i < N; i++) outPos.push(bRest.x, bRest.y * (hipHs[i] / h0), bRest.z);
   }
   const tracks = [];
   for (const sn of Object.keys(outRot)) {
     if (outRot[sn].length !== N * 4) continue;
     tracks.push(new THREE.QuaternionKeyframeTrack(sn + '.quaternion', outTimes, outRot[sn]));
   }
-  if (outPos.length === N * 3) tracks.push(new THREE.VectorKeyframeTrack('Hips.position', outTimes, outPos));
+  if (outPos.length === N * 3) tracks.push(new THREE.VectorKeyframeTrack('Body.position', outTimes, outPos));
   return new THREE.AnimationClip(clip.name, clip.duration, tracks);
 }
 let mixer = null;
@@ -223,12 +229,11 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
       const cmuRest = {}; let cmuHip = null;
       g.scene.traverse((o) => { if (o.isBone) { cmuRest[o.name] = o.quaternion.clone(); if (o.name === 'Hips') cmuHip = o.position.y; } });
       const sHip = studentRestPos['Hips'] ? studentRestPos['Hips'].y : 1;
-      const hipScale = 0;   // no vertical hips from the CMU clip: the feet are grounded each frame instead (see frame())
       for (const c of g.animations) {
         // the CMU clip files each hold a second copy (.001); keep the named one
         if (c.name === f || c.name === f + '.001' || c.name === '124_05' || c.name === '06_02' || c.name === '124_06' || f === 'jumpshot' || f === 'layup' || f === 'dribble_run') {
           if (/\.001$/.test(c.name)) continue;
-          const rc = retargetWorld(c, g.scene, hipScale);
+          const rc = retargetWorld(c, g.scene);
           actionsByName[f] = mixer.clipAction(rc);
           if (window.__fillClipList) window.__fillClipList();
         }
