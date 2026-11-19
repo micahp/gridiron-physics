@@ -3,7 +3,7 @@
 // joint limits, hand touch point. Limits are human ranges; segment lengths are
 // the CMU subject 124 arm (upper arm 0.303, forearm 0.189) and the football body's legs.
 import assert from 'node:assert/strict';
-import { fk, D, LIMITS } from './skeleton.js';
+import { fk, fill, D, LIMITS } from './skeleton.js';
 
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 const MM = 0.001;
@@ -101,6 +101,26 @@ check('shoulder reaches the ball: arm straight out forward is 0.492 m shoulder t
   const d = dist(f.shR.p, f.wrR.p);
   assert.ok(Math.abs(d - 0.492) < MM, `arm ${d.toFixed(4)} m`);
 });
+
+// --- the body's defined stature and reach (the same spec the football body uses: 1.81 m standing)
+{
+  const standing = fk(fill({}));
+  const lift = -Math.min(standing.anR.p[1], standing.anL.p[1], standing.toeR.p[1], standing.toeL.p[1]);
+  const st = fk({ ...fill({}), root: { lift } });
+  const crown = st.head.p[1] + 0.12;                 // head joint plus the crown radius used in sprite.js
+  check('stature: standing crown height is 1.81 m (5 mm)', () => {
+    assert.ok(Math.abs(crown - 1.81) < 0.005, `crown ${crown.toFixed(3)} m`);
+  });
+  const up = fk({ ...fill({}), root: { lift }, shR: [170 * D, 0, 0], elR: 0, wrR: [0, 0] });
+  check('reach: wrist straight up is 2.01 m (1 cm), 0.20 m above the crown', () => {
+    assert.ok(Math.abs(up.wrR.p[1] - 2.01) < 0.01, `wrist ${up.wrR.p[1].toFixed(3)} m`);
+  });
+  check('reach: shoulder to wrist, arm straight, is 0.492 m (CMU subject 124 arm)', () => {
+    const out = fk({ ...fill({}), root: { lift }, shR: [90 * D, 0, 0], elR: 0, wrR: [0, 0] });
+    const d = Math.hypot(...[0, 1, 2].map((i) => out.wrR.p[i] - out.shR.p[i]));
+    assert.ok(Math.abs(d - 0.492) < 0.001, `arm ${d.toFixed(4)} m`);
+  });
+}
 
 console.log(failures ? `\n${failures} failing` : '\nall basketball skeleton checks passed');
 process.exit(failures ? 1 : 0);
