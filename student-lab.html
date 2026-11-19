@@ -18,13 +18,14 @@
 <canvas id="c"></canvas>
 <div id="panel">
   <h1>GAME STUDENT PLAYER (Male_Casual.fbx)</h1>
-  <div><select id="clip"><option value="Man_Idle">Idle</option><option value="Man_Walk">Walk</option><option value="Man_Run">Run</option></select></div>
+  <div><select id="clip"><option value="Man_Idle">Idle</option><option value="Man_Walk">Walk</option><option value="Man_Run">Run</option><option value="jumpshot">Jump shot (CMU)</option><option value="layup">Layup (CMU)</option><option value="dribble_run">Dribble (CMU)</option></select></div>
   <div id="readout">loading…</div>
 </div>
 <div id="err"></div>
 <script type="module">
 import * as THREE from './web/vendor/three.module.js';
 import { FBXLoader } from './web/vendor/FBXLoader.js';
+import { GLTFLoader } from './web/vendor/GLTFLoader.js';
 
 const showErr = (e) => { const el = document.getElementById('err'); el.style.display = 'block'; el.textContent = String((e && e.stack) || e); };
 window.addEventListener('error', (e) => showErr(e.error || e.message));
@@ -44,6 +45,93 @@ const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(3, 6, 4)
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: '#c99a5b', roughness: 0.9 }));
 floor.rotation.x = -Math.PI / 2; scene.add(floor);
 
+// CMU mocap clips (the game's own court clips) mapped onto the student's rig.
+const CMU_TO_STUDENT = {
+  Hips: 'Hips', LowerBack: 'Abdomen', Spine1: 'Torso', Neck: 'Neck', Head: 'Head',
+  LeftShoulder: 'ShoulderL', LeftArm: 'UpperArmL', LeftForeArm: 'LowerArmL', LeftHand: 'PalmL',
+  RightShoulder: 'ShoulderR', RightArm: 'UpperArmR', RightForeArm: 'LowerArmR', RightHand: 'PalmR',
+  LeftUpLeg: 'UpperLegL', LeftLeg: 'LowerLegL', LeftFoot: 'FootL',
+  RightUpLeg: 'UpperLegR', RightLeg: 'LowerLegR', RightFoot: 'FootR',
+};
+const studentBones = {}, studentRestW = {}, studentRestPos = {};
+// World-space retarget. For each mapped bone: take the CMU bone's world rotation, re-express it relative to
+// the CMU rest, and apply it on the student's rest, so the bone points the same way. Parent chains are
+// rebuilt from each rig's own hierarchy, so the rigs' different local axes do not matter.
+function retargetWorld(clip, cmuScene, hipScale) {
+  cmuScene.updateMatrixWorld(true);
+  const cBones = {}; cmuScene.traverse((o) => { if (o.isBone) cBones[o.name] = o; });
+  const cRestW = {}, cLocal = {};
+  for (const n in cBones) { cRestW[n] = cBones[n].getWorldQuaternion(new THREE.Quaternion()); cLocal[n] = cBones[n].quaternion.clone(); }
+  const interp = {};
+  for (const t of clip.tracks) {
+    const dot = t.name.lastIndexOf('.');
+    const bone = t.name.slice(0, dot), prop = t.name.slice(dot + 1);
+    (interp[bone] ||= {})[prop] = t.createInterpolant();
+  }
+  const fps = 60, N = Math.max(2, Math.round(clip.duration * fps) + 1);
+  const outTimes = [];
+  const outRot = {}, outPos = [];
+  for (const n in CMU_TO_STUDENT) outRot[CMU_TO_STUDENT[n]] = [];
+  const mapped = Object.keys(CMU_TO_STUDENT);
+  const tmp = new THREE.Quaternion();
+  for (let i = 0; i < N; i++) {
+    const time = Math.min(clip.duration, i / fps);
+    outTimes.push(time);
+    // CMU local -> world, parent first
+    const cW = {};
+    const localAt = (n) => {
+      const it = interp[n];
+      if (it && it.quaternion) { const r = it.quaternion.evaluate(time); return new THREE.Quaternion(r[0], r[1], r[2], r[3]); }
+      return cLocal[n].clone();
+    };
+    const cWorld = (n) => {
+      if (cW[n]) return cW[n];
+      const b = cBones[n];
+      const pName = b && b.parent && b.parent.isBone ? b.parent.name : null;
+      const pW = pName ? cWorld(pName) : new THREE.Quaternion();
+      cW[n] = pW.clone().multiply(localAt(n));
+      return cW[n];
+    };
+    // desired student world rotation for each mapped bone
+    const sDes = {};
+    for (const cn of mapped) {
+      if (!cBones[cn]) continue;
+      const sn = CMU_TO_STUDENT[cn];
+      if (!studentRestW[sn]) continue;
+      // the change from the CMU rest, applied in world space: delta = pose * inv(rest), then onto the student's rest
+      sDes[sn] = cWorld(cn).clone().multiply(cRestW[cn].clone().invert()).multiply(studentRestW[sn]);
+    }
+    // local rotation of each student bone relative to its (desired or rest) parent
+    for (const sn of [...Object.keys(sDes), 'FootL', 'FootR']) {
+      if (!studentBones[sn]) continue;
+      const sb = studentBones[sn];
+      // feet stay flat: their world rotation is kept at the rest pose whatever the shin does
+      if (sn === 'FootL' || sn === 'FootR') {
+        const shinW = sDes[sn === 'FootL' ? 'LowerLegL' : 'LowerLegR'] || studentRestW[sn === 'FootL' ? 'LowerLegL' : 'LowerLegR'];
+        const local = shinW.clone().invert().multiply(studentRestW[sn]);
+        outRot[sn].push(local.x, local.y, local.z, local.w);
+        continue;
+      }
+      let pW = new THREE.Quaternion();
+      let p = sb.parent;
+      while (p && !p.isBone) p = p.parent;
+      if (p && p.isBone) pW = sDes[p.name] || studentRestW[p.name] || pW;
+      const local = pW.clone().invert().multiply(sDes[sn]);
+      outRot[sn].push(local.x, local.y, local.z, local.w);
+    }
+    if (interp['Hips'] && interp['Hips'].position) {
+      const r = interp['Hips'].position.evaluate(time);
+      outPos.push(r[0] * hipScale, r[1] * hipScale, r[2] * hipScale);
+    }
+  }
+  const tracks = [];
+  for (const sn of Object.keys(outRot)) {
+    if (outRot[sn].length !== N * 4) continue;
+    tracks.push(new THREE.QuaternionKeyframeTrack(sn + '.quaternion', outTimes, outRot[sn]));
+  }
+  if (outPos.length === N * 3) tracks.push(new THREE.VectorKeyframeTrack('Hips.position', outTimes, outPos));
+  return new THREE.AnimationClip(clip.name, clip.duration, tracks);
+}
 let mixer = null;
 new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   fbx.scale.setScalar(1);
@@ -70,18 +158,60 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
     });
     if (o.material.length === 1) o.material = o.material[0];
   });
-  const clips = fbx.animations || [];
+  fbx.updateMatrixWorld(true);
+  fbx.traverse((o) => { if (o.isBone) { studentBones[o.name] = o; studentRestW[o.name] = o.getWorldQuaternion(new THREE.Quaternion()); studentRestPos[o.name] = o.position.clone(); } });
+  // the clips name their tracks 'HumanArmature|Body.position'; the bone is just 'Body', so the prefix must go
+  // or the mixer skips those tracks (this is why Man_Sitting never sat down)
+  const clips = (fbx.animations || []).map((c) => new THREE.AnimationClip(c.name.replace('HumanArmature|', ''), c.duration,
+    c.tracks.map((t) => { const nt = t.clone(); nt.name = t.name.replace(/^HumanArmature\|/, ''); return nt; })));
+  const bones = []; fbx.traverse((o) => { if (o.isBone) bones.push(o.name); });
   mixer = new THREE.AnimationMixer(fbx);
   const actionsByName = {};
-  for (const c of clips) actionsByName[c.name.replace('HumanArmature|', '')] = mixer.clipAction(c);
+  window.__clips = clips;
+  for (const c of clips) actionsByName[c.name] = mixer.clipAction(c);
+  window.__actions = actionsByName;
+  window.__fbx = fbx;
   const play = (name) => { const a = actionsByName[name]; if (!a) return; for (const x of Object.values(actionsByName)) x.fadeOut(0.2); a.reset().fadeIn(0.2).play(); };
+  // CMU clips: each file has its own rig rest; hips translation is scaled by the ratio of hip heights
+  const cmuFiles = ['jumpshot', 'layup', 'dribble_run'];
+  const gl = new GLTFLoader();
+  for (const f of cmuFiles) {
+    gl.load(`./web/college/${f}.glb`, (g) => {
+      const cmuRest = {}; let cmuHip = null;
+      g.scene.traverse((o) => { if (o.isBone) { cmuRest[o.name] = o.quaternion.clone(); if (o.name === 'Hips') cmuHip = o.position.y; } });
+      const sHip = studentRestPos['Hips'] ? studentRestPos['Hips'].y : 1;
+      const hipScale = cmuHip ? sHip / cmuHip : 1;
+      for (const c of g.animations) {
+        // the CMU clip files each hold a second copy (.001); keep the named one
+        if (c.name === f || c.name === f + '.001' || c.name === '124_05' || c.name === '06_02' || c.name === '124_06' || f === 'jumpshot' || f === 'layup' || f === 'dribble_run') {
+          if (/\.001$/.test(c.name)) continue;
+          const rc = retargetWorld(c, g.scene, hipScale);
+          actionsByName[f] = mixer.clipAction(rc);
+          if (window.__fillClipList) window.__fillClipList();
+        }
+      }
+    });
+  }
   play('Man_Idle');
+  // the dropdown lists every clip (built-in and CMU), so each one can be shown
+  const fillClipList = () => {
+    const sel = document.getElementById('clip');
+    const keep = sel.value;
+    sel.innerHTML = '';
+    for (const k of Object.keys(actionsByName)) { const o = document.createElement('option'); o.value = k; o.textContent = k.replace('Man_', ''); sel.appendChild(o); }
+    if (actionsByName[keep]) sel.value = keep;
+  };
+  window.__fillClipList = fillClipList;
+  fillClipList();
   document.getElementById('clip').addEventListener('change', (e) => play(e.target.value));
   document.getElementById('readout').textContent =
     `raw height ${h.toFixed(2)} (scaled to 1.81 m)\n` +
     `meshes: ${meshes.join(', ')}\n` +
     `materials: ${[...mats].join(', ')}\n` +
-    `clips: ${clips.map((c) => c.name).join(', ') || 'none'}`;
+    `clips: ${clips.map((c) => c.name).join(', ') || 'none'}
+bones: ${bones.join(', ')}
+` +
+    ['UpperLegL', 'UpperLegR', 'ShoulderL', 'ShoulderR', 'FootL', 'FootR'].map((n) => { const b = studentBones[n]; if (!b) return n + ' missing'; const w = new THREE.Vector3(); b.getWorldPosition(w); const hp = new THREE.Vector3(); studentBones['Hips'].getWorldPosition(hp); return `${n} dx=${(w.x - hp.x).toFixed(3)} dz=${(w.z - hp.z).toFixed(3)} dy=${(w.y - hp.y).toFixed(3)}`; }).join(String.fromCharCode(10));
 }, undefined, (e) => showErr(e));
 
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
