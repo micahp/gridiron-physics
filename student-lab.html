@@ -60,7 +60,16 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   fbx.position.y = -box.min.y * s;
   // the game's colours for the student (court_player_model.gd build_student, court_game.gd look)
   const COL = { Skin: '#7a573d', Shirt: '#eab84d', Pants: '#1f3368', Socks: '#f2f2f2', Shoes: '#f2f2f2', Hair: '#141210' };
-  fbx.traverse((o) => { if (o.isMesh) for (const m of [].concat(o.material)) if (COL[m.name]) { m.color.set(COL[m.name]); m.map = null; m.metalness = 0; m.roughness = m.name === 'Skin' || m.name === 'Hair' ? 0.85 : 0.95; m.needsUpdate = true; } });
+  // The FBX loader makes Phong materials, whose specular highlight roughness cannot remove. Swap each for a
+  // matte standard material in the game's colour (the game's shaders are matte: roughness 0.85-0.95, no metal).
+  fbx.traverse((o) => {
+    if (!o.isMesh) return;
+    o.material = [].concat(o.material).map((m) => {
+      if (!COL[m.name]) return m;
+      return new THREE.MeshStandardMaterial({ name: m.name, color: COL[m.name], roughness: m.name === 'Skin' || m.name === 'Hair' ? 0.85 : 0.95, metalness: 0 });
+    });
+    if (o.material.length === 1) o.material = o.material[0];
+  });
   const clips = fbx.animations || [];
   mixer = new THREE.AnimationMixer(fbx);
   const actionsByName = {};
