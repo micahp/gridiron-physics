@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { rasterise, swipeFrame, bodyParts, VOXEL, G, X0, Z0, NL, COLOURS, BALL } from './sprite.js';
 import { swipe, STRIKE_T } from './actions.js';
+import { poseOf } from './library.js';
 
 let fails = 0;
 function check(name, fn) {
@@ -91,6 +92,16 @@ check('the swipe changes the sprite: the arm moves between t=0 and t=0.5', () =>
   let diff = 0;
   for (let j = 3; j < data.length; j += 4) if (a[j] !== data[j]) diff++;
   assert.ok(diff > 200, `only ${diff} pixels changed`);
+});
+
+check('the jersey carries its number on the back (dark digit pixels on the -x side of the shirt)', () => {
+  const st = rasterise(poseOf('stance', 0)).data;
+  let n = 0;
+  for (let k = 0; k < NL; k++) for (let r = 0; r < G; r++) for (let i = 0; i < G; i++) {
+    const o = ((k * G + r) * G + i) * 4;
+    if (st[o + 3] === 255 && st[o] < 40 && st[o + 1] < 40 && st[o + 2] < 45) n++;
+  }
+  assert.ok(n >= 10, `only ${n} digit pixels`);
 });
 
 console.log(fails ? `\n${fails} FAILED` : '\nall sprite checks pass');
