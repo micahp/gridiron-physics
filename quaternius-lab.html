@@ -67,18 +67,75 @@ function setView(name) {
 }
 setView('front');
 
+// The animation library (DEF- bone names) drives the base character (Unreal-style bone names).
+// Both are the same Universal rig; only the names differ, so tracks are renamed bone by bone.
+// Fingers have no counterpart in the body-only mapping and are dropped.
+const SIDE = { L: '_l', R: '_r' };
+const BONE_MAP = {
+  root: 'root', 'DEF-hips': 'pelvis', 'DEF-spine.001': 'spine_01', 'DEF-spine.002': 'spine_02', 'DEF-spine.003': 'spine_03',
+  'DEF-neck': 'neck_01', 'DEF-head': 'Head',
+};
+for (const s of ['L', 'R']) {
+  Object.assign(BONE_MAP, {
+    [`DEF-shoulder.${s}`]: 'clavicle' + SIDE[s], [`DEF-upper_arm.${s}`]: 'upperarm' + SIDE[s], [`DEF-forearm.${s}`]: 'lowerarm' + SIDE[s],
+    [`DEF-hand.${s}`]: 'hand' + SIDE[s], [`DEF-thigh.${s}`]: 'thigh' + SIDE[s], [`DEF-shin.${s}`]: 'calf' + SIDE[s],
+    [`DEF-foot.${s}`]: 'foot' + SIDE[s], [`DEF-toe.${s}`]: 'ball' + SIDE[s],
+  });
+}
+// Rest poses of both rigs. A clip's rotations are relative to its rig's rest pose, so each rotation is
+// re-expressed as: base rest * inverse(anim rest) * clip rotation. Without this the base keeps its own T-pose.
+let animRest = {}, baseRest = {};
+// three.js sanitises node names on load (it drops the dots), so track and rest-pose names are compared in that form.
+const sanitize = (s) => s.replace(/\s/g, '_').replace(/[\[\]\/\:\.]/g, '');
+const MAP_S = Object.fromEntries(Object.entries(BONE_MAP).map(([k, v]) => [sanitize(k), v]));
+function retarget(clip) {
+  const tracks = [];
+  const q = new THREE.Quaternion(), out = new THREE.Quaternion();
+  for (const t of clip.tracks) {
+    const dot = t.name.lastIndexOf('.');
+    const bone = t.name.slice(0, dot), prop = t.name.slice(dot + 1);
+    if (!(bone in MAP_S)) continue;
+    const target = MAP_S[bone];
+    let values = t.values;
+    if (prop === 'quaternion' && animRest[bone] && baseRest[target]) {
+      const inv = animRest[bone].clone().invert();   // anim rest for this sanitised bone name
+      values = new Float32Array(t.values.length);
+      for (let k = 0; k < t.values.length; k += 4) {
+        q.set(t.values[k], t.values[k + 1], t.values[k + 2], t.values[k + 3]);
+        out.copy(baseRest[target]).multiply(inv).multiply(q).normalize();
+        values[k] = out.x; values[k + 1] = out.y; values[k + 2] = out.z; values[k + 3] = out.w;
+      }
+    }
+    const TrackClass = t.constructor;
+    tracks.push(new TrackClass(target + '.' + prop, t.times, values));
+  }
+  return new THREE.AnimationClip(clip.name, clip.duration, tracks);
+}
+
 let mixer = null, actions = {}, character = null;
 const loader = new GLTFLoader();
-loader.load('./web/quaternius/AnimationLibrary_Godot_Standard.glb', (gltf) => {
-  character = gltf.scene;
+const loadGLTF = (url) => new Promise((ok, bad) => loader.load(url, ok, undefined, bad));
+Promise.all([
+  loadGLTF('./web/quaternius/base/Superhero_Male_FullBody.gltf'),
+  loadGLTF('./web/quaternius/AnimationLibrary_Godot_Standard.glb'),
+]).then(([base, anim]) => {
+  character = base.scene;
   character.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   scene.add(character);
+  character.traverse((o) => { if (o.isBone) baseRest[o.name] = o.quaternion.clone(); });
+  anim.scene.traverse((o) => { if (o.name) animRest[o.name] = o.quaternion.clone(); });
   mixer = new THREE.AnimationMixer(character);
-  for (const clip of gltf.animations) actions[clip.name] = mixer.clipAction(clip);
+  let kept = 0;
+  for (const clip of anim.animations) {
+    const rc = retarget(clip);
+    if (rc.tracks.length) { actions[clip.name] = mixer.clipAction(rc); kept++; }
+  }
   play('Idle_Loop');
   const box = new THREE.Box3().setFromObject(character);
-  $('readout').textContent = `loaded: ${gltf.animations.length} clips, height ${(box.max.y - box.min.y).toFixed(2)} m`;
-}, undefined, (e) => showErr(e));
+  const idleClip = actions['Idle_Loop'] && actions['Idle_Loop'].getClip();
+  const bound = idleClip ? idleClip.tracks.filter((t) => { try { return THREE.PropertyBinding.findNode(character, t.name.slice(0, t.name.lastIndexOf('.'))) !== null; } catch (e) { return false; } }).length : 0;
+  $('readout').textContent = `base character: Superhero male (CC0)\n${kept} clips retargeted; ${(box.max.y - box.min.y).toFixed(2)} m tall\nIdle_Loop tracks: ${idleClip ? idleClip.tracks.length : 0}, bones found: ${bound}`;
+}).catch((e) => showErr(e));
 
 function play(name) {
   if (!actions[name]) return;
@@ -94,6 +151,16 @@ const clock = new THREE.Clock();
 function frame() {
   const dt = clock.getDelta();
   if (mixer) mixer.update(dt);
+  if (character && window.__dbg === undefined) window.__dbg = 0;
+  if (character && (window.__dbgT = (window.__dbgT || 0) + dt) > 0.5) {
+    window.__dbgT = 0;
+    const ua = character.getObjectByName('upperarm_l');
+    const txt = ua ? `upperarm_l q=(${ua.quaternion.x.toFixed(3)}, ${ua.quaternion.y.toFixed(3)}, ${ua.quaternion.z.toFixed(3)}, ${ua.quaternion.w.toFixed(3)}) mixer t=${mixer.time.toFixed(2)}` : 'no upperarm_l';
+    const aw = actions['Idle_Loop'] ? actions['Idle_Loop'].getEffectiveWeight().toFixed(2) : 'none';
+    const ak = Object.keys(animRest).filter((k) => /upper|hips|spine/.test(k)).join(',');
+    const tk = actions['Idle_Loop'] ? actions['Idle_Loop'].getClip().tracks.slice(0, 4).map((t) => t.name).join(',') : '';
+    window.__dbgLine = txt + ` | idle weight ${aw} | animRest ${ak} | tracks ${tk}`;
+  }
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
