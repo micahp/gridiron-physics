@@ -60,7 +60,7 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   fbx.position.y = -box.min.y * s;
   // the game's colours for the student (court_player_model.gd build_student, court_game.gd look)
   const COL = { Skin: '#7a573d', Shirt: '#eab84d', Pants: '#1f3368', Socks: '#f2f2f2', Shoes: '#f2f2f2', Hair: '#141210' };
-  fbx.traverse((o) => { if (o.isMesh) for (const m of [].concat(o.material)) if (COL[m.name]) { m.color.set(COL[m.name]); m.map = null; m.needsUpdate = true; } });
+  fbx.traverse((o) => { if (o.isMesh) for (const m of [].concat(o.material)) if (COL[m.name]) { m.color.set(COL[m.name]); m.map = null; m.metalness = 0; m.roughness = m.name === 'Skin' || m.name === 'Hair' ? 0.85 : 0.95; m.needsUpdate = true; } });
   const clips = fbx.animations || [];
   mixer = new THREE.AnimationMixer(fbx);
   const actionsByName = {};
