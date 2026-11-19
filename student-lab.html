@@ -26,6 +26,7 @@
 import * as THREE from './web/vendor/three.module.js';
 import { FBXLoader } from './web/vendor/FBXLoader.js';
 import { GLTFLoader } from './web/vendor/GLTFLoader.js';
+import { OrbitControls } from './web/vendor/OrbitControls.js';
 
 const showErr = (e) => { const el = document.getElementById('err'); el.style.display = 'block'; el.textContent = String((e && e.stack) || e); };
 window.addEventListener('error', (e) => showErr(e.error || e.message));
@@ -40,6 +41,11 @@ scene.background = new THREE.Color('#9fb8d0');
 const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.05, 80);
 camera.position.set(0, 1.1, 5.2);
 camera.lookAt(0, 0.95, 0);
+// drag to orbit, scroll or pinch to zoom, right-drag to pan
+const orbit = new OrbitControls(camera, canvas);
+orbit.target.set(0, 0.95, 0);
+orbit.enableDamping = true;
+orbit.update();
 scene.add(new THREE.HemisphereLight(0xffffff, 0x665544, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(3, 6, 4); scene.add(sun);
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: '#c99a5b', roughness: 0.9 }));
@@ -356,6 +362,7 @@ function frame() {
     const v = new THREE.Vector3(); window.__sb.PalmR.getWorldPosition(v);
     ball.visible = true; ball.position.set(v.x, v.y - 0.12, v.z);
   } else ball.visible = false;
+  orbit.update();
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
