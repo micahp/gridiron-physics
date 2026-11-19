@@ -145,8 +145,8 @@ function retargetWorld(clip, cmuScene) {
       // bring the CMU direction into the student's frame via the parent's rest alignment
       // the student's parent bone at rest, for the same parent the CMU bone is attached to
       let sParent = studentBones[sn].parent; while (sParent && !sParent.isBone) sParent = sParent.parent;
-      const sParentRest = sParent && sParent.isBone ? studentRestW[sParent.name] : new THREE.Quaternion();
-      const A = sParentRest.clone().multiply(cRestW[cp].clone().invert());
+      // global CMU->student rest frame, taken at the hips: the per-bone parent frame rotated the thighs outward
+      const A = studentRestW['Hips'].clone().multiply(cRestW['Hips'].clone().invert());
       const tS = tC.applyQuaternion(A).normalize();
       const swing = new THREE.Quaternion().setFromUnitVectors(sjRest[sn], tS);
       sDes[sn] = swing.multiply(studentRestW[sn].clone());
