@@ -54,14 +54,28 @@ const CMU_TO_STUDENT = {
   RightUpLeg: 'UpperLegR', RightLeg: 'LowerLegR', RightFoot: 'FootR',
 };
 const studentBones = {}, studentRestW = {}, studentRestPos = {};
-// World-space retarget. For each mapped bone: take the CMU bone's world rotation, re-express it relative to
-// the CMU rest, and apply it on the student's rest, so the bone points the same way. Parent chains are
-// rebuilt from each rig's own hierarchy, so the rigs' different local axes do not matter.
+// Per-frame direction fit. For each limb segment (a bone and its child), the CMU segment's world direction
+// is brought into the student's rest frame and the student bone is rotated so its segment points the same
+// way (swing from the student's rest direction to the target). Parents come first, so each bone's local
+// rotation is taken against its parent's fitted world rotation. Feet stay flat in world space.
+const SEGMENTS = [
+  // [CMU parent, CMU child, student bone]
+  ['Hips', 'LowerBack', 'Hips'], ['LowerBack', 'Spine1', 'Abdomen'], ['Spine1', 'Neck', 'Torso'],
+  ['LeftShoulder', 'LeftArm', 'ShoulderL'], ['LeftArm', 'LeftForeArm', 'UpperArmL'], ['LeftForeArm', 'LeftHand', 'LowerArmL'],
+  ['RightShoulder', 'RightArm', 'ShoulderR'], ['RightArm', 'RightForeArm', 'UpperArmR'], ['RightForeArm', 'RightHand', 'LowerArmR'],
+  ['LeftUpLeg', 'LeftLeg', 'UpperLegL'], ['LeftLeg', 'LeftFoot', 'LowerLegL'],
+  ['RightUpLeg', 'RightLeg', 'UpperLegR'], ['RightLeg', 'RightFoot', 'LowerLegR'],
+];
 function retargetWorld(clip, cmuScene, hipScale) {
   cmuScene.updateMatrixWorld(true);
   const cBones = {}; cmuScene.traverse((o) => { if (o.isBone) cBones[o.name] = o; });
-  const cRestW = {}, cLocal = {};
-  for (const n in cBones) { cRestW[n] = cBones[n].getWorldQuaternion(new THREE.Quaternion()); cLocal[n] = cBones[n].quaternion.clone(); }
+  const cRestW = {}, cRestP = {}, cLocalRest = {};
+  for (const n in cBones) {
+    cRestW[n] = cBones[n].getWorldQuaternion(new THREE.Quaternion());
+    cLocalRest[n] = cBones[n].quaternion.clone();
+  }
+  // CMU rest offsets in parent space (the clip only moves the hips in translation)
+  const cPosRest = {}; for (const n in cBones) cPosRest[n] = cBones[n].position.clone();
   const interp = {};
   for (const t of clip.tracks) {
     const dot = t.name.lastIndexOf('.');
@@ -70,48 +84,73 @@ function retargetWorld(clip, cmuScene, hipScale) {
   }
   const fps = 60, N = Math.max(2, Math.round(clip.duration * fps) + 1);
   const outTimes = [];
-  const outRot = {}, outPos = [];
-  for (const n in CMU_TO_STUDENT) outRot[CMU_TO_STUDENT[n]] = [];
-  const mapped = Object.keys(CMU_TO_STUDENT);
-  const tmp = new THREE.Quaternion();
+  const outRot = {}; for (const seg of SEGMENTS) outRot[seg[2]] = [];
+  const outPos = [];
+  // student rest: world quats and world positions
+  const sBone = {}; for (const seg of SEGMENTS) sBone[seg[2]] = studentBones[seg[2]];
+  const sRestP = {}; for (const seg of SEGMENTS) { const b = studentBones[seg[2]]; if (b) { const v = new THREE.Vector3(); b.getWorldPosition(v); sRestP[seg[2]] = v; } }
+  const childRestP = (cn) => { return null; };
+  const sChildRestP = {};
+  for (const seg of SEGMENTS) { const [pc, cc, sn] = seg; const sc = studentBones[sn]; /* child is the next student bone along the chain */ }
+  // student rest world position of each segment's child joint (the joint the segment ends at)
+  const SEG_CHILD = { Hips: 'Abdomen', Abdomen: 'Torso', Torso: 'Neck', ShoulderL: 'UpperArmL', UpperArmL: 'LowerArmL', LowerArmL: 'PalmL', ShoulderR: 'UpperArmR', UpperArmR: 'LowerArmR', LowerArmR: 'PalmR', UpperLegL: 'LowerLegL', LowerLegL: 'FootL', UpperLegR: 'LowerLegR', LowerLegR: 'FootR' };
+  const sjRest = {};
+  for (const sn of Object.keys(SEG_CHILD)) {
+    const cb = studentBones[SEG_CHILD[sn]];
+    if (!cb || !studentBones[sn]) continue;
+    const a = new THREE.Vector3(), b = new THREE.Vector3();
+    studentBones[sn].getWorldPosition(a); cb.getWorldPosition(b);
+    sjRest[sn] = b.clone().sub(a).normalize();
+  }
+  const cLocalAt = (n, time) => {
+    const it = interp[n];
+    if (it && it.quaternion) { const r = it.quaternion.evaluate(time); return new THREE.Quaternion(r[0], r[1], r[2], r[3]); }
+    return cLocalRest[n].clone();
+  };
   for (let i = 0; i < N; i++) {
     const time = Math.min(clip.duration, i / fps);
     outTimes.push(time);
-    // CMU local -> world, parent first
-    const cW = {};
-    const localAt = (n) => {
-      const it = interp[n];
-      if (it && it.quaternion) { const r = it.quaternion.evaluate(time); return new THREE.Quaternion(r[0], r[1], r[2], r[3]); }
-      return cLocal[n].clone();
-    };
+    // CMU world rotations and world positions, parent first
+    const cW = {}, cP = {};
     const cWorld = (n) => {
       if (cW[n]) return cW[n];
       const b = cBones[n];
       const pName = b && b.parent && b.parent.isBone ? b.parent.name : null;
       const pW = pName ? cWorld(pName) : new THREE.Quaternion();
-      cW[n] = pW.clone().multiply(localAt(n));
+      cW[n] = pW.clone().multiply(cLocalAt(n, time));
       return cW[n];
     };
-    // desired student world rotation for each mapped bone
+    const cPos = (n) => {
+      if (cP[n]) return cP[n];
+      const b = cBones[n];
+      const pName = b && b.parent && b.parent.isBone ? b.parent.name : null;
+      let base = new THREE.Vector3(0, 0, 0);
+      if (pName) base = cPos(pName).clone();
+      const rest = cPosRest[n].clone();
+      if (n === 'Hips' && interp['Hips'] && interp['Hips'].position) { const r = interp['Hips'].position.evaluate(time); rest.set(r[0] * hipScale, r[1] * hipScale, r[2] * hipScale); }
+      const pW = pName ? cWorld(pName) : new THREE.Quaternion();
+      cP[n] = base.add(rest.applyQuaternion(pW));
+      return cP[n];
+    };
+    // fitted student world rotations, one per segment bone, in SEGMENTS order (parents first)
     const sDes = {};
-    for (const cn of mapped) {
-      if (!cBones[cn]) continue;
-      const sn = CMU_TO_STUDENT[cn];
-      if (!studentRestW[sn]) continue;
-      // the change from the CMU rest, applied in world space: delta = pose * inv(rest), then onto the student's rest
-      sDes[sn] = cWorld(cn).clone().multiply(cRestW[cn].clone().invert()).multiply(studentRestW[sn]);
-    }
-    // local rotation of each student bone relative to its (desired or rest) parent
-    for (const sn of [...Object.keys(sDes), 'FootL', 'FootR']) {
-      if (!studentBones[sn]) continue;
-      const sb = studentBones[sn];
-      // feet stay flat: their world rotation is kept at the rest pose whatever the shin does
-      if (sn === 'FootL' || sn === 'FootR') {
-        const shinW = sDes[sn === 'FootL' ? 'LowerLegL' : 'LowerLegR'] || studentRestW[sn === 'FootL' ? 'LowerLegL' : 'LowerLegR'];
-        const local = shinW.clone().invert().multiply(studentRestW[sn]);
-        outRot[sn].push(local.x, local.y, local.z, local.w);
+    for (const [cp, cc, sn] of SEGMENTS) {
+      if (!sjRest[sn]) {
+        // no segment direction (e.g. the palm or feet): keep the student's rest orientation
+        sDes[sn] = studentRestW[sn].clone();
         continue;
       }
+      const tC = cPos(cc).clone().sub(cPos(cp)).normalize();
+      // bring the CMU direction into the student's frame via the parent's rest alignment
+      const A = studentRestW[sn].clone().multiply(cRestW[cp].clone().invert());
+      const tS = tC.applyQuaternion(A).normalize();
+      const swing = new THREE.Quaternion().setFromUnitVectors(sjRest[sn], tS);
+      sDes[sn] = swing.multiply(studentRestW[sn].clone());
+    }
+    // local rotation against each bone's parent (fitted when the parent is a segment bone, else at rest)
+    for (const [cp, cc, sn] of SEGMENTS) {
+      const sb = studentBones[sn];
+      if (!sb) continue;
       let pW = new THREE.Quaternion();
       let p = sb.parent;
       while (p && !p.isBone) p = p.parent;
@@ -119,6 +158,7 @@ function retargetWorld(clip, cmuScene, hipScale) {
       const local = pW.clone().invert().multiply(sDes[sn]);
       outRot[sn].push(local.x, local.y, local.z, local.w);
     }
+    // Hips translation: the CMU hips move the body through the clip
     if (interp['Hips'] && interp['Hips'].position) {
       const r = interp['Hips'].position.evaluate(time);
       outPos.push(r[0] * hipScale, r[1] * hipScale, r[2] * hipScale);
