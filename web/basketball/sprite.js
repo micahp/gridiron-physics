@@ -54,18 +54,22 @@ export function bodyParts(f, ballC = BALL.c) {
     { kind: 'jersey', a: P('shR'), b: P('shL'), r: 0.07 },
     { kind: 'shorts', a: P('hipR'), b: P('hipL'), r: 0.13 },
     { kind: 'skin', a: P('shR'), b: P('elR'), r: 0.05 },   // bare arm: no sleeve
+    { kind: 'skin', a: lerp3(P('shR'), P('elR'), 0.2), b: lerp3(P('shR'), P('elR'), 0.6), r: 0.062 },   // bicep
     { kind: 'skin', a: P('elR'), b: P('wrR'), r: 0.042 },
     { kind: 'skin', a: P('wrR'), b: P('palmR'), r: 0.045 },
     { kind: 'skin', a: P('shL'), b: P('elL'), r: 0.05 },
+    { kind: 'skin', a: lerp3(P('shL'), P('elL'), 0.2), b: lerp3(P('shL'), P('elL'), 0.6), r: 0.062 },
     { kind: 'skin', a: P('elL'), b: P('wrL'), r: 0.042 },
     { kind: 'skin', a: P('wrL'), b: P('palmL'), r: 0.045 },
     { kind: 'shorts', a: P('hipR'), b: lerp3(P('hipR'), P('knR'), 0.45), r: 0.075 },
     { kind: 'skin', a: lerp3(P('hipR'), P('knR'), 0.45), b: P('knR'), r: 0.07 },   // bare thigh below the shorts
-    { kind: 'sock', a: P('knR'), b: P('anR'), r: 0.052 },
+    { kind: 'skin', a: lerp3(P('knR'), P('anR'), 0.1), b: lerp3(P('knR'), P('anR'), 0.5), r: 0.062 },   // calf
+    { kind: 'sock', a: lerp3(P('knR'), P('anR'), 0.5), b: P('anR'), r: 0.052 },
     { kind: 'shoe', a: P('anR'), b: P('toeR'), r: 0.042 },
     { kind: 'shorts', a: P('hipL'), b: lerp3(P('hipL'), P('knL'), 0.45), r: 0.075 },
     { kind: 'skin', a: lerp3(P('hipL'), P('knL'), 0.45), b: P('knL'), r: 0.07 },
-    { kind: 'sock', a: P('knL'), b: P('anL'), r: 0.052 },
+    { kind: 'skin', a: lerp3(P('knL'), P('anL'), 0.1), b: lerp3(P('knL'), P('anL'), 0.5), r: 0.062 },
+    { kind: 'sock', a: lerp3(P('knL'), P('anL'), 0.5), b: P('anL'), r: 0.052 },
     { kind: 'shoe', a: P('anL'), b: P('toeL'), r: 0.042 },
     { kind: 'ball', c: ballC, r: BALL.r },
   ];
