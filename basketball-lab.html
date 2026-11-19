@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Basketball Lab</title>
+<style>
+  :root { --bg: #0f1a12; --panel: rgba(10,16,12,.85); --ink: #f2f4ee; --dim: #a9b5a6; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 13px/1.4 system-ui, -apple-system, Segoe UI, sans-serif; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #panel { position: fixed; top: 10px; left: 10px; background: var(--panel); padding: 10px 12px; border-radius: 10px; width: min(92vw, 340px); }
+  #panel h1 { font-size: 14px; margin: 0 0 6px; letter-spacing: .04em; }
+  #panel input[type=range] { width: 100%; }
+  #panel button { background: #1d2b20; color: var(--ink); border: 1px solid #39503d; border-radius: 6px; padding: 4px 10px; font: inherit; margin-right: 6px; }
+  #readout { margin-top: 8px; font-variant-numeric: tabular-nums; white-space: pre; color: var(--dim); }
+  #note { margin-top: 6px; color: var(--dim); font-size: 12px; }
+  #err { position: fixed; bottom: 10px; left: 10px; right: 10px; background: #5a1010; padding: 8px 10px; border-radius: 8px; display: none; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="panel">
+  <h1>BASKETBALL LAB · SWIPE (SPRITE STACK)</h1>
+  <div><select id="action"><option value="swipe">swipe</option><option value="dribble">dribble</option><option value="stance">stance</option></select><button id="play">Play</button><button id="reset">Reset</button></div>
+  <input id="t" type="range" min="0" max="1" step="0.005" value="0">
+  <div id="readout"></div>
+  <div id="note">Sprite stack: the body is rasterised from the basketball skeleton into 78 height layers (25 mm), each drawn as four planes. Yellow dot: the palm joint. Drag to orbit.</div>
+</div>
+<div id="err"></div>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { OrbitControls } from './web/vendor/OrbitControls.js';
+import { rasterise, VOXEL, G, X0, Z0, NL, BALL } from './web/basketball/sprite.js';
+import { fk, D } from './web/basketball/skeleton.js';
+import { SWIPE_SECONDS, STRIKE_T } from './web/basketball/actions.js';
+import { LIBRARY, poseOf } from './web/basketball/library.js';
+
+const showErr = (e) => { const el = document.getElementById('err'); el.style.display = 'block'; el.textContent = String(e && e.stack || e); };
+window.addEventListener('error', (e) => showErr(e.error || e.message));
+
+const $ = (id) => document.getElementById(id);
+const canvas = $('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.setSize(innerWidth, innerHeight, false);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 50);
+camera.position.set(2.4, 3.4, 3.6);  // high: horizontal planes must be seen from above, not edge-on
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0.2, 0.9, 0);
+controls.update();
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: '#c99a5b' }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+scene.add(new THREE.GridHelper(10, 20, 0x886644, 0x886644));
+
+// One texture + two planes per layer. The texture is rewritten each time the pose changes.
+const LAYER_BYTES = G * G * 4;
+const SUB = 4;                      // planes per layer: closes the gaps at low angles
+const layerTex = [];
+const stack = new THREE.Group();
+const planeGeo = new THREE.PlaneGeometry(G * VOXEL, G * VOXEL);
+const cx = X0 + G * VOXEL / 2, cz = Z0 + G * VOXEL / 2;
+for (let k = 0; k < NL; k++) {
+  const buf = new Uint8Array(LAYER_BYTES);
+  const tex = new THREE.DataTexture(buf, G, G, THREE.RGBAFormat);
+  tex.magFilter = tex.minFilter = THREE.NearestFilter;
+  tex.generateMipmaps = false;
+  tex.needsUpdate = true;
+  layerTex.push({ buf, tex });
+  const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, transparent: false, side: THREE.DoubleSide });
+  for (let s = 0; s < SUB; s++) {
+    const m = new THREE.Mesh(planeGeo, mat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(cx, (k + (s + 0.5) / SUB) * VOXEL, cz);
+    stack.add(m);
+  }
+}
+scene.add(stack);
+
+// palm marker and ball outline, drawn over the sprite so the contact is readable
+const palm = new THREE.Mesh(new THREE.SphereGeometry(0.02, 12, 10), new THREE.MeshBasicMaterial({ color: '#ffe066' }));
+scene.add(palm);
+const ballRing = new THREE.Mesh(new THREE.SphereGeometry(BALL.r, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffffff', wireframe: true, transparent: true, opacity: 0.25 }));
+ballRing.position.set(BALL.c[0], BALL.c[1], BALL.c[2]);
+scene.add(ballRing);
+
+let t = 0, playing = false, lastT = -1, action = 'swipe';
+function pose(tt) {
+  if (tt === lastT) return;
+  lastT = tt;
+  const { data } = rasterise(poseOf(action, tt));
+  for (let k = 0; k < NL; k++) {
+    const { buf, tex } = layerTex[k];
+    buf.set(data.subarray(k * LAYER_BYTES, (k + 1) * LAYER_BYTES));
+    tex.needsUpdate = true;
+  }
+  const f = fk(poseOf(action, tt));
+  const pp = f.palmR.p;
+  palm.position.set(pp[0], pp[1], pp[2]);
+  const dist = Math.hypot(pp[0] - BALL.c[0], pp[1] - BALL.c[1], pp[2] - BALL.c[2]) - BALL.r;
+  const pose0 = LIBRARY[action].pose(tt);
+  const deg = (r) => (r / D).toFixed(0).padStart(4);
+  $('readout').textContent =
+    `t ${tt.toFixed(2)}   shoulder flex ${deg(pose0.shR[0])}  abd ${deg(pose0.shR[1])}\n` +
+    `elbow ${deg(pose0.elR)}   wrist ${deg(pose0.wrR[0])}\n` +
+    (action === 'swipe' ? `palm to ball surface ${(dist * 100).toFixed(1).padStart(5)} cm  (strike at t ${STRIKE_T})\n` : `palm height ${pp[1].toFixed(2)} m\n`) +
+    `toe lift R ${(Math.abs(f.toeR.p[1]) * 1000).toFixed(1)} mm  L ${(Math.abs(f.toeL.p[1]) * 1000).toFixed(1)} mm`;
+}
+
+$('t').addEventListener('input', (e) => { t = +e.target.value; playing = false; $('play').textContent = 'Play'; pose(t); });
+$('play').addEventListener('click', () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; if (playing && t >= 1) t = 0; });
+$('reset').addEventListener('click', () => { t = 0; playing = false; $('play').textContent = 'Play'; $('t').value = 0; pose(0); });
+$('action').addEventListener('change', (e) => { action = e.target.value; t = 0; playing = false; lastT = -1; $('play').textContent = 'Play'; $('t').value = 0; pose(0); });
+
+let last = performance.now();
+function frame(now) {
+  const dt = (now - last) / 1000; last = now;
+  if (playing) {
+    t = Math.min(1, t + dt / (LIBRARY[action] ? LIBRARY[action].seconds : SWIPE_SECONDS));
+    $('t').value = t;
+    if (t >= 1) { playing = false; $('play').textContent = 'Play'; }
+    pose(t);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+try {
+  pose(0);
+  requestAnimationFrame(frame);
+} catch (e) { showErr(e); }
+</script>
+</body>
+</html>
