@@ -50,9 +50,41 @@ camera.position.set(2.4, 3.4, 3.6);  // high: horizontal planes must be seen fro
 const controls = new OrbitControls(camera, canvas);
 controls.target.set(0.2, 0.9, 0);
 controls.update();
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: '#c99a5b' }));
-floor.rotation.x = -Math.PI / 2; scene.add(floor);
-scene.add(new THREE.GridHelper(10, 20, 0x886644, 0x886644));
+// Court: a painted hardwood floor with the key, free-throw circle and baseline, and a hoop at the shot target.
+// Canvas x runs from world x = -4.8 to 9.2 (14 m), canvas y from world z = +5 to -5 (10 m).
+const COURT = { x0: -4.8, x1: 9.2, z0: -5, z1: 5 };
+function courtTexture() {
+  const cv = document.createElement('canvas'); cv.width = 1400; cv.height = 1000;
+  const g = cv.getContext('2d');
+  const X = (x) => (x - COURT.x0) / (COURT.x1 - COURT.x0) * cv.width;
+  const Z = (z) => (COURT.z1 - z) / (COURT.z1 - COURT.z0) * cv.height;
+  const m = (metres) => metres / (COURT.x1 - COURT.x0) * cv.width;
+  g.fillStyle = '#c99a5b'; g.fillRect(0, 0, cv.width, cv.height);
+  // hardwood boards: faint lines across the court
+  g.strokeStyle = 'rgba(120,80,40,0.25)'; g.lineWidth = 2;
+  for (let z = -5; z <= 5; z += 0.2) { g.beginPath(); g.moveTo(0, Z(z)); g.lineTo(cv.width, Z(z)); g.stroke(); }
+  g.strokeStyle = '#ffffff'; g.lineWidth = Math.max(3, m(0.05));
+  const rect = (x0, x1, z0, z1) => g.strokeRect(X(x0), Z(z1), X(x1) - X(x0), Z(z0) - Z(z1));
+  const baseX = 4.775;                                  // baseline, 1.575 m behind the rim
+  rect(-4.8, baseX, -2.45, 2.45);                       // sideline / baseline outline (half court)
+  rect(baseX - 4.9, baseX, -2.45, 2.45);                // key (paint), 4.9 m deep and 4.9 m wide
+  g.beginPath(); g.arc(X(baseX - 4.9), Z(0), m(1.8), -Math.PI / 2, Math.PI / 2); g.stroke();   // free-throw circle
+  g.beginPath(); g.arc(X(3.2), Z(0), m(1.2), 0, Math.PI * 2); g.stroke();                       // restricted area
+  g.beginPath(); g.arc(X(baseX - 4.9), Z(0), m(1.2), 0, Math.PI * 2); g.setLineDash([]); g.stroke(); // (kept simple)
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(COURT.x1 - COURT.x0, COURT.z1 - COURT.z0), new THREE.MeshBasicMaterial({ map: courtTexture() }));
+floor.rotation.x = -Math.PI / 2; floor.position.set((COURT.x0 + COURT.x1) / 2, 0, 0); scene.add(floor);
+// hoop: pole, backboard, rim (the shot target is HOOP)
+const HOOP_RIM = [3.2, 3.05, 0];
+const hoop = new THREE.Group();
+const board = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.05, 1.8), new THREE.MeshBasicMaterial({ color: '#f4f4f0' }));
+board.position.set(3.4, 3.2, 0); hoop.add(board);
+const rim = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.02, 8, 24), new THREE.MeshBasicMaterial({ color: '#e0572a' }));
+rim.rotation.x = Math.PI / 2; rim.position.set(HOOP_RIM[0], HOOP_RIM[1], HOOP_RIM[2]); hoop.add(rim);
+const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.05, 10), new THREE.MeshBasicMaterial({ color: '#777' }));
+pole.position.set(4.1, 1.52, 0); hoop.add(pole);
+scene.add(hoop);
 
 // One texture + two planes per layer. The texture is rewritten each time the pose changes.
 const LAYER_BYTES = G * G * 4;
