@@ -97,18 +97,36 @@ function defendSlide(t) {
     knR: 55 * D, knL: 55 * D };   // equal knees: both feet stay on the floor as the body shifts
 }
 
+/** Knee angle for a jump: bent to load, extended to push off, bent again to land (radians). */
+function jumpKnee(t) {
+  const load = 78 * D, push = 22 * D, land = 60 * D, base = 50 * D;
+  if (t < 0.2) return key(t / 0.2, base, load);
+  if (t < 0.45) return key((t - 0.2) / 0.25, load, push);
+  if (t < 0.7) return push;
+  if (t < 0.85) return key((t - 0.7) / 0.15, push, land);
+  return key((t - 0.85) / 0.15, land, base);
+}
+/**
+ * Lift from the legs: the body rises only as the knees extend from their load, so the force comes
+ * from the feet. Returns metres of lift for a knee angle (0 at the load, up to `max` at full extension).
+ */
+function legLift(knee, max) {
+  const ext = Math.min(1, Math.max(0, (78 * D - knee) / (78 * D - 22 * D)));
+  return max * ext;
+}
+
 /** Fadeaway: jump back and away from the defender, release high while falling. */
 function fadeaway(t) {
-  const e = key((t - 0.35) / 0.3, 0, 1);
-  return { ...stance(), spine: [-8 * D, 0, 0], chest: [-8 * D, 0, 0],
+  const e = key((t - 0.35) / 0.3, 0, 1), kn = jumpKnee(t);
+  return { ...stance(), knR: kn, knL: kn, spine: [-8 * D, 0, 0], chest: [-8 * D, 0, 0],
     shR: [(60 + 95 * e) * D, 10 * D, 0], elR: (110 - 75 * e) * D, wrR: [0, 0],
     shL: [50 * D, 20 * D, 0], elL: 90 * D, wrL: [0, 0] };
 }
 
 /** Floater: one hand, a soft short hop, released at head height with a gentle flick. */
 function floater(t) {
-  const e = key((t - 0.4) / 0.3, 0, 1);
-  return { ...stance(), shR: [(110 + 40 * e) * D, 5 * D, 0], elR: (45 - 25 * e) * D, wrR: [-10 * D * e, 0],
+  const e = key((t - 0.4) / 0.3, 0, 1), kn = jumpKnee(t);
+  return { ...stance(), knR: kn, knL: kn, shR: [(110 + 40 * e) * D, 5 * D, 0], elR: (45 - 25 * e) * D, wrR: [-10 * D * e, 0],
     shL: [40 * D, 12 * D, 0], elL: 100 * D, wrL: [0, 0] };
 }
 
@@ -215,9 +233,9 @@ export const LIBRARY = {
   },
   defendInPlace: { source: 'hand-authored', seconds: 1.0, pose: defendInPlace, contact: null },
   defendSlide: { source: 'hand-authored', seconds: 1.0, pose: defendSlide, contact: null },
-  fadeaway: { source: 'hand-authored', seconds: 1.4, pose: fadeaway, contact: null, airborne: (t) => ({ lift: 0.2 * bump(t, 0.2, 0.8), x: -0.22 * bump(t, 0.2, 0.8) }),
+  fadeaway: { source: 'hand-authored', seconds: 1.4, pose: fadeaway, contact: null, airborne: (t) => ({ lift: legLift(jumpKnee(t), 0.2), x: -0.22 * bump(t, 0.2, 0.8) }),
     ball: { attach: 'palmR', release: 0.6, kind: 'arc', to: 'hoop', dt: 0.9 } },
-  floater: { source: 'hand-authored', seconds: 1.2, pose: floater, contact: null, airborne: (t) => ({ lift: 0.12 * bump(t, 0.2, 0.7), x: 0 }),
+  floater: { source: 'hand-authored', seconds: 1.2, pose: floater, contact: null, airborne: (t) => ({ lift: legLift(jumpKnee(t), 0.12), x: 0 }),
     ball: { attach: 'palmR', release: 0.5, kind: 'arc', to: 'hoop', dt: 0.7, short: true } },
   lowDribble: { source: 'hand-authored', seconds: 0.6, pose: lowDribble, contact: null, ball: { kind: 'dribble' } },
   crossover: { source: 'hand-authored', seconds: 0.9, pose: crossover, contact: null, ball: { kind: 'dribble' } },

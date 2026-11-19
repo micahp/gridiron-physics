@@ -216,6 +216,29 @@ check('refJumpShot: the jump is real (feet leave the floor by at least 15 cm at 
   });
 }
 
+// --- no floating: the feet leave the floor only after the legs have pushed off (knees extended from their load)
+for (const name of ['fadeaway', 'floater', 'refJumpShot']) {
+  if (!LIBRARY[name]) continue;
+  check(`${name}: the feet leave the floor only after the knees have extended from their load (the legs push off)`, () => {
+    const S = LIBRARY[name].seconds, N = 260;
+    // the load is the deepest knee bend; takeoff is the first lift after it
+    let loadKnee = -1, loadT = 0;
+    for (let i = 0; i <= N; i++) { const t = i / N; const k = poseOf(name, t).knR; if (k > loadKnee) { loadKnee = k; loadT = t * S; } }
+    let takeoffT = -1, kneeAtTakeoff = 0;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N, s = t * S;
+      if (s < loadT) continue;
+      const f = frame(name, t);
+      const sole = Math.min(f.toeR.p[1], f.toeL.p[1]);
+      if (sole > 0.02) { takeoffT = s; kneeAtTakeoff = poseOf(name, t).knR; break; }
+    }
+    assert.ok(takeoffT > 0, 'the feet never leave the floor');
+    assert.ok(takeoffT > loadT, `takeoff at ${takeoffT.toFixed(2)} s, before the load at ${loadT.toFixed(2)} s`);
+    const extended = (loadKnee - kneeAtTakeoff) / D;
+    // the lift is proportional to knee extension, so takeoff needs some extension (at least 3 degrees), not a jump
+    assert.ok(extended >= 3, `knee only ${extended.toFixed(1)} deg extended at takeoff`);
+  });
+}
 check('unknown action names are refused', () => {
   assert.throws(() => poseOf('layup', 0), /unknown action/);
 });
