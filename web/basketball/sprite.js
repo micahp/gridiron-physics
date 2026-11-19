@@ -138,7 +138,7 @@ export function rasterise(pose, ballC = BALL.c) {
         const o = ((k * G + r) * G + i) * 4;
         let col = COLOURS[bestPart.kind];
         // jersey number on the back: a 3x5 digit, printed on jersey pixels that face away from the camera
-        if (bestPart.kind === 'jersey' && bnx < -0.4 && NUMBER_ON(p)) col = [24, 24, 28];
+        if (bestPart.kind === 'jersey' && (bnx < -0.4 || bnx > 0.4) && NUMBER_ON(p, bnx > 0.4 ? 'front' : 'back')) col = [24, 24, 28];
         const lam = Math.max(0, bnx * SUN[0] + bny * SUN[1] + bnz * SUN[2]);
         const shade = 0.4 + 0.6 * lam;
         data[o] = Math.min(255, col[0] * shade);
@@ -154,10 +154,11 @@ export function rasterise(pose, ballC = BALL.c) {
 // Jersey number. A 3x5 bitmap, printed on the back of the shirt (world -x side), upper back.
 const DIGIT = { 7: ['111', '001', '001', '010', '010'], 2: ['111', '001', '111', '100', '111'], 3: ['111', '001', '111', '001', '111'] };
 const NUMBER = '7';
-function NUMBER_ON(p) {
+function NUMBER_ON(p, side) {
   const rows = DIGIT[NUMBER];
-  const u = (p[2] + 0.085) / 0.17;          // across the back, 0..1 (z: the player's right)
-  const v = (1.30 - p[1]) / 0.2;            // down the back, 0..1 (y)
+  const u = (p[2] + 0.085) / 0.17;          // across the chest, 0..1 (z: the player's right)
+  const v = (1.30 - p[1]) / 0.2;            // down the chest, 0..1 (y)
+  if (side === 'front') { /* same grid on the front, mirrored left to right */ }
   if (u < 0 || u >= 1 || v < 0 || v >= 1) return false;
   const c = Math.floor(u * 3), r = Math.floor(v * 5);
   return rows[r][c] === '1';
