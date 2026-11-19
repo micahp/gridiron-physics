@@ -142,7 +142,10 @@ function retargetWorld(clip, cmuScene, hipScale) {
       }
       const tC = cPos(cc).clone().sub(cPos(cp)).normalize();
       // bring the CMU direction into the student's frame via the parent's rest alignment
-      const A = studentRestW[sn].clone().multiply(cRestW[cp].clone().invert());
+      // the student's parent bone at rest, for the same parent the CMU bone is attached to
+      let sParent = studentBones[sn].parent; while (sParent && !sParent.isBone) sParent = sParent.parent;
+      const sParentRest = sParent && sParent.isBone ? studentRestW[sParent.name] : new THREE.Quaternion();
+      const A = sParentRest.clone().multiply(cRestW[cp].clone().invert());
       const tS = tC.applyQuaternion(A).normalize();
       const swing = new THREE.Quaternion().setFromUnitVectors(sjRest[sn], tS);
       sDes[sn] = swing.multiply(studentRestW[sn].clone());
@@ -210,7 +213,7 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   window.__clips = clips;
   for (const c of clips) actionsByName[c.name] = mixer.clipAction(c);
   window.__actions = actionsByName;
-  window.__fbx = fbx;
+  window.__fbx = fbx; window.__sb = studentBones;
   const play = (name) => { const a = actionsByName[name]; if (!a) return; for (const x of Object.values(actionsByName)) x.fadeOut(0.2); a.reset().fadeIn(0.2).play(); };
   // CMU clips: each file has its own rig rest; hips translation is scaled by the ratio of hip heights
   const cmuFiles = ['jumpshot', 'layup', 'dribble_run'];
@@ -220,7 +223,7 @@ new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
       const cmuRest = {}; let cmuHip = null;
       g.scene.traverse((o) => { if (o.isBone) { cmuRest[o.name] = o.quaternion.clone(); if (o.name === 'Hips') cmuHip = o.position.y; } });
       const sHip = studentRestPos['Hips'] ? studentRestPos['Hips'].y : 1;
-      const hipScale = cmuHip ? sHip / cmuHip : 1;
+      const hipScale = 0;   // no vertical hips from the CMU clip: the feet are grounded each frame instead (see frame())
       for (const c of g.animations) {
         // the CMU clip files each hold a second copy (.001); keep the named one
         if (c.name === f || c.name === f + '.001' || c.name === '124_05' || c.name === '06_02' || c.name === '124_06' || f === 'jumpshot' || f === 'layup' || f === 'dribble_run') {
@@ -258,6 +261,17 @@ addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, fal
 const clock = new THREE.Clock();
 function frame() {
   if (mixer) mixer.update(clock.getDelta());
+  // keep the feet on the floor: set the body height so the lowest foot touches y = 0
+  if (window.__fbx) {
+    const f = window.__fbx;
+    f.position.y = 0; f.updateMatrixWorld(true);
+    let low = 1e9;
+    for (const n of ['FootL', 'FootR', 'FootL_end', 'FootR_end']) {
+      const b = window.__sb && window.__sb[n]; if (!b) continue;
+      const v = new THREE.Vector3(); b.getWorldPosition(v); low = Math.min(low, v.y);
+    }
+    if (low < 1e8) f.position.y = -low + (f.userData.restY || 0);
+  }
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }

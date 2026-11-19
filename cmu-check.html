@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CMU Clip Check</title>
+<style>html,body{margin:0;height:100%;background:#9fb8d0;overflow:hidden}canvas{display:block;width:100%;height:100%}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+import * as THREE from './web/vendor/three.module.js';
+import { GLTFLoader } from './web/vendor/GLTFLoader.js';
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(1);
+renderer.setSize(innerWidth, innerHeight, false);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#9fb8d0');
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.05, 100);
+camera.position.set(0, 1.2, 5.0);
+camera.lookAt(0, 0.9, 0);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({ color: '#c99a5b' }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+const q = new URLSearchParams(location.search);
+const file = q.get('f') || 'jumpshot';
+const clipName = q.get('c') || file;
+const pairs = [['LeftShoulder','LeftArm'],['LeftArm','LeftForeArm'],['LeftForeArm','LeftHand'],['RightShoulder','RightArm'],['RightArm','RightForeArm'],['RightForeArm','RightHand'],['Hips','LowerBack'],['LowerBack','Spine1'],['Spine1','Neck'],['Neck','Head'],['Hips','LeftUpLeg'],['LeftUpLeg','LeftLeg'],['LeftLeg','LeftFoot'],['Hips','RightUpLeg'],['RightUpLeg','RightLeg'],['RightLeg','RightFoot']];
+const lineMat = new THREE.LineBasicMaterial({ color: 0xffdd33 });
+const dotMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const lineGroup = new THREE.Group(); scene.add(lineGroup);
+let mixer = null, bones = {}, clip = null, root = null;
+new GLTFLoader().load(`./web/college/${file}.glb`, (g) => {
+  g.scene.traverse((o) => { if (o.isBone) bones[o.name] = o; });
+  root = g.scene;
+  mixer = new THREE.AnimationMixer(g.scene);
+  clip = g.animations.find((c) => c.name === clipName) || g.animations[0];
+  mixer.clipAction(clip).play();
+  for (const n of Object.keys(bones)) {
+    const d = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), dotMat); d.name = 'dot_' + n; scene.add(d);
+  }
+  window.__ready = true;
+});
+const clock = new THREE.Clock();
+const pos = new THREE.Vector3();
+function frame() {
+  if (mixer) {
+    mixer.update(clock.getDelta());
+    root.updateMatrixWorld(true);
+    // stick figure from the recorded bones (scaled to the figure's height; CMU units are cm-like)
+    const scale = 18.75; // the glTF armature is 0.01 scale; head at ~0.096 maps to 1.8 m
+    lineGroup.clear();
+    const pts = {};
+    for (const n of Object.keys(bones)) { bones[n].getWorldPosition(pos); pts[n] = pos.clone().multiplyScalar(scale); const d = scene.getObjectByName('dot_' + n); if (d) d.position.copy(pts[n]); }
+    for (const [a, b] of pairs) if (pts[a] && pts[b]) { const g = new THREE.BufferGeometry().setFromPoints([pts[a], pts[b]]); lineGroup.add(new THREE.Line(g, lineMat)); }
+    window.__pos = Object.fromEntries(Object.entries(pts).map(([k, v]) => [k, v.toArray().map((x) => +x.toFixed(3))]));
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
