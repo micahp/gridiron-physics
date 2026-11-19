@@ -60,7 +60,7 @@ const studentBones = {}, studentRestW = {}, studentRestPos = {};
 // rotation is taken against its parent's fitted world rotation. Feet stay flat in world space.
 const SEGMENTS = [
   // [CMU parent, CMU child, student bone]
-  ['Hips', 'LowerBack', 'Hips'], ['LowerBack', 'Spine1', 'Abdomen'], ['Spine1', 'Neck', 'Torso'],
+  ['Hips', 'LowerBack', 'Hips'], ['LowerBack', 'Spine1', 'Abdomen'], ['Spine1', 'Neck', 'Torso'], ['Neck', 'Head', 'Neck'],
   ['LeftShoulder', 'LeftArm', 'ShoulderL'], ['LeftArm', 'LeftForeArm', 'UpperArmL'], ['LeftForeArm', 'LeftHand', 'LowerArmL'],
   ['RightShoulder', 'RightArm', 'ShoulderR'], ['RightArm', 'RightForeArm', 'UpperArmR'], ['RightForeArm', 'RightHand', 'LowerArmR'],
   ['LeftUpLeg', 'LeftLeg', 'UpperLegL'], ['LeftLeg', 'LeftFoot', 'LowerLegL'],
@@ -94,7 +94,7 @@ function retargetWorld(clip, cmuScene) {
   const sChildRestP = {};
   for (const seg of SEGMENTS) { const [pc, cc, sn] = seg; const sc = studentBones[sn]; /* child is the next student bone along the chain */ }
   // student rest world position of each segment's child joint (the joint the segment ends at)
-  const SEG_CHILD = { Hips: 'Abdomen', Abdomen: 'Torso', Torso: 'Neck', ShoulderL: 'UpperArmL', UpperArmL: 'LowerArmL', LowerArmL: 'PalmL', ShoulderR: 'UpperArmR', UpperArmR: 'LowerArmR', LowerArmR: 'PalmR', UpperLegL: 'LowerLegL', LowerLegL: 'FootL', UpperLegR: 'LowerLegR', LowerLegR: 'FootR' };
+  const SEG_CHILD = { Hips: 'Abdomen', Abdomen: 'Torso', Torso: 'Neck', Neck: 'Head', ShoulderL: 'UpperArmL', UpperArmL: 'LowerArmL', LowerArmL: 'PalmL', ShoulderR: 'UpperArmR', UpperArmR: 'LowerArmR', LowerArmR: 'PalmR', UpperLegL: 'LowerLegL', LowerLegL: 'FootL', UpperLegR: 'LowerLegR', LowerLegR: 'FootR' };
   const sjRest = {};
   for (const sn of Object.keys(SEG_CHILD)) {
     const cb = studentBones[SEG_CHILD[sn]];
@@ -181,6 +181,10 @@ function retargetWorld(clip, cmuScene) {
   if (outPos.length === N * 3) tracks.push(new THREE.VectorKeyframeTrack('Body.position', outTimes, outPos));
   return new THREE.AnimationClip(clip.name, clip.duration, tracks);
 }
+// dribble ball: rides the right palm during the dribble clip. The CMU hand never reaches the floor (min ~0.8 m),
+// so this is hand-carried, not a floor bounce.
+const ball = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 16), new THREE.MeshStandardMaterial({ color: '#d9621e', roughness: 0.7 }));
+ball.visible = false; scene.add(ball);
 let mixer = null;
 new FBXLoader().load('./web/college/student_Male_Casual.fbx', (fbx) => {
   fbx.scale.setScalar(1);
@@ -324,6 +328,10 @@ function frame() {
     attachFoot('L');
     attachFoot('R');
   }
+  if (window.__sb && window.__sb.PalmR && window.__activeClip === 'dribble_run') {
+    const v = new THREE.Vector3(); window.__sb.PalmR.getWorldPosition(v);
+    ball.visible = true; ball.position.set(v.x, v.y - 0.12, v.z);
+  } else ball.visible = false;
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
