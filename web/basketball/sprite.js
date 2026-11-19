@@ -48,9 +48,9 @@ export function bodyParts(f, ballC = BALL.c) {
     { kind: 'skin', c: [head[0] + 0.01, head[1] + 0.05, head[2]], r: 0.095 },   // face and skull
     { kind: 'hair', c: [head[0] - 0.005, head[1] + 0.12, head[2]], r: 0.1 },      // hair cap on top and back
     { kind: 'skin', a: P('neck'), b: head, r: 0.05 },
-    // torso: the football body's proportions, as rounded boxes: abdomen (half 0.118 x 0.12 x 0.152) and chest (0.138 x 0.16 x 0.178)
-    { kind: 'jersey', box: { c: P('spine'), h: [0.118, 0.12, 0.152], rr: 0.065 } },
-    { kind: 'jersey', box: { c: P('chest'), h: [0.138, 0.16, 0.178], rr: 0.075 } },
+    // torso: a basketball player's proportions (about 0.31 m across, 0.23 m deep); the football chest is too broad
+    { kind: 'jersey', box: { c: P('spine'), h: [0.105, 0.11, 0.138], rr: 0.06 } },
+    { kind: 'jersey', box: { c: P('chest'), h: [0.115, 0.14, 0.155], rr: 0.065 } },
     { kind: 'jersey', a: P('shR'), b: P('shL'), r: 0.07 },
     { kind: 'shorts', a: P('hipR'), b: P('hipL'), r: 0.13 },
     { kind: 'skin', a: P('shR'), b: P('elR'), r: 0.05 },   // bare arm: no sleeve
