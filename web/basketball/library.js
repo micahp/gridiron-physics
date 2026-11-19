@@ -10,6 +10,7 @@
 import { fk, D, LIMITS } from './skeleton.js';
 import { swipe, STRIKE_T, SWIPE_SECONDS } from './actions.js';
 import { REF as REF_JUMP_SHOT } from './refs/cmu_124_05_jumpshot.js';
+import { REF as REF_PASS } from './refs/cmu_15_12_pass.js';
 
 const ease = (x) => x * x * (3 - 2 * x);
 const key = (t, a, b) => a + (b - a) * ease(Math.min(1, Math.max(0, t)));
@@ -195,6 +196,15 @@ export function holdCentre(f, attach) {
 }
 
 export const LIBRARY = {
+  // Reference-derived: CMU mocap subject 15 trial 12, 56.8 to 59.8 s, a waist-level forward push
+  // (33 cm of forward hand travel in one second). Retargeted by tools/basketball/bvh_retarget.mjs.
+  // The hands spread up to 80 cm in this clip, so it is NOT a two-hand hold: the ball rides the
+  // right hand and is released as the arm reaches out. Not a confirmed chest pass.
+  refPushPass: {
+    seconds: REF_PASS.frames[REF_PASS.frames.length - 1].t, reference: true, source: 'CMU mocap 15_12 (56.8 to 59.8 s)',
+    pose: (t) => sampleRef(REF_PASS.frames, t), contact: null,
+    ball: { attach: 'palmR', release: 0.6, kind: 'pass', vel: [4.0, 0, 0] },
+  },
   // Reference-derived: CMU mocap subject 124 trial 5, a basketball jump shot, retargeted by
   // tools/basketball/bvh_retarget.mjs. Not a hand-set pose: the joint angles come from the recording.
   refJumpShot: {
