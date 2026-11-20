@@ -2,6 +2,60 @@
 
 **Read this before editing or launching an experiment.**
 
+## RIGGED CHARACTERS AND ANIMATION — 2026-11-20 (all character and animation work)
+
+Applies to the rigged players (`feat/rigged-animation-controller`,
+`feat/basketball-action-library`, and anything that draws an articulated
+body). It does not change the replay/simulation physics rules below: the
+animation shows what physics and game logic decided; it never decides an
+outcome. The same rules govern The U (micahp/college-sports-rpg, `AGENTS.md`)
+so the two games can share motion assets, timing and validation.
+
+The goal is believable early-PS2-quality athletic motion on the real skinned
+character in the real viewer. A passing validator, an IK target reached, or a
+valid T-pose is not proof that it looks right.
+
+1. **Recorded animation owns athletic motion.** Running, cutting, throwing,
+   catching, tackling and falling come from clips (CMU mocap or authored).
+   IK and corrective passes make small, bounded corrections at contact points.
+   Do not build athletic motion out of corrections. If the source clip lacks
+   the motion, say so and find or author a clip.
+2. **No clip? Use reference images.** If no recorded clip shows the action,
+   find photographs or video stills of the real action (several, not one).
+   Record each source and its license. Describe every reference joint by
+   joint (shoulder, elbow, wrist, hip, knee, ankle: angle and position) and
+   use those descriptions as the target poses for an authored clip and as
+   the acceptance reference in a side-by-side with the render. Do not commit
+   an image unless its license allows it; keep the source link instead.
+3. **One owner per joint, per action.** Keep a bone-ownership map for the rig
+   (which pass writes which bones, in order, when it is on, and what
+   overwrites it) at `docs/animation/OWNERSHIP.md`. Write it before changing
+   the rig, and update it when a change alters who writes a bone.
+4. **Prove the layer before you edit it.** Instrument the pipeline: record
+   the pose after every stage (clip, retarget, each corrective pass, final
+   skinned pose) and show which stage first makes it wrong, and that changing
+   that stage changes the rendered character. Do not judge on the stick
+   figure or joint numbers alone. No new corrective pass until you have shown
+   the clip and the existing passes cannot handle the problem.
+5. **Proof on the rendered character.** Before/after renders from the same
+   cameras at the same frames, including the transitions into and out of the
+   action. Measure what can be measured (`tools/validate-tackles.mjs`
+   with `web/mesh/interactions.js` on the rig branches); visual realism is a
+   separate acceptance criterion. If you cannot render, say visual acceptance
+   is unverified.
+6. **Interactions use a contact contract.** An action declares its approach,
+   contact window, target, the correction allowed, the possession or outcome
+   handoff, and the recovery. Two-player contact (tackle, block, catch, box-out)
+   starts from coordinated clips plus simple collision, not full-body IK on
+   both skeletons.
+7. **Report it this way:** the observed failure and its frame; the first
+   incorrect layer; the evidence; the minimum correction; the regression risk;
+   the visual defects that remain.
+
+Order of work, each stage working on the real character before the next:
+movement (idle, walk, run, cut, stop) -> one player with the ball -> two-player
+contact -> full plays with camera and AI. Research-branch rules below still apply.
+
 ## LATEST E1 VIEWER REPIN + OOB RESEARCH STOP — 2026-10-24
 
 **The Gridiron E1 drive viewer HAS BEEN REPINNED** on [research branch `f2a00a0973e901c7590220cd569dde80cdf6245c`](https://github.com/micahp/gridiron-physics/commit/f2a00a0973e901c7590220cd569dde80cdf6245c) to **LP `641e1b2ea7882389778a14e6c52b58583f7e9917`**, with 25/25 agent-reported Node tests, E0a passing and all ten headless DOM checks. `drive.clock_clamped_plays` is now independently recomputed in the viewer. **Accept that as current research-viewer integration pin; previous instructions about still needing to repin from `945754` are superseded.** This does not finish LP defects **A/B/C/D** or elevate `drive_statistical_demo` to a legal complete game. LP will regenerate after those fixes, and then Gridiron repins **to the repair commit**, not merely to `641e1b2e` again. See [LP decision](https://github.com/micahp/legendarypicks/blob/dev/docs/research/E1-DRIVE-INTEGRATION-DECISION-2026-10-24.md). No contract-v1/prod change.
