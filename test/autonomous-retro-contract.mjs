@@ -35,6 +35,12 @@ assert.ok(a.diagnostics.cadence[db].interval_seconds > b.diagnostics.cadence[db]
 assert.ok(a.diagnostics.cadence[qb].interrupts >= 2, 'snap and possession changes interrupt cadence');
 assert.equal(a.events.at(-1).type, 'whistle');
 assert.ok(a.events.at(-1).t <= a.result.elapsed_seconds + 0.001);
+const possessionChange = call(); possessionChange.seed = '6';
+const changeResult = simulateAutonomousPlay(possessionChange);
+assert.ok(changeResult.events.some((e) => e.type === 'catch' || e.type === 'interception'));
+assert.ok(changeResult.diagnostics.cadence[possessionChange.offense.lineup.WR1].interrupts >= 4,
+  'ball flight and possession changes interrupt the countdown');
+assert.equal(changeResult.events.at(-1).type, 'whistle');
 
 // Same seed, same acceleration. Explicit throw accuracy alone changes the
 // released throw's error distribution. Search deterministic seeds until a throw.
@@ -60,6 +66,8 @@ for (const acceleration of [10, 95]) {
   if (event) assert.equal(event.accuracy_rating, 70, 'ACC does not set throw accuracy');
 }
 for (const variant of [buildSampleCall(), call()]) {
+ for (const seed of ['1', '6', '1042']) {
+  variant.seed = seed;
   const full = simulateAutonomousPlay(variant);
   const lean = simulateAutonomousPlay({...variant, output_mode:'result_only'});
   assert.deepEqual(lean.result, full.result);
@@ -69,5 +77,6 @@ for (const variant of [buildSampleCall(), call()]) {
   assert.equal(lean.diagnostics.physical_warnings, null);
   assert.equal(lean.diagnostics.reconciliation.ok, true);
   assert.equal(lean.diagnostics.reconciliation.scope, 'events_only_no_frame_checks');
+ }
 }
 console.log('retro cadence, interrupt, independent throw accuracy and result-only parity passed');
