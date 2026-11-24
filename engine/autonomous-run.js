@@ -385,6 +385,7 @@ export function simulateInsideZone(options = {}) {
   let snapped = false, snapArrive = null, handed = false, carrier = null, carrierSince = null;
   let tackle = null, terminal = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
+  let lastCarrierX = null;
   let maxForward = null;
   const samples = new Map(roster.map((r) => [r.id, []]));
   const frames = [];
@@ -815,11 +816,15 @@ export function simulateInsideZone(options = {}) {
 
   function trackForwardProgress() {
     if (!carrier || W.ball.holder !== carrier) return;
-    const f = (W.ball.x / YD - cfg.los) * dir;
-    if (!maxForward || f > maxForward.f) maxForward = { f, x: W.ball.x, y: W.ball.y };
     const x = W.ball.x / YD;
-    if ((dir > 0 && x >= 100) || (dir < 0 && x <= 0)) {
-      const goalX = (dir > 0 ? 100 : 0) * YD;
+    const carrierDir = carrier.team === 'O' ? dir : -dir;
+    const f = (x - cfg.los) * carrierDir;
+    if (!maxForward || maxForward.direction !== carrierDir || f > maxForward.f) {
+      maxForward = { f, x: W.ball.x, y: W.ball.y, direction: carrierDir };
+    }
+    const previousX = lastCarrierX ?? x;
+    if ((carrierDir > 0 && x >= 100) || (carrierDir < 0 && x <= 0)) {
+      const goalX = (carrierDir > 0 ? 100 : 0) * YD;
       const spot = { x: goalX, y: W.ball.y };
       W.event('touchdown', { carrier_id: carrier.id, spot: { x: spot.x / YD, y: spot.y / YD } });
       finish('touchdown', spot);
@@ -836,6 +841,12 @@ export function simulateInsideZone(options = {}) {
       return;
     }
     lastInBounds = { x: W.ball.x, y: W.ball.y };
+    if ((carrierDir > 0 && previousX >= 0 && x < 0)
+        || (carrierDir < 0 && previousX <= 100 && x > 100)) {
+      finish('safety', { x: (carrierDir > 0 ? 0 : 100) * YD, y: W.ball.y });
+      return;
+    }
+    lastCarrierX = x;
     if ((dir > 0 && x < 0) || (dir < 0 && x > 100)) {
       finish('safety', { x: W.ball.x, y: W.ball.y });
     }
@@ -866,7 +877,7 @@ export function simulateInsideZone(options = {}) {
       W.event('snap_receive', { quarterback_id: qb.id });
     }
     if (!handed && W.ball.holder === qb && W.t > 0.12 && d2(qb, rb) < 1.28) {
-      handed = true; carrier = rb; carrierSince = W.t;
+      handed = true; carrier = rb; carrierSince = W.t; lastCarrierX = W.ball.x / YD;
       qb.hasBall = false; rb.hasBall = true; rb.mode = 'carry';
       W.ball.holder = rb; W.ball.hand = 'carry';
       W.event('handoff', { from: qb.id, to: rb.id });

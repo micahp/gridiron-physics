@@ -301,6 +301,7 @@ export function simulatePassPlay(options = {}) {
   let sack = null, tackle = null, terminal = null;
   let maxForward = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
+  let lastCarrierX = null;
   let dropDepth = -7.6;
   const catches = [];
 
@@ -649,6 +650,10 @@ export function simulatePassPlay(options = {}) {
     }
     carrier = player;
     carrierSince = W.t;
+    const catchX = b.x / YD;
+    const carrierDir = player.team === 'O' ? dir : -dir;
+    maxForward = { f: (catchX - cfg.los) * carrierDir, x: b.x, y: b.y, direction: carrierDir };
+    lastCarrierX = catchX;
     pCarrierReset();
     resolveAttempt = null;
     throwInfo = null;
@@ -1045,11 +1050,15 @@ export function simulatePassPlay(options = {}) {
       // Out-of-bounds flight is not a rule violation until the ball lands.
     }
     if (carrier && W.ball.holder === carrier) {
-      const f = (W.ball.x / YD - cfg.los) * dir;
-      if (!maxForward || f > maxForward.f) maxForward = { f, x: W.ball.x, y: W.ball.y };
       const x = W.ball.x / YD;
-      if ((dir > 0 && x >= 100) || (dir < 0 && x <= 0)) {
-        const goalX = (dir > 0 ? 100 : 0) * YD;
+      const carrierDir = carrier.team === 'O' ? dir : -dir;
+      const f = (x - cfg.los) * carrierDir;
+      if (!maxForward || maxForward.direction !== carrierDir || f > maxForward.f) {
+        maxForward = { f, x: W.ball.x, y: W.ball.y, direction: carrierDir };
+      }
+      const previousX = lastCarrierX ?? x;
+      if ((carrierDir > 0 && x >= 100) || (carrierDir < 0 && x <= 0)) {
+        const goalX = (carrierDir > 0 ? 100 : 0) * YD;
         W.event('touchdown', { carrier_id: carrier.id, spot: { x: goalX / YD, y: W.ball.y / YD } });
         finish('touchdown', { x: goalX, y: W.ball.y });
         return;
@@ -1062,7 +1071,12 @@ export function simulatePassPlay(options = {}) {
         return;
       }
       lastInBounds = { x: W.ball.x, y: W.ball.y };
-      if ((dir > 0 && x < 0) || (dir < 0 && x > 100)) finish('safety', { x: W.ball.x, y: W.ball.y });
+      if ((carrierDir > 0 && previousX >= 0 && x < 0)
+          || (carrierDir < 0 && previousX <= 100 && x > 100)) {
+        finish('safety', { x: (carrierDir > 0 ? 0 : 100) * YD, y: W.ball.y });
+        return;
+      }
+      lastCarrierX = x;
     }
   }
 
@@ -1104,7 +1118,13 @@ export function simulatePassPlay(options = {}) {
     }
     trackLive();
     if (!terminal && tackle && W.t - tackle.t0 >= 0.48) {
-      const spot = maxForward || { x: W.ball.x, y: W.ball.y };
+      let spot = maxForward || { x: W.ball.x, y: W.ball.y };
+      if (carrier?.team === 'D') {
+        const carrierDir = -dir;
+        const ownGoalX = carrierDir > 0 ? 0 : 100;
+        if ((carrierDir > 0 && spot.x / YD < ownGoalX)
+            || (carrierDir < 0 && spot.x / YD > ownGoalX)) spot = { ...spot, x: ownGoalX * YD };
+      }
       finish(tackle === sack ? 'sack' : 'tackle', spot);
     }
     if (!cfg.resultOnly && !terminal && W.t >= nextRecord - 1e-9) {
@@ -1116,7 +1136,13 @@ export function simulatePassPlay(options = {}) {
   // A wrap that started before the cap is real contact, not a truncated play:
   // resolve it at the cap rather than reporting a technical failure.
   if (!terminal && tackle) {
-    const spot = maxForward || { x: W.ball.x, y: W.ball.y };
+    let spot = maxForward || { x: W.ball.x, y: W.ball.y };
+    if (carrier?.team === 'D') {
+      const carrierDir = -dir;
+      const ownGoalX = carrierDir > 0 ? 0 : 100;
+      if ((carrierDir > 0 && spot.x / YD < ownGoalX)
+          || (carrierDir < 0 && spot.x / YD > ownGoalX)) spot = { ...spot, x: ownGoalX * YD };
+    }
     finish(tackle === sack ? 'sack' : 'tackle', spot);
   }
   if (!terminal) {

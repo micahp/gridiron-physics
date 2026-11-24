@@ -42,6 +42,23 @@ assert.ok(seen.has('incomplete') || seen.has('tackle') || seen.has('out_of_bound
 assert.ok(yards.some((y) => y > 0), 'some passes gain ground');
 assert.ok(new Set(yards.map((y) => y.toFixed(2))).size > 1, 'pass results are not a constant');
 
+// Defensive return progress follows the returner's direction, independent of
+// which way the intercepted offense was attacking. The dead spot cannot be
+// placed behind the interception catch point by a carrier facing the other way.
+for (const scenario of [
+  { seed: 'turnover-direction--1-40', dir: -1 },
+  { seed: 'turnover-direction-1-60', dir: 1 },
+]) {
+  const run = simulatePassPlay({ ...base, ...scenario, los: 50 });
+  const interception = run.events.find((event) => event.type === 'interception');
+  assert.ok(interception, `${scenario.seed} must produce an interception`);
+  assert.equal(run.terminal.reason, 'tackle');
+  assert.ok((run.terminal.spot.x - interception.at.x) * -scenario.dir >= -1e-8,
+    `${scenario.seed} must preserve returner-direction forward progress`);
+  assert.ok(run.terminal.spot.x >= 0 && run.terminal.spot.x <= 100,
+    'an interception return dead ball stays on the field');
+}
+
 // The quarterback must be pressured by a real defender, and sacks require contact.
 const pressure = simulatePassPlay({ seed: 'pressure-7', front: 'nickel_over', coverage: 'cover_1', direction: 'right' });
 for (const sweep of [pressure]) {
