@@ -16,8 +16,12 @@ const unit = (x, y) => {
 };
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'runSide', 'front', 'ratingOverrides',
-  'playerIds', 'initialPositions', 'preSnapVelocity', 'massOverrides', 'resultOnly',
+  'playerIds', 'initialPositions', 'preSnapVelocity', 'massOverrides', 'resultOnly', 'assignments',
 ]);
+const RUN_GAP_LATERAL = {
+  backside_c: -2.65, backside_b: -1.68, backside_a: -0.58,
+  play_side_a: 0.58, play_side_b: 1.68, play_side_c: 2.65,
+};
 const RATING_NAMES = new Set([
   'SPD', 'ACC', 'AGI', 'STR', 'AWR', 'RBK', 'IBL', 'PBK', 'BSH', 'PMV', 'THA',
   'FMV', 'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC', 'CTH', 'CIT',
@@ -105,6 +109,7 @@ function validateConfig(input) {
     preSnapVelocity: input.preSnapVelocity ?? {},
     massOverrides: input.massOverrides ?? {},
     resultOnly: input.resultOnly ?? false,
+    assignments: input.assignments ?? null,
   };
   if (typeof cfg.resultOnly !== 'boolean') throw new TypeError('resultOnly must be boolean');
   if (!Number.isFinite(cfg.los) || cfg.los < 1 || cfg.los > 99) throw new RangeError('los must be between 1 and 99 yards');
@@ -119,6 +124,12 @@ function validateConfig(input) {
   const roles = allRoleKeys(cfg.front);
   for (const label of ['ratingOverrides', 'playerIds', 'initialPositions', 'preSnapVelocity', 'massOverrides']) {
     for (const key of Object.keys(cfg[label])) if (!roles.has(key)) throw new TypeError(`${label} contains unknown role ID ${key}`);
+  }
+  if (cfg.assignments != null) {
+    if (!cfg.assignments || typeof cfg.assignments !== 'object' || Array.isArray(cfg.assignments)) throw new TypeError('assignments must be an object keyed by role ID');
+    const assignmentRoles = new Set(Object.keys(cfg.assignments));
+    for (const role of roles) if (!assignmentRoles.has(role)) throw new TypeError(`missing run assignment: ${role}`);
+    for (const role of assignmentRoles) if (!roles.has(role)) throw new TypeError(`run assignment contains unknown role ID ${role}`);
   }
   for (const [key, patch] of Object.entries(cfg.ratingOverrides)) {
     if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new TypeError(`ratings for ${key} must be an object`);
@@ -275,6 +286,10 @@ export function simulateInsideZone(options = {}) {
     p.pose = ['LT', 'LG', 'C', 'RG', 'RT', 'LDE', 'LDT', 'RDT', 'RDE', 'NT'].includes(info.slot) ? POSE.STANCE : POSE.RUN;
     p.ai.assignment = 'align';
     p.ai.decision = 'read snap';
+    p.ai.playAssignment = cfg.assignments?.[info.roleKey] ?? null;
+    if (p.ai.playAssignment) W.event('assignment_executed', {
+      player_id: p.id, role: p.roleKey, task: p.ai.playAssignment,
+    });
     byRole.set(info.roleKey, p);
     (info.team === 'O' ? offense : defense).push(p);
     roster.push({ id: p.id, team: p.team, slot: p.slot, roleKey: p.roleKey });
@@ -332,7 +347,17 @@ export function simulateInsideZone(options = {}) {
   };
 
   for (const p of offense) {
-    if (['LT', 'LG', 'C', 'RG', 'RT'].includes(p.slot)) {
+    const task = p.ai.playAssignment;
+    if (task?.kind === 'zone_block') {
+      p.ai.zoneL = RUN_GAP_LATERAL[task.track_gap] * side;
+      setIntent(p, `zone track ${task.track_gap}`, 'step to the assigned track and identify the first-level threat');
+    } else if (task?.kind === 'runner') {
+      p.ai.aimingLane = RUN_GAP_LATERAL[task.aiming_gap] * side;
+      setIntent(p, `press ${task.aiming_gap} aiming gap`, 'read current daylight after securing the handoff');
+    } else if (task?.kind === 'block') {
+      p.ai.blockTargetRole = task.target_slot;
+      setIntent(p, `block assigned ${task.target_slot}`, 'close space and engage the live assigned defender');
+    } else if (['LT', 'LG', 'C', 'RG', 'RT'].includes(p.slot)) {
       p.ai.zoneL = ({ LT: 2.25, LG: 1.12, C: 0, RG: -1.12, RT: -2.25 })[p.slot];
       setIntent(p, `inside-zone ${p.slot} track`, 'step laterally and identify first-level threat');
     } else if (p === rb) setIntent(p, 'press inside-zone aiming point', 'meet the quarterback at the mesh');
@@ -341,13 +366,16 @@ export function simulateInsideZone(options = {}) {
     else setIntent(p, 'stalk assigned perimeter defender', 'close space without looking past the live defender');
   }
   for (const p of defense) {
+    const task = p.ai.playAssignment;
     if (p.info.group === 'DL') {
-      p.ai.gapL = lOf(p);
+      p.ai.gapL = task?.kind === 'gap_fit' ? RUN_GAP_LATERAL[task.gap] * side : lOf(p);
       setIntent(p, `attack ${gapName(p.ai.gapL, side)} gap`, 'read the backfield and control assigned gap');
     } else if (p.info.group === 'LB') {
-      p.ai.gapL = ({ WILL: -2.1, MIKE: 0, SAM: 2.1, LOLB: -3.5, ROLB: 3.5 })[p.slot] ?? 0;
+      p.ai.gapL = task?.kind === 'gap_fit' ? RUN_GAP_LATERAL[task.gap] * side
+        : ({ WILL: -2.1, MIKE: 0, SAM: 2.1, LOLB: -3.5, ROLB: 3.5 })[p.slot] ?? 0;
       setIntent(p, `fit ${gapName(p.ai.gapL, side)} gap`, 'key the guard and stay square');
     } else {
+      if (task?.kind === 'run_support') p.ai.runSupport = task.responsibility;
       setIntent(p, p.slot === 'FS' ? 'deep run support' : p.slot === 'SS' ? 'alley run support' : 'outside contain', 'read receiver, then fit the run');
     }
   }
@@ -398,6 +426,8 @@ export function simulateInsideZone(options = {}) {
   function chooseBlockTarget(p) {
     const lane = p.slot === 'TE' ? side * 4.3 : p.slot.startsWith('WR') ? lOf(p) : p.ai.zoneL + side * 0.18;
     const current = p.ai.blockOn;
+    const assigned = p.ai.blockTargetRole ? get(p.ai.blockTargetRole) : null;
+    if (assigned && !assigned.down && (!assigned.engaged || assigned.engaged === p)) return assigned;
     const perimeterBlocker = p.info.group === 'WR';
     const targetScore = (q) => {
       const lateral = Math.abs(lOf(q) - lane);
@@ -478,7 +508,8 @@ export function simulateInsideZone(options = {}) {
       const cutCost = Math.abs(lane - currentL) * (0.60 - (rb.R.AGI ?? 60) * 0.0021);
       const readSkill = 0.78 + (rb.R.BCV ?? 60) * 0.003;
       const playsideBias = -side * lane * 0.16;
-      return { lane, score: threat * 1.9 * readSkill - support * 0.58 + cutCost + playsideBias };
+      const aimingCost = rb.ai.aimingLane == null ? 0 : Math.abs(lane - rb.ai.aimingLane) * 0.55;
+      return { lane, score: threat * 1.9 * readSkill - support * 0.58 + cutCost + playsideBias + aimingCost };
     }).sort((a, b) => a.score - b.score || Math.abs(a.lane - side * 1.15) - Math.abs(b.lane - side * 1.15));
     return scored;
   }
@@ -554,11 +585,12 @@ export function simulateInsideZone(options = {}) {
     }
     const forward = fOf(p);
     if (p.ai.nextRead == null || W.t >= p.ai.nextRead) {
-      const next = pickLane();
+      const firstAssignedRead = p.ai.lane == null && p.ai.aimingLane != null;
+      const next = firstAssignedRead ? p.ai.aimingLane : pickLane();
       if (p.ai.lane == null || (!p.ai.laneLocked && W.t >= (p.ai.laneHoldUntil ?? 0)
           && Math.abs(next - p.ai.lane) > 0.8 && laneSwitchHasAdvantage(next))) {
         p.ai.lane = next;
-        p.ai.laneHoldUntil = W.t + 0.18;
+        p.ai.laneHoldUntil = W.t + (firstAssignedRead ? 0.34 : 0.18);
         W.event('lane_read', { carrier_id: p.id, lane_local_yards: next, time: W.t });
       }
       if (forward >= 0.8) p.ai.laneLocked = true;
@@ -669,8 +701,9 @@ export function simulateInsideZone(options = {}) {
         setIntent(p, `fit ${gapName(p.ai.gapL, side)} gap`, carrier ? 'flow downhill to the observed carrier path' : 'close the line of scrimmage and read the mesh');
       }
     } else {
-      const isDeep = p.slot === 'FS';
-      const isOutside = p.slot === 'LCB' || p.slot === 'RCB';
+      const support = p.ai.runSupport;
+      const isDeep = support ? support === 'deep' : p.slot === 'FS';
+      const isOutside = support ? support === 'corner' : p.slot === 'LCB' || p.slot === 'RCB';
       const assignedWR = p.ai.coveredWR;
       const visibleRunCue = W.ball.state === 'held' && W.ball.holder === rb && rb.hasBall
         && (rb.speed / YD > 0.35 || offense.some((q) => q.info.group === 'OL' && fOf(q) > 0.05 && q.speed / YD > 0.45));
@@ -727,7 +760,7 @@ export function simulateInsideZone(options = {}) {
         fraction = 0.72 + 0.25 * (1 - leverage);
         assignment = 'top-down safety pursuit';
         decision = 'maintain depth and close the alley from above the runner';
-      } else if (p.slot === 'SS') {
+      } else if (support === 'alley' || (!support && p.slot === 'SS')) {
         const onRunSide = p.ai.outsideSign * carrierL > 0;
         const ahead = onRunSide ? 0.65 : 1.8;
         const leverageL = onRunSide ? p.ai.outsideSign * 1.9 : carrierL * 0.72 - carrierL;
@@ -738,6 +771,13 @@ export function simulateInsideZone(options = {}) {
         decision = onRunSide
           ? 'fit inside the corner force and square to the runner'
           : 'scrape across while preserving the cutback angle';
+      } else if (support === 'force') {
+        const onRunSide = p.ai.outsideSign * carrierL > 0;
+        targetF = Math.max(carrierF + (onRunSide ? 0.9 : 2.1) * leverage, leadF);
+        targetL = carrierL + p.ai.outsideSign * (onRunSide ? 3.1 : 0.8) * leverage;
+        fraction = 0.82 + 0.16 * (1 - leverage);
+        assignment = onRunSide ? 'outside force and contain' : 'backside force and cutback fit';
+        decision = onRunSide ? 'keep outside leverage and spill the runner inward' : 'close the cutback while protecting the edge';
       } else {
         targetF = Math.max(carrierF + 0.45 * leverage, leadF);
         targetL = carrierL + p.ai.outsideSign * leverage;

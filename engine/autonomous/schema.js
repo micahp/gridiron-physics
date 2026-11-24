@@ -123,10 +123,13 @@ export function validatePlayInput(input) {
   if (call.direction !== 'left' && call.direction !== 'right') throw new RangeError('offense.call.direction must be left or right');
   if (!SNAP_TYPES.has(call.snap_type)) throw new RangeError(`unsupported snap type: ${call.snap_type}`);
   if (call.family === 'pass' && call.snap_type !== 'shotgun') throw new RangeError('quick passing is implemented from the shotgun only');
-  if ((call.concept === 'assigned') !== (input.assignments != null)) {
-    throw new RangeError('assigned concept requires top-level assignments; other concepts do not accept them');
+  if (call.concept === 'assigned' && input.assignments == null) {
+    throw new RangeError('assigned concept requires top-level assignments');
   }
-  if (input.assignments) validateAssignments(input.assignments, { executable: true });
+  if (input.assignments && call.family === 'pass' && call.concept !== 'assigned') {
+    throw new RangeError('custom passing assignments require the assigned concept');
+  }
+  if (input.assignments) validateAssignments(input.assignments, { executable: true, family: call.family });
   if (input.behavior_mode != null && (call.concept !== 'assigned' || !['retro', 'detailed'].includes(input.behavior_mode))) {
     throw new RangeError('behavior_mode is supported for assigned calls: retro or detailed');
   }

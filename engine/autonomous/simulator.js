@@ -13,6 +13,20 @@ const DEFENSE_SLOTS = ['LEDGE', 'LDT', 'RDT', 'REDGE', 'MLB', 'WLB', 'NB', 'LCB'
 // The shared roster aligns nickel personnel for both nickel over and under.
 const RUSH_FRONT = { nickel_over: 'nickel', nickel_under: 'nickel', nickel: 'nickel', over: 'over', under: 'under', even: 'even', odd: 'odd', bear: 'bear' };
 
+function translateRunAssignments(assignments) {
+  if (!assignments) return null;
+  const defense = {};
+  for (const [slot, task] of Object.entries(assignments.defense)) {
+    const role = DEFENSE_SLOT_TO_ROSTER[slot] ?? slot;
+    defense[`D.${role}`] = { ...task };
+  }
+  const offense = Object.fromEntries(Object.entries(assignments.offense).map(([slot, task]) => [
+    `O.${slot}`,
+    task.target_slot ? { ...task, target_slot: `D.${DEFENSE_SLOT_TO_ROSTER[task.target_slot] ?? task.target_slot}` } : { ...task },
+  ]));
+  return { ...offense, ...defense };
+}
+
 function translation(map, toRoster) {
   if (!toRoster) return map;
   const out = {};
@@ -70,6 +84,7 @@ export function scenarioFromCall(call) {
         ratingOverrides: keep(translation(ratingOverrides, true)),
         massOverrides: keep(translation(massOverrides, true)),
         playerIds: keep(translation(playerIds, true)),
+        ...(call.assignments ? { assignments: translateRunAssignments(call.assignments) } : {}),
       },
     };
   }

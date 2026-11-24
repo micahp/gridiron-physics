@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
-import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
+import { exampleAssignments, exampleRunAssignments } from '../engine/autonomous/example-assignments.js';
 import { buildSampleCall } from './autonomous-fixtures.mjs';
 const digest = (v) => createHash('sha256').update(JSON.stringify(v, (_k, x) => ArrayBuffer.isView(x) ? Array.from(x) : x)).digest('hex');
 for (const [options, expected] of [
@@ -60,4 +60,29 @@ const slowRun = simulateAutonomousPlay(slow), fastRun = simulateAutonomousPlay(f
 const wrIndex = slowRun.trajectory.roster.findIndex((p) => p.id === receiver);
 assert.notDeepEqual([...slowRun.trajectory.frames[25].slice(wrIndex * 6, wrIndex * 6 + 2)],
   [...fastRun.trajectory.frames[25].slice(wrIndex * 6, wrIndex * 6 + 2)], 'speed changes route movement');
+
+const runCall = buildSampleCall({ family: 'run', concept: 'inside_zone', direction: 'right' });
+runCall.assignments = exampleRunAssignments('right');
+const runResult = simulateAutonomousPlay(runCall);
+assert.equal(runResult.status, 'complete');
+assert.deepEqual(runResult.call.assignments, runCall.assignments);
+assert.equal(runResult.diagnostics.reconciliation.ok, true);
+const executed = runResult.events.filter((event) => event.type === 'assignment_executed');
+assert.equal(executed.length, 22, 'each player receives one executable run assignment');
+assert.deepEqual(new Set(executed.map((event) => event.role)), new Set(runResult.trajectory.roster.map((player) => player.roleKey)));
+const atFrame = (record, role, frame = 36) => {
+  const index = record.trajectory.roster.findIndex((player) => player.roleKey === role);
+  return [...record.trajectory.frames[frame].slice(index * 6, index * 6 + 2)];
+};
+for (const [mutate, role, label] of [
+  [(call) => { call.assignments.offense.RB.aiming_gap = 'backside_c'; }, 'O.RB', 'runner aiming gap'],
+  [(call) => { call.assignments.offense.LT.track_gap = 'play_side_a'; }, 'O.LT', 'lineman track gap'],
+  [(call) => { call.assignments.offense.WR1.target_slot = 'RCB'; }, 'O.WR1', 'perimeter block target'],
+  [(call) => { call.assignments.defense.MLB.gap = 'play_side_c'; }, 'D.MIKE', 'linebacker gap fit'],
+]) {
+  const changed = structuredClone(runCall);
+  mutate(changed);
+  const changedResult = simulateAutonomousPlay(changed);
+  assert.notDeepEqual(atFrame(changedResult, role), atFrame(runResult, role), `${label} changes assigned-player movement`);
+}
 console.log('assigned routes, three composed concepts, coverage response and legacy replay parity passed');

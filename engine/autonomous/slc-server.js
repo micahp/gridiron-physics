@@ -2,7 +2,7 @@
 import { createInterface } from 'node:readline';
 import { performance } from 'node:perf_hooks';
 import { simulateAutonomousPlay } from './simulator.js';
-import { exampleAssignments } from './example-assignments.js';
+import { exampleAssignments, exampleRunAssignments } from './example-assignments.js';
 
 const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
 for await (const line of input) {
@@ -13,6 +13,7 @@ for await (const line of input) {
     let value;
     if (request.op === 'play') value = simulateAutonomousPlay(request.call);
     else if (request.op === 'example_assignments') value = exampleAssignments(request.concept, request.coverage);
+    else if (request.op === 'example_run_assignments') value = exampleRunAssignments(request.direction);
     else throw new RangeError('unsupported operation');
     const response = { id: request.id ?? null, ok: true, value, engine_ms: performance.now() - start };
     process.stdout.write(JSON.stringify(response, (_key, v) => ArrayBuffer.isView(v) ? Array.from(v) : v) + '\n');
