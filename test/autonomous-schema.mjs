@@ -38,7 +38,8 @@ assert.throws(() => validatePlayInput(mutate((s) => { s.offense.call.concept = '
 assert.throws(() => validatePlayInput(mutate((s) => { s.defense.call.front = 'dime_stack'; })), /unsupported defensive front/);
 assert.throws(() => validatePlayInput(mutate((s) => { s.defense.call.coverage = 'cover_0'; })), /unsupported coverage/);
 assert.throws(() => validatePlayInput(mutate((s) => { delete s.player_profiles[s.offense.lineup.TE]; })), /required for every declared player/);
-assert.throws(() => validatePlayInput(mutate((s) => { s.player_profiles[s.offense.lineup.TE].physics.vmax = Number.NaN; })), /finite/);
+assert.throws(() => validatePlayInput(mutate((s) => { s.player_profiles[s.offense.lineup.TE].physics.vmax = 8; })), /unsupported physical parameter/);
+assert.throws(() => validatePlayInput(mutate((s) => { s.player_profiles[s.offense.lineup.TE].physics.mass = Number.NaN; })), /finite/);
 assert.throws(() => validatePlayInput(mutate((s) => { s.player_profiles[s.offense.lineup.TE].physics.mass = 500; })), /50 to 200/);
 assert.throws(() => validatePlayInput(mutate((s) => { s.player_profiles[s.offense.lineup.TE].ratings.SPD = 120; })), /1 to 99/);
 assert.throws(() => validatePlayInput(mutate((s) => { s.player_profiles[s.offense.lineup.TE].ratings.FAKE = 50; })), /unsupported rating/);

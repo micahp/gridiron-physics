@@ -16,10 +16,10 @@ const unit = (x, y) => {
 };
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'runSide', 'front', 'ratingOverrides',
-  'playerIds', 'initialPositions', 'preSnapVelocity', 'massOverrides',
+  'playerIds', 'initialPositions', 'preSnapVelocity', 'massOverrides', 'resultOnly',
 ]);
 const RATING_NAMES = new Set([
-  'SPD', 'ACC', 'AGI', 'STR', 'AWR', 'RBK', 'IBL', 'PBK', 'BSH', 'PMV',
+  'SPD', 'ACC', 'AGI', 'STR', 'AWR', 'RBK', 'IBL', 'PBK', 'BSH', 'PMV', 'THA',
   'FMV', 'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC', 'CTH', 'CIT',
 ]);
 
@@ -104,7 +104,9 @@ function validateConfig(input) {
     initialPositions: input.initialPositions ?? {},
     preSnapVelocity: input.preSnapVelocity ?? {},
     massOverrides: input.massOverrides ?? {},
+    resultOnly: input.resultOnly ?? false,
   };
+  if (typeof cfg.resultOnly !== 'boolean') throw new TypeError('resultOnly must be boolean');
   if (!Number.isFinite(cfg.los) || cfg.los < 1 || cfg.los > 99) throw new RangeError('los must be between 1 and 99 yards');
   if (cfg.dir !== 1 && cfg.dir !== -1) throw new RangeError('dir must be 1 or -1');
   if (!Number.isFinite(cfg.ballY) || cfg.ballY < 1 || cfg.ballY > FIELD_W_YD - 1) throw new RangeError('ballY must be inside the field');
@@ -799,7 +801,7 @@ export function simulateInsideZone(options = {}) {
     }
   }
 
-  record();
+  if (!cfg.resultOnly) record();
   nextRecord = 1 / REC_HZ;
   while (W.t < MAX_SECONDS && !terminal) {
     if (!snapped) {
@@ -849,7 +851,7 @@ export function simulateInsideZone(options = {}) {
       const spot = maxForward || { x: W.ball.x, y: W.ball.y };
       finish('tackle', spot);
     }
-    if (!terminal && W.t >= nextRecord - 1e-9) {
+    if (!cfg.resultOnly && !terminal && W.t >= nextRecord - 1e-9) {
       record();
       nextRecord += 1 / REC_HZ;
     }
@@ -859,7 +861,7 @@ export function simulateInsideZone(options = {}) {
     for (const engagement of [...W.engagements]) W.disengage(engagement);
     W.event('simulation_failure', { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS });
   }
-  if (frames.length === 0 || W.t - ((frames.length - 1) / REC_HZ) > 1e-6) record();
+  if (!cfg.resultOnly && (frames.length === 0 || W.t - ((frames.length - 1) / REC_HZ) > 1e-6)) record();
   for (const row of activeBlock.values()) row.end = W.t;
   const spot = terminal?.spot ?? null;
   const yardsGained = spot ? (spot.x - cfg.los) * dir : null;
@@ -879,7 +881,7 @@ export function simulateInsideZone(options = {}) {
     schema_version: 'gridiron.autonomous-inside-zone.v1', mode: 'autonomous', play_call: 'inside_zone',
     seed: String(cfg.seed), front: cfg.front, run_side: cfg.runSide, direction: dir,
     line_of_scrimmage: cfg.los, ball_y: cfg.ballY, roster, hz: REC_HZ, t0: 0,
-    stride: roster.length * 6 + 6, frames, trajectories,
+    stride: roster.length * 6 + 6, frames: cfg.resultOnly ? null : frames, trajectories,
     events: W.events,
     terminal: terminal ? { ...terminal, yards_gained: yardsGained, touchdown: terminal.reason === 'touchdown' } : null,
     resolved: !!terminal, carrier_id: carrier?.id ?? null,

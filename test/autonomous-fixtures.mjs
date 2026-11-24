@@ -33,6 +33,9 @@ export function buildSampleCall(overrides = {}) {
   const profiles = {};
   for (const [slot, id] of Object.entries(offenseLineup)) profiles[id] = profileFor(slot, 'O');
   for (const [slot, id] of Object.entries(defenseLineup)) profiles[id] = profileFor(slot, 'D');
+  if (overrides.concept === 'assigned') {
+    for (const profile of Object.values(profiles)) for (const key of ['IBL', 'BCV', 'TRK', 'CIT']) delete profile.ratings[key];
+  }
   return {
     schema_version: PLAY_SCHEMA,
     mode: 'autonomous_from_snap',

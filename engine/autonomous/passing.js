@@ -13,6 +13,7 @@ import { createInsideZoneRoster } from '../autonomous-run.js';
 import { estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
 import { routeOffsets } from '../routes.js';
 import { validateAssignments } from './assignments.js';
+import { retroDecisionInterval } from './retro-cadence.js';
 
 const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
@@ -33,7 +34,7 @@ const FRONT_TO_ROSTER = { nickel_over: 'nickel', nickel_under: 'nickel', nickel:
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
-  'assignments', 'behaviorMode',
+  'assignments', 'behaviorMode', 'resultOnly',
 ]);
 
 function validateConfig(input) {
@@ -57,7 +58,9 @@ function validateConfig(input) {
     defenseTeam: input.defenseTeam ?? 'DEF',
     assignments: input.assignments ?? null,
     behaviorMode: input.behaviorMode ?? (input.assignments ? 'retro' : 'detailed'),
+    resultOnly: input.resultOnly ?? false,
   };
+  if (typeof cfg.resultOnly !== 'boolean') throw new TypeError('resultOnly must be boolean');
   if (!['slant_flat', 'assigned'].includes(cfg.concept)) throw new RangeError(`unsupported passing concept: ${cfg.concept}`);
   if ((cfg.concept === 'assigned') !== (cfg.assignments != null)) throw new RangeError('assigned concept requires assignments');
   if (cfg.assignments) validateAssignments(cfg.assignments, { executable: true });
@@ -488,7 +491,7 @@ export function simulatePassPlay(options = {}) {
     const from = { x: W.ball.x, y: W.ball.y, z: 1.45 };
     // Location error is the quarterback's, not the receiver's: it grows with
     // throw distance and pressure and shrinks with accuracy.
-    const accuracy = qb.R.ACC ?? qb.R.THN ?? qb.R.AWR ?? 70;
+    const accuracy = cfg.assignments ? (qb.R.THA ?? 70) : (qb.R.ACC ?? qb.R.THN ?? qb.R.AWR ?? 70);
     const distanceYd = Math.hypot(best.aim.x - qb.p.x, best.aim.y - qb.p.y) / YD;
     const sigma = clamp(0.28 + distanceYd * 0.026 + clamp(2.0 - best.pressure, 0, 1.6) * 0.30
       + clamp((72 - accuracy) * 0.012, -0.12, 0.35), 0.12, 1.5);
@@ -509,6 +512,7 @@ export function simulatePassPlay(options = {}) {
     W.ball.thrownAt = W.t;
     W.event('throw', {
       quarterback_id: qb.id, target_id: best.receiver.id,
+      ...(cfg.assignments ? { accuracy_rating: accuracy, accuracy_sigma_yards: sigma } : {}),
       separation_yards: best.separation, lane_risk: best.lane,
       pressure_yards: best.pressure, flight_seconds: best.flight,
       target_observation_age_seconds: best.observationAge,
@@ -977,6 +981,26 @@ export function simulatePassPlay(options = {}) {
 
   // ---------------------------------------------------------------- schedule
   const brains = (p) => {
+    if (cfg.assignments && cfg.behaviorMode === 'retro') {
+      if (p.down) { p.dv = { x: 0, y: 0 }; return; }
+      // Strategic decisions use a countdown. Physics keeps integrating the last
+      // intent on every step. Possession, snap and ball-phase transitions wake
+      // every player immediately; the terminal loop stops at the whistle.
+      const phase = `${snapped}:${received}:${W.ball.state}:${carrier?.id ?? ''}:${!!tackle}`;
+      const interrupted = p.ai.lastPhase !== phase;
+      if (interrupted || W.t + 1e-9 >= (p.ai.nextDecision ?? 0)) {
+        const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
+        const interval = retroDecisionInterval(awareness);
+        p.ai.lastPhase = phase;
+        p.ai.nextDecision = W.t + interval;
+        p.ai.tickCount = (p.ai.tickCount ?? 0) + 1;
+        p.ai.interruptCount = (p.ai.interruptCount ?? 0) + (interrupted ? 1 : 0);
+        if (p === qb && received) qbDecision();
+        if (p.team === 'O') offenseBrain(p);
+        else defenseBrain(p);
+      }
+      return;
+    }
     if (W.t + 1e-9 >= (p.ai.nextDecision ?? 0)) {
       p.ai.nextDecision = W.t + 1 / DECISION_HZ;
       if (!p.down) {
@@ -1043,7 +1067,7 @@ export function simulatePassPlay(options = {}) {
   }
 
   // --------------------------------------------------------------- main loop
-  record();
+  if (!cfg.resultOnly) record();
   nextRecord = 1 / REC_HZ;
   while (W.t < MAX_SECONDS && !terminal) {
     if (!snapped) {
@@ -1083,7 +1107,7 @@ export function simulatePassPlay(options = {}) {
       const spot = maxForward || { x: W.ball.x, y: W.ball.y };
       finish(tackle === sack ? 'sack' : 'tackle', spot);
     }
-    if (!terminal && W.t >= nextRecord - 1e-9) {
+    if (!cfg.resultOnly && !terminal && W.t >= nextRecord - 1e-9) {
       record();
       nextRecord += 1 / REC_HZ;
     }
@@ -1101,7 +1125,7 @@ export function simulatePassPlay(options = {}) {
   }
   // The final frame belongs to the instant of the whistle, not to the step
   // that finished integrating after the ball went dead.
-  if (frames.length === 0 || W.t - ((frames.length - 1) / REC_HZ) > 1e-6) record(terminal?.time ?? W.t);
+  if (!cfg.resultOnly && (frames.length === 0 || W.t - ((frames.length - 1) / REC_HZ) > 1e-6)) record(terminal?.time ?? W.t);
   for (const row of activeBlock.values()) row.end = W.t;
 
   const spot = terminal?.spot ?? null;
@@ -1126,7 +1150,7 @@ export function simulatePassPlay(options = {}) {
     schema_version: 'gridiron.autonomous-pass.v1', mode: 'autonomous', play_call: cfg.concept,
     seed: String(cfg.seed), front: cfg.front, coverage: cfg.coverage, direction: cfg.direction, dir,
     line_of_scrimmage: cfg.los, ball_y: cfg.ballY, roster, hz: REC_HZ, t0: 0,
-    stride: roster.length * 6 + 6, frames, trajectories,
+    stride: roster.length * 6 + 6, frames: cfg.resultOnly ? null : frames, trajectories,
     events: W.events,
     terminal: terminal ? { ...terminal, yards_gained: yardsGained, touchdown: terminal.reason === 'touchdown' } : null,
     resolved: !!terminal,
@@ -1141,6 +1165,9 @@ export function simulatePassPlay(options = {}) {
     blockers, topSpeed,
     diagnostics: {
       ...(cfg.assignments ? { behavior_mode: cfg.behaviorMode } : {}),
+      ...(cfg.assignments && cfg.behaviorMode === 'retro' ? { cadence: Object.fromEntries(W.players.map((p) => [p.id,
+        { ticks: p.ai.tickCount ?? 0, interrupts: p.ai.interruptCount ?? 0,
+          interval_seconds: retroDecisionInterval(p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60)) }])) } : {}),
       qb_perception: {
         body_heading: qb.h, gaze_heading: qb.ai.gazeHeading,
         reaction_delay_seconds: lastSeenMemory.reactionDelaySeconds,

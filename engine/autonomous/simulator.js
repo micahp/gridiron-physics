@@ -58,6 +58,7 @@ export function scenarioFromCall(call) {
     ratingOverrides,
     massOverrides,
     playerIds,
+    ...(call.output_mode === 'result_only' ? { resultOnly: true } : {}),
   };
   if (call.offense.family === 'run') {
     return {

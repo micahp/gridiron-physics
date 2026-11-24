@@ -41,7 +41,7 @@ export const SNAP_TYPES = new Set(['under_center', 'shotgun']);
 
 const RATING_NAMES = new Set([
   'SPD', 'ACC', 'AGI', 'STR', 'AWR', 'RBK', 'IBL', 'PBK', 'BSH', 'PMV', 'FMV',
-  'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC', 'CTH', 'CIT',
+  'TAK', 'BTK', 'ELU', 'BCV', 'TRK', 'PUR', 'CAR', 'PRC', 'CTH', 'CIT', 'THA',
 ]);
 
 /** Throw if any key anywhere in the payload names a realized outcome. */
@@ -130,6 +130,7 @@ export function validatePlayInput(input) {
   if (input.behavior_mode != null && (call.concept !== 'assigned' || !['retro', 'detailed'].includes(input.behavior_mode))) {
     throw new RangeError('behavior_mode is supported for assigned calls: retro or detailed');
   }
+  if (input.output_mode != null && !['full', 'result_only'].includes(input.output_mode)) throw new RangeError('unsupported output_mode');
 
   const dcall = requireObject(defense.call, 'defense.call');
   if (!Object.hasOwn(FRONT_MAP, dcall.front)) throw new RangeError(`unsupported defensive front: ${dcall.front}`);
@@ -140,6 +141,16 @@ export function validatePlayInput(input) {
 
   const lineups = validateLineups(offense.lineup, defense.lineup, dcall);
   const profiles = validateProfiles(input.player_profiles, lineups);
+  for (const [id, profile] of profiles) {
+    if ('THA' in profile.ratings && (call.concept !== 'assigned' || id !== lineups.offense.QB)) {
+      throw new TypeError('THA is supported only for the assigned quarterback');
+    }
+    if (call.concept === 'assigned') {
+      for (const name of ['IBL', 'BCV', 'TRK', 'CIT']) {
+        if (name in profile.ratings) throw new TypeError(`${name} is not used by assigned passing execution`);
+      }
+    }
+  }
 
   return {
     play_id: input.play_id,
@@ -162,6 +173,7 @@ export function validatePlayInput(input) {
     profiles,
     assignments: input.assignments ?? null,
     behavior_mode: input.behavior_mode ?? (input.assignments ? 'retro' : null),
+    output_mode: input.output_mode ?? 'full',
   };
 }
 
@@ -208,7 +220,7 @@ function validateProfiles(profiles, lineups) {
     const physics = profile.physics ?? {};
     if (typeof physics !== 'object' || Array.isArray(physics)) throw new TypeError(`player_profiles.${id}.physics must be an object`);
     for (const [name, value] of Object.entries(physics)) {
-      if (!['mass', 'height', 'radius', 'vmax', 'f0', 'drive', 'alat', 'reach'].includes(name)) {
+      if (name !== 'mass') {
         throw new TypeError(`unsupported physical parameter ${name} for ${id}`);
       }
       if (!finite(value) || value <= 0) throw new RangeError(`${id}.${name} must be a positive finite number`);

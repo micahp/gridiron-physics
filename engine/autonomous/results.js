@@ -72,10 +72,11 @@ export function toResultRecord(call, run) {
     },
     diagnostics: {
       ...(call.assignments ? { behavior_mode: call.behavior_mode } : {}),
+      ...(run.diagnostics?.cadence ? { cadence: run.diagnostics.cadence } : {}),
       agent_decisions: run.events.filter((e) => e.type === 'decision').map((e) => ({
         t: e.t, player_id: e.player_id, role: e.role, assignment: e.assignment, decision: e.decision,
       })),
-      physical_warnings: physicalWarnings(run),
+      physical_warnings: run.frames === null ? null : physicalWarnings(run),
       ball_spots: ballSpots(run),
       result_provenance: 'generated_from_agent_actions_and_physics',
       outcome_inputs: [],
@@ -128,14 +129,14 @@ export function reconcileResult(record) {
   if (result && (result.final_ball_spot.y_yards < 0 || result.final_ball_spot.y_yards > FIELD_W_YD)) {
     problems.push('final spot is outside the field of play');
   }
-  const frames = trajectory.frames.length;
+  const frames = trajectory.frames?.length ?? null;
   if (frames === 0) problems.push('no recorded frames');
   const last = trajectory.roster.map((p) => ({ id: p.id }));
   if (last.length !== 22) problems.push(`expected 22 recorded players, found ${last.length}`);
-  for (const frame of trajectory.frames) {
+  for (const frame of trajectory.frames ?? []) {
     if (frame.length !== trajectory.stride) { problems.push(`frame stride ${frame.length} != ${trajectory.stride}`); break; }
   }
-  if (result) {
+  if (result && frames !== null) {
     const lastT = (frames - 1) / trajectory.hz + trajectory.t0;
     if (Math.abs(lastT - result.elapsed_seconds) > 0.5) problems.push('play duration disagrees with the recorded frames');
   }
@@ -145,12 +146,12 @@ export function reconcileResult(record) {
     problems.push('tackle event carrier disagrees with the result carrier');
   }
   // Never more than one holder in any frame.
-  for (const frame of trajectory.frames) {
+  for (const frame of trajectory.frames ?? []) {
     let holders = 0;
     for (let i = 0; i < trajectory.roster.length; i++) if (frame[i * 6 + 5] === 1) holders++;
     if (holders > 1) { problems.push('more than one player holds the ball in a frame'); break; }
   }
-  return { ok: problems.length === 0, problems };
+  return { ok: problems.length === 0, problems, ...(frames === null ? { scope: 'events_only_no_frame_checks' } : {}) };
 }
 
 function round(x) {
