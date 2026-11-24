@@ -106,6 +106,10 @@ export function validatePlayInput(input) {
   if (offense.formation !== 'singleback_11') throw new RangeError('only the singleback_11 formation is supported');
 
   const call = requireObject(offense.call, 'offense.call');
+  if (input.assignments != null || offense.assignments != null || defense.assignments != null ||
+      call.assignments != null || defense.call?.assignments != null) {
+    throw new RangeError('custom assignments are not yet supported by the autonomous executor');
+  }
   if (call.family !== 'run' && call.family !== 'pass') throw new RangeError('offense.call.family must be run or pass');
   if (!RUN_CONCEPTS.has(call.concept) && !PASS_CONCEPTS.has(call.concept)) {
     throw new RangeError(`unsupported offensive concept: ${call.concept}`);

@@ -25,6 +25,8 @@ assert.ok(PROHIBITED_FIELDS.includes('endX'));
 
 // Structural rejections.
 const mutate = (fn) => { const next = structuredClone(sample); fn(next); return next; };
+assert.throws(() => validatePlayInput(mutate((s) => { s.offense.call.assignments = {}; })), /custom assignments/);
+assert.throws(() => validatePlayInput(mutate((s) => { s.defense.call.assignments = {}; })), /custom assignments/);
 assert.throws(() => validatePlayInput(mutate((s) => { s.schema_version = 'gridiron.autonomous-play.v0'; })), /schema_version/);
 assert.throws(() => validatePlayInput(mutate((s) => { s.mode = 'historical'; })), /mode must be/);
 assert.throws(() => validatePlayInput(mutate((s) => { delete s.offense.lineup.WR3; })), /exactly 11/);
