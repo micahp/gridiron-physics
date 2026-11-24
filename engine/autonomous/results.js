@@ -51,6 +51,7 @@ export function toResultRecord(call, run) {
       snap_type: call.offense.snap_type,
       front: call.defense.front,
       coverage: call.defense.coverage,
+      ...(call.assignments ? { assignments: call.assignments } : {}),
     },
     situation: call.situation,
     result,

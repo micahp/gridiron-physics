@@ -18,6 +18,7 @@ for (const concept of ['slant_flat', 'curls', 'four_verticals']) {
     const call = assigned(concept, coverage);
     const result = simulateAutonomousPlay(call);
     assert.equal(result.status, 'complete', `${concept} ${coverage}`);
+    assert.deepEqual(result.call.assignments, call.assignments, 'record the executed assignments');
     assert.equal(result.diagnostics.reconciliation.ok, true);
     assert.deepEqual(result.diagnostics.outcome_inputs, []);
     assert.equal(digest(result), digest(simulateAutonomousPlay(call)), 'deterministic replay');
