@@ -70,6 +70,7 @@ export function toResultRecord(call, run) {
       hz: run.hz,
     },
     diagnostics: {
+      ...(call.assignments ? { behavior_mode: call.behavior_mode } : {}),
       agent_decisions: run.events.filter((e) => e.type === 'decision').map((e) => ({
         t: e.t, player_id: e.player_id, role: e.role, assignment: e.assignment, decision: e.decision,
       })),
