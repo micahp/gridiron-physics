@@ -12,6 +12,8 @@ for (const [rating, property] of [['SPD','vmax'], ['ACC','f0'], ['AGI','alat'], 
   const roster = (value) => createPassRoster({ratingOverrides: {'O.WR2': {[rating]: value}}}).find((p) => p.roleKey === 'O.WR2');
   assert.ok(roster(95).physics[property] > roster(10).physics[property], `${rating} must increase ${property}`);
 }
+const massRoster = createPassRoster({massOverrides: {'O.WR2': 110}}).find((p) => p.roleKey === 'O.WR2');
+assert.equal(massRoster.physics.mass, 110);
 function call() {
   const c = buildSampleCall({family:'pass',concept:'assigned',snap_type:'shotgun',coverage:'cover_3'});
   c.assignments = exampleAssignments('slant_flat','zone');
@@ -60,11 +62,13 @@ for (let seed = 1; seed <= 16 && !verified; seed++) {
   }
 }
 assert.ok(verified, 'at least one controlled throw');
+let accelerationThrows = 0;
 for (const acceleration of [10, 95]) {
   const c = call(); c.seed = '1'; c.player_profiles[qb].ratings.ACC = acceleration;
   const event = simulateAutonomousPlay(c).events.find((e) => e.type === 'throw');
-  if (event) assert.equal(event.accuracy_rating, 70, 'ACC does not set throw accuracy');
+  if (event) { accelerationThrows++; assert.equal(event.accuracy_rating, 70, 'ACC does not set throw accuracy'); }
 }
+assert.ok(accelerationThrows > 0, 'acceleration control must include a throw');
 for (const variant of [buildSampleCall(), call()]) {
  for (const seed of ['1', '6', '1042']) {
   variant.seed = seed;
