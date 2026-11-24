@@ -11,6 +11,7 @@ import { YD, FIELD_W, FIELD_W_YD, DT, REC_HZ, CROSSBAR, GOAL_W } from './constan
 import { rng } from './rng.js';
 import { World, Player, POSE } from './world.js';
 import { solveLaunch, AERO, dragK } from './ball.js';
+import { routeWaypoints } from './routes.js';
 
 const PRE = 0.9; // seconds of pre-snap stance recorded
 const POST = 1.4; // seconds recorded after the whistle
@@ -183,19 +184,7 @@ export function simulatePlay(game, S, ctx = {}) {
   }
 
   function routeFor(slot, f0, l0, kind) {
-    const out = sgn(l0 || 1); // toward own sideline
-    const R = {
-      go: [[12, 0], [35, out * 1]],
-      curl: [[11, 0], [9.5, -out * 1]],
-      out: [[10, 0], [10.5, out * 7]],
-      dig: [[12, 0], [12, -out * 12]],
-      slant: [[2.5, 0], [8, -out * 6]],
-      flat: [[1, out * 3], [2, out * 9]],
-      post: [[11, 0], [26, -out * 10]],
-      seam: [[10, 0], [28, -out * 1]],
-      check: [[0.5, out * 2.5], [3, out * 5]],
-    }[kind];
-    return R.map(([df, dl]) => at(f0 + df, l0 + dl));
+    return routeWaypoints(kind, f0, l0, at);
   }
 
   // -------------------------------------------------------- scenario
