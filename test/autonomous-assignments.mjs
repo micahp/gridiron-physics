@@ -47,4 +47,16 @@ const zone = simulateAutonomousPlay(assigned('slant_flat', 'zone'));
 assert.notDeepEqual(man.trajectory.frames[30], zone.trajectory.frames[30], 'coverage changes movement');
 const qbEvents = (r) => r.events.filter((e) => ['qb_read', 'throw', 'throw_away'].includes(e.type));
 assert.notDeepEqual(qbEvents(man), qbEvents(zone), 'coverage changes quarterback observations or decisions');
+const detailed = assigned('curls', 'zone');
+detailed.behavior_mode = 'detailed';
+assert.equal(simulateAutonomousPlay(detailed).diagnostics.behavior_mode, 'detailed');
+const slow = assigned('slant_flat', 'zone');
+const fast = structuredClone(slow);
+const receiver = slow.offense.lineup.WR2;
+slow.player_profiles[receiver].ratings.SPD = 35;
+fast.player_profiles[receiver].ratings.SPD = 99;
+const slowRun = simulateAutonomousPlay(slow), fastRun = simulateAutonomousPlay(fast);
+const wrIndex = slowRun.trajectory.roster.findIndex((p) => p.id === receiver);
+assert.notDeepEqual([...slowRun.trajectory.frames[25].slice(wrIndex * 6, wrIndex * 6 + 2)],
+  [...fastRun.trajectory.frames[25].slice(wrIndex * 6, wrIndex * 6 + 2)], 'speed changes route movement');
 console.log('assigned routes, three composed concepts, coverage response and legacy replay parity passed');
