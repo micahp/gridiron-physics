@@ -56,8 +56,9 @@ for (const teamId of ['NE', 'CHI']) {
     book.coverage.eligible_offense_scrimmage_plays);
   assert.equal(book.coverage.defense_participation_joined + book.coverage.defense_participation_missing,
     book.coverage.eligible_defense_scrimmage_plays);
-  assert.ok(book.pregame_2026_comparison.eligible_plays > 0);
-  assert.ok(book.pregame_2026_comparison.source_ids.every((x) => Number(x.game_id.split('_')[1]) <= 6));
+  // These files were replaced by the 2025-only 32-team build. A 2026
+  // comparison is a different artifact, not a field to fabricate here.
+  assert.equal('pregame_2026_comparison' in book, false);
 }
 
 function scenario(teamId, kind, seed = 'repeatable-demo') {
