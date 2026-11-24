@@ -268,11 +268,17 @@ export class World {
       const dx = c.p.x - t.p.x, dy = c.p.y - t.p.y;
       const d = Math.hypot(dx, dy) || 1e-3;
       const rest = (t.r + c.r) * 0.75;
+      // Spring stabilization: cap the wrap force so a wrap started at a large
+      // separation cannot produce an unbounded impulse (a 3 m gap -> ~17 kN,
+      // ~200 m/s^2 on the tackler). Normal wraps at near-rest separation are
+      // unaffected; only pathological far gaps are clipped.
       const f = 7000 * (d - rest);
-      t.ext.x += (f * dx) / d;
-      t.ext.y += (f * dy) / d;
-      c.ext.x -= (f * dx) / d;
-      c.ext.y -= (f * dy) / d;
+      const fCap = 4000;
+      const fc = Math.max(-fCap, Math.min(fCap, f));
+      t.ext.x += (fc * dx) / d;
+      t.ext.y += (fc * dy) / d;
+      c.ext.x -= (fc * dx) / d;
+      c.ext.y -= (fc * dy) / d;
       // the tackler's weight hanging on the carrier: strong drag
       const drag = 0.6 * t.m * G * 0.5 * (w.grip / w.resist);
       const cs = c.speed;
