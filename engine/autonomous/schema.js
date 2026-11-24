@@ -5,6 +5,7 @@
 // field that carries a realized outcome (yards gained, intended end spot,
 // credited tackler, completion flag) is rejected rather than ignored, so a
 // caller cannot smuggle a predetermined result into the engine.
+import { validateAssignments } from './assignments.js';
 export const PLAY_SCHEMA = 'gridiron.autonomous-play.v1';
 export const RESULT_SCHEMA = 'gridiron.autonomous-result.v1';
 
@@ -34,7 +35,7 @@ export const FRONT_MAP = {
 };
 
 export const RUN_CONCEPTS = new Set(['inside_zone']);
-export const PASS_CONCEPTS = new Set(['slant_flat']);
+export const PASS_CONCEPTS = new Set(['slant_flat', 'assigned']);
 export const COVERAGES = new Set(['cover_1', 'cover_3']);
 export const SNAP_TYPES = new Set(['under_center', 'shotgun']);
 
@@ -106,9 +107,8 @@ export function validatePlayInput(input) {
   if (offense.formation !== 'singleback_11') throw new RangeError('only the singleback_11 formation is supported');
 
   const call = requireObject(offense.call, 'offense.call');
-  if (input.assignments != null || offense.assignments != null || defense.assignments != null ||
-      call.assignments != null || defense.call?.assignments != null) {
-    throw new RangeError('custom assignments are not yet supported by the autonomous executor');
+  if (offense.assignments != null || defense.assignments != null || call.assignments != null || defense.call?.assignments != null) {
+    throw new RangeError('custom assignments must be provided at the top level');
   }
   if (call.family !== 'run' && call.family !== 'pass') throw new RangeError('offense.call.family must be run or pass');
   if (!RUN_CONCEPTS.has(call.concept) && !PASS_CONCEPTS.has(call.concept)) {
@@ -123,6 +123,13 @@ export function validatePlayInput(input) {
   if (call.direction !== 'left' && call.direction !== 'right') throw new RangeError('offense.call.direction must be left or right');
   if (!SNAP_TYPES.has(call.snap_type)) throw new RangeError(`unsupported snap type: ${call.snap_type}`);
   if (call.family === 'pass' && call.snap_type !== 'shotgun') throw new RangeError('quick passing is implemented from the shotgun only');
+  if ((call.concept === 'assigned') !== (input.assignments != null)) {
+    throw new RangeError('assigned concept requires top-level assignments; other concepts do not accept them');
+  }
+  if (input.assignments) validateAssignments(input.assignments, { executable: true });
+  if (input.behavior_mode != null && (call.concept !== 'assigned' || !['retro', 'detailed'].includes(input.behavior_mode))) {
+    throw new RangeError('behavior_mode is supported for assigned calls: retro or detailed');
+  }
 
   const dcall = requireObject(defense.call, 'defense.call');
   if (!Object.hasOwn(FRONT_MAP, dcall.front)) throw new RangeError(`unsupported defensive front: ${dcall.front}`);
@@ -153,6 +160,8 @@ export function validatePlayInput(input) {
       lineup: lineups.defense,
     },
     profiles,
+    assignments: input.assignments ?? null,
+    behavior_mode: input.behavior_mode ?? (input.assignments ? 'retro' : null),
   };
 }
 

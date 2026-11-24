@@ -11,6 +11,8 @@ import { AERO, solveLaunch } from '../ball.js';
 import { Player, POSE, World } from '../world.js';
 import { createInsideZoneRoster } from '../autonomous-run.js';
 import { estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
+import { routeOffsets } from '../routes.js';
+import { validateAssignments } from './assignments.js';
 
 const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
@@ -31,6 +33,7 @@ const FRONT_TO_ROSTER = { nickel_over: 'nickel', nickel_under: 'nickel', nickel:
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
+  'assignments', 'behaviorMode',
 ]);
 
 function validateConfig(input) {
@@ -52,8 +55,13 @@ function validateConfig(input) {
     massOverrides: input.massOverrides ?? {},
     offenseTeam: input.offenseTeam ?? 'OFF',
     defenseTeam: input.defenseTeam ?? 'DEF',
+    assignments: input.assignments ?? null,
+    behaviorMode: input.behaviorMode ?? (input.assignments ? 'retro' : 'detailed'),
   };
-  if (cfg.concept !== 'slant_flat') throw new RangeError(`unsupported passing concept: ${cfg.concept}`);
+  if (!['slant_flat', 'assigned'].includes(cfg.concept)) throw new RangeError(`unsupported passing concept: ${cfg.concept}`);
+  if ((cfg.concept === 'assigned') !== (cfg.assignments != null)) throw new RangeError('assigned concept requires assignments');
+  if (cfg.assignments) validateAssignments(cfg.assignments, { executable: true });
+  if (!['retro', 'detailed'].includes(cfg.behaviorMode)) throw new RangeError('unsupported behavior mode');
   if (cfg.direction !== 'left' && cfg.direction !== 'right') throw new RangeError('direction must be left or right');
   if (!FRONT_TO_ROSTER[cfg.front]) throw new RangeError(`unsupported passing front: ${cfg.front}`);
   if (cfg.coverage !== 'cover_1' && cfg.coverage !== 'cover_3') throw new RangeError(`unsupported coverage: ${cfg.coverage}`);
@@ -149,6 +157,7 @@ export function simulatePassPlay(options = {}) {
     const p = W.add(new Player(info, info.team, info.slot));
     p.roleKey = info.roleKey;
     const spot = formation(info);
+    p.ai.routeStart = spot;
     p.p = { x: at(spot.f, spot.l).x, y: at(spot.f, spot.l).y };
     p.h = info.team === 'O' ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? Math.PI : 0);
     const blockRating = info.team === 'O' ? (p.R.PBK ?? p.R.RBK ?? 60) : (p.R.BSH ?? Math.max(p.R.PMV ?? 50, p.R.FMV ?? 50));
@@ -167,7 +176,8 @@ export function simulatePassPlay(options = {}) {
   const xRec = get('O.WR1');
   const center = get('O.C');
   const lastSeenMemory = new ObservationMemory({ reactionDelaySeconds: QB_REACTION_DELAY_SECONDS });
-  const qbObservationTargets = [...new Set([z, slotRec, rb, ...defense].filter(Boolean))];
+  const routeReceivers = cfg.assignments ? offense.filter((p) => cfg.assignments.offense[p.slot].kind === 'route') : [z, slotRec, rb];
+  const qbObservationTargets = [...new Set([...routeReceivers, ...defense].filter(Boolean))];
   const defenderBallObservations = new Map();
   qb.ai.gazeHeading = dir > 0 ? 0 : Math.PI;
   let observedBallPredictions = 0;
@@ -225,7 +235,10 @@ export function simulatePassPlay(options = {}) {
   // ------------------------------------------------------------- assignments
   const linemen = offense.filter((p) => ['LT', 'LG', 'C', 'RG', 'RT'].includes(p.slot));
   for (const p of offense) {
-    if (linemen.includes(p)) setIntent(p, `pass set ${p.slot}`, 'protect the inside lane and pick up the nearest rusher');
+    const task = cfg.assignments?.offense[p.slot];
+    if (task?.kind === 'route') setIntent(p, `run ${task.route} route`, task.check_release ? 'check protection before releasing' : 'follow route landmarks');
+    else if (task?.kind === 'block') setIntent(p, `pass set ${p.slot}`, 'protect the pocket');
+    else if (linemen.includes(p)) setIntent(p, `pass set ${p.slot}`, 'protect the inside lane and pick up the nearest rusher');
     else if (p === te) setIntent(p, 'protect the edge', 'set on the edge rusher before releasing');
     else if (p === rb) setIntent(p, 'check protection then checkdown', 'scan the rush before releasing to the checkdown');
     else if (p === qb) setIntent(p, 'take the snap and drop', 'read separation and pressure after the drop');
@@ -262,6 +275,14 @@ export function simulatePassPlay(options = {}) {
       const zone = zoneAssign.get(p.slot);
       if (zone) setIntent(p, `cover the ${coverageRole(p.slot)} zone`, 'carry the zone landmark and break on the throw');
       else setIntent(p, 'rush the passer', 'win your gap and get to the quarterback');
+    }
+  }
+  if (cfg.assignments) {
+    for (const p of defense) {
+      const task = cfg.assignments.defense[p.slot];
+      const description = task.kind === 'man' ? `cover ${task.target_slot} man` :
+        task.kind === 'zone' ? 'cover assigned zone' : task.kind === 'rush' ? 'rush the passer' : 'read the play';
+      setIntent(p, description, 'execute assigned responsibility');
     }
   }
 
@@ -333,6 +354,21 @@ export function simulatePassPlay(options = {}) {
 
   function routeTarget(p) {
     const t = W.t - (throwInfo?.snapT ?? 0);
+    if (cfg.assignments) {
+      const task = cfg.assignments.offense[p.slot];
+      if (task.kind !== 'route') return null;
+      if (task.check_release && t < 0.9) return null;
+      const start = p.ai.routeStart;
+      const offsets = routeOffsets(task.route, start.l || side);
+      const points = offsets.map(([f, l]) => at(start.f + f, start.l + l));
+      let index = p.ai.routeIndex ?? 0;
+      if (index < points.length - 1 && dist(p.p, points[index]) < 0.8 * YD) {
+        index++;
+        W.event('route_break', { player_id: p.id, role: p.roleKey, route: task.route, waypoint: index });
+      }
+      p.ai.routeIndex = index;
+      return points[index];
+    }
     if (p === z) {
       // Slant: vertical stem, then a 45-degree break inside.
       const stem = at(2.6, side * 17);
@@ -357,8 +393,10 @@ export function simulatePassPlay(options = {}) {
 
   // ------------------------------------------------------------ quarterback
   function updateQbPerception(elapsed) {
+    if (cfg.behaviorMode === 'retro') return;
     // Route knowledge sets gaze; field of view and player-body occlusion still gate sensed locations.
-    const lookPoint = elapsed < 1.2 ? at(2.6, side * 17)
+    const read = cfg.assignments && routeReceivers[Math.floor(elapsed / 0.5) % routeReceivers.length];
+    const lookPoint = read ? read.p : elapsed < 1.2 ? at(2.6, side * 17)
       : elapsed < 1.65 ? at(2.4, side * 15) : at(1.6, side * 3.2);
     const desiredGaze = Math.atan2(lookPoint.y - qb.p.y, lookPoint.x - qb.p.x);
     qb.ai.gazeHeading = turnHeadingToward(qb.ai.gazeHeading ?? qb.h, desiredGaze, 5.5 / DECISION_HZ);
@@ -371,9 +409,15 @@ export function simulatePassPlay(options = {}) {
     lastSeenMemory.advance(W.t);
   }
 
+  // Retro mode uses present relevant positions, with no gaze cone or delayed-memory model.
+  const observe = (p) => cfg.behaviorMode === 'retro'
+    ? { position: { ...p.p }, velocity: { ...p.v }, down: p.down,
+        confidence: 1, uncertaintyMeters: 0, ageSeconds: 0 }
+    : lastSeenMemory.estimate(p.id, W.t);
+
   function nearestObservedRusher() {
     return defense.filter((player) => player.info.group === 'DL')
-      .map((player) => ({ player, estimate: lastSeenMemory.estimate(player.id, W.t) }))
+      .map((player) => ({ player, estimate: observe(player) }))
       .filter((item) => item.estimate && !item.estimate.down && item.estimate.confidence > 0.08)
       .map((item) => ({ ...item, distance: Math.hypot(item.estimate.position.x - qb.p.x,
         item.estimate.position.y - qb.p.y) }))
@@ -392,17 +436,17 @@ export function simulatePassPlay(options = {}) {
   }
 
   function readOptions() {
-    const throwers = [z, slotRec, rb].filter(Boolean);
+    const throwers = routeReceivers.filter(Boolean);
     const gaze = qb.ai.gazeHeading;
     // Read only delayed observations and their confidence/uncertainty, never a target's live position.
     return throwers.flatMap((rec) => {
-      const receiver = lastSeenMemory.estimate(rec.id, W.t);
+      const receiver = observe(rec);
       if (!receiver || receiver.down || receiver.confidence < 0.12) return [];
       const flight = clamp(Math.hypot(receiver.position.x - qb.p.x, receiver.position.y - qb.p.y) / (16 * YD), 0.32, 1.25);
       const aim = { x: receiver.position.x + receiver.velocity.x * flight * 0.75,
         y: receiver.position.y + receiver.velocity.y * flight * 0.75 };
       const defendersSeen = defense
-        .map((player) => ({ player, estimate: lastSeenMemory.estimate(player.id, W.t) }))
+        .map((player) => ({ player, estimate: observe(player) }))
         .filter((item) => item.estimate && !item.estimate.down && item.estimate.confidence > 0.08)
         .map((item) => ({ ...item, distance: Math.hypot(item.estimate.position.x - receiver.position.x,
           item.estimate.position.y - receiver.position.y) }))
@@ -431,7 +475,7 @@ export function simulatePassPlay(options = {}) {
         - clamp(lane * 0.55, 0, 1.35) - clamp((1.6 - pressure) * 0.45, 0, 0.9)
         - clamp(Math.hypot(receiver.position.x - qb.p.x, receiver.position.y - qb.p.y) / (28 * YD), 0, 0.5)
         - receiver.uncertaintyMeters / YD * 0.08;
-      const readiness = rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
+      const readiness = cfg.assignments ? 0.5 + routeReceivers.indexOf(rec) * 0.15 : rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
       return [{ receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness,
         observationAge: receiver.ageSeconds, observationConfidence: receiver.confidence,
         observationUncertainty: receiver.uncertaintyMeters, gazeHeading: gaze }];
@@ -478,7 +522,7 @@ export function simulatePassPlay(options = {}) {
     const elapsed = W.t - (W.ball.receivedAt ?? 0);
     updateQbPerception(elapsed);
     // A three-step drop from the gun takes about 0.8 s before the first read is live.
-    if (elapsed < 0.75) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
+    if (elapsed < 0.75 + (cfg.assignments?.offense.QB.decision_delay_seconds ?? 0)) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
     const options = readOptions().filter((o) => elapsed >= o.readyAt);
     const pressure = sensedPressure().distance;
     if (options.length) {
@@ -522,6 +566,7 @@ export function simulatePassPlay(options = {}) {
     const out = [];
     for (const p of W.players) {
       if (p.down) continue;
+      if (cfg.assignments && p.team === 'O' && cfg.assignments.offense[p.slot].kind !== 'route') continue;
       const planar = Math.hypot(p.p.x - b.x, p.p.y - b.y) / YD;
       const reach = 1.15 + p.r / YD;
       if (planar > reach) continue;
@@ -721,7 +766,7 @@ export function simulatePassPlay(options = {}) {
       }
       return;
     }
-    if (['LT', 'LG', 'C', 'RG', 'RT', 'TE'].includes(p.slot)) {
+    if (cfg.assignments ? cfg.assignments.offense[p.slot].kind === 'block' || (cfg.assignments.offense[p.slot].check_release && p.engaged) : ['LT', 'LG', 'C', 'RG', 'RT', 'TE'].includes(p.slot)) {
       if (p.engaged) {
         const d = p.engaged;
         const toward = unit(qb.p.x - p.p.x, qb.p.y - p.p.y);
@@ -747,7 +792,7 @@ export function simulatePassPlay(options = {}) {
       return;
     }
     // Receivers and the back follow their route landmarks from live positions.
-    if (p === rb) {
+    if (cfg.assignments ? cfg.assignments.offense[p.slot].check_release : p === rb) {
       const elapsed = W.t - (W.ball.receivedAt ?? 0);
       if (elapsed < 0.9 && !p.engaged && !throwInfo) {
         // Scan the rush before releasing.
@@ -784,6 +829,10 @@ export function simulatePassPlay(options = {}) {
   }
 
   function estimateObservedBallLanding(p) {
+    if (cfg.behaviorMode === 'retro') {
+      return estimateBallLanding({ position: { x: W.ball.x, y: W.ball.y }, velocity: { x: W.ball.vx, y: W.ball.vy },
+        z: W.ball.z, vz: W.ball.vz, uncertaintyMeters: 0 }, G);
+    }
     if (!defenderBallObservations.has(p.id)) {
       defenderBallObservations.set(p.id, new ObservationMemory({ reactionDelaySeconds: 0.14,
         maxMemorySeconds: 0.9, maxPredictionSeconds: 0.18, confidenceDecaySeconds: 0.45,
@@ -860,7 +909,8 @@ export function simulatePassPlay(options = {}) {
       setIntent(p, 'pursue the carrier', 'take the interception angle from the live carrier position');
       return;
     }
-    if (p.info.group === 'DL') { rushPasser(p); return; }
+    if (cfg.assignments && cfg.assignments.defense[p.slot].kind === 'rush') { rushPasser(p); return; }
+    if (!cfg.assignments && p.info.group === 'DL') { rushPasser(p); return; }
     if (W.ball.state === 'air') {
       const estimate = estimateObservedBallLanding(p);
       if (estimate) {
@@ -870,6 +920,22 @@ export function simulatePassPlay(options = {}) {
           `estimate the landing point from the delayed trajectory (${estimate.uncertaintyMeters.toFixed(2)} m uncertainty)`);
         return;
       }
+    }
+    if (cfg.assignments) {
+      const task = cfg.assignments.defense[p.slot];
+      if (task.kind === 'man') {
+        const target = get(`O.${task.target_slot}`);
+        p.dv = seek(p, lead(p, target, 0.18), 0.95, 16);
+        p.face = Math.atan2(target.p.y - p.p.y, target.p.x - p.p.x);
+        setIntent(p, `cover ${target.slot} man`, 'stay in phase and squeeze the route');
+      } else {
+        const bounds = task.kind === 'zone' ? task.bounds : [3, 7, p.ai.routeStart.l - 1, p.ai.routeStart.l + 1];
+        const landmark = at((bounds[0] + bounds[1]) / 2, (bounds[2] + bounds[3]) / 2);
+        p.dv = seek(p, landmark, 0.8, 12);
+        p.face = Math.atan2(qb.p.y - p.p.y, qb.p.x - p.p.x);
+        setIntent(p, task.kind === 'zone' ? 'cover assigned zone' : 'read the play', 'maintain responsibility and observe the quarterback');
+      }
+      return;
     }
     if (cfg.coverage === 'cover_1') {
       const target = manAssign.get(p.slot);
@@ -989,7 +1055,7 @@ export function simulatePassPlay(options = {}) {
         vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k,
       });
       const snapArrive = W.t + 0.16;
-      W.event('snap', { play_call: 'slant_flat', concept: cfg.concept, direction: cfg.direction, front: cfg.front, coverage: cfg.coverage, to: qb.id });
+      W.event('snap', { play_call: cfg.concept, concept: cfg.concept, direction: cfg.direction, front: cfg.front, coverage: cfg.coverage, to: qb.id });
       W.ball.snapArrive = snapArrive;
     }
     if (W.ball.state === 'snap' && W.t >= W.ball.snapArrive) {

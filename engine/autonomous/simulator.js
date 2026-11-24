@@ -81,6 +81,8 @@ export function scenarioFromCall(call) {
       concept: call.offense.concept,
       front: call.defense.front,
       coverage: call.defense.coverage,
+      ...(call.assignments ? { assignments: call.assignments } : {}),
+      ...(call.behavior_mode ? { behaviorMode: call.behavior_mode } : {}),
       offenseTeam: call.offense.team,
       defenseTeam: call.defense.team,
     },
