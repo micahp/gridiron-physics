@@ -1826,7 +1826,7 @@ export function simulatePlay(game, S, ctx = {}) {
       const budget = Math.abs(st.endX - c.ai.startX) * YD / (0.55 * c.vmax) + 2.5;
       if (W.t - st.carrierSince > budget) {
         const near = W.players.filter((q) => q.team !== c.team && !q.down).sort((a, b) => d2(a.p, c.p) - d2(b.p, c.p))[0];
-        if (near && d2(near.p, c.p) < 3) startTackle(near, c);
+        if (near && d2(near.p, c.p) < 1) startTackle(near, c);
         else if (near) near.mode = "tackle_to"; // nearest defender closes the play
       }
     }
