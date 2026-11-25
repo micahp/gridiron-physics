@@ -33,6 +33,12 @@ const BASE = {
 };
 const RATING_KEYS = new Set(['SPD', 'ACC', 'AGI', 'STR', 'AWR', 'PUR', 'TAK', 'BSH', 'RBK', 'IBL',
   'CTH', 'CAR', 'BCV', 'ELU', 'TRK', 'PRC', 'KPW', 'KAC']);
+const ROLE_RATINGS = {
+  kicker: ['SPD', 'ACC', 'AGI', 'STR', 'AWR', 'KPW', 'KAC'],
+  coverage: ['SPD', 'ACC', 'AGI', 'STR', 'AWR', 'PUR', 'TAK', 'BSH', 'RBK'],
+  returner: ['SPD', 'ACC', 'AGI', 'STR', 'AWR', 'CTH', 'CAR', 'BCV', 'ELU', 'TRK', 'PRC'],
+  blocker: ['SPD', 'ACC', 'AGI', 'STR', 'AWR', 'RBK', 'IBL', 'CTH', 'CAR'],
+};
 
 function requireObject(value, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new TypeError(`${label} must be an object`);
@@ -66,12 +72,16 @@ function validateInput(input) {
   const profiles = requireObject(input.player_profiles, 'player_profiles');
   for (const id of ids) {
     const profile = requireObject(profiles[id], `player_profiles.${id}`);
-    if (profile.ratings != null) {
-      requireObject(profile.ratings, `player_profiles.${id}.ratings`);
-      for (const [name, value] of Object.entries(profile.ratings)) {
-        if (!RATING_KEYS.has(name)) throw new TypeError(`unsupported special-teams rating ${name}`);
-        if (!Number.isFinite(value) || value < 1 || value > 99) throw new RangeError(`${id}.${name} must be from 1 to 99`);
-      }
+    const role = id === specialist ? 'kicker'
+      : id === lineups.receiving.returner ? 'returner'
+        : lineups.kicking.coverage.includes(id) ? 'coverage' : 'blocker';
+    const ratings = requireObject(profile.ratings, `player_profiles.${id}.ratings`);
+    for (const [name, value] of Object.entries(ratings)) {
+      if (!RATING_KEYS.has(name)) throw new TypeError(`unsupported special-teams rating ${name}`);
+      if (!Number.isFinite(value) || value < 1 || value > 99) throw new RangeError(`${id}.${name} must be from 1 to 99`);
+    }
+    for (const name of ROLE_RATINGS[role]) if (ratings[name] == null) {
+      throw new TypeError(`${id}.ratings_missing:${name}`);
     }
     if (profile.physics?.mass != null && (!Number.isFinite(profile.physics.mass) || profile.physics.mass < 50 || profile.physics.mass > 200)) {
       throw new RangeError(`${id}.physics.mass must be from 50 to 200 kg`);
@@ -190,8 +200,11 @@ export function simulateAutonomousSpecialTeams(input) {
   // The flight target is private to the ball model. Returners steer toward
   // observed ball coordinates, never toward this generated landing point.
   const strength = clamp(specialist.R.KPW ?? 70, 1, 99);
+  const safetyFreeKick = kickoff && kickSpotY100 === 80;
   const distanceYards = kickoff
-    ? clamp(59 + (strength - 70) * 0.24 + rand.normal() * 3.6, 45, 76)
+    ? safetyFreeKick
+      ? clamp(72 + (strength - 70) * 0.24 + rand.normal() * 3.6, 55, 90)
+      : clamp(59 + (strength - 70) * 0.24 + rand.normal() * 3.6, 45, 76)
     : clamp(41 + (strength - 70) * 0.28 + rand.normal() * 2.8, 28, 62);
   const accuracy = clamp(specialist.R.KAC ?? 70, 1, 99);
   const kickX = kickoff ? los : specialistX + 1.2;
@@ -200,7 +213,7 @@ export function simulateAutonomousSpecialTeams(input) {
   const lateralSigma = (kickoff ? 1.1 : 1.8) * (1.45 - (accuracy - 1) * (0.9 / 98));
   const lateralOffset = clamp(rand.normal() * lateralSigma, -4, 4);
   const launchFrom = { x: kickX * YD, y: ballY, z: 0.85 };
-  const launchTo = { x: landingX * YD, y: clamp(ballY / YD + lateralOffset, 2, FIELD_W_YD - 2) * YD, z: 0.12 };
+  const launchTo = { x: landingX * YD, y: (ballY / YD + lateralOffset) * YD, z: 0.12 };
   const flight = solveLaunch(launchFrom, launchTo, hang, AERO.wobble);
   Object.assign(W.ball, { state: 'air', holder: null, x: launchFrom.x, y: launchFrom.y,
     z: launchFrom.z, vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k, tumble: true });
@@ -215,6 +228,8 @@ export function simulateAutonomousSpecialTeams(input) {
   let terminal = null;
   let tackleStarted = null;
   let catchResolved = false;
+  let catchAt = null;
+  let fairCaught = false;
   let carrierDecision = 0;
   let selectedLaneY = null;
   let deadBall = null;
@@ -350,11 +365,23 @@ export function simulateAutonomousSpecialTeams(input) {
       const d = Math.hypot(W.ball.x - returner.p.x, W.ball.y - returner.p.y);
       if (d <= 1.35 * YD) {
         catchResolved = true;
+        catchAt = W.t;
         if (rand() <= catchSkill) {
           carrier = returner; returner.hasBall = true; returner.mode = 'carry';
           W.ball.state = 'held'; W.ball.holder = returner; W.ball.hand = 'carry';
           returnStartXActual = returner.p.x / YD; returnStartYActual = returner.p.y / YD;
           W.event('catch', { player_id: returner.id, ball_spot: { x: returnStartXActual, y: returnStartYActual } });
+          if (!kickoff) {
+            const nearestThreat = Math.min(...kickRoster.filter((p) => p !== specialist && !p.down)
+              .map((p) => dist(p.p, returner.p)));
+            const fairCatchSkill = clamp(0.35 + ((returner.R.AWR ?? 65) - 65) * 0.008, 0.12, 0.82);
+            if (nearestThreat <= 5.5 * YD && rand() < fairCatchSkill) {
+              fairCaught = true;
+              deadBall = { x: returnStartXActual, y: returnStartYActual };
+              deadReason = 'fair_catch'; terminal = W.t;
+              W.event('fair_catch', { player_id: returner.id, ball_spot: deadBall });
+            }
+          }
           if (kickoff && returnStartXActual >= 100) {
             deadBall = { x: 100, y: returnStartYActual }; deadReason = 'touchback'; terminal = W.t;
           }
@@ -367,7 +394,12 @@ export function simulateAutonomousSpecialTeams(input) {
       }
     }
     if (W.ball.state === 'loose' && muffed && recovery == null) attemptRecovery();
-    if (W.ball.state === 'air' && W.ball.x >= 100 * YD) {
+    if (terminal == null && W.ball.state === 'air' && (W.ball.y < 0 || W.ball.y > FIELD_W)) {
+      deadBall = { x: clamp(W.ball.x / YD, 0, 100), y: clamp(W.ball.y / YD, 0, FIELD_W_YD) };
+      deadReason = 'out_of_bounds'; terminal = W.t;
+      W.event('kick_out_of_bounds', { ball_spot: deadBall });
+    }
+    if (terminal == null && W.ball.state === 'air' && W.ball.x >= 100 * YD) {
       deadBall = { x: 100, y: W.ball.y / YD }; deadReason = 'touchback'; terminal = W.t;
     }
     if (W.ball.state === 'loose' && !muffed && W.ball.z <= 0.11) {
@@ -375,7 +407,7 @@ export function simulateAutonomousSpecialTeams(input) {
       deadBall = { x: clamp(W.ball.x / YD, 0, 100), y: clamp(W.ball.y / YD, 0, FIELD_W_YD) };
       deadReason = 'downed'; terminal = W.t;
     }
-    if (carrier === returner) {
+    if (terminal == null && carrier === returner) {
       const tackler = kickRoster.filter((p) => !p.down && !p.engaged)
         .sort((a, b) => dist(a.p, returner.p) - dist(b.p, returner.p) || a.id.localeCompare(b.id))[0];
       const tackleReach = 0.35 + ((tackler?.R.TAK ?? 60) - 50) * 0.003;
@@ -432,18 +464,26 @@ export function simulateAutonomousSpecialTeams(input) {
       fumble_spot_yardline_100: fumbleSpot, receiving_team_touched_beyond_line: true,
       return_yards: 0, returner_id: returner.id, recoverer_id: recovery?.id ?? null };
   } else {
-    const startX = returnStartXActual ?? clamp(landingX, 1, 99);
+    const startX = deadReason === 'out_of_bounds' && returnStartXActual == null
+      ? deadBall.x : returnStartXActual ?? clamp(landingX, 1, 99);
     const startSpot = Math.round(100 - startX);
     const deadSpot = Math.round(100 - deadBall.x);
     const returnYards = deadSpot - startSpot;
     result = { result: 'return', possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       return_start_yardline_100: Math.round(startSpot), dead_ball_yardline_100: Math.round(deadSpot),
-      return_yards: deadReason === 'downed' ? 0 : returnYards,
-      returner_id: deadReason === 'downed' ? null : returner.id,
+      return_yards: ['downed', 'out_of_bounds'].includes(deadReason) ? 0 : returnYards,
+      returner_id: ['downed', 'out_of_bounds'].includes(deadReason) ? null : returner.id,
       scoring: deadReason === 'touchdown' ? 'touchdown' : null,
-      out_of_bounds: deadReason === 'out_of_bounds' };
+      fair_catch: fairCaught, out_of_bounds: deadReason === 'out_of_bounds' };
   }
+  result.elapsed_seconds = terminal;
+  result.catch_elapsed_seconds = catchAt;
+  result.clock_runoff_seconds = kickoff
+    ? (deadReason === 'touchback' ? 0
+      : Math.max(0, Math.ceil(terminal - (catchAt ?? terminal))
+        + (['tackle', 'muff_recovery'].includes(deadReason) ? 27 : 0)))
+    : Math.ceil(terminal) + (['tackle', 'muff_recovery', 'downed'].includes(deadReason) ? 27 : 0);
   W.event('whistle', { reason: deadReason, ball_spot: deadBall, terminal_t: terminal });
   const framesFlat = frames.map((frame) => Array.from(frame));
   const resultRecord = {

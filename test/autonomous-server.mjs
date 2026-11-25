@@ -31,8 +31,8 @@ try {
     lineups: { kicking: { punter: 'K', coverage: ids.slice(1, 11) },
       receiving: { returner: 'R', blockers: ids.slice(12) } },
     player_profiles: Object.fromEntries(ids.map((id) => [id, {ratings: {SPD: 76, ACC: 75,
-      AGI: 75, STR: 68, AWR: 70, PUR: 75, TAK: 70, RBK: 70, CTH: 78, CAR: 78,
-      BCV: 75, ELU: 75, KPW: 70, KAC: 70}}])),
+      AGI: 75, STR: 68, AWR: 70, PUR: 75, TAK: 70, BSH: 70, RBK: 70, IBL: 70,
+      CTH: 78, CAR: 78, BCV: 75, ELU: 75, TRK: 65, PRC: 70, KPW: 70, KAC: 70}}])),
   };
   const special = await request({id: 5, op: 'special_teams', call: specialTeams});
   assert.equal(special.ok, true);
