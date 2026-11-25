@@ -10,7 +10,10 @@ import { assertNoOutcomeFields } from './schema.js';
 import { retroDecisionInterval } from './retro-cadence.js';
 import { estimateBallLanding } from './perception.js';
 
-const MAX_SECONDS = 18;
+// Long kickoff returns can cover the field diagonally while players disengage
+// and reset their lanes. Keep a hard bound, but allow the generated live play
+// to reach the returner's touchdown or the pursuit tackle.
+const MAX_SECONDS = 36;
 const MAX_PLAYERS_PER_SIDE = 11;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
