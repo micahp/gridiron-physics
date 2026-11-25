@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createPassRoster, simulatePassPlay } from '../engine/autonomous/passing.js';
+import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
 
 const base = { seed: 'slant-flat-1', front: 'nickel_over', coverage: 'cover_1', direction: 'right' };
 const a = simulatePassPlay(base);
@@ -41,6 +42,17 @@ for (let i = 0; i < 60; i++) {
 assert.ok(seen.has('incomplete') || seen.has('tackle') || seen.has('out_of_bounds'), `outcome spread: ${[...seen]}`);
 assert.ok(yards.some((y) => y > 0), 'some passes gain ground');
 assert.ok(new Set(yards.map((y) => y.toFixed(2))).size > 1, 'pass results are not a constant');
+
+const dpi = simulatePassPlay({
+  seed: 'dpi-assigned-210', concept: 'assigned', front: 'nickel_under', coverage: 'cover_3',
+  direction: 'right', dir: -1, los: 50, ballY: 23.583,
+  assignments: exampleAssignments('slant_flat', 'zone'), behaviorMode: 'retro',
+});
+const dpiEvent = dpi.events.find((event) => event.type === 'pass_interference');
+assert.ok(dpiEvent, 'downfield contact with a catchable live pass generates defensive interference');
+assert.equal(dpi.terminal.reason, 'incomplete', 'the penalty whistles the play dead before the catch result');
+assert.equal(dpi.events.at(-1).type, 'whistle');
+assert.equal(dpi.events.filter((event) => ['catch', 'interception'].includes(event.type)).length, 0);
 
 // Defensive return progress follows the returner's direction, independent of
 // which way the intercepted offense was attacking. The dead spot cannot be

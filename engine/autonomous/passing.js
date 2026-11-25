@@ -299,6 +299,7 @@ export function simulatePassPlay(options = {}) {
   let throwInfo = null;
   let resolveAttempt = null;
   let sack = null, tackle = null, terminal = null;
+  let passInterference = null;
   let maxForward = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
   let lastCarrierX = null;
@@ -530,8 +531,16 @@ export function simulatePassPlay(options = {}) {
     updateQbPerception(elapsed);
     // A three-step drop from the gun takes about 0.8 s before the first read is live.
     if (elapsed < 0.75 + (cfg.assignments?.offense.QB.decision_delay_seconds ?? 0)) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
-    const options = readOptions().filter((o) => elapsed >= o.readyAt);
+    const availableOptions = readOptions().filter((o) => elapsed >= o.readyAt);
     const pressure = sensedPressure().distance;
+    const developedOptions = cfg.assignments
+      ? availableOptions.filter((option) => fOf(option.receiver) >= 5)
+      : availableOptions;
+    const options = developedOptions.length ? developedOptions : availableOptions;
+    if (cfg.assignments && !developedOptions.length && elapsed < 1.35 && pressure >= 1.1) {
+      setIntent(qb, 'let routes develop', 'hold the pocket until a route clears the five-yard contact zone');
+      return;
+    }
     if (options.length) {
       const best = options[0];
       if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
@@ -699,10 +708,46 @@ export function simulatePassPlay(options = {}) {
     }
   }
 
+  function recordPassInterference(a, b, closingSpeed = null) {
+    if (passInterference || W.ball.state !== 'air' || !W.ball.target) return;
+    const receiver = W.ball.target;
+    const defender = a === receiver ? b : b === receiver ? a : null;
+    if (!defender || receiver.team !== 'O' || defender.team !== 'D' || defender.down) return;
+    const ballDistance = dist(receiver.p, W.ball) / YD;
+    // Downfield contact while the pass is still travelling is the observable
+    // foul fact. Contact near the line or at the catch point remains legal
+    // coverage/catch contention and never becomes an inferred penalty.
+    const landing = W.ball.landing;
+    const planarSpeed = Math.max(1, Math.hypot(W.ball.vx, W.ball.vy));
+    const remainingFlight = landing
+      ? clamp(dist(W.ball, landing) / planarSpeed, 0, 1.25)
+      : 0;
+    const receiverReach = receiver.vmax * remainingFlight / YD + 1.25;
+    const landingDistance = landing ? dist(receiver.p, landing) / YD : Infinity;
+    if (fOf(receiver) < 5 || ballDistance < 2.5
+        || landingDistance > receiverReach
+        || (closingSpeed != null && closingSpeed <= 2.5)) return;
+    passInterference = { defender, receiver, x: receiver.p.x / YD, y: receiver.p.y / YD };
+    W.event('pass_interference', {
+      defender_id: defender.id, receiver_id: receiver.id,
+      spot: { x: passInterference.x, y: passInterference.y },
+      ball_distance_yards: Number(ballDistance.toFixed(2)),
+      closing_speed_mps: closingSpeed == null ? null : Number(closingSpeed.toFixed(2)),
+    });
+    // Accepted DPI makes the pass dead at the foul spot. The rules adapter
+    // later applies the spot foul and automatic first down from this fact.
+    finish('incomplete', { x: receiver.p.x, y: receiver.p.y });
+  }
+
   W.onTouch = (a, b) => {
+    recordPassInterference(a, b);
     if (!carrier || tackle || terminal || (a !== carrier && b !== carrier)) return;
     const d = a === carrier ? b : a;
     if (d.team !== carrier.team && !d.down && (d.ai.missUntil ?? 0) <= W.t) startTackle(d);
+  };
+
+  W.onContact = (a, b, closingSpeed) => {
+    recordPassInterference(a, b, closingSpeed);
   };
 
   function rushPasser(d) {
