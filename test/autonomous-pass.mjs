@@ -54,6 +54,23 @@ assert.ok(dpi.terminal.time > dpiEvent.t,
   'DPI is recorded during the pass and does not itself end live execution');
 assert.equal(dpi.events.at(-1).type, 'whistle');
 
+const fumbleDefenseRatings = Object.fromEntries(
+  ['LDE', 'LDT', 'RDT', 'RDE', 'WILL', 'MIKE', 'LCB', 'RCB', 'NB', 'SS', 'FS']
+    .map((role) => [`D.${role}`, { TAK: 99, STR: 99, PRC: 99 }]));
+const fumbleOffenseRatings = (carrying) => Object.fromEntries(
+  ['QB', 'RB', 'TE', 'WR1', 'WR2', 'WR3'].map((role) => [`O.${role}`, { CAR: carrying }]));
+const forcedFumble = simulatePassPlay({ seed: 6, front: 'nickel', coverage: 'cover_1',
+  direction: 'right', dir: 1, los: 40, ballY: 26.67, resultOnly: true,
+  ratingOverrides: { ...fumbleOffenseRatings(1), ...fumbleDefenseRatings } });
+const protectedBall = simulatePassPlay({ seed: 6, front: 'nickel', coverage: 'cover_1',
+  direction: 'right', dir: 1, los: 40, ballY: 26.67, resultOnly: true,
+  ratingOverrides: { ...fumbleOffenseRatings(99), ...fumbleDefenseRatings } });
+assert.equal(forcedFumble.fumble.recovery_team, 'D', 'a generated catch fumble can change possession');
+assert.ok(forcedFumble.fumble.return_yards > 0, 'the live recovery advances before the whistle');
+assert.ok(forcedFumble.events.some((event) => event.type === 'fumble')
+  && forcedFumble.events.some((event) => event.type === 'fumble_recovery'));
+assert.equal(protectedBall.fumble, null, 'carrying rating changes fumble exposure at the same seed');
+
 // Defensive return progress follows the returner's direction, independent of
 // which way the intercepted offense was attacking. The dead spot cannot be
 // placed behind the interception catch point by a carrier facing the other way.

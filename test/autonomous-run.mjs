@@ -63,6 +63,19 @@ assert.notEqual(weakBlockRun.terminal.yards_gained, strongBlockRun.terminal.yard
 assert.notEqual(weakBlockRun.blockers.filter((p) => p.won).length, strongBlockRun.blockers.filter((p) => p.won).length,
   'blocker wins are resolved from simulated engagement, shed, and penetration');
 
+const fumbleDefense = Object.fromEntries(['LDE', 'LDT', 'RDT', 'RDE', 'WILL', 'MIKE', 'SAM', 'LCB', 'RCB', 'SS', 'FS']
+  .map((role) => [`D.${role}`, { TAK: 99, STR: 99, PRC: 99 }]));
+const looseSecurity = simulateInsideZone({ seed: 21, front: 'even', resultOnly: true,
+  ratingOverrides: { 'O.RB': { CAR: 1 }, ...fumbleDefense } });
+const secureSecurity = simulateInsideZone({ seed: 21, front: 'even', resultOnly: true,
+  ratingOverrides: { 'O.RB': { CAR: 99 }, ...fumbleDefense } });
+assert.equal(looseSecurity.resolved, true, 'a forced fumble and return resolve through the live whistle');
+assert.equal(looseSecurity.fumble.recovery_team, 'D', 'the defense can recover a generated loose ball');
+assert.ok(looseSecurity.events.some((event) => event.type === 'fumble')
+  && looseSecurity.events.some((event) => event.type === 'fumble_recovery'));
+assert.ok(looseSecurity.fumble.return_yards > 0, 'the recovery is advanced through live movement');
+assert.equal(secureSecurity.fumble, null, 'ball-carrier carrying rating changes fumble exposure at the same seed');
+
 const observed = a.roster.flatMap((p) => [0.5, 1.0].map((t) => {
   const sample = a.trajectories[p.id].reduce((best, row) => Math.abs(row.t - t) < Math.abs(best.t - t) ? row : best);
   return { player_id: p.id, t, x: sample.x + 1, y: sample.y };

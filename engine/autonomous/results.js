@@ -14,7 +14,13 @@ export function toResultRecord(call, run) {
   const reason = run.terminal?.reason ?? null;
   const spot = run.terminal?.spot ?? null;
   const possessionTeam = run.possession_team === 'D' ? call.defense.team : call.offense.team;
-  const turnover = TURNOVER_EVENTS.has(reason) || (run.possession_team === 'D' && call.offense.family === 'pass');
+  const fumble = run.fumble ? {
+    ...run.fumble,
+    recovery_side: run.fumble.recovery_team,
+    recovery_team: run.fumble.recovery_team === 'D' ? call.defense.team : call.offense.team,
+  } : null;
+  const turnover = TURNOVER_EVENTS.has(reason) || (run.possession_team === 'D' && call.offense.family === 'pass')
+    || fumble?.recovery_side === 'D';
   const result = completed ? {
     event: reason,
     possession_team: possessionTeam,
@@ -22,6 +28,7 @@ export function toResultRecord(call, run) {
     yards_gained: round(run.terminal.yards_gained),
     is_touchdown: reason === 'touchdown',
     turnover,
+    fumble,
     final_ball_spot: { x_yards: round(spot.x), y_yards: round(spot.y) },
     elapsed_seconds: round(run.terminal.time),
   } : null;
@@ -144,6 +151,14 @@ export function reconcileResult(record) {
   if (result?.event === 'tackle' && tackles.length === 0) problems.push('tackle result without a tackle event');
   if (result?.event === 'tackle' && tackles.length && !(result.carrier_id && tackles[0].on === result.carrier_id)) {
     problems.push('tackle event carrier disagrees with the result carrier');
+  }
+  if (result?.fumble) {
+    const forced = events.find((e) => e.type === 'fumble');
+    const recovered = events.find((e) => e.type === 'fumble_recovery');
+    if (!forced || !recovered) problems.push('fumble result lacks live fumble and recovery events');
+    if (forced && recovered && recovered.t < forced.t) problems.push('fumble recovery precedes the fumble');
+    if (result.fumble.recovery_team !== result.possession_team) problems.push('fumble recovery team disagrees with possession');
+    if (result.turnover !== (result.fumble.recovery_side !== 'O')) problems.push('fumble turnover flag disagrees with recovery team');
   }
   // Never more than one holder in any frame.
   for (const frame of trajectory.frames ?? []) {

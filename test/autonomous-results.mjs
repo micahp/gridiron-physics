@@ -55,6 +55,26 @@ const broken = buildSampleCall();
 delete broken.player_profiles[broken.offense.lineup.QB];
 assert.throws(() => simulateAutonomousPlay(broken), /required for every declared player/);
 
+const forcedFumbleCall = buildSampleCall({ front: 'even' });
+forcedFumbleCall.output_mode = 'result_only';
+forcedFumbleCall.seed = '3';
+forcedFumbleCall.situation.yardline_100 = 40;
+forcedFumbleCall.player_profiles['ne-rb'].ratings.CAR = 1;
+for (const playerId of Object.values(forcedFumbleCall.defense.lineup)) {
+  Object.assign(forcedFumbleCall.player_profiles[playerId].ratings,
+    { TAK: 99, STR: 99, PRC: 99 });
+}
+const fumbleReturn = simulateAutonomousPlay(forcedFumbleCall);
+assert.equal(fumbleReturn.status, 'complete');
+assert.equal(fumbleReturn.result.event, 'touchdown');
+assert.equal(fumbleReturn.result.turnover, true);
+assert.equal(fumbleReturn.result.fumble.recovery_side, 'D');
+assert.ok(fumbleReturn.result.fumble.return_yards > 0);
+assert.ok(fumbleReturn.events.some((event) => event.type === 'fumble')
+  && fumbleReturn.events.some((event) => event.type === 'fumble_recovery'));
+assert.equal(fumbleReturn.diagnostics.reconciliation.ok, true,
+  fumbleReturn.diagnostics.reconciliation.problems.join('; '));
+
 // Both play families flow through the same contract.
 const pass = simulateAutonomousPlay(buildSampleCall({ family: 'pass', concept: 'slant_flat', snap_type: 'shotgun', coverage: 'cover_1' }));
 assert.equal(pass.schema_version, RESULT_SCHEMA);

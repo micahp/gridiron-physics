@@ -383,7 +383,8 @@ export function simulateInsideZone(options = {}) {
   const qbMesh = at(-3.05, side * 0.18);
   const rbMesh = at(-2.72, -side * 0.12);
   let snapped = false, snapArrive = null, handed = false, carrier = null, carrierSince = null;
-  let tackle = null, terminal = null;
+  let possession = 'O';
+  let tackle = null, terminal = null, fumble = null, fumbleRecovery = null, fumbleRecoverySpot = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
   let lastCarrierX = null;
   let maxForward = null;
@@ -539,6 +540,82 @@ export function simulateInsideZone(options = {}) {
     p.ai.runReadDelay = clamp(baseDelay + (68 - recognition) * 0.003, baseDelay - 0.08, baseDelay + 0.14);
   }
 
+  function attemptForcedFumble(d, victim, closing) {
+    if (fumble || !victim || W.ball.holder !== victim) return false;
+    const force = 0.55 * (d.R.TAK ?? 60) + 0.45 * (d.R.STR ?? 60) + closing * 1.4;
+    const security = victim.R.CAR ?? 65;
+    const chance = clamp(0.012 + (force - security) * 0.0014, 0.003, 0.14);
+    if (rand() >= chance) return false;
+    const spot = { x: W.ball.x, y: W.ball.y };
+    fumble = { fumbler: victim, forcedBy: d, spot };
+    victim.hasBall = false;
+    victim.mode = 'loose_ball';
+    W.ball.state = 'loose'; W.ball.holder = null; W.ball.hand = 'carry';
+    const away = unit(victim.p.x - d.p.x, victim.p.y - d.p.y);
+    W.ball.x = spot.x; W.ball.y = spot.y; W.ball.z = 0.72;
+    W.ball.vx = victim.v.x * 0.34 + away.x * 2.2;
+    W.ball.vy = victim.v.y * 0.34 + away.y * 1.6;
+    W.ball.vz = 1.4; W.ball.k = 0.28; W.ball.tumble = true;
+    carrier = null; tackle = null; maxForward = null; lastCarrierX = null;
+    W.event('fumble', { fumbler_id: victim.id, forced_by_id: d.id,
+      ball_spot: { x: spot.x / YD, y: spot.y / YD }, chance: Number(chance.toFixed(4)) });
+    return true;
+  }
+
+  function looseBallBrain(p) {
+    if (p.down) { p.dv = { x: 0, y: 0 }; return; }
+    const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
+    const fraction = clamp(0.76 + (awareness - 60) * 0.003, 0.58, 0.94);
+    p.dv = seek(p, { x: W.ball.x, y: W.ball.y }, fraction, 22);
+    p.face = Math.atan2(W.ball.y - p.p.y, W.ball.x - p.p.x);
+    setIntent(p, 'pursue the loose football', 'read its current bounce and close to recover');
+  }
+
+  function fumbleReturnBrain(p) {
+    if (p.down) { p.dv = { x: 0, y: 0 }; return; }
+    if (p === carrier) {
+      const attack = p.team === 'O' ? dir : -dir;
+      p.dv = seek(p, { x: p.p.x + attack * 4.5 * YD,
+        y: clamp(p.p.y + (FIELD_W_YD / 2 * YD - p.p.y) * 0.12, 1.2 * YD,
+                 (FIELD_W_YD - 1.2) * YD) }, 0.94, 8.5);
+      setIntent(p, 'advance the recovered fumble', 'protect the ball and attack open field ahead');
+      return;
+    }
+    if (p.team !== carrier.team) {
+      p.dv = seek(p, lead(p, carrier, 0.18), 0.96, 18);
+      setIntent(p, 'pursue the fumble returner', 'close on the current carrier and attempt a tackle');
+      return;
+    }
+    const threat = closest(W.players, p, (q) => q.team !== carrier.team && !q.down);
+    if (threat && d2(threat, p) < 1.0 && !p.engaged && !threat.engaged) W.engage(p, threat);
+    p.dv = seek(p, { x: carrier.p.x - (p.team === 'O' ? dir : -dir) * 2.0 * YD,
+      y: carrier.p.y + (((p.ai.index ?? 0) % 3) - 1) * 1.0 * YD }, 0.82, 12);
+    setIntent(p, 'escort the fumble return', 'screen the nearest pursuit player');
+  }
+
+  function recoverFumble() {
+    if (!fumble || fumbleRecovery || W.ball.state !== 'loose' || W.ball.z > 0.24) return;
+    const candidates = W.players.filter((p) => !p.down
+      && d2(p, { p: { x: W.ball.x, y: W.ball.y } }) <= 0.86 * YD)
+      .sort((a, b) => d2(a, { p: { x: W.ball.x, y: W.ball.y } })
+        - d2(b, { p: { x: W.ball.x, y: W.ball.y } }) || a.id.localeCompare(b.id));
+    const p = candidates[0];
+    if (!p) return;
+    const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
+    const chance = clamp(0.58 + (awareness - 60) * 0.005, 0.28, 0.94);
+    if (rand() >= chance) return;
+    fumbleRecovery = p; fumbleRecoverySpot = { x: W.ball.x, y: W.ball.y };
+    carrier = p; carrierSince = W.t;
+    p.hasBall = true; p.mode = 'carry';
+    W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
+    possession = p.team;
+    maxForward = { f: (W.ball.x / YD - cfg.los) * (p.team === 'O' ? dir : -dir),
+      x: W.ball.x, y: W.ball.y, direction: p.team === 'O' ? dir : -dir };
+    lastCarrierX = W.ball.x / YD;
+    W.event('fumble_recovery', { fumbler_id: fumble.fumbler.id, recoverer_id: p.id,
+      team: p.team, recovery_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
+  }
+
   function startTackle(d, contactSource = 'body') {
     if (terminal || tackle || !carrier || d.team === carrier.team || d.engaged) return;
     W.event('tackle_contact', {
@@ -549,6 +626,7 @@ export function simulateInsideZone(options = {}) {
     const tak = d.R.TAK ?? 60;
     const btk = Math.max(carrier.R.BTK ?? 55, carrier.R.ELU ?? 55);
     const strength = (d.R.STR ?? 55) - (carrier.R.STR ?? 55);
+    if (attemptForcedFumble(d, carrier, closing)) return;
     const finish = clamp(0.43 + (tak - btk) * 0.006 + strength * 0.0015 + closing * 0.027, 0.08, 0.92);
     d.ai.lastTackleAttempt = W.t;
     if (rand() < finish) {
@@ -619,6 +697,7 @@ export function simulateInsideZone(options = {}) {
 
   function offenseBrain(p) {
     if (!snapped) { p.dv = { x: 0, y: 0 }; p.face = dir > 0 ? 0 : Math.PI; return; }
+    if (fumble) { fumbleRecovery ? fumbleReturnBrain(p) : looseBallBrain(p); return; }
     if (p === rb) { rbBrain(p); return; }
     if (p === qb) {
       if (!handed) {
@@ -668,6 +747,7 @@ export function simulateInsideZone(options = {}) {
 
   function defenseBrain(p) {
     if (!snapped) { p.dv = { x: 0, y: 0 }; p.face = dir > 0 ? Math.PI : 0; return; }
+    if (fumble) { fumbleRecovery ? fumbleReturnBrain(p) : looseBallBrain(p); return; }
     if (p.engaged) {
       const blocker = p.engaged;
       tryShed(p);
@@ -888,12 +968,15 @@ export function simulateInsideZone(options = {}) {
       row.minDefF = Math.min(row.minDefF, fOf(row.defender));
       row.maxDefF = Math.max(row.maxDefF, fOf(row.defender));
     }
+    recoverFumble();
     trackForwardProgress();
     if (!terminal && !tackle && carrier) {
-      for (const defender of defense) {
-        if (defender.down || defender.engaged || (defender.ai.missUntil ?? 0) > W.t) continue;
-        if (d2(defender, carrier) <= defender.r + carrier.r + ARM_TACKLE_REACH) {
-          startTackle(defender, 'arm_reach');
+      for (const tackler of W.players) {
+        if (!carrier) break;
+        if (tackler.team === carrier.team || tackler.down || tackler.engaged
+            || (tackler.ai.missUntil ?? 0) > W.t) continue;
+        if (d2(tackler, carrier) <= tackler.r + carrier.r + ARM_TACKLE_REACH) {
+          startTackle(tackler, 'arm_reach');
           if (tackle) break;
         }
       }
@@ -935,7 +1018,16 @@ export function simulateInsideZone(options = {}) {
     stride: roster.length * 6 + 6, frames: cfg.resultOnly ? null : frames, trajectories,
     events: W.events,
     terminal: terminal ? { ...terminal, yards_gained: yardsGained, touchdown: terminal.reason === 'touchdown' } : null,
-    resolved: !!terminal, carrier_id: carrier?.id ?? null,
+    resolved: !!terminal, carrier_id: carrier?.id ?? null, possession_team: possession,
+    fumble: fumble && fumbleRecovery ? {
+      fumbler_id: fumble.fumbler.id, forced_by_id: fumble.forcedBy.id,
+      fumble_spot: { x: fumble.spot.x / YD, y: fumble.spot.y / YD },
+      recovery_team: fumbleRecovery.team, recoverer_id: fumbleRecovery.id,
+      recovery_spot: { x: fumbleRecoverySpot.x / YD, y: fumbleRecoverySpot.y / YD },
+      dead_ball_spot: terminal?.spot ?? null,
+      return_yards: terminal && carrier ? (terminal.spot.x - fumbleRecoverySpot.x / YD)
+        * (carrier.team === 'O' ? dir : -dir) : null,
+    } : null,
     failure: terminal ? null : { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS },
     tackle_id: terminal?.reason === 'tackle' ? tackle?.tackler.id ?? null : null,
     blockers, topSpeed,

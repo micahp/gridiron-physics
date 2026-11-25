@@ -298,7 +298,8 @@ export function simulatePassPlay(options = {}) {
   let possession = 'O';
   let throwInfo = null;
   let resolveAttempt = null;
-  let sack = null, tackle = null, terminal = null;
+  let sack = null, tackle = null, terminal = null, fumble = null, fumbleRecovery = null;
+  let fumbleRecoverySpot = null;
   let passInterference = null;
   let maxForward = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
@@ -683,6 +684,81 @@ export function simulatePassPlay(options = {}) {
   };
 
   // ---------------------------------------------------------------- contact
+  function attemptForcedFumble(d, victim, closing) {
+    if (fumble || !victim || W.ball.holder !== victim) return false;
+    const force = 0.55 * (d.R.TAK ?? 60) + 0.45 * (d.R.STR ?? 60) + closing * 1.4;
+    const security = victim.R.CAR ?? 65;
+    const chance = clamp(0.012 + (force - security) * 0.0014, 0.003, 0.14);
+    if (rand() >= chance) return false;
+    const spot = { x: W.ball.x, y: W.ball.y };
+    fumble = { fumbler: victim, forcedBy: d, spot };
+    victim.hasBall = false; victim.mode = 'loose_ball';
+    W.ball.state = 'loose'; W.ball.holder = null; W.ball.hand = 'carry';
+    const away = unit(victim.p.x - d.p.x, victim.p.y - d.p.y);
+    W.ball.x = spot.x; W.ball.y = spot.y; W.ball.z = 0.72;
+    W.ball.vx = victim.v.x * 0.34 + away.x * 2.2;
+    W.ball.vy = victim.v.y * 0.34 + away.y * 1.6;
+    W.ball.vz = 1.4; W.ball.k = 0.28; W.ball.tumble = true;
+    carrier = null; tackle = null; maxForward = null; lastCarrierX = null;
+    W.event('fumble', { fumbler_id: victim.id, forced_by_id: d.id,
+      ball_spot: { x: spot.x / YD, y: spot.y / YD }, chance: Number(chance.toFixed(4)) });
+    return true;
+  }
+
+  function looseBallBrain(p) {
+    if (p.down) { p.dv = { x: 0, y: 0 }; return; }
+    const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
+    p.dv = seek(p, { x: W.ball.x, y: W.ball.y },
+      clamp(0.76 + (awareness - 60) * 0.003, 0.58, 0.94), 22);
+    p.face = Math.atan2(W.ball.y - p.p.y, W.ball.x - p.p.x);
+    setIntent(p, 'pursue the loose football', 'read its current bounce and close to recover');
+  }
+
+  function fumbleReturnBrain(p) {
+    if (p.down) { p.dv = { x: 0, y: 0 }; return; }
+    if (p === carrier) {
+      const attack = p.team === 'O' ? dir : -dir;
+      p.dv = seek(p, { x: p.p.x + attack * 4.5 * YD,
+        y: clamp(p.p.y + (FIELD_W_YD / 2 * YD - p.p.y) * 0.12, 1.2 * YD,
+                 (FIELD_W_YD - 1.2) * YD) }, 0.94, 8.5);
+      setIntent(p, 'advance the recovered fumble', 'protect the ball and attack open field ahead');
+      return;
+    }
+    if (p.team !== carrier.team) {
+      p.dv = seek(p, lead(p, carrier, 0.18), 0.96, 18);
+      setIntent(p, 'pursue the fumble returner', 'close on the current carrier and attempt a tackle');
+      return;
+    }
+    const threat = W.players.filter((q) => q.team !== carrier.team && !q.down)
+      .sort((a, b) => d2(p, a) - d2(p, b) || a.id.localeCompare(b.id))[0];
+    if (threat && d2(threat, p) < 1.0 && !p.engaged && !threat.engaged) W.engage(p, threat);
+    const attack = p.team === 'O' ? dir : -dir;
+    p.dv = seek(p, { x: carrier.p.x - attack * 2.0 * YD,
+      y: carrier.p.y + (((p.ai.index ?? 0) % 3) - 1) * 1.0 * YD }, 0.82, 12);
+    setIntent(p, 'escort the fumble return', 'screen the nearest pursuit player');
+  }
+
+  function recoverFumble() {
+    if (!fumble || fumbleRecovery || W.ball.state !== 'loose' || W.ball.z > 0.24) return;
+    const candidates = W.players.filter((p) => !p.down
+      && d2(p, { p: { x: W.ball.x, y: W.ball.y } }) <= 0.86 * YD)
+      .sort((a, b) => d2(a, { p: { x: W.ball.x, y: W.ball.y } })
+        - d2(b, { p: { x: W.ball.x, y: W.ball.y } }) || a.id.localeCompare(b.id));
+    const p = candidates[0];
+    if (!p) return;
+    const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
+    if (rand() >= clamp(0.58 + (awareness - 60) * 0.005, 0.28, 0.94)) return;
+    fumbleRecovery = p; fumbleRecoverySpot = { x: W.ball.x, y: W.ball.y };
+    carrier = p; carrierSince = W.t; possession = p.team;
+    p.hasBall = true; p.mode = 'carry';
+    W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
+    maxForward = { f: (W.ball.x / YD - cfg.los) * (p.team === 'O' ? dir : -dir),
+      x: W.ball.x, y: W.ball.y, direction: p.team === 'O' ? dir : -dir };
+    lastCarrierX = W.ball.x / YD;
+    W.event('fumble_recovery', { fumbler_id: fumble.fumbler.id, recoverer_id: p.id,
+      team: p.team, recovery_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
+  }
+
   function startTackle(d) {
     if (terminal || tackle || !carrier || d.team === carrier.team) return;
     const closing = Math.hypot(d.v.x - carrier.v.x, d.v.y - carrier.v.y) / YD;
@@ -691,6 +767,7 @@ export function simulatePassPlay(options = {}) {
     const strength = (d.R.STR ?? 55) - (carrier.R.STR ?? 55);
     const finishChance = clamp(0.43 + (tak - btk) * 0.006 + strength * 0.0015 + closing * 0.027, 0.08, 0.92);
     d.ai.lastTackleAttempt = W.t;
+    if (attemptForcedFumble(d, carrier, closing)) return;
     if (rand() < finishChance) {
       tackle = { tackler: d, carrier, t0: W.t };
       d.mode = 'tackling'; carrier.mode = 'tackled';
@@ -766,8 +843,10 @@ export function simulatePassPlay(options = {}) {
       if (d2(d, qb) < d.r + qb.r + 0.2) {
         W.event('sack', { defender_id: d.id, quarterback_id: qb.id, time: W.t });
         sack = { defender: d, t0: W.t };
+        carrier = qb;
+        const closing = Math.hypot(d.v.x - qb.v.x, d.v.y - qb.v.y) / YD;
+        if (attemptForcedFumble(d, qb, closing)) return;
         d.pose = POSE.WRAP;
-        carrier = qb; // the quarterback is a ball carrier for contact purposes
         tackle = { tackler: d, carrier: qb, t0: W.t };
         W.wrap(d, qb, { fall: 0.5, keepCarrier: 0.1 });
         finish('sack', { x: W.ball.x, y: W.ball.y });
@@ -1031,6 +1110,10 @@ export function simulatePassPlay(options = {}) {
 
   // ---------------------------------------------------------------- schedule
   const brains = (p) => {
+    if (fumble) {
+      fumbleRecovery ? fumbleReturnBrain(p) : looseBallBrain(p);
+      return;
+    }
     if (cfg.assignments && cfg.behaviorMode === 'retro') {
       if (p.down) { p.dv = { x: 0, y: 0 }; return; }
       // Strategic decisions use a countdown. Physics keeps integrating the last
@@ -1161,6 +1244,7 @@ export function simulatePassPlay(options = {}) {
       row.minDefF = Math.min(row.minDefF, fOf(row.defender));
       row.maxDefF = Math.max(row.maxDefF, fOf(row.defender));
     }
+    recoverFumble();
     trackLive();
     if (!terminal && tackle && W.t - tackle.t0 >= 0.48) {
       let spot = maxForward || { x: W.ball.x, y: W.ball.y };
@@ -1231,7 +1315,16 @@ export function simulatePassPlay(options = {}) {
     catches,
     failure: terminal ? null : { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS },
     tackle_id: terminal && (terminal.reason === 'tackle' || terminal.reason === 'sack') ? tackle?.tackler.id ?? null : null,
-    sack_id: terminal?.reason === 'sack' ? sack?.defender.id ?? null : null,
+    sack_id: sack?.defender.id ?? null,
+    fumble: fumble && fumbleRecovery ? {
+      fumbler_id: fumble.fumbler.id, forced_by_id: fumble.forcedBy.id,
+      fumble_spot: { x: fumble.spot.x / YD, y: fumble.spot.y / YD },
+      recovery_team: fumbleRecovery.team, recoverer_id: fumbleRecovery.id,
+      recovery_spot: { x: fumbleRecoverySpot.x / YD, y: fumbleRecoverySpot.y / YD },
+      dead_ball_spot: terminal?.spot ?? null,
+      return_yards: terminal && carrier ? (terminal.spot.x - fumbleRecoverySpot.x / YD)
+        * (carrier.team === 'O' ? dir : -dir) : null,
+    } : null,
     interception_id: catches.find((c) => c.team === 'D')?.player_id ?? null,
     blockers, topSpeed,
     diagnostics: {
