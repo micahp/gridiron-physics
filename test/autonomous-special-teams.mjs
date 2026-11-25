@@ -14,7 +14,8 @@ function call({ kind = 'punt', seed = 42, cth = 78, kpw = 70, kac = 70, awr = 70
   }]));
   return {
     schema_version: 'gridiron.autonomous-special-teams.v1', kind, seed,
-    kicking_team: 'A', receiving_team: 'B', yardline_100: kind === 'punt' ? 45 : 65,
+    kicking_team: 'A', receiving_team: 'B',
+    yardline_100: kind === 'punt' ? 45 : kind === 'field_goal' ? 35 : 65,
     ball_lateral_yards: 26.67,
     lineups: {
       kicking: { [kind === 'punt' ? 'punter' : 'kicker']: 'K', coverage: ids.slice(1, 11) },
@@ -43,6 +44,23 @@ assert.equal(kickoff.diagnostics.assignments_executed, 22);
 assert.equal(kickoff.trajectory.roster.length, 22);
 assert.ok(kickoff.events.some((event) => event.type === 'catch' || event.type === 'muff'
   || event.type === 'whistle' && event.reason === 'touchback'));
+
+const fieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42 }));
+assert.equal(fieldGoal.status, 'complete');
+assert.equal(fieldGoal.diagnostics.assignments_executed, 22);
+assert.equal(fieldGoal.trajectory.roster.length, 22);
+assert.ok(['made', 'missed', 'blocked'].includes(fieldGoal.result.result));
+assert.ok(fieldGoal.events.some((event) => event.type === 'long_snap'));
+assert.ok(fieldGoal.events.some((event) => event.type === 'field_goal_made'
+  || event.type === 'field_goal_missed' || event.type === 'kick_blocked'));
+const weakFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 1 }));
+const strongFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 99 }));
+assert.ok(strongFieldGoal.diagnostics.kick_model.power_limit_mps
+  > weakFieldGoal.diagnostics.kick_model.power_limit_mps);
+const lowAccuracyFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kac: 1 }));
+const highAccuracyFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kac: 99 }));
+assert.ok(highAccuracyFieldGoal.diagnostics.kick_model.horizontal_sigma_meters
+  < lowAccuracyFieldGoal.diagnostics.kick_model.horizontal_sigma_meters);
 
 const poorHands = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 2, cth: 1 }));
 const sureHands = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 2, cth: 99 }));
@@ -91,4 +109,4 @@ assert.equal(safetyFreeTouchback.result.dead_ball_yardline_100, 20);
 const missingRatings = call({ kind: 'punt', seed: 42 });
 delete missingRatings.player_profiles.K.ratings.KPW;
 assert.throws(() => simulateAutonomousSpecialTeams(missingRatings), /K\.ratings_missing:KPW/);
-console.log('autonomous punts and kickoffs execute 22 assignments, resolve live catches/muffs/returns, and map ratings to behavior');
+console.log('autonomous punts, kickoffs, and field goals execute 22 assignments, resolve live outcomes, and map ratings to behavior');

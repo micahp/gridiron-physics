@@ -55,7 +55,7 @@ function validateInput(input) {
     'yardline_100', 'ball_lateral_yards', 'lineups', 'player_profiles']);
   for (const key of Object.keys(input)) if (!allowed.has(key)) throw new TypeError(`unsupported special-teams input: ${key}`);
   if (input.schema_version !== 'gridiron.autonomous-special-teams.v1') throw new TypeError('unsupported special-teams schema');
-  if (!['punt', 'kickoff'].includes(input.kind)) throw new RangeError('special-teams kind must be punt or kickoff');
+  if (!['punt', 'kickoff', 'field_goal'].includes(input.kind)) throw new RangeError('special-teams kind must be punt, kickoff, or field_goal');
   if (!(typeof input.seed === 'string' && input.seed.trim()) && !Number.isInteger(input.seed)) throw new TypeError('seed must be a non-empty string or integer');
   for (const key of ['kicking_team', 'receiving_team']) if (typeof input[key] !== 'string' || !input[key].trim()) throw new TypeError(`${key} must be a team identity`);
   if (input.kicking_team === input.receiving_team) throw new TypeError('special-teams units must belong to different teams');
@@ -113,6 +113,7 @@ function skill(rating) { return 0.75 + 0.5 * ((rating ?? 60) - 50) / 50; }
 /** Simulate one punt or kickoff from the live kick through the return whistle. */
 export function simulateAutonomousSpecialTeams(input) {
   const cfg = validateInput(input);
+  if (cfg.kind === 'field_goal') return simulateAutonomousFieldGoal(cfg);
   const rand = rng(cfg.seed);
   const W = new World(rand);
   const lineups = cfg.lineups;
@@ -503,4 +504,248 @@ export function simulateAutonomousSpecialTeams(input) {
       provenance: 'generated kick placement and live bounded player execution' },
   };
   return resultRecord;
+}
+
+function simulateAutonomousFieldGoal(cfg) {
+  const rand = rng(cfg.seed);
+  const W = new World(rand);
+  const { kicking, receiving } = cfg.lineups;
+  const ballY = cfg.ball_lateral_yards * YD;
+  const los = 100 - cfg.yardline_100;
+  const center = FIELD_W / 2;
+  const assignments = new Map();
+  const roster = [];
+  const seekPlayer = (p, target, fraction = 1, decel = 7) => {
+    const dx = target.x - p.p.x, dy = target.y - p.p.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 0.05) return { x: 0, y: 0 };
+    const speed = Math.min(p.vmax * fraction, Math.sqrt(2 * decel * d));
+    return { x: dx / d * speed, y: dy / d * speed };
+  };
+  const nearestPlayer = (from, list) => list.filter((p) => !p.down)
+    .sort((a, b) => dist(a.p, from.p) - dist(b.p, from.p) || a.id.localeCompare(b.id))[0] ?? null;
+  const add = (id, team, role, x, y, task, index = null) => {
+    const archetype = role === 'specialist' ? 'kicker' : role;
+    const p = W.add(new Player(infoFor(id, archetype, cfg.profiles), team, role));
+    p.p = { x: x * YD, y };
+    p.h = team === 'K' ? 0 : Math.PI;
+    p.ai.assignment = task;
+    p.ai.decision = 'execute assigned field-goal responsibility';
+    p.ai.nextDecision = 0;
+    p.ai.index = index;
+    p.ai.role = role;
+    p.roleKey = `${team}.${role}${index == null ? '' : index + 1}`;
+    p.engageMul = skill(p.R.RBK ?? p.R.IBL ?? p.R.BSH ?? 60)
+      * (0.8 + 0.2 * (p.R.STR ?? 60) / 80);
+    assignments.set(id, task);
+    roster.push({ id, team, slot: p.roleKey, roleKey: p.roleKey });
+    W.event('assignment_executed', { player_id: id, role: p.roleKey, task });
+    return p;
+  };
+  const kicker = add(kicking.kicker, 'K', 'specialist', los - 10, ballY,
+    'approach the placed ball and kick through the upright window');
+  const snapper = add(kicking.coverage[0], 'K', 'blocker', los, ballY,
+    'long snap to the holder');
+  const holder = add(kicking.coverage[1], 'K', 'blocker', los - 7, ballY,
+    'receive the snap and place the ball');
+  const protectors = kicking.coverage.slice(2).map((id, i) => {
+    const y = center + ((i - 3.5) * 0.85 * YD);
+    return add(id, 'K', 'blocker', los - 0.7, y,
+      'protect the kicker and hold the kick lane', i);
+  });
+  const rushers = [receiving.returner, ...receiving.blockers].map((id, i) => {
+    const y = center + ((i - 5) * 0.8 * YD);
+    return add(id, 'R', i === 0 ? 'returner' : 'coverage', los + 0.45, y,
+      'rush the assigned gap and attempt to block the kick', i);
+  });
+
+  const frames = [];
+  const stride = roster.length * 6 + 6;
+  const record = () => {
+    const frame = new Float32Array(stride);
+    let n = 0;
+    for (const p of W.players) {
+      frame[n++] = p.p.x / YD; frame[n++] = p.p.y / YD; frame[n++] = p.h;
+      frame[n++] = p.speed / YD; frame[n++] = p.down ? POSE.DOWN : p.pose; frame[n++] = p.hasBall ? 1 : 0;
+    }
+    const b = W.ball;
+    frame[n++] = b.x / YD; frame[n++] = b.y / YD; frame[n++] = b.z;
+    frame[n++] = b.spin; frame[n++] = b.rot; frame[n++] = 0;
+    frames.push(frame);
+  };
+  const snapAt = 0.08;
+  const kickAt = 1.05;
+  const goalpostX = 110 * YD;
+  const distanceYards = cfg.yardline_100 + 17;
+  const kickPower = clamp(kicker.R.KPW ?? 70, 1, 99);
+  const kickAccuracy = clamp(kicker.R.KAC ?? 70, 1, 99);
+  const accuracyScale = clamp(1.5 - kickAccuracy * 0.01, 0.45, 1.5);
+  const horizontalSigma = (0.7 + distanceYards * 0.018) * accuracyScale;
+  const verticalSigma = (0.65 + distanceYards * 0.01) * accuracyScale;
+  const target = {
+    x: goalpostX,
+    y: ballY + rand.normal() * horizontalSigma,
+    z: 3.75 + rand.normal() * verticalSigma,
+  };
+  let snapCaught = false;
+  let snapStarted = false;
+  let kickLaunched = false;
+  let blocked = false;
+  let resultName = null;
+  let terminal = null;
+  let crossing = null;
+  let nextFrame = 0;
+  let previousBall = null;
+  let kickModel = null;
+
+  W.ball.state = 'held';
+  W.ball.holder = snapper;
+  W.ball.hand = 'chest';
+  snapper.hasBall = true;
+
+  function setIntent(p, assignment, decision) {
+    if (p.ai.assignment === assignment && p.ai.decision === decision) return;
+    p.ai.assignment = assignment;
+    p.ai.decision = decision;
+    W.event('decision', { player_id: p.id, role: p.roleKey, assignment, decision });
+  }
+
+  function brain(p) {
+    if (p === kicker || p === holder || p === snapper) {
+      p.dv = p === kicker && snapCaught && !kickLaunched
+        ? seekPlayer(p, W.ball, 0.8, 8) : seekPlayer(p, p.p, 0);
+      return;
+    }
+    if (p.team === 'K') {
+      const threat = nearestPlayer(p, rushers.filter((q) => !q.engaged));
+      if (threat) {
+        setIntent(p, 'engage the assigned protection gap', 'meet the nearest rusher and preserve the kick lane');
+        p.dv = seekPlayer(p, { x: threat.p.x - 0.5 * YD, y: threat.p.y }, 0.72, 4.5);
+        if (dist(p.p, threat.p) <= p.r + threat.r + 0.16 * YD) W.engage(p, threat);
+      }
+      return;
+    }
+    const protector = nearestPlayer(p, protectors.filter((q) => !q.engaged));
+    const laneY = p.ai.index == null ? center : center + ((p.ai.index - 5) * 0.8 * YD);
+    const targetPoint = protector ? { x: protector.p.x + 0.25 * YD, y: protector.p.y }
+      : { x: los - 7.5, y: laneY };
+    setIntent(p, 'rush the assigned gap', 'close on the protection and affect the kick');
+    p.dv = seekPlayer(p, targetPoint, 0.88, 5.2);
+    if (protector && dist(p.p, protector.p) <= p.r + protector.r + 0.16 * YD) W.engage(p, protector);
+  }
+
+  for (let step = 0; step < Math.ceil(7 / DT); step++) {
+    if (terminal != null) break;
+    if (!snapStarted && W.t >= snapAt) {
+      snapStarted = true;
+      const from = { x: W.ball.x, y: W.ball.y, z: 0.85 };
+      const to = { x: holder.p.x, y: holder.p.y, z: 0.82 };
+      const snap = solveLaunch(from, to, 0.32, AERO.spiral);
+      snapper.hasBall = false;
+      Object.assign(W.ball, { state: 'snap', holder: null, x: from.x, y: from.y, z: from.z,
+        vx: snap.vx, vy: snap.vy, vz: snap.vz, k: snap.k });
+      W.event('long_snap', { snapper_id: snapper.id, holder_id: holder.id });
+    }
+    const prior = { x: W.ball.x, y: W.ball.y, z: W.ball.z };
+    W.step(DT, brain);
+
+    if (!snapCaught && W.t >= snapAt) {
+      const d = dist(W.ball, holder.p);
+      if (d <= holder.r + 0.55 * YD) {
+        snapCaught = true;
+        snapper.hasBall = false;
+        holder.hasBall = true;
+        holder.mode = 'hold';
+        W.ball.state = 'held'; W.ball.holder = holder; W.ball.hand = 'chest';
+        W.event('snap_catch', { snapper_id: snapper.id, holder_id: holder.id });
+      } else if (W.t > 0.5) {
+        resultName = 'missed'; terminal = W.t;
+        W.event('snap_failed', { snapper_id: snapper.id, holder_id: holder.id });
+      }
+    }
+
+    if (snapCaught && !kickLaunched && W.t >= kickAt) {
+      const pressure = rushers.some((r) => !r.down
+        && dist(r.p, holder.p) <= r.r + holder.r + 0.30 * YD);
+      if (pressure) {
+        blocked = true;
+        resultName = 'blocked';
+        terminal = W.t;
+        W.ball.state = 'loose'; W.ball.holder = null; holder.hasBall = false;
+        W.event('kick_blocked', { blocker_id: nearest(holder, rushers, () => true)?.id ?? null,
+          ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
+      } else {
+        kickLaunched = true;
+        const from = { x: W.ball.x, y: W.ball.y, z: 0.55 };
+        const distanceMeters = Math.max(1, goalpostX - from.x);
+        const flightSeconds = clamp(0.95 + distanceMeters / 25, 1.4, 3.8);
+        const flight = solveLaunch(from, target, flightSeconds, AERO.tumble);
+        const speed = Math.hypot(flight.vx, flight.vy, flight.vz);
+        const powerLimit = 16 + kickPower * 0.15;
+        const powerSufficient = speed <= powerLimit;
+        if (!powerSufficient) {
+          const scale = powerLimit / speed;
+          flight.vx *= scale; flight.vy *= scale; flight.vz *= scale;
+        }
+        Object.assign(W.ball, { state: 'air', holder: null, x: from.x, y: from.y, z: from.z,
+          vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k, tumble: true });
+        holder.hasBall = false;
+        kicker.pose = POSE.KICK;
+        W.event('field_goal_kick', { kicker_id: kicker.id, distance_yards: distanceYards,
+          kick_power: kickPower, kick_accuracy: kickAccuracy, launch_speed_mps: speed,
+          power_limit_mps: powerLimit });
+        kickModel = { power_rating: kickPower, accuracy_rating: kickAccuracy, distance_yards: distanceYards,
+          horizontal_sigma_meters: horizontalSigma, vertical_sigma_meters: verticalSigma,
+          launch_speed_mps: speed, power_limit_mps: powerLimit, power_sufficient: powerSufficient };
+      }
+    }
+
+    if (kickLaunched && W.ball.state === 'air' && W.ball.x >= goalpostX) {
+      const span = W.ball.x - prior.x;
+      const t = span > 1e-9 ? clamp((goalpostX - prior.x) / span, 0, 1) : 1;
+      crossing = { x: goalpostX / YD, y: (prior.y + (W.ball.y - prior.y) * t) / YD,
+        z: prior.z + (W.ball.z - prior.z) * t };
+      const halfWidth = 2.82;
+      const made = kickModel.power_sufficient
+        && Math.abs(crossing.y * YD - ballY) <= halfWidth
+        && crossing.z >= 3.05 + 0.11;
+      resultName = made ? 'made' : 'missed';
+      terminal = W.t;
+      W.event(made ? 'field_goal_made' : 'field_goal_missed', { kicker_id: kicker.id,
+        crossing, distance_yards: distanceYards, power_sufficient: kickModel.power_sufficient });
+    }
+    if (kickLaunched && W.ball.state === 'loose') {
+      resultName = 'missed'; terminal = W.t;
+      W.event('field_goal_missed', { kicker_id: kicker.id, ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD },
+        distance_yards: distanceYards, power_sufficient: kickModel.power_sufficient });
+    }
+    if (W.ball.y < 0 || W.ball.y > FIELD_W) {
+      resultName = 'missed'; terminal = W.t;
+      W.event('field_goal_missed', { kicker_id: kicker.id,
+        ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD }, distance_yards: distanceYards });
+    }
+    if (terminal == null && W.t >= nextFrame - 1e-9) {
+      record(); nextFrame += 1 / REC_HZ;
+    }
+  }
+  if (terminal == null) return { schema_version: 'gridiron.autonomous-special-teams.v1',
+    status: 'failed', kind: cfg.kind, seed: cfg.seed,
+    failure: { reason: 'field_goal_flight_time_cap', time_limit_seconds: 7 }, events: W.events,
+    trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
+    diagnostics: { assignments_executed: assignments.size, expected_assignments: 22, outcome_inputs: [] } };
+
+  if (frames.length === 0 || terminal - (frames.length - 1) / REC_HZ > 1e-6) record();
+  W.event('whistle', { reason: blocked ? 'blocked_field_goal' : `field_goal_${resultName}`, terminal_t: terminal });
+  const result = { result: resultName, possession_after: resultName === 'made' ? null : 'receiving_team',
+    kick_spot_yardline_100: cfg.yardline_100, distance_yards: distanceYards,
+    elapsed_seconds: terminal, clock_runoff_seconds: Math.ceil(terminal), scoring: resultName === 'made' ? 'field_goal' : null,
+    out_of_bounds: false, returner_id: null, crossing };
+  return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'complete', kind: cfg.kind,
+    seed: cfg.seed, kicking_team: cfg.kicking_team, receiving_team: cfg.receiving_team, result,
+    events: W.events, trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
+    diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
+      decision_counts: Object.fromEntries(W.players.map((p) => [p.id, 1])), outcome_inputs: [],
+      player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
+        top_speed_yards_per_second: p.topSpeed / YD, distance_yards: p.dist / YD })),
+      kick_model: kickModel, outcome: resultName, blocked, provenance: 'generated snap, protection, kick flight, and goal geometry' } };
 }
