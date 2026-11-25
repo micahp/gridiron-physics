@@ -23,5 +23,21 @@ try {
   assert.equal(first.id, 2); assert.equal(second.id, 3);
   const examples = await request({id: 4, op: 'example_assignments', concept:'four_verticals', coverage:'man'});
   assert.deepEqual(examples.value, exampleAssignments('four_verticals', 'man'));
-  console.log('persistent server: error isolation, multiple plays and deterministic replay passed');
+  const ids = ['K', ...Array.from({length: 10}, (_, i) => `C${i}`), 'R',
+    ...Array.from({length: 10}, (_, i) => `B${i}`)];
+  const specialTeams = {
+    schema_version: 'gridiron.autonomous-special-teams.v1', kind: 'punt', seed: 42,
+    kicking_team: 'A', receiving_team: 'B', yardline_100: 45,
+    lineups: { kicking: { punter: 'K', coverage: ids.slice(1, 11) },
+      receiving: { returner: 'R', blockers: ids.slice(12) } },
+    player_profiles: Object.fromEntries(ids.map((id) => [id, {ratings: {SPD: 76, ACC: 75,
+      AGI: 75, STR: 68, AWR: 70, PUR: 75, TAK: 70, RBK: 70, CTH: 78, CAR: 78,
+      BCV: 75, ELU: 75, KPW: 70, KAC: 70}}])),
+  };
+  const special = await request({id: 5, op: 'special_teams', call: specialTeams});
+  assert.equal(special.ok, true);
+  assert.equal(special.value.status, 'complete');
+  assert.equal(special.value.diagnostics.assignments_executed, 22);
+  assert.equal(special.value.trajectory.roster.length, 22);
+  console.log('persistent server: error isolation, scrimmage replay and autonomous special teams passed');
 } finally { child.stdin.end(); }

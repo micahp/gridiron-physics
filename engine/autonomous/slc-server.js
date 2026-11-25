@@ -2,6 +2,7 @@
 import { createInterface } from 'node:readline';
 import { performance } from 'node:perf_hooks';
 import { simulateAutonomousPlay } from './simulator.js';
+import { simulateAutonomousSpecialTeams } from './special-teams.js';
 import { exampleAssignments, exampleRunAssignments } from './example-assignments.js';
 
 const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
@@ -12,6 +13,7 @@ for await (const line of input) {
     const start = performance.now();
     let value;
     if (request.op === 'play') value = simulateAutonomousPlay(request.call);
+    else if (request.op === 'special_teams') value = simulateAutonomousSpecialTeams(request.call);
     else if (request.op === 'example_assignments') value = exampleAssignments(request.concept, request.coverage);
     else if (request.op === 'example_run_assignments') value = exampleRunAssignments(request.direction);
     else throw new RangeError('unsupported operation');
