@@ -102,6 +102,8 @@ assert.equal(outOfBounds.result.out_of_bounds, true);
 assert.equal(outOfBounds.result.returner_id, null);
 assert.equal(outOfBounds.result.return_yards, null);
 assert.equal(outOfBounds.result.clock_runoff_seconds, 0);
+assert.equal(outOfBounds.result.out_of_bounds_spot_yardline_100,
+  outOfBounds.result.dead_ball_yardline_100);
 const kickback = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 12 }));
 assert.equal(kickback.result.result, 'touchback');
 assert.equal(kickback.result.clock_runoff_seconds, 0);

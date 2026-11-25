@@ -477,7 +477,9 @@ export function simulateAutonomousSpecialTeams(input) {
     result = { result: deadReason, possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: Math.round(100 - deadBall.x), return_yards: null,
-      returner_id: null, out_of_bounds: deadReason === 'out_of_bounds' };
+      returner_id: null, out_of_bounds: deadReason === 'out_of_bounds',
+      ...(deadReason === 'out_of_bounds'
+        ? { out_of_bounds_spot_yardline_100: Math.round(100 - deadBall.x) } : {}) };
   } else {
     const startX = returnStartXActual ?? clamp(landingX, 1, 99);
     const startSpot = Math.round(100 - startX);
