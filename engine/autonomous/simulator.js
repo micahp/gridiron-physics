@@ -13,26 +13,31 @@ const DEFENSE_SLOTS = ['LEDGE', 'LDT', 'RDT', 'REDGE', 'MLB', 'WLB', 'NB', 'LCB'
 // The shared roster aligns nickel personnel for both nickel over and under.
 const RUSH_FRONT = { nickel_over: 'nickel', nickel_under: 'nickel', nickel: 'nickel', over: 'over', under: 'under', even: 'even', odd: 'odd', bear: 'bear' };
 
-function translateRunAssignments(assignments) {
+function defenseSlotToRoster(slot, front) {
+  if (['even', 'over', 'under'].includes(front) && slot === 'NB') return 'SAM';
+  return DEFENSE_SLOT_TO_ROSTER[slot] ?? slot;
+}
+
+function translateRunAssignments(assignments, front) {
   if (!assignments) return null;
   const defense = {};
   for (const [slot, task] of Object.entries(assignments.defense)) {
-    const role = DEFENSE_SLOT_TO_ROSTER[slot] ?? slot;
+    const role = defenseSlotToRoster(slot, front);
     defense[`D.${role}`] = { ...task };
   }
   const offense = Object.fromEntries(Object.entries(assignments.offense).map(([slot, task]) => [
     `O.${slot}`,
-    task.target_slot ? { ...task, target_slot: `D.${DEFENSE_SLOT_TO_ROSTER[task.target_slot] ?? task.target_slot}` } : { ...task },
+    task.target_slot ? { ...task, target_slot: `D.${defenseSlotToRoster(task.target_slot, front)}` } : { ...task },
   ]));
   return { ...offense, ...defense };
 }
 
-function translation(map, toRoster) {
+function translation(map, toRoster, front) {
   if (!toRoster) return map;
   const out = {};
   for (const [key, value] of Object.entries(map)) {
     const [team, slot] = key.split('.');
-    out[`${team}.${team === 'D' ? (DEFENSE_SLOT_TO_ROSTER[slot] ?? slot) : slot}`] = value;
+    out[`${team}.${team === 'D' ? defenseSlotToRoster(slot, front) : slot}`] = value;
   }
   return out;
 }
@@ -62,6 +67,9 @@ export function scenarioFromCall(call) {
     }
   }
   const rosterFront = RUSH_FRONT[call.defense.front];
+  if (call.offense.family === 'run' && ['odd', 'bear'].includes(rosterFront)) {
+    throw new RangeError(`run assignment role map is unsupported for ${rosterFront} front`);
+  }
   const allowed = roleKeysForFront(rosterFront);
   const keep = (map) => Object.fromEntries(Object.entries(map).filter(([key]) => allowed.has(key)));
   const common = {
@@ -81,10 +89,10 @@ export function scenarioFromCall(call) {
         ...common,
         runSide: call.offense.direction,
         front: rosterFront,
-        ratingOverrides: keep(translation(ratingOverrides, true)),
-        massOverrides: keep(translation(massOverrides, true)),
-        playerIds: keep(translation(playerIds, true)),
-        ...(call.assignments ? { assignments: translateRunAssignments(call.assignments) } : {}),
+        ratingOverrides: keep(translation(ratingOverrides, true, call.defense.front)),
+        massOverrides: keep(translation(massOverrides, true, call.defense.front)),
+        playerIds: keep(translation(playerIds, true, call.defense.front)),
+        ...(call.assignments ? { assignments: translateRunAssignments(call.assignments, call.defense.front) } : {}),
       },
     };
   }
