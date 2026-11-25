@@ -4,10 +4,12 @@ import { simulateAutonomousSpecialTeams } from '../engine/autonomous/special-tea
 const ids = ['K', ...Array.from({ length: 10 }, (_, i) => `C${i}`), 'R',
   ...Array.from({ length: 10 }, (_, i) => `B${i}`)];
 
-function call({ kind = 'punt', seed = 42, cth = 78, kpw = 70, kac = 70, awr = 70, spd = 76 } = {}) {
+function call({ kind = 'punt', seed = 42, cth = 78, kpw = 70, kac = 70, awr = 70, spd = 76,
+  rush = 70, protect = 70 } = {}) {
   const profiles = Object.fromEntries(ids.map((id) => [id, {
     ratings: { SPD: id === 'R' ? spd : 76, ACC: 75, AGI: 75, STR: 68, AWR: id === 'R' ? awr : 70,
-      PUR: 75, TAK: 70, BSH: 70, RBK: 70, IBL: 70, CTH: id === 'R' ? cth : 78,
+      PUR: 75, TAK: 70, BSH: id.startsWith('B') || id === 'R' ? rush : 70,
+      RBK: 70, IBL: id.startsWith('C') ? protect : 70, CTH: id === 'R' ? cth : 78,
       CAR: 78, BCV: 75, ELU: 75, TRK: 65, PRC: 70,
       KPW: id === 'K' ? kpw : 70, KAC: id === 'K' ? kac : 70 },
     physics: {},
@@ -53,6 +55,15 @@ assert.ok(['made', 'missed', 'blocked'].includes(fieldGoal.result.result));
 assert.ok(fieldGoal.events.some((event) => event.type === 'long_snap'));
 assert.ok(fieldGoal.events.some((event) => event.type === 'field_goal_made'
   || event.type === 'field_goal_missed' || event.type === 'kick_blocked'));
+const blockedFieldGoal = simulateAutonomousSpecialTeams(call({
+  kind: 'field_goal', seed: 0, kpw: 1, kac: 1, rush: 99, protect: 1,
+}));
+assert.equal(blockedFieldGoal.result.result, 'blocked');
+assert.equal(blockedFieldGoal.diagnostics.assignments_executed, 22);
+assert.equal(blockedFieldGoal.trajectory.roster.length, 22);
+assert.equal(blockedFieldGoal.events.filter((event) => event.type === 'kick_blocked').length, 1);
+assert.ok(blockedFieldGoal.events.some((event) => event.type === 'kick_recovery'));
+assert.ok(blockedFieldGoal.events.some((event) => event.type === 'whistle'));
 const weakFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 1 }));
 const strongFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 99 }));
 assert.ok(strongFieldGoal.diagnostics.kick_model.power_limit_mps

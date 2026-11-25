@@ -586,7 +586,7 @@ function simulateAutonomousFieldGoal(cfg) {
     frames.push(frame);
   };
   const snapAt = 0.08;
-  const kickAt = 1.05;
+  const kickAt = 1.6;
   const goalpostX = 110 * YD;
   const distanceYards = cfg.yardline_100 + 17;
   const kickPower = clamp(kicker.R.KPW ?? 70, 1, 99);
@@ -609,6 +609,11 @@ function simulateAutonomousFieldGoal(cfg) {
   let nextFrame = 0;
   let previousBall = null;
   let kickModel = null;
+  let recovery = null;
+  let carrier = null;
+  let tackleStarted = null;
+  let deadReason = null;
+  let deadBall = null;
 
   W.ball.state = 'held';
   W.ball.holder = snapper;
@@ -623,6 +628,38 @@ function simulateAutonomousFieldGoal(cfg) {
   }
 
   function brain(p) {
+    if (blocked) {
+      if (!recovery) {
+        setIntent(p, 'recover the blocked kick', 'track the loose ball and secure possession');
+        p.dv = seekPlayer(p, { x: W.ball.x, y: W.ball.y }, 0.92, 5.5);
+        return;
+      }
+      if (p === carrier) {
+        const direction = carrier.team === 'K' ? 1 : -1;
+        setIntent(p, 'advance the recovered kick', 'protect the ball and take the open field');
+        p.dv = seekPlayer(p, { x: clamp(p.p.x + direction * 5 * YD, 0.5 * YD, 99.5 * YD),
+          y: clamp(p.p.y + (center - p.p.y) * 0.18, 1.5 * YD, FIELD_W - 1.5 * YD) }, 0.96, 5.5);
+        return;
+      }
+      if (p.team !== carrier.team) {
+        setIntent(p, 'pursue the kick recovery', 'close on the current carrier and attempt a tackle');
+        p.dv = seekPlayer(p, { x: carrier.p.x + carrier.v.x * 0.14,
+          y: carrier.p.y + carrier.v.y * 0.14 }, 0.94, 5.0);
+      } else {
+        const threat = nearestPlayer(p, W.players.filter((q) => q.team !== carrier.team));
+        if (threat && Math.abs(threat.p.x - carrier.p.x) < 7 * YD) {
+          setIntent(p, 'protect the kick recovery', 'engage the nearest pursuit player');
+          p.dv = seekPlayer(p, { x: threat.p.x + (carrier.team === 'K' ? -0.5 : 0.5) * YD,
+            y: threat.p.y }, 0.82, 4.5);
+          if (dist(p.p, threat.p) <= p.r + threat.r + 0.16 * YD) W.engage(p, threat);
+        } else {
+          setIntent(p, 'escort the kick recovery', 'stay ahead of the carrier and preserve the return lane');
+          p.dv = seekPlayer(p, { x: carrier.p.x + (carrier.team === 'K' ? 3 : -3) * YD,
+            y: carrier.p.y + ((p.ai.index ?? 0) % 3 - 1) * 1.1 * YD }, 0.78, 4.5);
+        }
+      }
+      return;
+    }
     if (p === kicker || p === holder || p === snapper) {
       p.dv = p === kicker && snapCaught && !kickLaunched
         ? seekPlayer(p, W.ball, 0.8, 8) : seekPlayer(p, p.p, 0);
@@ -635,6 +672,22 @@ function simulateAutonomousFieldGoal(cfg) {
         p.dv = seekPlayer(p, { x: threat.p.x - 0.5 * YD, y: threat.p.y }, 0.72, 4.5);
         if (dist(p.p, threat.p) <= p.r + threat.r + 0.16 * YD) W.engage(p, threat);
       }
+      return;
+    }
+    if (p.engaged) {
+      const engagement = W.engagements.find((row) => row.a === p || row.b === p);
+      if (engagement && (p.ai.nextShed == null || W.t >= p.ai.nextShed)) {
+        const blocker = engagement.a === p ? engagement.b : engagement.a;
+        const advantage = (p.R.BSH ?? 60) - (blocker.R.IBL ?? blocker.R.RBK ?? 60);
+        const shedChance = clamp(0.46 + advantage * 0.006, 0.12, 0.86);
+        setIntent(p, 'shed the assigned protector', 'use block-shed skill and current leverage to reach the holder');
+        p.ai.nextShed = W.t + clamp(0.72 - ((p.R.AWR ?? 60) - 60) * 0.004, 0.42, 1.25);
+        if (rand() < shedChance) W.disengage(engagement, p);
+      }
+    }
+    if (p === rushers[0]) {
+      setIntent(p, 'rush the holder through the center gap', 'close on the live snap and attempt to block the kick');
+      p.dv = seekPlayer(p, { x: holder.p.x + 0.65 * YD, y: holder.p.y }, 0.94, 5.4);
       return;
     }
     const protector = nearestPlayer(p, protectors.filter((q) => !q.engaged));
@@ -676,15 +729,24 @@ function simulateAutonomousFieldGoal(cfg) {
       }
     }
 
-    if (snapCaught && !kickLaunched && W.t >= kickAt) {
+    if (snapCaught && !kickLaunched && !blocked && W.t >= kickAt) {
       const pressure = rushers.some((r) => !r.down
-        && dist(r.p, holder.p) <= r.r + holder.r + 0.30 * YD);
+        && dist(r.p, holder.p) <= r.r + holder.r + 1.25 * YD
+          + ((r.R.BSH ?? 60) - 60) * 0.008 * YD);
       if (pressure) {
         blocked = true;
         resultName = 'blocked';
-        terminal = W.t;
         W.ball.state = 'loose'; W.ball.holder = null; holder.hasBall = false;
-        W.event('kick_blocked', { blocker_id: nearest(holder, rushers, () => true)?.id ?? null,
+        const blocker = nearestPlayer(holder, rushers);
+        if (blocker) {
+          const dx = W.ball.x - blocker.p.x, dy = W.ball.y - blocker.p.y;
+          const length = Math.hypot(dx, dy) || 1;
+          W.ball.vx = (dx / length) * 4.2 + blocker.v.x * 0.22;
+          W.ball.vy = (dy / length) * 3.0 + blocker.v.y * 0.18;
+          W.ball.vz = 2.2;
+          W.ball.k = 0.25;
+        }
+        W.event('kick_blocked', { blocker_id: blocker?.id ?? null,
           ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
       } else {
         kickLaunched = true;
@@ -709,6 +771,51 @@ function simulateAutonomousFieldGoal(cfg) {
         kickModel = { power_rating: kickPower, accuracy_rating: kickAccuracy, distance_yards: distanceYards,
           horizontal_sigma_meters: horizontalSigma, vertical_sigma_meters: verticalSigma,
           launch_speed_mps: speed, power_limit_mps: powerLimit, power_sufficient: powerSufficient };
+      }
+    }
+
+    if (blocked && recovery == null && W.ball.state === 'loose') {
+      const candidates = [...W.players].filter((p) => !p.down)
+        .sort((a, b) => dist(a.p, W.ball) - dist(b.p, W.ball) || a.id.localeCompare(b.id));
+      const candidate = candidates[0];
+      if (candidate && dist(candidate.p, W.ball) <= 1.3 * YD
+          && rand() <= clamp(0.55 + ((candidate.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9)) {
+        recovery = carrier = candidate;
+        candidate.hasBall = true;
+        candidate.mode = 'carry';
+        W.ball.state = 'held'; W.ball.holder = candidate; W.ball.hand = 'carry';
+        W.event('kick_recovery', { player_id: candidate.id, team: candidate.team,
+          ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
+      }
+    }
+    if (blocked && carrier && terminal == null) {
+      W.ball.x = carrier.p.x + Math.cos(carrier.h) * carrier.r * 0.6;
+      W.ball.y = carrier.p.y + Math.sin(carrier.h) * carrier.r * 0.6;
+      W.ball.z = 1.05;
+      const opponent = W.players.filter((p) => p.team !== carrier.team && !p.down && !p.engaged)
+        .sort((a, b) => dist(a.p, carrier.p) - dist(b.p, carrier.p) || a.id.localeCompare(b.id))[0];
+      if (tackleStarted == null && opponent
+          && dist(opponent.p, carrier.p) <= opponent.r + carrier.r + 0.38 * YD) {
+        W.wrap(opponent, carrier, { fall: 0.28, keepCarrier: 0.28 });
+        tackleStarted = W.t;
+        W.event('return_tackle', { tackler_id: opponent.id, returner_id: carrier.id });
+      }
+      if ((carrier.team === 'R' && carrier.p.x <= 0.55 * YD)
+          || (carrier.team === 'K' && carrier.p.x >= 99.45 * YD)) {
+        deadReason = 'touchdown'; terminal = W.t;
+        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+        W.event('touchdown', { player_id: carrier.id, team: carrier.team });
+      } else if ((carrier.team === 'R' && carrier.p.x >= 99.45 * YD)
+          || (carrier.team === 'K' && carrier.p.x <= 0.55 * YD)) {
+        deadReason = 'safety'; terminal = W.t;
+        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+        W.event('safety', { player_id: carrier.id, team: carrier.team });
+      } else if (carrier.p.y < 0 || carrier.p.y > FIELD_W) {
+        deadReason = 'out_of_bounds'; terminal = W.t;
+        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+      } else if (tackleStarted != null && W.t - tackleStarted >= 0.3) {
+        deadReason = 'tackle'; terminal = W.t;
+        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
       }
     }
 
@@ -742,16 +849,32 @@ function simulateAutonomousFieldGoal(cfg) {
   }
   if (terminal == null) return { schema_version: 'gridiron.autonomous-special-teams.v1',
     status: 'failed', kind: cfg.kind, seed: cfg.seed,
-    failure: { reason: 'field_goal_flight_time_cap', time_limit_seconds: 7 }, events: W.events,
+    failure: { reason: blocked ? 'blocked_field_goal_recovery_time_cap' : 'field_goal_flight_time_cap',
+      time_limit_seconds: 7 }, events: W.events,
     trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
     diagnostics: { assignments_executed: assignments.size, expected_assignments: 22, outcome_inputs: [] } };
 
   if (frames.length === 0 || terminal - (frames.length - 1) / REC_HZ > 1e-6) record();
   W.event('whistle', { reason: blocked ? 'blocked_field_goal' : `field_goal_${resultName}`, terminal_t: terminal });
-  const result = { result: resultName, possession_after: resultName === 'made' ? null : 'receiving_team',
-    kick_spot_yardline_100: cfg.yardline_100, distance_yards: distanceYards,
-    elapsed_seconds: terminal, clock_runoff_seconds: Math.ceil(terminal), scoring: resultName === 'made' ? 'field_goal' : null,
-    out_of_bounds: false, returner_id: null, crossing };
+  const result = blocked
+    ? { result: 'blocked', possession_after: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
+        recovery_team: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
+        recovery_yardline_100: Math.round(100 - recovery.p.x / YD),
+        dead_ball_yardline_100: Math.round(100 - deadBall.x),
+        return_yards: recovery.team === 'R'
+          ? Math.round((100 - deadBall.x) - (100 - recovery.p.x / YD)) : null,
+        recoverer_id: recovery.id, returner_id: recovery.team === 'R' ? recovery.id : null,
+        scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,
+        scoring_team: deadReason === 'safety' ? (recovery.team === 'R' ? 'kicking_team' : 'receiving_team')
+          : deadReason === 'touchdown' ? (recovery.team === 'R' ? 'receiving_team' : 'kicking_team') : null,
+        kick_spot_yardline_100: cfg.yardline_100, distance_yards: distanceYards,
+        elapsed_seconds: terminal, clock_runoff_seconds: Math.ceil(terminal),
+        out_of_bounds: deadReason === 'out_of_bounds', crossing: null }
+    : { result: resultName, possession_after: resultName === 'made' ? null : 'receiving_team',
+        kick_spot_yardline_100: cfg.yardline_100, distance_yards: distanceYards,
+        elapsed_seconds: terminal, clock_runoff_seconds: Math.ceil(terminal),
+        scoring: resultName === 'made' ? 'field_goal' : null,
+        out_of_bounds: false, returner_id: null, crossing };
   return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'complete', kind: cfg.kind,
     seed: cfg.seed, kicking_team: cfg.kicking_team, receiving_team: cfg.receiving_team, result,
     events: W.events, trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
