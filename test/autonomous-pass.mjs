@@ -50,9 +50,9 @@ const dpi = simulatePassPlay({
 });
 const dpiEvent = dpi.events.find((event) => event.type === 'pass_interference');
 assert.ok(dpiEvent, 'downfield contact with a catchable live pass generates defensive interference');
-assert.equal(dpi.terminal.reason, 'incomplete', 'the penalty whistles the play dead before the catch result');
+assert.ok(dpi.terminal.time > dpiEvent.t,
+  'DPI is recorded during the pass and does not itself end live execution');
 assert.equal(dpi.events.at(-1).type, 'whistle');
-assert.equal(dpi.events.filter((event) => ['catch', 'interception'].includes(event.type)).length, 0);
 
 // Defensive return progress follows the returner's direction, independent of
 // which way the intercepted offense was attacking. The dead spot cannot be

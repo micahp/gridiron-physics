@@ -734,9 +734,9 @@ export function simulatePassPlay(options = {}) {
       ball_distance_yards: Number(ballDistance.toFixed(2)),
       closing_speed_mps: closingSpeed == null ? null : Number(closingSpeed.toFixed(2)),
     });
-    // Accepted DPI makes the pass dead at the foul spot. The rules adapter
-    // later applies the spot foul and automatic first down from this fact.
-    finish('incomplete', { x: receiver.p.x, y: receiver.p.y });
+    // Record the foul while the ball remains live. The pass, catch, interception,
+    // return, and whistle still resolve through the ordinary execution path;
+    // the rules adapter evaluates acceptance after those live facts exist.
   }
 
   W.onTouch = (a, b) => {

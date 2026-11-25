@@ -110,4 +110,10 @@ Before future movement scoring, reconcile the reported **9,456 manifest rows / 9
 
 **Stop condition:** If no suitable full-play tracking is available, narrow explicitly to the published 2026 Big Data Bowl throw-to-arrival benchmark or deliver an access blocker. Do not claim a 20–50 full-play validation was performed without the data.
 
+## V1 Complete disk and runtime stewardship
+- Keep generated game outputs outside the repository and write them only after validation passes.
+- Do not persist full-resolution trajectories for batch runs; retain compact summaries and the minimum replay needed to reproduce a defect.
+- Reuse pinned input datasets and caches instead of copying them into each worktree. Check free disk and memory before seeded batches; run one bounded batch at a time.
+- Run Python with `/root/envs/lp-standard/bin/python` (`lp-python`) and never install packages.
+
 The [Roadmap](ROADMAP.md) records historical milestones. The [ratings-to-physics integration review](docs/research/RATINGS-TO-PHYSICS-INTEGRATION-REVIEW-2026-10-23.md) remains the frozen decision on prior experimental mappings.
