@@ -38,6 +38,7 @@ assert.deepEqual(simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 42 })
 
 const kickoff = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 42 }));
 assert.equal(kickoff.status, 'complete');
+assert.equal(kickoff.result.result, 'return');
 assert.equal(kickoff.diagnostics.assignments_executed, 22);
 assert.equal(kickoff.trajectory.roster.length, 22);
 assert.ok(kickoff.events.some((event) => event.type === 'catch' || event.type === 'muff'
@@ -46,6 +47,9 @@ assert.ok(kickoff.events.some((event) => event.type === 'catch' || event.type ==
 const poorHands = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 2, cth: 1 }));
 const sureHands = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 2, cth: 99 }));
 assert.ok(poorHands.events.some((event) => event.type === 'muff'));
+assert.equal(poorHands.result.result, 'muff');
+assert.equal(poorHands.result.recovery_team, 'receiving_team');
+assert.ok(poorHands.result.recoverer_id);
 assert.ok(sureHands.events.some((event) => event.type === 'catch'));
 
 const weakLeg = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 2, kpw: 1 }));
