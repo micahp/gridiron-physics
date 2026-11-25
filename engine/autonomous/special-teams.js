@@ -110,8 +110,8 @@ export function simulateAutonomousSpecialTeams(input) {
   const ballY = cfg.ball_lateral_yards * YD;
   const yFor = (index, total = 10) => clamp((FIELD_W_YD * (index + 0.5)) / total, 2, FIELD_W_YD - 2) * YD;
   const kickoff = cfg.kind === 'kickoff';
-  const kickSpotY100 = kickoff ? 65 : cfg.yardline_100;
-  const los = kickoff ? 35 : 100 - cfg.yardline_100;
+  const kickSpotY100 = cfg.yardline_100;
+  const los = 100 - kickSpotY100;
   const specialistId = kickoff ? lineups.kicking.kicker : lineups.kicking.punter;
   const assignments = new Map();
   const addPlayer = (id, team, role, position, assignment, index) => {
@@ -137,11 +137,11 @@ export function simulateAutonomousSpecialTeams(input) {
     return p;
   };
 
-  const specialistX = kickoff ? 35 : Math.max(2, los - 12);
+  const specialistX = kickoff ? los : Math.max(2, los - 12);
   const specialist = addPlayer(specialistId, 'K', 'specialist', { x: specialistX, y: ballY / YD },
     kickoff ? 'kickoff and cover' : 'receive snap, punt downfield, then cover', null);
   lineups.kicking.coverage.forEach((id, i) => {
-    const x = kickoff ? 40 : los - (i === 4 ? 0.3 : 0.8);
+    const x = kickoff ? los + 5 : los - (i === 4 ? 0.3 : 0.8);
     const p = addPlayer(id, 'K', 'coverage', { x, y: yFor(i) / YD }, `cover lane ${i + 1}; pursue current returner`, i);
     p.ai.lane = i;
   });
@@ -194,7 +194,7 @@ export function simulateAutonomousSpecialTeams(input) {
     ? clamp(59 + (strength - 70) * 0.24 + rand.normal() * 3.6, 45, 76)
     : clamp(41 + (strength - 70) * 0.28 + rand.normal() * 2.8, 28, 62);
   const accuracy = clamp(specialist.R.KAC ?? 70, 1, 99);
-  const kickX = kickoff ? 35 : specialistX + 1.2;
+  const kickX = kickoff ? los : specialistX + 1.2;
   const landingX = kickX + distanceYards;
   const hang = clamp((kickoff ? 3.6 : 3.7) + distanceYards * 0.012, 3.6, 4.8);
   const lateralSigma = (kickoff ? 1.1 : 1.8) * (1.45 - (accuracy - 1) * (0.9 / 98));
@@ -420,7 +420,8 @@ export function simulateAutonomousSpecialTeams(input) {
   if (deadReason === 'touchback') {
     result = { result: 'touchback', possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
-      dead_ball_yardline_100: kickoff ? 35 : 20, return_yards: null, returner_id: null };
+      dead_ball_yardline_100: kickoff ? (kickSpotY100 === 80 ? 20 : 35) : 20,
+      return_yards: null, returner_id: null };
   } else if (deadReason === 'muff_recovery') {
     const team = recovery?.team === 'K' ? 'kicking_team' : 'receiving_team';
     const fumbleSpot = Math.round(100 - (W.events.find((e) => e.type === 'muff')?.ball_spot?.x ?? deadBall.x));
