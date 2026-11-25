@@ -83,20 +83,25 @@ assert.ok(highAwareness.diagnostics.decision_counts.R > lowAwareness.diagnostics
 
 assert.throws(() => simulateAutonomousSpecialTeams({ ...call(), final_ball_spot: 81 }), /outcome field/);
 const fairCatch = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 0, cth: 99, awr: 99, spd: 99 }));
+assert.equal(fairCatch.result.result, 'fair_catch');
 assert.equal(fairCatch.result.fair_catch, true);
-assert.equal(fairCatch.result.return_yards, 0);
+assert.equal(fairCatch.result.return_yards, null);
 assert.ok(fairCatch.events.some((event) => event.type === 'fair_catch'));
 const negativeReturn = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 1, cth: 99, awr: 99, spd: 99 }));
 assert.equal(negativeReturn.result.return_yards, -1);
-assert.ok(negativeReturn.result.clock_runoff_seconds > 27);
+assert.equal(negativeReturn.result.clock_runoff_seconds,
+  Math.ceil(negativeReturn.result.elapsed_seconds - negativeReturn.result.catch_elapsed_seconds));
 const outOfBoundsPunt = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 5 }));
 assert.equal(Boolean(outOfBoundsPunt.result.out_of_bounds), false,
   'the centered deterministic kick stays in bounds');
 const outOfBoundsInput = call({ kind: 'punt', seed: 5 });
 outOfBoundsInput.ball_lateral_yards = 1.01;
 const outOfBounds = simulateAutonomousSpecialTeams(outOfBoundsInput);
+assert.equal(outOfBounds.result.result, 'out_of_bounds');
 assert.equal(outOfBounds.result.out_of_bounds, true);
 assert.equal(outOfBounds.result.returner_id, null);
+assert.equal(outOfBounds.result.return_yards, null);
+assert.equal(outOfBounds.result.clock_runoff_seconds, 0);
 const kickback = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 12 }));
 assert.equal(kickback.result.result, 'touchback');
 assert.equal(kickback.result.clock_runoff_seconds, 0);

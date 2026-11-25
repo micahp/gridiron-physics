@@ -466,28 +466,38 @@ export function simulateAutonomousSpecialTeams(input) {
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: recoverySpot, recovery_yardline_100: recoverySpot,
       fumble_spot_yardline_100: fumbleSpot, receiving_team_touched_beyond_line: true,
-      return_yards: 0, returner_id: returner.id, recoverer_id: recovery?.id ?? null };
+      return_yards: null, returner_id: returner.id, recoverer_id: recovery?.id ?? null };
+  } else if (deadReason === 'fair_catch') {
+    const spot = Math.round(100 - deadBall.x);
+    result = { result: 'fair_catch', possession_after: 'receiving_team',
+      kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
+      return_start_yardline_100: spot, dead_ball_yardline_100: spot,
+      return_yards: null, returner_id: returner.id, fair_catch: true };
+  } else if (deadReason === 'downed' || deadReason === 'out_of_bounds') {
+    result = { result: deadReason, possession_after: 'receiving_team',
+      kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
+      dead_ball_yardline_100: Math.round(100 - deadBall.x), return_yards: null,
+      returner_id: null, out_of_bounds: deadReason === 'out_of_bounds' };
   } else {
-    const startX = deadReason === 'out_of_bounds' && returnStartXActual == null
-      ? deadBall.x : returnStartXActual ?? clamp(landingX, 1, 99);
+    const startX = returnStartXActual ?? clamp(landingX, 1, 99);
     const startSpot = Math.round(100 - startX);
     const deadSpot = Math.round(100 - deadBall.x);
     const returnYards = deadSpot - startSpot;
     result = { result: 'return', possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       return_start_yardline_100: Math.round(startSpot), dead_ball_yardline_100: Math.round(deadSpot),
-      return_yards: ['downed', 'out_of_bounds'].includes(deadReason) ? 0 : returnYards,
-      returner_id: ['downed', 'out_of_bounds'].includes(deadReason) ? null : returner.id,
+      return_yards: returnYards, returner_id: returner.id,
       scoring: deadReason === 'touchdown' ? 'touchdown' : null,
-      fair_catch: fairCaught, out_of_bounds: deadReason === 'out_of_bounds' };
+      fair_catch: false, out_of_bounds: false };
   }
   result.elapsed_seconds = terminal;
   result.catch_elapsed_seconds = catchAt;
-  result.clock_runoff_seconds = kickoff
-    ? (deadReason === 'touchback' ? 0
-      : Math.max(0, Math.ceil(terminal - (catchAt ?? terminal))
-        + (['tackle', 'muff_recovery'].includes(deadReason) ? 27 : 0)))
-    : Math.ceil(terminal) + (['tackle', 'muff_recovery', 'downed'].includes(deadReason) ? 27 : 0);
+  // The game clock starts on a legal receiving-team touch and stops at the
+  // whistle. Flight time before that touch and dead-ball time before the next
+  // snap are not charged here; the game lifecycle owns any later restart.
+  result.live_elapsed_seconds = (deadReason === 'touchback' || catchAt == null)
+    ? 0 : Math.max(0, terminal - catchAt);
+  result.clock_runoff_seconds = Math.ceil(result.live_elapsed_seconds);
   W.event('whistle', { reason: deadReason, ball_spot: deadBall, terminal_t: terminal });
   const framesFlat = frames.map((frame) => Array.from(frame));
   const resultRecord = {
