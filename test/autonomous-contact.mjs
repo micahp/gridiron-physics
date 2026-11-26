@@ -28,10 +28,15 @@ const teamOf = (run) => new Map(run.roster.map((p) => [p.id, p.team]));
 for (const run of runs) {
   assert.ok(run.resolved, `${run.seed} resolves (${JSON.stringify(run.failure)})`);
   const teams = teamOf(run);
+  let liveCarrier = run.roster.find((player) => player.roleKey === 'O.QB')?.id ?? null;
   const engagedPairs = new Set();
   const engagementOf = new Map(); // defender id -> current blocker ids
 
   for (const event of run.events) {
+    if (event.type === 'handoff') liveCarrier = event.to;
+    else if (event.type === 'catch' || event.type === 'interception') liveCarrier = event.player_id;
+    else if (event.type === 'fumble') liveCarrier = null;
+    else if (event.type === 'fumble_recovery') liveCarrier = event.recoverer_id;
     if (event.type === 'block_engage') {
       assert.notEqual(event.blocker_id, event.defender_id, `${run.seed}: nobody blocks himself`);
       assert.notEqual(teams.get(event.blocker_id), teams.get(event.defender_id), `${run.seed}: blockers and rushers are opponents`);
@@ -49,11 +54,11 @@ for (const run of runs) {
       assert.ok(engagedPairs.has(`${event.blocker_id}|${event.defender_id}`), `${run.seed}: a release ends a real engagement`);
     }
     if (event.type === 'tackle') {
-      assert.equal(event.on, run.carrier_id, `${run.seed}: the tackled player is the carrier`);
+      assert.equal(event.on, liveCarrier, `${run.seed}: the tackled player holds possession at contact`);
       assert.notEqual(teams.get(event.by), teams.get(event.on), `${run.seed}: a tackler is an opponent`);
     }
     if (event.type === 'broken_tackle') {
-      assert.equal(event.carrier_id, run.carrier_id, `${run.seed}: only the carrier breaks tackles`);
+      assert.equal(event.carrier_id, liveCarrier, `${run.seed}: only the live carrier breaks tackles`);
       assert.notEqual(teams.get(event.defender_id), teams.get(event.carrier_id), `${run.seed}: a broken tackle comes from an opponent`);
     }
     if (event.type === 'sack') {

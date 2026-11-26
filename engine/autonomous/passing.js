@@ -13,7 +13,7 @@ import { createInsideZoneRoster } from '../autonomous-run.js';
 import { estimateBallCatchPoint, estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
 import { routeOffsets } from '../routes.js';
 import { validateAssignments } from './assignments.js';
-import { hazardDeadline, retroDecisionInterval } from './retro-cadence.js';
+import { engagementHazardUniform, hazardDeadline, retroDecisionInterval } from './retro-cadence.js';
 import { serializeReturnGeometry } from './field-geometry.js';
 import { nextRecoveryAttempt } from './contact-attempts.js';
 
@@ -506,6 +506,13 @@ export function simulatePassPlay(options = {}) {
   }
 
   const shedDeadlines = new WeakMap();
+  const shedOrdinals = new Map();
+  function shedUniform(engagement) {
+    const pairKey = [engagement.a.id, engagement.b.id].sort().join('|');
+    const ordinal = shedOrdinals.get(pairKey) ?? 0;
+    shedOrdinals.set(pairKey, ordinal + 1);
+    return engagementHazardUniform(cfg.seed, pairKey, ordinal);
+  }
   function shedDue(defender, engagement, blocker) {
     const attack = defender.info.group === 'DL'
       ? Math.max(defender.R.PMV ?? 50, defender.R.FMV ?? 50, defender.R.BSH ?? 50)
@@ -513,7 +520,7 @@ export function simulatePassPlay(options = {}) {
     const block = blocker.R.PBK ?? blocker.R.RBK ?? 50;
     const rate = clamp(0.34 * Math.exp((attack - block) / 22), 0.05, 3);
     if (!shedDeadlines.has(engagement)) {
-      shedDeadlines.set(engagement, hazardDeadline(engagement.t0, rate, rand()));
+      shedDeadlines.set(engagement, hazardDeadline(engagement.t0, rate, shedUniform(engagement)));
     }
     return W.t >= shedDeadlines.get(engagement);
   }
@@ -549,12 +556,7 @@ export function simulatePassPlay(options = {}) {
         if (shedDue(defender, engagement, blocker)) W.disengage(engagement, defender);
         continue;
       }
-      const attack = defender.info.group === 'DL'
-        ? Math.max(defender.R.PMV ?? 50, defender.R.FMV ?? 50, defender.R.BSH ?? 50)
-        : defender.R.BSH ?? 50;
-      const block = blocker.R.PBK ?? blocker.R.RBK ?? 50;
-      const rate = clamp(0.34 * Math.exp((attack - block) / 22), 0.05, 3);
-      if (rand() < rate * physicsDt) W.disengage(engagement, defender);
+      if (shedDue(defender, engagement, blocker)) W.disengage(engagement, defender);
     }
   }
 

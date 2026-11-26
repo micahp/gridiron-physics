@@ -7,7 +7,7 @@ import { AERO, solveLaunch } from './ball.js';
 import { Player, POSE, World } from './world.js';
 import { serializeReturnGeometry } from './autonomous/field-geometry.js';
 import { nextRecoveryAttempt } from './autonomous/contact-attempts.js';
-import { hazardDeadline } from './autonomous/retro-cadence.js';
+import { engagementHazardUniform, hazardDeadline } from './autonomous/retro-cadence.js';
 
 const MAX_SECONDS = 12;
 const ARM_TACKLE_REACH = 0.12;
@@ -273,6 +273,13 @@ export function simulateInsideZone(options = {}) {
   const pendingEngagements = [];
   const pendingSheds = new Map();
   const shedDeadlines = new WeakMap();
+  const shedOrdinals = new Map();
+  function shedUniform(engagement) {
+    const pairKey = [engagement.a.id, engagement.b.id].sort().join('|');
+    const ordinal = shedOrdinals.get(pairKey) ?? 0;
+    shedOrdinals.set(pairKey, ordinal + 1);
+    return engagementHazardUniform(cfg.seed, pairKey, ordinal);
+  }
   let collectingBrains = false;
   let tickRunnerLane = null;
   W.event = (type, data = {}) => {
@@ -503,7 +510,12 @@ export function simulateInsideZone(options = {}) {
     const attack = d.info.group === 'DL' ? Math.max(d.R.PMV ?? 50, d.R.FMV ?? 50, d.R.BSH ?? 50) : d.R.BSH ?? 50;
     const block = blocker.R.RBK ?? blocker.R.IBL ?? 50;
     const rate = clamp(0.12 * Math.exp((attack - block) / 24), 0.025, 1.6);
-    if (sharedSnapshot) { pendingSheds.set(d.id, { defender: d, engagement: e, rate }); return; }
+    if (sharedSnapshot || cfg.assignments) {
+      if (!shedDeadlines.has(e)) shedDeadlines.set(e, hazardDeadline(e.t0, rate, shedUniform(e)));
+      if (sharedSnapshot) { pendingSheds.set(d.id, { defender: d, engagement: e, rate }); return; }
+      if (W.t >= shedDeadlines.get(e)) W.disengage(e, d);
+      return;
+    }
     if (rand() < rate * DT) W.disengage(e, d);
   }
 
@@ -1010,7 +1022,7 @@ export function simulateInsideZone(options = {}) {
       for (const event of callbackEvents.splice(0)) originalEvent(event.type, event.data);
       for (const { defender, engagement, rate } of [...pendingSheds.values()].sort((a, b) => a.defender.id.localeCompare(b.defender.id))) {
         if (!W.engagements.includes(engagement)) continue;
-        if (!shedDeadlines.has(engagement)) shedDeadlines.set(engagement, hazardDeadline(engagement.t0, rate, rand()));
+        if (!shedDeadlines.has(engagement)) shedDeadlines.set(engagement, hazardDeadline(engagement.t0, rate, shedUniform(engagement)));
         if (W.t >= shedDeadlines.get(engagement)) W.disengage(engagement, defender);
       }
       pendingSheds.clear();

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
+import { exampleAssignments, exampleRunAssignments } from '../engine/autonomous/example-assignments.js';
 import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
 import { buildSampleCall } from './autonomous-fixtures.mjs';
 
 const call = buildSampleCall({ family: 'pass', concept: 'assigned', snap_type: 'shotgun', coverage: 'cover_3' });
-call.seed = '7';
+call.seed = '0';
 call.assignments = exampleAssignments('slant_flat', 'zone');
 call.player_evaluation_mode = 'shared_snapshot';
 const result = simulateAutonomousPlay(call);
@@ -21,7 +21,7 @@ assert.equal(result.diagnostics.reconciliation.ok, true);
 assert.deepEqual(result.diagnostics.outcome_inputs, []);
 
 const interceptionCall = buildSampleCall({ family: 'pass', concept: 'assigned', snap_type: 'shotgun', coverage: 'cover_1' });
-interceptionCall.seed = '18';
+interceptionCall.seed = '15';
 interceptionCall.assignments = exampleAssignments('four_verticals', 'man');
 interceptionCall.player_evaluation_mode = 'shared_snapshot';
 for (const [id, profile] of Object.entries(interceptionCall.player_profiles)) {
@@ -52,4 +52,29 @@ assert.ok(!turnover.events.some((event) => event.type === 'decision' && event.t 
   && /^run .* route$/.test(event.assignment)), 'receivers stop running routes after the turnover');
 assert.equal(turnover.diagnostics.reconciliation.ok, true);
 assert.deepEqual(turnover.diagnostics.outcome_inputs, []);
-console.log('catch and interception transition teammates to support and pursuit');
+
+const fumbleCall = buildSampleCall({ family: 'run', direction: 'right', front: 'nickel_over' });
+fumbleCall.seed = '19';
+fumbleCall.situation.yardline_100 = 40;
+fumbleCall.assignments = exampleRunAssignments('right');
+fumbleCall.player_evaluation_mode = 'shared_snapshot';
+fumbleCall.player_profiles['ne-rb'].ratings.CAR = 1;
+for (const id of Object.values(fumbleCall.defense.lineup)) {
+  Object.assign(fumbleCall.player_profiles[id].ratings, { TAK: 99, STR: 99, PRC: 99 });
+}
+const fumbleReturn = simulateAutonomousPlay(fumbleCall);
+const recovery = fumbleReturn.events.find((event) => event.type === 'fumble_recovery');
+assert.ok(recovery && recovery.team === 'D', 'fixture has a defensive fumble recovery');
+const recoveryDecisions = fumbleReturn.events.filter((event) => event.type === 'decision'
+  && event.t === recovery.t);
+const fumbleHelpers = new Set(recoveryDecisions.filter((event) => event.assignment === 'escort the fumble return')
+  .map((event) => event.player_id));
+assert.equal(fumbleHelpers.size, 10, 'every other defender transitions to recovered-ball support');
+assert.ok([...fumbleHelpers].every((id) => Object.values(fumbleCall.defense.lineup).includes(id)));
+const fumblePursuers = new Set(recoveryDecisions.filter((event) => event.assignment === 'pursue the fumble returner')
+  .map((event) => event.player_id));
+assert.equal(fumblePursuers.size, 11, 'all offensive players transition to fumble-return pursuit');
+assert.ok([...fumblePursuers].every((id) => Object.values(fumbleCall.offense.lineup).includes(id)));
+assert.equal(fumbleReturn.diagnostics.reconciliation.ok, true);
+assert.deepEqual(fumbleReturn.diagnostics.outcome_inputs, []);
+console.log('catch, interception, and fumble transitions enter live support and pursuit');

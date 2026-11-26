@@ -28,6 +28,9 @@ const result = simulateAutonomousPlay(call);
 assert.equal(result.status, 'complete');
 assert.equal(result.diagnostics.reconciliation.ok, true);
 assert.equal(new Set(result.events.filter((e) => e.type === 'assignment_executed').map((e) => e.player_id)).size, 22);
+const snapAt = result.events.find((event) => event.type === 'snap')?.t ?? 0;
+assert.equal(new Set(result.events.filter((event) => event.type === 'decision' && event.t > snapAt)
+  .map((event) => event.player_id)).size, 22, 'every player takes part in live decisions after the snap');
 assert.deepEqual(result.diagnostics.outcome_inputs, []);
 const throwEvent = result.events.find((e) => e.type === 'throw');
 const breaks = result.events.filter((e) => e.type === 'decision'

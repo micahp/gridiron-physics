@@ -1,3 +1,5 @@
+import { rng } from '../rng.js';
+
 // Authored football gameplay cadence. NHL 95 research motivated per-player
 // countdowns; these bounds are not copied from that game's coefficients.
 export function retroDecisionInterval(rating) {
@@ -13,4 +15,12 @@ export function hazardDeadline(start, rate, uniform) {
     throw new RangeError('invalid hazard clock inputs');
   }
   return start - Math.log1p(-uniform) / rate;
+}
+// Give each engagement its own deterministic hazard stream so changing the
+// physics step cannot consume extra draws from the play's shared RNG stream.
+export function engagementHazardUniform(seed, pairKey, ordinal = 0) {
+  if (typeof pairKey !== 'string' || !pairKey || !Number.isInteger(ordinal) || ordinal < 0) {
+    throw new RangeError('invalid engagement hazard identity');
+  }
+  return rng(`engagement-hazard:${String(seed)}:${pairKey}:${ordinal}`)();
 }

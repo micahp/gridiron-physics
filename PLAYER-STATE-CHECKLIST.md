@@ -8,8 +8,8 @@ Work from existing controllers and research; check an item only when its integra
 - [x] Integrate shared-snapshot arbitration and verify callback-order independence in applicable play types.
 - [x] Implement play-specific QB reads and coherent drop, scramble, pass, and legal throwaway transitions.
 - [x] Preserve assigned protection, rush lanes, gaps, and edge contain, including blitz pickup.
-- [ ] Complete runner, receiver, and support transitions after possession changes.
+- [x] Complete runner, receiver, and support transitions after possession changes.
 - [x] Limit loose-ball recovery trials to distinct opportunities across executors.
 - [x] Consolidate and verify special-teams observation, protection, catch, return, and recovery transitions.
-- [ ] Verify hazard timing across decision and physics frequencies and reconcile competing catch attempts.
-- [ ] Demonstrate all 22 players react to live situations without future outcome information in integrated play tests.
+- [x] Verify hazard timing across decision and physics frequencies and reconcile competing catch attempts.
+- [x] Demonstrate all 22 players react to live situations without future outcome information in integrated play tests.
