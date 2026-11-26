@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
-import { createPassRoster, passInterferenceContactEligible, simulatePassPlay } from '../engine/autonomous/passing.js';
+import { createPassRoster, firstUnattemptedContact, passInterferenceContactEligible,
+  pruneExitedContactAttempts, simulatePassPlay } from '../engine/autonomous/passing.js';
 import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
+import { serializeReturnGeometry } from '../engine/autonomous/field-geometry.js';
 
 const base = { seed: 'slant-flat-1', front: 'nickel_over', coverage: 'cover_1', direction: 'right' };
 const a = simulatePassPlay(base);
@@ -34,10 +36,65 @@ for (const row of contestTrace.diagnostics.pass_contests.throws) {
     Number.isInteger(opportunity.resolve_attempts) && Number.isInteger(opportunity.probability_draws)));
   for (const opportunity of row.physical_opportunities) {
     assert.ok(opportunity.resolve_attempts >= 1);
+    assert.ok(opportunity.probability_draws <= 1,
+      'a player receives at most one probability draw during continuous ball contact');
     assert.ok((opportunity.draw_types.contested_interception ?? 0) <= 1);
     assert.ok((opportunity.draw_types.uncontested_interception ?? 0) <= 1);
     assert.ok((opportunity.draw_types.receiver_catch ?? 0) <= 1);
   }
+}
+
+// A defender's attempted interception is keyed to the defender's continuous
+// ball contact, independent of which receiver is currently nearest.
+const receiverAttempts = new Set(['O.WR1']);
+const defenderAttempts = new Set(['D.CB1']);
+pruneExitedContactAttempts(receiverAttempts, ['O.WR1', 'O.WR2']);
+pruneExitedContactAttempts(defenderAttempts, ['D.CB1']);
+assert.equal(defenderAttempts.has('D.CB1'), true,
+  'overlapping/changing receiver candidates do not re-arm the same defender');
+pruneExitedContactAttempts(receiverAttempts, []);
+pruneExitedContactAttempts(defenderAttempts, []);
+assert.equal(receiverAttempts.size, 0, 'complete separation clears receiver contact attempts');
+assert.equal(defenderAttempts.size, 0, 'complete separation clears defender contact attempts');
+pruneExitedContactAttempts(defenderAttempts, ['D.CB1']);
+assert.equal(defenderAttempts.has('D.CB1'), false,
+  're-entry after a full contact exit starts a new opportunity');
+defenderAttempts.add('D.CB1');
+assert.equal(defenderAttempts.has('D.CB1'), true);
+const overlappingReceivers = [{ player: { id: 'O.WR1' } }, { player: { id: 'O.WR2' } }];
+const changingNearestDefenders = [{ player: { id: 'D.CB1' } }, { player: { id: 'D.SS' } }];
+assert.equal(firstUnattemptedContact(overlappingReceivers, new Set(['O.WR1'])).player.id, 'O.WR2',
+  'overlapping receiver contacts retain independent receiver attempt state');
+assert.equal(firstUnattemptedContact(changingNearestDefenders, new Set(['D.CB1'])).player.id, 'D.SS',
+  'a newly contacting defender gets its own chance when the nearest defender changes');
+
+const deflectedPass = simulatePassPlay({ seed: 3, front: 'nickel_over', coverage: 'cover_1',
+  direction: 'right', dir: -1, los: 43, ballY: 26.67, resultOnly: true, contestDiagnostics: true });
+assert.ok(deflectedPass.events.some((event) => event.type === 'pass_deflected'));
+assert.ok(deflectedPass.events.some((event) => event.type === 'catch'),
+  'a deflection can lead to a later distinct receiver interaction');
+for (const opportunity of deflectedPass.diagnostics.pass_contests.throws.flatMap((row) => row.physical_opportunities)) {
+  assert.ok(opportunity.probability_draws <= 1,
+    'a deflection does not repeat a draw while the same player remains in contact');
+}
+
+const reentryPass = simulatePassPlay({ seed: 19, front: 'nickel_over', coverage: 'cover_1',
+  direction: 'right', dir: -1, los: 49, ballY: 26.67, resultOnly: true, contestDiagnostics: true });
+const reenteredDefender = reentryPass.diagnostics.pass_contests.throws[0].physical_opportunities
+  .filter((opportunity) => opportunity.player_id === 'D.NB' && opportunity.probability_draws > 0);
+assert.equal(reenteredDefender.length, 2,
+  'the same defender may draw again only after leaving and re-entering the ball contact envelope');
+assert.notEqual(reenteredDefender[0].opportunity_id, reenteredDefender[1].opportunity_id);
+
+for (const direction of [-1, 1]) for (const carrierTeam of ['O', 'D']) {
+  const recoveryX = 40.5;
+  const deadBallX = direction === 1 ? 39.5 : 41.5;
+  const expectedSign = carrierTeam === 'O' ? direction : -direction;
+  const actual = serializeReturnGeometry({ recoveryX, deadBallX, direction, carrierTeam });
+  const rounded = (x) => Math.floor((direction === 1 ? 100 - x : x) + 0.5);
+  const statSign = carrierTeam === 'O' ? -1 : 1;
+  assert.equal(actual.return_yards, (rounded(deadBallX) - rounded(recoveryX)) * statSign);
+  assert.equal(actual.return_displacement_yards, (deadBallX - recoveryX) * expectedSign);
 }
 
 const throwawayAssignments = exampleAssignments('curls', 'man');
@@ -127,6 +184,8 @@ assert.equal(forcedFumble.fumble.return_yards,
   Math.round(100 - forcedFumble.fumble.dead_ball_spot.x)
     - Math.round(100 - forcedFumble.fumble.recovery_spot.x),
   'statistical return yards subtract whole-yard spots in the snap-offense frame');
+assert.ok(Number.isFinite(forcedFumble.fumble.return_displacement_yards),
+  'pass fumbles retain continuous displacement separately from statistical yardage');
 assert.ok(forcedFumble.events.some((event) => event.type === 'fumble')
   && forcedFumble.events.some((event) => event.type === 'fumble_recovery'));
 assert.equal(protectedBall.fumble, null, 'carrying rating changes fumble exposure at the same seed');

@@ -74,6 +74,14 @@ assert.equal(looseSecurity.fumble.recovery_team, 'D', 'the defense can recover a
 assert.ok(looseSecurity.events.some((event) => event.type === 'fumble')
   && looseSecurity.events.some((event) => event.type === 'fumble_recovery'));
 assert.ok(looseSecurity.fumble.return_yards > 0, 'the recovery is advanced through live movement');
+assert.equal(looseSecurity.fumble.returner_id, looseSecurity.result?.carrier_id ?? looseSecurity.carrier_id,
+  'the returner is recorded separately from the recoverer');
+assert.ok(Number.isFinite(looseSecurity.fumble.return_displacement_yards),
+  'run fumbles preserve continuous return displacement separately');
+assert.equal(looseSecurity.fumble.return_yards,
+  Math.floor(100 - looseSecurity.fumble.dead_ball_spot.x + 0.5)
+    - Math.floor(100 - looseSecurity.fumble.recovery_spot.x + 0.5),
+  'run fumble box-score yards use the shared whole-yard endpoint convention');
 assert.equal(secureSecurity.fumble, null, 'ball-carrier carrying rating changes fumble exposure at the same seed');
 
 const observed = a.roster.flatMap((p) => [0.5, 1.0].map((t) => {

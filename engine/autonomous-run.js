@@ -5,6 +5,7 @@ import { DT, FIELD_W_YD, REC_HZ, YD } from './constants.js';
 import { rng } from './rng.js';
 import { AERO, solveLaunch } from './ball.js';
 import { Player, POSE, World } from './world.js';
+import { serializeReturnGeometry } from './autonomous/field-geometry.js';
 
 const MAX_SECONDS = 12;
 const ARM_TACKLE_REACH = 0.12;
@@ -1023,10 +1024,12 @@ export function simulateInsideZone(options = {}) {
       fumbler_id: fumble.fumbler.id, forced_by_id: fumble.forcedBy.id,
       fumble_spot: { x: fumble.spot.x / YD, y: fumble.spot.y / YD },
       recovery_team: fumbleRecovery.team, recoverer_id: fumbleRecovery.id,
+      returner_id: carrier?.id ?? null,
       recovery_spot: { x: fumbleRecoverySpot.x / YD, y: fumbleRecoverySpot.y / YD },
       dead_ball_spot: terminal?.spot ?? null,
-      return_yards: terminal && carrier ? (terminal.spot.x - fumbleRecoverySpot.x / YD)
-        * (carrier.team === 'O' ? dir : -dir) : null,
+      ...(terminal && carrier ? serializeReturnGeometry({ recoveryX: fumbleRecoverySpot.x / YD,
+        deadBallX: terminal.spot.x, direction: dir, carrierTeam: carrier.team })
+        : { return_yards: null, return_displacement_yards: null }),
     } : null,
     failure: terminal ? null : { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS },
     tackle_id: terminal?.reason === 'tackle' ? tackle?.tackler.id ?? null : null,

@@ -18,3 +18,24 @@ export function statReturnYards(recoveryYardline, deadBallYardline, advanceSign)
   const yards = (deadBallYardline - recoveryYardline) * advanceSign;
   return yards === 0 ? 0 : yards;
 }
+
+// One wire representation shared by run and pass executors. Coordinates stay
+// continuous in absolute field space; box-score yards are computed only after
+// both endpoints are rounded in the snap-offense yardline_100 frame.
+export function serializeReturnGeometry({ recoveryX, deadBallX, direction, carrierTeam }) {
+  if (![recoveryX, deadBallX].every(Number.isFinite)
+      || recoveryX < 0 || recoveryX > 100 || deadBallX < 0 || deadBallX > 100) {
+    throw new RangeError('return geometry coordinates must be between 0 and 100 yards');
+  }
+  if (![direction].every((value) => value === -1 || value === 1)
+      || !['O', 'D'].includes(carrierTeam)) {
+    throw new TypeError('return geometry direction or carrier team is invalid');
+  }
+  const offenseFrame = (x) => roundYardline100(direction === 1 ? 100 - x : x);
+  const advanceSign = carrierTeam === 'O' ? -1 : 1;
+  return {
+    return_yards: statReturnYards(offenseFrame(recoveryX), offenseFrame(deadBallX), advanceSign),
+    return_displacement_yards: (deadBallX - recoveryX)
+      * (carrierTeam === 'O' ? direction : -direction),
+  };
+}
