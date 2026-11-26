@@ -27,6 +27,10 @@ export function firstUnattemptedContact(candidates, attempted, playerId = (candi
   return candidates.find((candidate) => !attempted.has(playerId(candidate))) ?? candidates[0] ?? null;
 }
 
+export function compareBallContact(a, b) {
+  return a.planar - b.planar || a.player.id.localeCompare(b.player.id);
+}
+
 const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
 const QB_FIELD_OF_VIEW = 220 * Math.PI / 180;
@@ -850,7 +854,7 @@ export function simulatePassPlay(options = {}) {
       if (b.z < 0.35 || b.z > 2.75) continue;
       out.push({ player: p, planar });
     }
-    return out.sort((a, b2) => a.planar - b2.planar || a.player.id.localeCompare(b2.player.id));
+    return out.sort(compareBallContact);
   }
 
   function recordAirborneReachability() {
@@ -959,6 +963,25 @@ export function simulatePassPlay(options = {}) {
       ? d2(receiver.player, defender.player) / YD
       : receiver ? 6 : 0;
     const ballZ = W.ball.z;
+
+    // At a simultaneous reach, the closer unattempted player has the first
+    // physical opportunity. A defender already touching the ball must not
+    // pre-empt a newly arriving receiver with another probability draw.
+    if (cfg.assignments && receiver && defender && compareBallContact(defender, receiver) < 0
+        && !attemptedDefenderContacts.has(defender.player.id)) {
+      attemptedDefenderContacts.add(defender.player.id);
+      currentPhysicalOpportunityId = defender.player.id;
+      const chance = clamp(0.045 - separation * 0.03
+        + ((defender.player.R.PRC ?? 60) - 60) * 0.0005, 0.005, 0.05);
+      W.event('catch_contest', { player_id: defender.player.id, team: defender.player.team,
+        chance: Number(chance.toFixed(3)), separation_yards: Number(separation.toFixed(2)),
+        ball_z: Number(ballZ.toFixed(2)) });
+      if (contestRoll('contested_interception', defender.player, chance) < chance) {
+        secure(defender.player); return;
+      }
+      knockDown(defender.player);
+      return;
+    }
 
     if (receiver) {
       let resolvedInteraction = false;
