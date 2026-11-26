@@ -47,6 +47,10 @@ assert.equal(punt.trajectory.roster.length, 22);
 assert.ok(punt.trajectory.frames.length > 20);
 assert.equal(punt.events.at(-1).type, 'whistle');
 assert.ok(punt.events.some((event) => event.type === 'catch' || event.type === 'muff'));
+const observedKick = punt.events.find((event) => event.type === 'kick_observed');
+assert.ok(observedKick && observedKick.player_id === 'R');
+assert.ok(observedKick.observation_age_seconds >= 0.14 - 1e-9,
+  'returner reacts to delayed observed flight');
 assert.equal(punt.result.clock_runoff_seconds, Math.ceil(punt.result.elapsed_seconds),
   'scrimmage-kick clock time includes flight from the snap through the whistle');
 const puntTouchback = simulateAutonomousSpecialTeams({ ...call({ kind: 'punt', seed: 0 }), yardline_100: 15 });
@@ -123,7 +127,7 @@ assert.ok(poorHands.events.some((event) => event.type === 'loose_ball_recovery_a
 assert.deepEqual(poorHands.result.recovery_at,
   { ...muffRecoveryEvent.at, time: muffRecoveryEvent.time },
   'muff return spot keeps the ball coordinates and time from the recovery event');
-const kickingTeamMuff = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 55, cth: 1, awr: 1 }));
+const kickingTeamMuff = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 0, cth: 1, awr: 1 }));
 assert.equal(kickingTeamMuff.status, 'complete');
 assert.equal(kickingTeamMuff.result.recovery_team, 'kicking_team');
 assert.equal(kickingTeamMuff.result.return_yards,
@@ -204,9 +208,9 @@ const safetyFreeTouchback = simulateAutonomousSpecialTeams({
 });
 assert.equal(safetyFreeTouchback.result.result, 'touchback');
 assert.equal(safetyFreeTouchback.result.dead_ball_yardline_100, 20);
-const longKickoffReturn = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 15 }));
+const longKickoffReturn = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 29 }));
 assert.equal(longKickoffReturn.status, 'complete');
-assert.equal(longKickoffReturn.result.return_yards, 68);
+assert.equal(longKickoffReturn.result.return_yards, 67);
 assert.ok(longKickoffReturn.result.elapsed_seconds > 18,
   'a long live kickoff return completes beyond the former 18-second cap');
 assert.equal(longKickoffReturn.result.clock_runoff_seconds,
@@ -220,7 +224,7 @@ const eliteReturnRatings = {
   coverage: { SPD: 50, ACC: 50, AGI: 50, STR: 45, PUR: 50, TAK: 45, BSH: 45 },
   blocker: { SPD: 88, ACC: 88, AGI: 88, STR: 99, BSH: 99, RBK: 99, IBL: 99 },
 };
-const kickoffReturnTouchdown = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 24,
+const kickoffReturnTouchdown = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 2,
   ratingOverrides: eliteReturnRatings }));
 assert.equal(kickoffReturnTouchdown.result.result, 'return');
 assert.equal(kickoffReturnTouchdown.result.scoring, 'touchdown');
