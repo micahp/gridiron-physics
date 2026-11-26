@@ -361,8 +361,9 @@ export class World {
     }
   }
 
-  step(dt, brains) {
+  step(dt, brains, afterBrains = null) {
     for (const p of this.players) brains(p);
+    if (afterBrains) afterBrains();
     this.engagementForces();
     this.wrapForces(dt);
     for (const p of this.players) p.locomote(dt);
