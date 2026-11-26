@@ -467,7 +467,7 @@ export function simulateAutonomousSpecialTeams(input) {
 
   if (muffed && recovery && deadReason === 'touchback') {
     return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
-      failure: { reason: 'muff_recovery_touchback_requires_ceg_play_2_extension' }, events: W.events,
+      failure: { reason: 'muff_recovery_touchback_unmodeled_in_ceg_play_3' }, events: W.events,
       trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
       diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
         decision_counts: Object.fromEntries(decisionCount), outcome_inputs: [],

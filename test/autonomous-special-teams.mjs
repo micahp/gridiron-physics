@@ -97,7 +97,7 @@ assert.ok(poorHands.result.recoverer_id);
 const muffedEndZoneRecovery = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5, cth: 1 }));
 assert.equal(muffedEndZoneRecovery.status, 'failed');
 assert.equal(muffedEndZoneRecovery.failure.reason,
-  'muff_recovery_touchback_requires_ceg_play_2_extension');
+  'muff_recovery_touchback_unmodeled_in_ceg_play_3');
 assert.ok(sureHands.events.some((event) => event.type === 'catch'));
 
 const weakLeg = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 2, kpw: 1 }));
