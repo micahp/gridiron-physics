@@ -418,10 +418,17 @@ export function simulatePassPlay(options = {}) {
 
   const visible = (p) => p.team === possession ? offense : defense;
 
+  function protectionThreat(q) {
+    if (q.down) return false;
+    if (q.info.group === 'DL') return true;
+    // Recognize a rusher from movement and position, not the defensive call.
+    return fOf(q) <= 1.5 && (q.v.x * dir < -0.25 || d2(q, qb) < 3.2 * YD);
+  }
+
   function rankBlockTargets(p) {
     const engagedAtTick = (q) => tickEngagementSnapshot?.has(q.id)
       ? tickEngagementSnapshot.get(q.id) : q.engaged;
-    const pool = defense.filter((q) => !q.down && q.info.group === 'DL'
+    const pool = defense.filter((q) => (cfg.assignments ? protectionThreat(q) : !q.down && q.info.group === 'DL')
       && (!engagedAtTick(q) || engagedAtTick(q) === p));
     const free = pool.filter((q) => !engagedAtTick(q));
     const options = free.length ? free : pool;
@@ -434,7 +441,7 @@ export function simulatePassPlay(options = {}) {
 
   function chooseBlockTarget(p) {
     if (!sharedSnapshot) {
-      const pool = defense.filter((q) => !q.down && q.info.group === 'DL' && (!q.engaged || q.engaged === p));
+      const pool = defense.filter((q) => (cfg.assignments ? protectionThreat(q) : !q.down && q.info.group === 'DL') && (!q.engaged || q.engaged === p));
       const free = pool.filter((q) => !q.engaged);
       const options = free.length ? free : pool;
       if (!options.length) return null;
@@ -529,7 +536,7 @@ export function simulatePassPlay(options = {}) {
     if (cfg.assignments) {
       const task = cfg.assignments.offense[p.slot];
       if (task.kind !== 'route') return null;
-      if (task.check_release && t < 0.9) return null;
+      if (task.check_release && !p.ai.protectionReleased) return null;
       const start = p.ai.routeStart;
       const offsets = routeOffsets(task.route, start.l || side);
       const points = offsets.map(([f, l]) => at(start.f + f, start.l + l));
@@ -617,8 +624,7 @@ export function simulatePassPlay(options = {}) {
     const gaze = qb.ai.gazeHeading;
     // Read only delayed observations and their confidence/uncertainty, never a target's live position.
     return throwers.flatMap((rec) => {
-      if (cfg.assignments?.offense[rec.slot].check_release &&
-          (rec.engaged || W.t - (W.ball.receivedAt ?? 0) < 0.9)) return [];
+      if (cfg.assignments?.offense[rec.slot].check_release && !rec.ai.protectionReleased) return [];
       const receiver = observe(rec);
       if (!receiver || receiver.down || receiver.confidence < 0.12) return [];
       const flight = clamp(Math.hypot(receiver.position.x - qb.p.x, receiver.position.y - qb.p.y) / (16 * YD), 0.32, 1.25);
@@ -1333,7 +1339,25 @@ export function simulatePassPlay(options = {}) {
       return;
     }
     // Receivers and the back follow their route landmarks from live positions.
-    if (cfg.assignments ? cfg.assignments.offense[p.slot].check_release : p === rb) {
+    if (cfg.assignments?.offense[p.slot].check_release && !p.ai.protectionReleased) {
+      const elapsed = W.t - (W.ball.receivedAt ?? W.t);
+      const threat = defense.filter((q) => protectionThreat(q) && !q.engaged && d2(q, qb) < 3.2 * YD)
+        .sort((a, b) => d2(a, qb) - d2(b, qb) || a.id.localeCompare(b.id))[0];
+      if (threat) {
+        p.dv = seek(p, lead(p, threat, 0.1), 0.75, 12);
+        engageBlocker(p, threat, 'check_release');
+        setIntent(p, 'check protection', 'protect against the observed pressure');
+        return;
+      }
+      if (!received || elapsed < 0.9) {
+        p.dv = seek(p, at(-1.5, p.ai.routeStart.l), 0.5, 8);
+        setIntent(p, 'check protection', 'hold in protection while reading the rush');
+        return;
+      }
+      p.ai.protectionReleased = true;
+      W.event('protection_release', { player_id: p.id, role: p.roleKey });
+    }
+    if (!cfg.assignments && p === rb) {
       const elapsed = W.t - (W.ball.receivedAt ?? 0);
       if (elapsed < 0.9 && !p.engaged && !throwInfo) {
         // Scan the rush before releasing.
