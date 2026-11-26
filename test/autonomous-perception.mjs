@@ -4,7 +4,8 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { estimateBallLanding, ObservationMemory, observationVisibility, turnHeadingToward } from '../engine/autonomous/perception.js';
+import { AERO, solveLaunch } from '../engine/ball.js';
+import { estimateBallCatchPoint, estimateBallLanding, ObservationMemory, observationVisibility, turnHeadingToward } from '../engine/autonomous/perception.js';
 import { assertFootballInvariant } from './football-assertion.mjs';
 
 const passingPath = new URL('../engine/autonomous/passing.js', import.meta.url);
@@ -77,6 +78,17 @@ perceptionCheck(landingEstimate.x === landingEstimate.flightSeconds * 10,
   { decision: { observed_velocity_x: 10, observed_height: 2, observed_vertical_velocity: -1 },
     outcome: landingEstimate });
 
+const passStart = { x: 0, y: 0, z: 1.7 };
+const passTarget = { x: 22, y: 5, z: 1.5 };
+const passFlight = 1.1;
+const passLaunch = solveLaunch(passStart, passTarget, passFlight, AERO.spiral);
+const passCatchEstimate = estimateBallCatchPoint({ position: passStart,
+  velocity: { x: passLaunch.vx, y: passLaunch.vy }, z: passStart.z, vz: passLaunch.vz,
+  uncertaintyMeters: 0 }, AERO.spiral);
+perceptionCheck(Math.hypot(passCatchEstimate.x - passTarget.x,
+  passCatchEstimate.y - passTarget.y) < 0.1,
+  'pass catch-point estimates account for the observed ball drag model', { outcome: passCatchEstimate });
+
 function functionBody(name) {
   const marker = `function ${name}(`;
   const start = source.indexOf(marker);
@@ -109,6 +121,9 @@ function functionBody(name) {
 const readOptions = functionBody('readOptions');
 const qbDecision = functionBody('qbDecision');
 const defenseBrain = functionBody('defenseBrain');
+const offenseBrain = functionBody('offenseBrain');
+const estimateObservedBallCatchPoint = functionBody('estimateObservedBallCatchPoint');
+const legacyDetailedReceiverPursuit = functionBody('legacyDetailedReceiverPursuit');
 const sensedPressure = functionBody('sensedPressure');
 const resolveContest = functionBody('resolveContest');
 const brainsMarker = 'const brains = (p) =>';
@@ -162,8 +177,17 @@ check(/return\s*\{\s*level:\s*'contact',\s*distance:\s*0\.65\s*\}/.test(sensedPr
 check(!/\bb\.landing\b/.test(defenseBrain),
   'defensive agents must estimate ball landing from the observed trajectory',
   'defenseBrain reads the ball simulator landing coordinate directly');
+check(/estimateObservedBallCatchPoint\(p\)/.test(offenseBrain)
+    && !/\b(?:W\.ball|b)\.landing\b/.test(offenseBrain)
+    && !/\b(?:W\.ball|ball)\.landing\b/.test(estimateObservedBallCatchPoint),
+  'receivers must pursue an estimated catch point from observed ball state, never the exact future coordinate',
+  'offenseBrain or estimateObservedBallCatchPoint reads the stored ball landing coordinate');
+check(/if\s*\(!cfg\.assignments\s*&&\s*cfg\.behaviorMode\s*===\s*'detailed'\)[\s\S]{0,220}legacyDetailedReceiverPursuit\(p\)/.test(offenseBrain)
+    && /ball\.landing/.test(legacyDetailedReceiverPursuit),
+  'the future-landing compatibility path is restricted to unassigned detailed legacy execution',
+  'an assigned or retro V1 Complete receiver can enter the legacy future-landing helper');
 check(/const chance = clamp\([\s\S]*?0\.35,\s*0\.97\)/.test(resolveContest)
-    && /if\s*\(rand\(\)\s*<\s*chance\)\s*\{\s*secure\(receiver\.player\)/.test(resolveContest),
+    && /if\s*\(contestRoll\('receiver_catch',\s*receiver\.player,\s*chance\)\s*<\s*chance\)\s*\{\s*secure\(receiver\.player\)/.test(resolveContest),
   'selecting a receiver must not guarantee a catch',
   'resolveContest must resolve the ball at the catch point using a probability below one');
 check(!/\brouteTarget\s*\(|\bp\.ai\.(?:route|routeAssignment)\b/.test(defenseBrain),

@@ -165,6 +165,9 @@ assert.ok(passAssignments.every((event) => event.task && event.role),
   'each assignment record carries the responsible role and executable task');
 assert.ok(dpi.terminal.time > dpi.events.find((event) => event.type === 'throw').t,
   'the live pass advances from release to its terminal result');
+assert.ok(dpi.events.some((event) => event.type === 'decision'
+  && event.assignment === 'adjust to observed pass'),
+'assigned receivers react to the live ball instead of pursuing its stored future landing point');
 assert.equal(dpi.events.at(-1).type, 'whistle');
 
 const fumbleDefenseRatings = Object.fromEntries(
