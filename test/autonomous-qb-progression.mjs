@@ -3,6 +3,9 @@ import { exampleAssignments } from '../engine/autonomous/example-assignments.js'
 import { validateAssignments } from '../engine/autonomous/assignments.js';
 import { simulatePassPlay } from '../engine/autonomous/passing.js';
 import { World } from '../engine/world.js';
+import { YD, FIELD_W_YD } from '../engine/constants.js';
+import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
+import { buildSampleCall } from './autonomous-fixtures.mjs';
 
 function play(order) {
   const assignments = exampleAssignments('slant_flat', 'man');
@@ -42,6 +45,34 @@ for (const mode of ['legacy_sequential', 'shared_snapshot']) {
       playerEvaluationMode: mode });
     assert.ok(injected && result.events.some((event) => event.type === 'quarterback_state'
       && event.state === 'read' && event.reason === 'pressure_cleared'), `${mode}: escape returns to reading`);
+  } finally { World.prototype.step = step; }
+}
+{
+  const step = World.prototype.step;
+  let injected = false;
+  World.prototype.step = function (dt, brains, afterBrains) {
+    if (!injected && this.t >= 0.4) {
+      const qb = this.players.find((p) => p.roleKey === 'O.QB');
+      for (const defender of this.players.filter((p) => p.team === 'D')) defender.down = true;
+      qb.p.x = 35 * YD + 0.25;
+      qb.p.y = (FIELD_W_YD - 0.05) * YD;
+      qb.v = { x: 2, y: 7 };
+      qb.ai.nextDecision = this.t + 2;
+      injected = true;
+    }
+    return step.call(this, dt, brains, afterBrains);
+  };
+  try {
+    const call = buildSampleCall({ family: 'pass', concept: 'assigned', snap_type: 'shotgun', coverage: 'cover_3' });
+    call.situation.yardline_100 = 35;
+    call.assignments = exampleAssignments('slant_flat', 'zone');
+    const result = simulateAutonomousPlay(call);
+    assert.ok(injected && result.events.some((event) => event.type === 'quarterback_state'
+      && event.state === 'carry' && event.reason === 'crossed_line'));
+    assert.equal(result.status, 'complete');
+    assert.equal(result.result.carrier_id, call.offense.lineup.QB);
+    assert.ok(!result.events.some((event) => event.type === 'throw' || event.type === 'throw_away'));
+    assert.equal(result.diagnostics.reconciliation.ok, true);
   } finally { World.prototype.step = step; }
 }
 console.log('play-specific quarterback progression passed');

@@ -1771,6 +1771,16 @@ export function simulatePassPlay(options = {}) {
       received = true;
       W.event('snap_receive', { quarterback_id: qb.id, time: W.t });
     }
+    // Once the quarterback crosses the line while holding the ball, the play
+    // has become a run; subsequent decisions use the ordinary carrier path.
+    if (cfg.assignments && received && !carrier && W.ball.holder === qb && fOf(qb) >= 0) {
+      carrier = qb;
+      carrierSince = W.t;
+      qb.ai.escape = null;
+      qb.ai.quarterbackState = 'carry';
+      W.ball.hand = 'carry';
+      W.event('quarterback_state', { player_id: qb.id, state: 'carry', reason: 'crossed_line' });
+    }
     if (received && !carrier && W.ball.state === 'air') throwInfo = { snapT: W.ball.receivedAt, thrownAt: W.t };
     if (received && carrier) throwInfo = null;
 
