@@ -40,6 +40,12 @@ assert.equal(punt.trajectory.roster.length, 22);
 assert.ok(punt.trajectory.frames.length > 20);
 assert.equal(punt.events.at(-1).type, 'whistle');
 assert.ok(punt.events.some((event) => event.type === 'catch' || event.type === 'muff'));
+assert.equal(punt.result.clock_runoff_seconds, Math.ceil(punt.result.elapsed_seconds),
+  'scrimmage-kick clock time includes flight from the snap through the whistle');
+const puntTouchback = simulateAutonomousSpecialTeams({ ...call({ kind: 'punt', seed: 0 }), yardline_100: 15 });
+assert.equal(puntTouchback.result.result, 'touchback');
+assert.equal(puntTouchback.result.clock_runoff_seconds, Math.ceil(puntTouchback.result.elapsed_seconds),
+  'a scrimmage-kick touchback charges time from the snap');
 assert.deepEqual(simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 42 })).result, punt.result,
   'same inputs reproduce kick and live return outcomes');
 
@@ -110,7 +116,7 @@ assert.ok(fairCatch.events.some((event) => event.type === 'fair_catch'));
 const negativeReturn = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 1, cth: 99, awr: 99, spd: 99 }));
 assert.equal(negativeReturn.result.return_yards, -1);
 assert.equal(negativeReturn.result.clock_runoff_seconds,
-  Math.ceil(negativeReturn.result.elapsed_seconds - negativeReturn.result.catch_elapsed_seconds));
+  Math.ceil(negativeReturn.result.elapsed_seconds));
 const outOfBoundsPunt = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 5 }));
 assert.equal(Boolean(outOfBoundsPunt.result.out_of_bounds), false,
   'the centered deterministic kick stays in bounds');
@@ -121,7 +127,8 @@ assert.equal(outOfBounds.result.result, 'out_of_bounds');
 assert.equal(outOfBounds.result.out_of_bounds, true);
 assert.equal(outOfBounds.result.returner_id, null);
 assert.equal(outOfBounds.result.return_yards, null);
-assert.equal(outOfBounds.result.clock_runoff_seconds, 0);
+assert.equal(outOfBounds.result.clock_runoff_seconds, Math.ceil(outOfBounds.result.elapsed_seconds),
+  'a punt that goes out of bounds charges flight time from the snap');
 assert.equal(outOfBounds.result.out_of_bounds_spot_yardline_100,
   outOfBounds.result.dead_ball_yardline_100);
 const kickback = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 12 }));
@@ -138,6 +145,9 @@ assert.equal(longKickoffReturn.status, 'complete');
 assert.equal(longKickoffReturn.result.return_yards, 68);
 assert.ok(longKickoffReturn.result.elapsed_seconds > 18,
   'a long live kickoff return completes beyond the former 18-second cap');
+assert.equal(longKickoffReturn.result.clock_runoff_seconds,
+  Math.ceil(longKickoffReturn.result.elapsed_seconds - longKickoffReturn.result.catch_elapsed_seconds),
+  'free-kick clock time starts at the receiving team touch');
 assert.equal(longKickoffReturn.events.at(-1).type, 'whistle');
 assert.equal(longKickoffReturn.diagnostics.assignments_executed, 22);
 const eliteReturnRatings = {

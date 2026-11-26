@@ -479,15 +479,17 @@ export function simulateAutonomousSpecialTeams(input) {
   if (muffed && recovery && deadReason !== 'touchback') {
     const team = recovery.team === 'K' ? 'kicking_team' : 'receiving_team';
     const fumbleEvent = W.events.find((event) => event.type === 'muff');
+    const muffingReturnerId = fumbleEvent?.player_id ?? fumblerId;
     const fumbleSpot = Math.round(100 - (fumbleEvent?.ball_spot?.x ?? returnStartXActual));
-    const recoverySpot = Math.round(100 - returnStartXActual);
+    const recoverySpot = Math.round(100 - recovery.p.x / YD);
     const deadSpot = Math.round(100 - deadBall.x);
     const returnYards = deadSpot - recoverySpot;
     result = { result: 'muff', possession_after: team, recovery_team: team,
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: deadSpot, recovery_yardline_100: recoverySpot,
       fumble_spot_yardline_100: fumbleSpot, receiving_team_touched_beyond_line: true,
-      return_yards: returnYards, returner_id: recovery.id,
+      return_yards: returnYards, returner_id: null,
+      muffing_returner_id: muffingReturnerId, post_recovery_returner_id: carrier?.id ?? recovery.id,
       recoverer_id: recovery.id, fumbler_id: fumblerId,
       scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,
       scoring_team: deadReason === 'touchdown' ? team
@@ -526,11 +528,12 @@ export function simulateAutonomousSpecialTeams(input) {
   }
   result.elapsed_seconds = terminal;
   result.catch_elapsed_seconds = catchAt;
-  // The game clock starts on a legal receiving-team touch and stops at the
-  // whistle. Flight time before that touch and dead-ball time before the next
-  // snap are not charged here; the game lifecycle owns any later restart.
-  result.live_elapsed_seconds = (deadReason === 'touchback' || catchAt == null)
-    ? 0 : Math.max(0, terminal - catchAt);
+  // Scrimmage kicks charge time from the snap through the whistle. Free kicks
+  // start the game clock on a legal receiving-team touch; an untouched
+  // touchback therefore has no charged live time.
+  result.live_elapsed_seconds = kickoff
+    ? ((deadReason === 'touchback' || catchAt == null) ? 0 : Math.max(0, terminal - catchAt))
+    : Math.max(0, terminal);
   result.clock_runoff_seconds = Math.ceil(result.live_elapsed_seconds);
   W.event('whistle', { reason: deadReason, ball_spot: deadBall, terminal_t: terminal });
   const framesFlat = frames.map((frame) => Array.from(frame));
