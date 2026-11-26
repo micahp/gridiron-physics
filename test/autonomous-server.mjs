@@ -37,6 +37,8 @@ try {
   assert.equal(runResponse.value.diagnostics.reconciliation.ok, true);
   const examples = await request({id: 4, op: 'example_assignments', concept:'four_verticals', coverage:'man'});
   assert.deepEqual(examples.value, exampleAssignments('four_verticals', 'man'));
+  const leftExample = await request({id: 11, op: 'example_assignments', concept:'curls', coverage:'zone', direction:'left'});
+  assert.deepEqual(leftExample.value, exampleAssignments('curls', 'zone', 'left'));
   const ids = ['K', ...Array.from({length: 10}, (_, i) => `C${i}`), 'R',
     ...Array.from({length: 10}, (_, i) => `B${i}`)];
   const specialTeams = {

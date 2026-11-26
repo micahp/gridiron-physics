@@ -14,7 +14,7 @@ for await (const line of input) {
     let value;
     if (request.op === 'play') value = simulateAutonomousPlay(request.call);
     else if (request.op === 'special_teams') value = simulateAutonomousSpecialTeams(request.call);
-    else if (request.op === 'example_assignments') value = exampleAssignments(request.concept, request.coverage);
+    else if (request.op === 'example_assignments') value = exampleAssignments(request.concept, request.coverage, request.direction);
     else if (request.op === 'example_run_assignments') value = exampleRunAssignments(request.direction);
     else throw new RangeError('unsupported operation');
     const response = { id: request.id ?? null, ok: true, value, engine_ms: performance.now() - start };

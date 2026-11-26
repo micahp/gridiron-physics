@@ -35,4 +35,20 @@ const breaks = result.events.filter((e) => e.type === 'decision'
 assert.ok(throwEvent && breaks.length, 'the live fixture produces an observed throw and coverage reaction');
 assert.ok(breaks.every((e) => e.t >= throwEvent.t + 0.14), 'reactions follow observation delay');
 assert.ok(new Set(breaks.map((e) => e.player_id)).size < 7, 'coverage does not converge all seven defenders');
+for (const concept of ['slant_flat', 'curls', 'four_verticals']) for (const coverage of ['man', 'zone']) {
+  const right = exampleAssignments(concept, coverage, 'right');
+  const left = exampleAssignments(concept, coverage, 'left');
+  for (const [slot, task] of Object.entries(right.defense)) {
+    if (task.kind === 'zone') assert.deepEqual(left.defense[slot].bounds,
+      [task.bounds[0], task.bounds[1], -task.bounds[3], -task.bounds[2]], `${concept} ${coverage} ${slot} mirrors`);
+    else assert.deepEqual(left.defense[slot], task, `${concept} ${coverage} ${slot} retains its assignment`);
+  }
+  const leftCall = buildSampleCall({ family: 'pass', concept: 'assigned', snap_type: 'shotgun', coverage: coverage === 'man' ? 'cover_1' : 'cover_3', direction: 'left' });
+  leftCall.assignments = left;
+  leftCall.player_evaluation_mode = 'shared_snapshot';
+  const live = simulateAutonomousPlay(leftCall);
+  assert.equal(live.status, 'complete');
+  assert.equal(new Set(live.events.filter((event) => event.type === 'assignment_executed').map((event) => event.player_id)).size, 22);
+  assert.equal(live.diagnostics.reconciliation.ok, true);
+}
 console.log('coverage responsibilities and observed-ball opportunity passed');

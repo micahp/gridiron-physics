@@ -2,7 +2,7 @@
 // These are not team playbooks or historical team tendencies.
 import { ASSIGNMENT_SCHEMA } from './assignments.js';
 
-export function exampleAssignments(concept, coverage) {
+export function exampleAssignments(concept, coverage, direction = 'right') {
   const routes = {
     slant_flat: { WR1: 'go', WR2: 'slant', WR3: 'flat', RB: 'check' },
     curls: { WR1: 'curl', WR2: 'curl', WR3: 'out', RB: 'check' },
@@ -10,6 +10,7 @@ export function exampleAssignments(concept, coverage) {
   }[concept];
   if (!routes) throw new RangeError(`unsupported example concept: ${concept}`);
   if (!['man', 'zone'].includes(coverage)) throw new RangeError(`unsupported example coverage: ${coverage}`);
+  if (!['left', 'right'].includes(direction)) throw new RangeError(`unsupported example direction: ${direction}`);
   const readOrder = {
     slant_flat: ['WR2', 'WR3', 'WR1', 'RB'],
     curls: ['WR2', 'WR1', 'WR3', 'RB'],
@@ -30,7 +31,9 @@ export function exampleAssignments(concept, coverage) {
     SS: [3, 12, -8, 2], LCB: [12, 30, 8, 27], RCB: [12, 30, -27, -8],
     FS: [12, 30, -8, 8] };
   const man = { LCB: 'WR1', RCB: 'WR2', NB: 'WR3', MLB: 'RB', WLB: 'TE' };
-  for (const [slot, bounds] of Object.entries(zones)) {
+  for (const [slot, originalBounds] of Object.entries(zones)) {
+    const bounds = direction === 'left'
+      ? [originalBounds[0], originalBounds[1], -originalBounds[3], -originalBounds[2]] : originalBounds;
     const target = man[slot];
     defense[slot] = coverage === 'man' && target && offense[target].kind === 'route'
       ? { kind: 'man', target_slot: target } : { kind: 'zone', bounds };
