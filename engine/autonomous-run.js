@@ -668,6 +668,21 @@ export function simulateInsideZone(options = {}) {
       return;
     }
     const forward = fOf(p);
+    if (p.ai.aimingLane != null && (p.ai.runnerState === 'open_field' || forward >= 3)) {
+      if (p.ai.runnerState !== 'open_field') {
+        p.ai.runnerState = 'open_field';
+        p.ai.laneLocked = false;
+        W.event('runner_state', { carrier_id: p.id, state: 'open_field' });
+      }
+      const threat = closest(defense, p, (q) => !q.down && fOf(q) >= forward - 1
+        && fOf(q) <= forward + 6 && d2(q, p) < 6 * YD);
+      const avoidance = threat ? clamp((p.p.y - threat.p.y) / YD, -2, 2) : 0;
+      const target = { x: p.p.x + dir * 4 * YD,
+        y: clamp(p.p.y + avoidance * YD, 1.2 * YD, (FIELD_W_YD - 1.2) * YD) };
+      p.dv = seek(p, target, 1, 6.6);
+      setIntent(p, 'run in open field', 'avoid nearby defenders and advance');
+      return;
+    }
     if (p.ai.nextRead == null || W.t >= p.ai.nextRead) {
       const firstAssignedRead = p.ai.lane == null && p.ai.aimingLane != null;
       const next = firstAssignedRead ? p.ai.aimingLane : pickLane();
@@ -682,7 +697,7 @@ export function simulateInsideZone(options = {}) {
       p.ai.nextRead = W.t + (forward < 0.7 ? readInterval : readInterval * 1.25);
     }
     const press = forward < 0.65 && W.t - carrierSince < 0.55;
-    const lane = press ? side * 0.58 : (p.ai.lane ?? side * 0.58);
+    const lane = press ? (p.ai.aimingLane ?? side * 0.58) : (p.ai.lane ?? side * 0.58);
     const target = { x: p.p.x + dir * (press ? 1.25 : 2.1) * YD, y: (cfg.ballY + dir * lane) * YD };
     let dv = seek(p, target, 1, 6.6);
     // React to defenders already in the near collision envelope. The lane read
