@@ -10,6 +10,7 @@ import { assertNoOutcomeFields } from './schema.js';
 import { retroDecisionInterval } from './retro-cadence.js';
 import { estimateBallLanding } from './perception.js';
 import { roundYardline100, serializeReturnGeometry, statReturnYards } from './field-geometry.js';
+import { nextRecoveryAttempt } from './contact-attempts.js';
 
 // Long kickoff returns can cover the field diagonally while players disengage
 // and reset their lanes. Keep a hard bound, but allow the generated live play
@@ -233,6 +234,7 @@ export function simulateAutonomousSpecialTeams(input) {
   let muffed = false;
   let fumblerId = null;
   let recovery = null;
+  const recoveryAttempts = new Set();
   // Snapshot the ball's coordinates at the instant the recovery is awarded.
   // The recoverer continues moving during the return, so their final position
   // cannot be used later as the recovery spot.
@@ -253,8 +255,11 @@ export function simulateAutonomousSpecialTeams(input) {
     if (W.ball.state !== 'loose') return;
     const candidates = [...W.players].filter((p) => !p.down && dist(p.p, { x: W.ball.x, y: W.ball.y }) < 1.15)
       .sort((a, b) => dist(a.p, { x: W.ball.x, y: W.ball.y }) - dist(b.p, { x: W.ball.x, y: W.ball.y }) || a.id.localeCompare(b.id));
-    const p = candidates[0];
-    if (!p || rand() > clamp(0.55 + ((p.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9)) return;
+    const p = nextRecoveryAttempt(recoveryAttempts, candidates);
+    if (!p) return;
+    const chance = clamp(0.55 + ((p.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9);
+    W.event('loose_ball_recovery_attempt', { player_id: p.id, chance });
+    if (rand() > chance) return;
     recovery = p;
     recoveryAt = Object.freeze({ x: W.ball.x / YD, y: W.ball.y / YD, time: W.t });
     carrier = p;
@@ -687,6 +692,7 @@ function simulateAutonomousFieldGoal(cfg) {
   let previousBall = null;
   let kickModel = null;
   let recovery = null;
+  const recoveryAttempts = new Set();
   let recoveryAt = null;
   let carrier = null;
   let tackleStarted = null;
@@ -853,11 +859,12 @@ function simulateAutonomousFieldGoal(cfg) {
     }
 
     if (blocked && recovery == null && W.ball.state === 'loose') {
-      const candidates = [...W.players].filter((p) => !p.down)
+      const candidates = [...W.players].filter((p) => !p.down && dist(p.p, W.ball) <= 1.3 * YD)
         .sort((a, b) => dist(a.p, W.ball) - dist(b.p, W.ball) || a.id.localeCompare(b.id));
-      const candidate = candidates[0];
-      if (candidate && dist(candidate.p, W.ball) <= 1.3 * YD
-          && rand() <= clamp(0.55 + ((candidate.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9)) {
+      const candidate = nextRecoveryAttempt(recoveryAttempts, candidates);
+      const chance = candidate && clamp(0.55 + ((candidate.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9);
+      if (candidate) W.event('loose_ball_recovery_attempt', { player_id: candidate.id, chance });
+      if (candidate && rand() <= chance) {
         recovery = carrier = candidate;
         recoveryAt = Object.freeze({ x: W.ball.x / YD, y: W.ball.y / YD, time: W.t });
         candidate.hasBall = true;

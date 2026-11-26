@@ -80,6 +80,8 @@ assert.equal(blockedFieldGoal.diagnostics.assignments_executed, 22);
 assert.equal(blockedFieldGoal.trajectory.roster.length, 22);
 assert.equal(blockedFieldGoal.events.filter((event) => event.type === 'kick_blocked').length, 1);
 assert.ok(blockedFieldGoal.events.some((event) => event.type === 'kick_recovery'));
+assert.ok(blockedFieldGoal.events.some((event) => event.type === 'loose_ball_recovery_attempt'),
+  'blocked kick recovery records its contact opportunity');
 assert.ok(blockedFieldGoal.events.some((event) => event.type === 'whistle'));
 assert.equal(blockedFieldGoal.result.receiving_team_touched_beyond_line, false);
 assert.ok(blockedFieldGoal.result.recoverer_id);
@@ -116,6 +118,8 @@ assert.equal(poorHands.result.result, 'muff');
 assert.equal(poorHands.result.recovery_team, 'receiving_team');
 assert.ok(poorHands.result.recoverer_id);
 const muffRecoveryEvent = poorHands.events.find((event) => event.type === 'kick_recovery');
+assert.ok(poorHands.events.some((event) => event.type === 'loose_ball_recovery_attempt'),
+  'muff recovery records its contact opportunity');
 assert.deepEqual(poorHands.result.recovery_at,
   { ...muffRecoveryEvent.at, time: muffRecoveryEvent.time },
   'muff return spot keeps the ball coordinates and time from the recovery event');

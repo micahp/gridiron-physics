@@ -191,6 +191,8 @@ assert.ok(Number.isFinite(forcedFumble.fumble.return_displacement_yards),
   'pass fumbles retain continuous displacement separately from statistical yardage');
 assert.ok(forcedFumble.events.some((event) => event.type === 'fumble')
   && forcedFumble.events.some((event) => event.type === 'fumble_recovery'));
+assert.ok(forcedFumble.events.some((event) => event.type === 'loose_ball_recovery_attempt'),
+  'pass fumble recovery records its contact opportunity');
 assert.equal(protectedBall.fumble, null, 'carrying rating changes fumble exposure at the same seed');
 
 const contestTimestepInputs = { seed: 6, front: 'nickel', coverage: 'cover_1', direction: 'right',

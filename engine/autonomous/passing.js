@@ -15,6 +15,7 @@ import { routeOffsets } from '../routes.js';
 import { validateAssignments } from './assignments.js';
 import { retroDecisionInterval } from './retro-cadence.js';
 import { serializeReturnGeometry } from './field-geometry.js';
+import { nextRecoveryAttempt } from './contact-attempts.js';
 
 export function pruneExitedContactAttempts(attempted, activePlayerIds) {
   const active = new Set(activePlayerIds);
@@ -378,6 +379,7 @@ export function simulatePassPlay(options = {}) {
   let physicalOpportunitySequence = 0;
   const contestDiagnostics = cfg.contestDiagnostics ? { throws: [], by_player: {} } : null;
   let sack = null, tackle = null, terminal = null, fumble = null, fumbleRecovery = null;
+  const fumbleRecoveryAttempts = new Set();
   let pendingPass = null, pendingThrowaway = false;
   const pendingSackCandidates = new Set();
   const pendingBlockRequests = new Map();
@@ -1125,15 +1127,18 @@ export function simulatePassPlay(options = {}) {
   }
 
   function recoverFumble() {
-    if (!fumble || fumbleRecovery || W.ball.state !== 'loose' || W.ball.z > 0.24) return;
+    if (!fumble || fumbleRecovery || W.ball.state !== 'loose') return;
+    if (W.ball.z > 0.24) { fumbleRecoveryAttempts.clear(); return; }
     const candidates = W.players.filter((p) => !p.down
       && d2(p, { p: { x: W.ball.x, y: W.ball.y } }) <= 0.86 * YD)
       .sort((a, b) => d2(a, { p: { x: W.ball.x, y: W.ball.y } })
         - d2(b, { p: { x: W.ball.x, y: W.ball.y } }) || a.id.localeCompare(b.id));
-    const p = candidates[0];
+    const p = nextRecoveryAttempt(fumbleRecoveryAttempts, candidates);
     if (!p) return;
     const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
-    if (rand() >= clamp(0.58 + (awareness - 60) * 0.005, 0.28, 0.94)) return;
+    const chance = clamp(0.58 + (awareness - 60) * 0.005, 0.28, 0.94);
+    W.event('loose_ball_recovery_attempt', { player_id: p.id, chance });
+    if (rand() >= chance) return;
     fumbleRecovery = p; fumbleRecoverySpot = { x: W.ball.x, y: W.ball.y };
     carrier = p; carrierSince = W.t; possession = p.team;
     p.hasBall = true; p.mode = 'carry';

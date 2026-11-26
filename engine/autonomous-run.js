@@ -6,6 +6,7 @@ import { rng } from './rng.js';
 import { AERO, solveLaunch } from './ball.js';
 import { Player, POSE, World } from './world.js';
 import { serializeReturnGeometry } from './autonomous/field-geometry.js';
+import { nextRecoveryAttempt } from './autonomous/contact-attempts.js';
 
 const MAX_SECONDS = 12;
 const ARM_TACKLE_REACH = 0.12;
@@ -386,6 +387,7 @@ export function simulateInsideZone(options = {}) {
   let snapped = false, snapArrive = null, handed = false, carrier = null, carrierSince = null;
   let possession = 'O';
   let tackle = null, terminal = null, fumble = null, fumbleRecovery = null, fumbleRecoverySpot = null;
+  const fumbleRecoveryAttempts = new Set();
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
   let lastCarrierX = null;
   let maxForward = null;
@@ -595,15 +597,17 @@ export function simulateInsideZone(options = {}) {
   }
 
   function recoverFumble() {
-    if (!fumble || fumbleRecovery || W.ball.state !== 'loose' || W.ball.z > 0.24) return;
+    if (!fumble || fumbleRecovery || W.ball.state !== 'loose') return;
+    if (W.ball.z > 0.24) { fumbleRecoveryAttempts.clear(); return; }
     const candidates = W.players.filter((p) => !p.down
       && d2(p, { p: { x: W.ball.x, y: W.ball.y } }) <= 0.86 * YD)
       .sort((a, b) => d2(a, { p: { x: W.ball.x, y: W.ball.y } })
         - d2(b, { p: { x: W.ball.x, y: W.ball.y } }) || a.id.localeCompare(b.id));
-    const p = candidates[0];
+    const p = nextRecoveryAttempt(fumbleRecoveryAttempts, candidates);
     if (!p) return;
     const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
     const chance = clamp(0.58 + (awareness - 60) * 0.005, 0.28, 0.94);
+    W.event('loose_ball_recovery_attempt', { player_id: p.id, chance });
     if (rand() >= chance) return;
     fumbleRecovery = p; fumbleRecoverySpot = { x: W.ball.x, y: W.ball.y };
     carrier = p; carrierSince = W.t;

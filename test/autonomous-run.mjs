@@ -73,6 +73,8 @@ assert.equal(looseSecurity.resolved, true, 'a forced fumble and return resolve t
 assert.equal(looseSecurity.fumble.recovery_team, 'D', 'the defense can recover a generated loose ball');
 assert.ok(looseSecurity.events.some((event) => event.type === 'fumble')
   && looseSecurity.events.some((event) => event.type === 'fumble_recovery'));
+assert.ok(looseSecurity.events.some((event) => event.type === 'loose_ball_recovery_attempt'),
+  'run fumble recovery records its contact opportunity');
 assert.ok(looseSecurity.fumble.return_yards > 0, 'the recovery is advanced through live movement');
 assert.equal(looseSecurity.fumble.returner_id, looseSecurity.result?.carrier_id ?? looseSecurity.carrier_id,
   'the returner is recorded separately from the recoverer');
