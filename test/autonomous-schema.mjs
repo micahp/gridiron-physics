@@ -51,6 +51,8 @@ const pass = buildSampleCall({ family: 'pass', concept: 'slant_flat', snap_type:
 const passCall = validatePlayInput(pass);
 assert.equal(passCall.offense.family, 'pass');
 assert.equal(passCall.defense.coverage, 'cover_3');
+assert.throws(() => validatePlayInput({ ...sample, player_evaluation_mode: 'shared_snapshot' }), /assigned passes/);
+assert.throws(() => validatePlayInput({ ...pass, player_evaluation_mode: 'unknown' }), /assigned passes/);
 assert.throws(() => validatePlayInput({ ...pass, offense: { ...pass.offense, call: { ...pass.offense.call, snap_type: 'under_center' } } }), /shotgun/);
 assert.throws(
   () => validatePlayInput({ ...sample, offense: { ...sample.offense, call: { ...sample.offense.call, family: 'pass', concept: 'inside_zone' } } }),

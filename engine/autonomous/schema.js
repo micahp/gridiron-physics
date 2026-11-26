@@ -133,6 +133,10 @@ export function validatePlayInput(input) {
   if (input.behavior_mode != null && (call.concept !== 'assigned' || !['retro', 'detailed'].includes(input.behavior_mode))) {
     throw new RangeError('behavior_mode is supported for assigned calls: retro or detailed');
   }
+  if (input.player_evaluation_mode != null && (call.family !== 'pass' || call.concept !== 'assigned'
+      || !['legacy_sequential', 'shared_snapshot'].includes(input.player_evaluation_mode))) {
+    throw new RangeError('player_evaluation_mode is supported for assigned passes: legacy_sequential or shared_snapshot');
+  }
   if (input.output_mode != null && !['full', 'result_only'].includes(input.output_mode)) throw new RangeError('unsupported output_mode');
 
   const dcall = requireObject(defense.call, 'defense.call');
@@ -176,6 +180,7 @@ export function validatePlayInput(input) {
     profiles,
     assignments: input.assignments ?? null,
     behavior_mode: input.behavior_mode ?? (input.assignments ? 'retro' : null),
+    ...(input.player_evaluation_mode != null ? { player_evaluation_mode: input.player_evaluation_mode } : {}),
     output_mode: input.output_mode ?? 'full',
   };
 }

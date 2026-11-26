@@ -107,6 +107,7 @@ export function scenarioFromCall(call) {
       coverage: call.defense.coverage,
       ...(call.assignments ? { assignments: call.assignments } : {}),
       ...(call.behavior_mode ? { behaviorMode: call.behavior_mode } : {}),
+      ...(call.player_evaluation_mode ? { playerEvaluationMode: call.player_evaluation_mode } : {}),
       offenseTeam: call.offense.team,
       defenseTeam: call.defense.team,
     },

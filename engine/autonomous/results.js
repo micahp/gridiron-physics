@@ -79,6 +79,7 @@ export function toResultRecord(call, run) {
     },
     diagnostics: {
       ...(call.assignments ? { behavior_mode: call.behavior_mode } : {}),
+      ...(call.player_evaluation_mode ? { player_evaluation_mode: call.player_evaluation_mode } : {}),
       ...(run.diagnostics?.cadence ? { cadence: run.diagnostics.cadence } : {}),
       ...(call.assignments ? {
         assignments_executed: new Set(run.events.filter((event) => event.type === 'assignment_executed')

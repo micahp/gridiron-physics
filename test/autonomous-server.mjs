@@ -21,6 +21,13 @@ try {
   assert.equal(first.ok, true); assert.equal(second.ok, true);
   assert.deepEqual(first.value, second.value);
   assert.equal(first.id, 2); assert.equal(second.id, 3);
+  const sharedCall = { ...call, player_evaluation_mode: 'shared_snapshot' };
+  const shared = await request({id: 6, op: 'play', call: sharedCall});
+  const sharedReplay = await request({id: 7, op: 'play', call: sharedCall});
+  assert.equal(shared.ok, true);
+  assert.equal(shared.value.diagnostics.player_evaluation_mode, 'shared_snapshot');
+  assert.equal(shared.value.diagnostics.reconciliation.ok, true);
+  assert.deepEqual(shared.value, sharedReplay.value);
   const examples = await request({id: 4, op: 'example_assignments', concept:'four_verticals', coverage:'man'});
   assert.deepEqual(examples.value, exampleAssignments('four_verticals', 'man'));
   const ids = ['K', ...Array.from({length: 10}, (_, i) => `C${i}`), 'R',
