@@ -60,8 +60,9 @@ function validateInput(input) {
   for (const key of Object.keys(input)) if (!allowed.has(key)) throw new TypeError(`unsupported special-teams input: ${key}`);
   if (input.schema_version !== 'gridiron.autonomous-special-teams.v1') throw new TypeError('unsupported special-teams schema');
   if (!['punt', 'kickoff', 'field_goal'].includes(input.kind)) throw new RangeError('special-teams kind must be punt, kickoff, or field_goal');
-  if (input.player_evaluation_mode != null && (!['legacy_sequential', 'shared_snapshot'].includes(input.player_evaluation_mode)
-      || input.kind === 'field_goal')) throw new RangeError('player_evaluation_mode is supported for punts and kickoffs');
+  if (input.player_evaluation_mode != null && !['legacy_sequential', 'shared_snapshot'].includes(input.player_evaluation_mode)) {
+    throw new RangeError('unsupported player_evaluation_mode');
+  }
   if (!(typeof input.seed === 'string' && input.seed.trim()) && !Number.isInteger(input.seed)) throw new TypeError('seed must be a non-empty string or integer');
   for (const key of ['kicking_team', 'receiving_team']) if (typeof input[key] !== 'string' || !input[key].trim()) throw new TypeError(`${key} must be a team identity`);
   if (input.kicking_team === input.receiving_team) throw new TypeError('special-teams units must belong to different teams');
@@ -653,6 +654,20 @@ export function simulateAutonomousSpecialTeams(input) {
 function simulateAutonomousFieldGoal(cfg) {
   const rand = rng(cfg.seed);
   const W = new World(rand);
+  const sharedSnapshot = cfg.player_evaluation_mode === 'shared_snapshot';
+  const originalEvent = W.event.bind(W);
+  const originalEngage = W.engage.bind(W);
+  const originalDisengage = W.disengage.bind(W);
+  const pendingEvents = [], pendingEngagements = [], pendingSheds = [];
+  let collectingBrains = false;
+  W.event = (type, data = {}) => {
+    if (sharedSnapshot && collectingBrains) pendingEvents.push({ type, data });
+    else originalEvent(type, data);
+  };
+  W.engage = (a, b) => {
+    if (sharedSnapshot && collectingBrains) pendingEngagements.push({ a, b });
+    else originalEngage(a, b);
+  };
   const { kicking, receiving } = cfg.lineups;
   const ballY = cfg.ball_lateral_yards * YD;
   const los = 100 - cfg.yardline_100;
@@ -816,7 +831,8 @@ function simulateAutonomousFieldGoal(cfg) {
         const shedChance = clamp(0.46 + advantage * 0.006, 0.12, 0.86);
         setIntent(p, 'shed the assigned protector', 'use block-shed skill and current leverage to reach the holder');
         p.ai.nextShed = W.t + clamp(0.72 - ((p.R.AWR ?? 60) - 60) * 0.004, 0.42, 1.25);
-        if (rand() < shedChance) W.disengage(engagement, p);
+        if (sharedSnapshot) pendingSheds.push({ engagement, defender: p, chance: shedChance });
+        else if (rand() < shedChance) W.disengage(engagement, p);
       }
     }
     if (p === rushers[0]) {
@@ -846,7 +862,19 @@ function simulateAutonomousFieldGoal(cfg) {
       W.event('long_snap', { snapper_id: snapper.id, holder_id: holder.id });
     }
     const prior = { x: W.ball.x, y: W.ball.y, z: W.ball.z };
-    W.step(DT, brain);
+    W.step(DT, (player) => {
+      collectingBrains = true;
+      try { brain(player); } finally { collectingBrains = false; }
+    }, sharedSnapshot ? () => {
+      pendingEvents.sort((a, b) => JSON.stringify([a.type, a.data]).localeCompare(JSON.stringify([b.type, b.data])));
+      for (const event of pendingEvents.splice(0)) originalEvent(event.type, event.data);
+      pendingSheds.sort((a, b) => a.defender.id.localeCompare(b.defender.id));
+      for (const { engagement, defender, chance } of pendingSheds.splice(0)) {
+        if (W.engagements.includes(engagement) && rand() < chance) originalDisengage(engagement, defender);
+      }
+      pendingEngagements.sort((a, b) => a.a.id.localeCompare(b.a.id) || a.b.id.localeCompare(b.b.id));
+      for (const { a, b } of pendingEngagements.splice(0)) originalEngage(a, b);
+    } : null);
 
     if (!snapCaught && W.t >= snapAt) {
       const d = dist(W.ball, holder.p);
@@ -1025,6 +1053,7 @@ function simulateAutonomousFieldGoal(cfg) {
     seed: cfg.seed, kicking_team: cfg.kicking_team, receiving_team: cfg.receiving_team, result,
     events: W.events, trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
     diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
+      ...(cfg.player_evaluation_mode ? { player_evaluation_mode: cfg.player_evaluation_mode } : {}),
       decision_counts: Object.fromEntries(W.players.map((p) => [p.id, 1])), outcome_inputs: [],
       player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
         top_speed_yards_per_second: p.topSpeed / YD, distance_yards: p.dist / YD })),

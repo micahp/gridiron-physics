@@ -58,5 +58,12 @@ try {
   assert.equal(sharedSpecial.ok, true);
   assert.equal(sharedSpecial.value.status, 'complete');
   assert.equal(sharedSpecial.value.diagnostics.player_evaluation_mode, 'shared_snapshot');
+  const fieldGoal = { ...specialTeams, kind: 'field_goal', yardline_100: 35,
+    player_evaluation_mode: 'shared_snapshot',
+    lineups: { ...specialTeams.lineups, kicking: { kicker: 'K', coverage: ids.slice(1, 11) } } };
+  const sharedFieldGoal = await request({ id: 10, op: 'special_teams', call: fieldGoal });
+  assert.equal(sharedFieldGoal.ok, true);
+  assert.equal(sharedFieldGoal.value.status, 'complete');
+  assert.equal(sharedFieldGoal.value.diagnostics.player_evaluation_mode, 'shared_snapshot');
   console.log('persistent server: error isolation, scrimmage replay and autonomous special teams passed');
 } finally { child.stdin.end(); }
