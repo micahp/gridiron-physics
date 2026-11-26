@@ -567,7 +567,11 @@ export function simulatePassPlay(options = {}) {
   function updateQbPerception(elapsed) {
     if (cfg.behaviorMode === 'retro') return;
     // Route knowledge sets gaze; field of view and player-body occlusion still gate sensed locations.
-    const read = cfg.assignments && routeReceivers[Math.floor(elapsed / 0.5) % routeReceivers.length];
+    const readOrder = cfg.assignments?.offense.QB.read_order;
+    const readStart = 0.75 + (cfg.assignments?.offense.QB.decision_delay_seconds ?? 0);
+    const readSlot = readOrder?.[Math.min(readOrder.length - 1, Math.max(0, Math.floor((elapsed - readStart) / 0.35)))];
+    const read = readOrder ? get(`O.${readSlot}`)
+      : cfg.assignments && routeReceivers[Math.floor(elapsed / 0.5) % routeReceivers.length];
     const lookPoint = read ? read.p : elapsed < 1.2 ? at(2.6, side * 17)
       : elapsed < 1.65 ? at(2.4, side * 15) : at(1.6, side * 3.2);
     const desiredGaze = Math.atan2(lookPoint.y - qb.p.y, lookPoint.x - qb.p.x);
@@ -650,7 +654,9 @@ export function simulatePassPlay(options = {}) {
         - clamp(lane * 0.55, 0, 1.35) - clamp((1.6 - pressure) * 0.45, 0, 0.9)
         - clamp(Math.hypot(receiver.position.x - qb.p.x, receiver.position.y - qb.p.y) / (28 * YD), 0, 0.5)
         - receiver.uncertaintyMeters / YD * 0.08;
-      const readiness = cfg.assignments ? 0.5 + routeReceivers.indexOf(rec) * 0.15 : rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
+      const order = cfg.assignments?.offense.QB.read_order;
+      const readiness = order ? 0.75 + (cfg.assignments.offense.QB.decision_delay_seconds ?? 0) + order.indexOf(rec.slot) * 0.35
+        : cfg.assignments ? 0.5 + routeReceivers.indexOf(rec) * 0.15 : rec === z ? 0.35 : rec === slotRec ? 0.55 : 1.05;
       return [{ receiver: rec, aim, flight, separation, lane, pressure, utility, readyAt: readiness,
         observationAge: receiver.ageSeconds, observationConfidence: receiver.confidence,
         observationUncertainty: receiver.uncertaintyMeters, gazeHeading: gaze }];
@@ -753,16 +759,19 @@ export function simulatePassPlay(options = {}) {
     if (elapsed < 0.75 + (cfg.assignments?.offense.QB.decision_delay_seconds ?? 0)) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
     const availableOptions = readOptions().filter((o) => elapsed >= o.readyAt);
     const pressure = sensedPressure().distance;
-    const developedOptions = cfg.assignments
+    const progression = cfg.assignments?.offense.QB.read_order;
+    const developedOptions = cfg.assignments && !progression
       ? availableOptions.filter((option) => fOf(option.receiver) >= 5)
       : availableOptions;
     const options = developedOptions.length ? developedOptions : availableOptions;
-    if (cfg.assignments && !developedOptions.length && elapsed < 1.35 && pressure >= 1.1) {
+    if (progression) options.sort((a, b) => progression.indexOf(a.receiver.slot) - progression.indexOf(b.receiver.slot));
+    if (cfg.assignments && !progression && !developedOptions.length && elapsed < 1.35 && pressure >= 1.1) {
       setIntent(qb, 'let routes develop', 'hold the pocket until a route clears the five-yard contact zone');
       return;
     }
     if (options.length) {
-      const best = options[0];
+      const best = progression ? options.find((option) => option.utility > 0.62
+        || (pressure < 1.5 && option.utility > 0.34)) ?? options[0] : options[0];
       if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
         // Draw the throw's error at the QB's decision point, but hold the ball
         // transition until every player has observed the same held-ball snapshot.

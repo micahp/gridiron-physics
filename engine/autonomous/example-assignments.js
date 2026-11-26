@@ -10,7 +10,12 @@ export function exampleAssignments(concept, coverage) {
   }[concept];
   if (!routes) throw new RangeError(`unsupported example concept: ${concept}`);
   if (!['man', 'zone'].includes(coverage)) throw new RangeError(`unsupported example coverage: ${coverage}`);
-  const offense = { QB: { kind: 'quarterback' } };
+  const readOrder = {
+    slant_flat: ['WR2', 'WR3', 'WR1', 'RB'],
+    curls: ['WR2', 'WR1', 'WR3', 'RB'],
+    four_verticals: ['WR3', 'TE', 'WR1', 'WR2'],
+  }[concept];
+  const offense = { QB: { kind: 'quarterback', read_order: readOrder } };
   for (const slot of ['LT', 'LG', 'C', 'RG', 'RT', 'RB', 'TE', 'WR1', 'WR2', 'WR3']) {
     offense[slot] = routes[slot] ? { kind: 'route', route: routes[slot], ...(slot === 'RB' ? { check_release: true } : {}) } : { kind: 'block' };
   }

@@ -98,6 +98,7 @@ for (const direction of [-1, 1]) for (const carrierTeam of ['O', 'D']) {
 }
 
 const throwawayAssignments = exampleAssignments('curls', 'man');
+delete throwawayAssignments.offense.QB.read_order; // exercise the frozen legacy throwaway fixture
 throwawayAssignments.offense.QB.decision_delay_seconds = 3.8;
 const throwawayRatings = {};
 for (const slot of ['LEDGE', 'LDT', 'RDT', 'REDGE']) {
