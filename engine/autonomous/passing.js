@@ -13,7 +13,7 @@ import { createInsideZoneRoster } from '../autonomous-run.js';
 import { estimateBallCatchPoint, estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
 import { routeOffsets } from '../routes.js';
 import { validateAssignments } from './assignments.js';
-import { retroDecisionInterval } from './retro-cadence.js';
+import { hazardDeadline, retroDecisionInterval } from './retro-cadence.js';
 import { serializeReturnGeometry } from './field-geometry.js';
 import { nextRecoveryAttempt } from './contact-attempts.js';
 
@@ -505,12 +505,29 @@ export function simulatePassPlay(options = {}) {
     }
   }
 
+  const shedDeadlines = new WeakMap();
+  function shedDue(defender, engagement, blocker) {
+    const attack = defender.info.group === 'DL'
+      ? Math.max(defender.R.PMV ?? 50, defender.R.FMV ?? 50, defender.R.BSH ?? 50)
+      : defender.R.BSH ?? 50;
+    const block = blocker.R.PBK ?? blocker.R.RBK ?? 50;
+    const rate = clamp(0.34 * Math.exp((attack - block) / 22), 0.05, 3);
+    if (!shedDeadlines.has(engagement)) {
+      shedDeadlines.set(engagement, hazardDeadline(engagement.t0, rate, rand()));
+    }
+    return W.t >= shedDeadlines.get(engagement);
+  }
+
   function tryShed(d) {
     const e = W.engagements.find((x) => x.a === d || x.b === d);
     if (!e) return;
     const blocker = e.a === d ? e.b : e.a;
     if (blocker.team !== 'O') return;
     if (!sharedSnapshot) {
+      if (cfg.assignments) {
+        if (shedDue(d, e, blocker)) W.disengage(e, d);
+        return;
+      }
       const attack = d.info.group === 'DL' ? Math.max(d.R.PMV ?? 50, d.R.FMV ?? 50, d.R.BSH ?? 50) : d.R.BSH ?? 50;
       const block = blocker.R.PBK ?? blocker.R.RBK ?? 50;
       const rate = clamp(0.34 * Math.exp((attack - block) / 22), 0.05, 3);
@@ -528,6 +545,10 @@ export function simulatePassPlay(options = {}) {
       if (!W.engagements.includes(engagement)
           || (engagement.a !== defender && engagement.b !== defender)) continue;
       const blocker = engagement.a === defender ? engagement.b : engagement.a;
+      if (cfg.assignments) {
+        if (shedDue(defender, engagement, blocker)) W.disengage(engagement, defender);
+        continue;
+      }
       const attack = defender.info.group === 'DL'
         ? Math.max(defender.R.PMV ?? 50, defender.R.FMV ?? 50, defender.R.BSH ?? 50)
         : defender.R.BSH ?? 50;
