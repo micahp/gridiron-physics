@@ -66,4 +66,37 @@ assert.ok(!direct.events.some((event) => event.type === 'decision' && event.role
 const edgeId = contain.roster.find((player) => player.roleKey === 'D.LEDGE').id;
 assert.notDeepEqual(contain.trajectories[edgeId], direct.trajectories[edgeId],
   'declared edge responsibility changes live movement');
+function tackleTarget(mode) {
+  const step = World.prototype.step;
+  let captured = null;
+  World.prototype.step = function (dt, brains, afterBrains) {
+    if (captured === null && this.t >= 0.25) {
+      for (const pair of [...this.engagements]) this.disengage(pair);
+      const tackle = this.players.find((p) => p.roleKey === 'O.LT');
+      const edge = this.players.find((p) => p.roleKey === 'D.LEDGE');
+      const far = this.players.find((p) => p.roleKey === 'D.REDGE');
+      const qb = this.players.find((p) => p.roleKey === 'O.QB');
+      for (const defender of this.players.filter((p) => p.team === 'D')) defender.down = true;
+      edge.down = far.down = false;
+      edge.p = { x: tackle.p.x + 1, y: tackle.p.y + 1 };
+      far.p = { x: qb.p.x + 0.5, y: qb.p.y - 1.5 };
+      tackle.ai.nextDecision = this.t;
+      tackle.ai.nextTargetAt = 0;
+      tackle.ai.blockOn = null;
+      const value = step.call(this, dt, brains, afterBrains);
+      captured = tackle.ai.blockOn?.roleKey ?? 'none';
+      return value;
+    }
+    return step.call(this, dt, brains, afterBrains);
+  };
+  try {
+    simulatePassPlay({ seed: 'protection-area', concept: 'assigned',
+      assignments: exampleAssignments('slant_flat', 'zone'), front: 'nickel_over',
+      coverage: 'cover_3', direction: 'right', resultOnly: true, playerEvaluationMode: mode });
+    return captured;
+  } finally { World.prototype.step = step; }
+}
+for (const mode of ['legacy_sequential', 'shared_snapshot']) {
+  assert.equal(tackleTarget(mode), 'D.LEDGE', `${mode}: left tackle retains its protection area`);
+}
 console.log('check-release blitz pickup passed in both evaluation modes');

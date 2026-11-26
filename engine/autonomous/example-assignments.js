@@ -19,6 +19,8 @@ export function exampleAssignments(concept, coverage) {
   for (const slot of ['LT', 'LG', 'C', 'RG', 'RT', 'RB', 'TE', 'WR1', 'WR2', 'WR3']) {
     offense[slot] = routes[slot] ? { kind: 'route', route: routes[slot], ...(slot === 'RB' ? { check_release: true } : {}) } : { kind: 'block' };
   }
+  const protectionAreas = { LT: [0.8, 7], LG: [-0.3, 3], C: [-1.4, 1.4], RG: [-3, 0.3], RT: [-7, -0.8] };
+  for (const [slot, protection_area] of Object.entries(protectionAreas)) offense[slot].protection_area = protection_area;
   const defense = Object.fromEntries(['LEDGE', 'LDT', 'RDT', 'REDGE'].map((slot) => [slot, { kind: 'rush' }]));
   defense.LEDGE.rush_lane = 'outside';
   defense.REDGE.rush_lane = 'outside';

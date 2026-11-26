@@ -428,7 +428,9 @@ export function simulatePassPlay(options = {}) {
   function rankBlockTargets(p) {
     const engagedAtTick = (q) => tickEngagementSnapshot?.has(q.id)
       ? tickEngagementSnapshot.get(q.id) : q.engaged;
+    const area = cfg.assignments?.offense[p.slot]?.protection_area;
     const pool = defense.filter((q) => (cfg.assignments ? protectionThreat(q) : !q.down && q.info.group === 'DL')
+      && (!area || (lOf(q) >= area[0] && lOf(q) <= area[1]))
       && (!engagedAtTick(q) || engagedAtTick(q) === p));
     const free = pool.filter((q) => !engagedAtTick(q));
     const options = free.length ? free : pool;
@@ -440,7 +442,7 @@ export function simulatePassPlay(options = {}) {
   }
 
   function chooseBlockTarget(p) {
-    if (!sharedSnapshot) {
+    if (!sharedSnapshot && !cfg.assignments) {
       const pool = defense.filter((q) => (cfg.assignments ? protectionThreat(q) : !q.down && q.info.group === 'DL') && (!q.engaged || q.engaged === p));
       const free = pool.filter((q) => !q.engaged);
       const options = free.length ? free : pool;
@@ -1341,7 +1343,8 @@ export function simulatePassPlay(options = {}) {
         p.face = Math.atan2(d.p.y - p.p.y, d.p.x - p.p.x);
         engageBlocker(p, d);
       } else {
-        p.dv = seek(p, at(-1.0, p.ai.zoneL ?? lOf(p) * 0.5), 0.5, 8);
+        const area = cfg.assignments?.offense[p.slot]?.protection_area;
+        p.dv = seek(p, at(-1.0, area ? clamp(p.ai.routeStart.l, area[0], area[1]) : p.ai.zoneL ?? lOf(p) * 0.5), 0.5, 8);
       }
       return;
     }

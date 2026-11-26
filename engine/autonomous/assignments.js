@@ -70,9 +70,13 @@ export function validateAssignments(input, { executable = false, family = 'pass'
     if (input.offense.QB.kind !== 'quarterback') throw new TypeError('QB needs quarterback assignment');
     for (const [slot, task] of Object.entries(input.offense)) {
       const allowed = task.kind === 'route' ? ['kind', 'route', 'check_release'] :
-        task.kind === 'quarterback' ? ['kind', 'decision_delay_seconds', 'read_order'] : ['kind'];
+        task.kind === 'quarterback' ? ['kind', 'decision_delay_seconds', 'read_order'] : task.kind === 'block' ? ['kind', 'protection_area'] : ['kind'];
       if (Object.keys(task).some((key) => !allowed.includes(key))) throw new TypeError(`unsupported offensive assignment field: ${slot}`);
       if (task.decision_delay_seconds != null && (!Number.isFinite(task.decision_delay_seconds) || task.decision_delay_seconds < 0 || task.decision_delay_seconds > 4)) throw new RangeError('decision delay must be from 0 to 4 seconds');
+      if (task.protection_area != null && (!Array.isArray(task.protection_area) || task.protection_area.length !== 2
+          || !task.protection_area.every(Number.isFinite) || task.protection_area[0] >= task.protection_area[1])) {
+        throw new TypeError(`invalid protection area: ${slot}`);
+      }
       if (task.read_order != null && (slot !== 'QB' || !Array.isArray(task.read_order)
           || task.read_order.length === 0 || new Set(task.read_order).size !== task.read_order.length
           || task.read_order.some((target) => input.offense[target]?.kind !== 'route')
