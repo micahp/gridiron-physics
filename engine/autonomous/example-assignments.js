@@ -20,6 +20,8 @@ export function exampleAssignments(concept, coverage) {
     offense[slot] = routes[slot] ? { kind: 'route', route: routes[slot], ...(slot === 'RB' ? { check_release: true } : {}) } : { kind: 'block' };
   }
   const defense = Object.fromEntries(['LEDGE', 'LDT', 'RDT', 'REDGE'].map((slot) => [slot, { kind: 'rush' }]));
+  defense.LEDGE.rush_lane = 'outside';
+  defense.REDGE.rush_lane = 'outside';
   // Cover 3: three deep thirds and four underneath zones. Coordinates are
   // forward and lateral yards relative to the offense's line of scrimmage.
   const zones = { MLB: [3, 12, -2, 8], WLB: [3, 12, 8, 26], NB: [3, 12, -26, -8],

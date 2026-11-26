@@ -1244,7 +1244,14 @@ export function simulatePassPlay(options = {}) {
       }
     }
     if (W.ball.holder === qb) {
-      d.dv = seek(d, lead(d, qb, 0.12), 1, 22);
+      const outside = cfg.assignments?.defense[d.slot]?.rush_lane === 'outside';
+      const target = lead(d, qb, 0.12);
+      if (outside) {
+        const lateralSide = Math.sign(d.ai.routeStart.l) || 1;
+        target.y += dir * lateralSide * 1.5 * YD;
+        setIntent(d, 'contain the passer', 'rush while preserving outside leverage');
+      }
+      d.dv = seek(d, target, 1, 22);
       d.face = Math.atan2(qb.p.y - d.p.y, qb.p.x - d.p.x);
       if (d2(d, qb) < d.r + qb.r + 0.2) {
         if (sharedSnapshot) {

@@ -88,9 +88,10 @@ export function validateAssignments(input, { executable = false, family = 'pass'
     }
     if (!['RB', 'TE', 'WR1', 'WR2', 'WR3'].some((slot) => input.offense[slot].kind === 'route')) throw new TypeError('at least one eligible route required');
     for (const [slot, task] of Object.entries(input.defense)) {
-      const allowed = task.kind === 'man' ? ['kind', 'target_slot'] : task.kind === 'zone' ? ['kind', 'bounds'] : ['kind'];
+      const allowed = task.kind === 'man' ? ['kind', 'target_slot'] : task.kind === 'zone' ? ['kind', 'bounds'] : task.kind === 'rush' ? ['kind', 'rush_lane'] : ['kind'];
       if (Object.keys(task).some((key) => !allowed.includes(key))) throw new TypeError(`unsupported defensive assignment field: ${slot}`);
       if (task.kind === 'man' && input.offense[task.target_slot]?.kind !== 'route') throw new TypeError(`${slot} man target must run a route`);
+      if (task.rush_lane != null && !['outside', 'direct'].includes(task.rush_lane)) throw new TypeError(`invalid rush lane: ${slot}`);
     }
     }
   }

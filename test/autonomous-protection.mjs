@@ -50,4 +50,20 @@ for (const mode of ['legacy_sequential', 'shared_snapshot']) {
   const release = result.events.find((e) => e.type === 'protection_release' && e.role === 'O.RB');
   assert.ok(!release || release.t > contacts[0], `${mode}: back does not release before the threat`);
 }
+const containAssignments = exampleAssignments('slant_flat', 'zone');
+const directAssignments = structuredClone(containAssignments);
+directAssignments.defense.LEDGE.rush_lane = 'direct';
+function rushPlay(assignments) {
+  return simulatePassPlay({ seed: 'edge', concept: 'assigned', assignments, front: 'nickel_over',
+    coverage: 'cover_3', direction: 'right' });
+}
+const contain = rushPlay(containAssignments);
+const direct = rushPlay(directAssignments);
+assert.ok(contain.events.some((event) => event.type === 'decision' && event.role === 'D.LEDGE'
+  && event.assignment === 'contain the passer'), 'outside edge enters contain');
+assert.ok(!direct.events.some((event) => event.type === 'decision' && event.role === 'D.LEDGE'
+  && event.assignment === 'contain the passer'), 'direct rush does not use contain');
+const edgeId = contain.roster.find((player) => player.roleKey === 'D.LEDGE').id;
+assert.notDeepEqual(contain.trajectories[edgeId], direct.trajectories[edgeId],
+  'declared edge responsibility changes live movement');
 console.log('check-release blitz pickup passed in both evaluation modes');
