@@ -1170,19 +1170,19 @@ export function simulatePassPlay(options = {}) {
     setIntent(p, 'pursue the loose football', 'read its current bounce and close to recover');
   }
 
-  function fumbleReturnBrain(p) {
+  function fumbleReturnBrain(p, possessionTransition = false) {
     if (p.down) { p.dv = { x: 0, y: 0 }; return; }
     if (p === carrier) {
       const attack = p.team === 'O' ? dir : -dir;
       p.dv = seek(p, { x: p.p.x + attack * 4.5 * YD,
         y: clamp(p.p.y + (FIELD_W_YD / 2 * YD - p.p.y) * 0.12, 1.2 * YD,
                  (FIELD_W_YD - 1.2) * YD) }, 0.94, 8.5);
-      setIntent(p, 'advance the recovered fumble', 'protect the ball and attack open field ahead');
+      setIntent(p, possessionTransition ? 'advance the return' : 'advance the recovered fumble', 'protect the ball and attack open field ahead');
       return;
     }
     if (p.team !== carrier.team) {
       p.dv = seek(p, lead(p, carrier, 0.18), 0.96, 18);
-      setIntent(p, 'pursue the fumble returner', 'close on the current carrier and attempt a tackle');
+      setIntent(p, possessionTransition ? 'pursue the returner' : 'pursue the fumble returner', 'close on the current carrier and attempt a tackle');
       return;
     }
     const threat = W.players.filter((q) => q.team !== carrier.team && !q.down)
@@ -1194,7 +1194,7 @@ export function simulatePassPlay(options = {}) {
     const attack = p.team === 'O' ? dir : -dir;
     p.dv = seek(p, { x: carrier.p.x - attack * 2.0 * YD,
       y: carrier.p.y + (((p.ai.index ?? 0) % 3) - 1) * 1.0 * YD }, 0.82, 12);
-    setIntent(p, 'escort the fumble return', 'screen the nearest pursuit player');
+    setIntent(p, possessionTransition ? 'escort the carrier' : 'escort the fumble return', 'screen the nearest pursuit player');
   }
 
   function recoverFumble() {
@@ -1355,6 +1355,7 @@ export function simulatePassPlay(options = {}) {
     if (!snapped) { p.dv = { x: 0, y: 0 }; p.face = dir > 0 ? 0 : Math.PI; return; }
     if (carrier && p === carrier) { carrierBrain(p); return; }
     if (carrier && p.team !== carrier.team) { pursuerBrain(p); return; }
+    if (cfg.assignments && carrier && p.team === carrier.team) { fumbleReturnBrain(p, true); return; }
     if (p === qb) {
       if (!received) { p.dv = { x: 0, y: 0 }; return; }
       if (W.ball.holder !== qb) { p.dv = { x: 0, y: 0 }; setIntent(p, 'follow the throw', 'watch the ball and stay available'); return; }
@@ -1556,6 +1557,7 @@ export function simulatePassPlay(options = {}) {
 
   function defenseBrain(p) {
     if (!snapped) { p.dv = { x: 0, y: 0 }; p.face = dir > 0 ? Math.PI : 0; return; }
+    if (cfg.assignments && carrier && p.team === carrier.team) { fumbleReturnBrain(p, true); return; }
     if (carrier && p.team !== carrier.team) {
       if (p.engaged) {
         tryShed(p);
