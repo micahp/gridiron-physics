@@ -133,9 +133,9 @@ export function validatePlayInput(input) {
   if (input.behavior_mode != null && (call.concept !== 'assigned' || !['retro', 'detailed'].includes(input.behavior_mode))) {
     throw new RangeError('behavior_mode is supported for assigned calls: retro or detailed');
   }
-  if (input.player_evaluation_mode != null && (call.family !== 'pass' || call.concept !== 'assigned'
+  if (input.player_evaluation_mode != null && (!input.assignments || (call.family === 'pass' && call.concept !== 'assigned')
       || !['legacy_sequential', 'shared_snapshot'].includes(input.player_evaluation_mode))) {
-    throw new RangeError('player_evaluation_mode is supported for assigned passes: legacy_sequential or shared_snapshot');
+    throw new RangeError('player_evaluation_mode is supported for assigned plays: legacy_sequential or shared_snapshot');
   }
   if (input.output_mode != null && !['full', 'result_only'].includes(input.output_mode)) throw new RangeError('unsupported output_mode');
 

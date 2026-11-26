@@ -93,6 +93,7 @@ export function scenarioFromCall(call) {
         massOverrides: keep(translation(massOverrides, true, call.defense.front)),
         playerIds: keep(translation(playerIds, true, call.defense.front)),
         ...(call.assignments ? { assignments: translateRunAssignments(call.assignments, call.defense.front) } : {}),
+        ...(call.player_evaluation_mode ? { playerEvaluationMode: call.player_evaluation_mode } : {}),
       },
     };
   }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { buildSampleCall } from './autonomous-fixtures.mjs';
-import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
+import { exampleAssignments, exampleRunAssignments } from '../engine/autonomous/example-assignments.js';
 const child = spawn(process.execPath, ['engine/autonomous/slc-server.js'], { stdio: ['pipe', 'pipe', 'inherit'] });
 const lines = createInterface({ input: child.stdout })[Symbol.asyncIterator]();
 async function request(v) {
@@ -28,6 +28,13 @@ try {
   assert.equal(shared.value.diagnostics.player_evaluation_mode, 'shared_snapshot');
   assert.equal(shared.value.diagnostics.reconciliation.ok, true);
   assert.deepEqual(shared.value, sharedReplay.value);
+  const sharedRun = buildSampleCall({ family: 'run', concept: 'inside_zone', direction: 'right' });
+  sharedRun.assignments = exampleRunAssignments('right');
+  sharedRun.player_evaluation_mode = 'shared_snapshot';
+  const runResponse = await request({ id: 8, op: 'play', call: sharedRun });
+  assert.equal(runResponse.ok, true);
+  assert.equal(runResponse.value.diagnostics.player_evaluation_mode, 'shared_snapshot');
+  assert.equal(runResponse.value.diagnostics.reconciliation.ok, true);
   const examples = await request({id: 4, op: 'example_assignments', concept:'four_verticals', coverage:'man'});
   assert.deepEqual(examples.value, exampleAssignments('four_verticals', 'man'));
   const ids = ['K', ...Array.from({length: 10}, (_, i) => `C${i}`), 'R',

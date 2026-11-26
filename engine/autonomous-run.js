@@ -7,6 +7,7 @@ import { AERO, solveLaunch } from './ball.js';
 import { Player, POSE, World } from './world.js';
 import { serializeReturnGeometry } from './autonomous/field-geometry.js';
 import { nextRecoveryAttempt } from './autonomous/contact-attempts.js';
+import { hazardDeadline } from './autonomous/retro-cadence.js';
 
 const MAX_SECONDS = 12;
 const ARM_TACKLE_REACH = 0.12;
@@ -18,7 +19,7 @@ const unit = (x, y) => {
 };
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'runSide', 'front', 'ratingOverrides',
-  'playerIds', 'initialPositions', 'preSnapVelocity', 'massOverrides', 'resultOnly', 'assignments',
+  'playerIds', 'initialPositions', 'preSnapVelocity', 'massOverrides', 'resultOnly', 'assignments', 'playerEvaluationMode',
 ]);
 const RUN_GAP_LATERAL = {
   backside_c: -2.65, backside_b: -1.68, backside_a: -0.58,
@@ -112,7 +113,9 @@ function validateConfig(input) {
     massOverrides: input.massOverrides ?? {},
     resultOnly: input.resultOnly ?? false,
     assignments: input.assignments ?? null,
+    playerEvaluationMode: input.playerEvaluationMode ?? 'legacy_sequential',
   };
+  if (!['legacy_sequential', 'shared_snapshot'].includes(cfg.playerEvaluationMode)) throw new RangeError('unsupported player evaluation mode');
   if (typeof cfg.resultOnly !== 'boolean') throw new TypeError('resultOnly must be boolean');
   if (!Number.isFinite(cfg.los) || cfg.los < 1 || cfg.los > 99) throw new RangeError('los must be between 1 and 99 yards');
   if (cfg.dir !== 1 && cfg.dir !== -1) throw new RangeError('dir must be 1 or -1');
@@ -264,6 +267,18 @@ export function simulateInsideZone(options = {}) {
   const rand = rng(cfg.seed);
   const rosterInfo = createInsideZoneRoster(cfg);
   const W = new World(rand);
+  const sharedSnapshot = cfg.playerEvaluationMode === 'shared_snapshot';
+  const originalEvent = W.event.bind(W);
+  const callbackEvents = [];
+  const pendingEngagements = [];
+  const pendingSheds = new Map();
+  const shedDeadlines = new WeakMap();
+  let collectingBrains = false;
+  let tickRunnerLane = null;
+  W.event = (type, data = {}) => {
+    if (sharedSnapshot && collectingBrains) callbackEvents.push({ type, data });
+    else originalEvent(type, data);
+  };
   const dir = cfg.dir;
   const side = cfg.runSide === 'left' ? 1 : -1;
   const at = (f, l) => ({ x: (cfg.los + dir * f) * YD, y: (cfg.ballY + dir * l) * YD });
@@ -322,6 +337,7 @@ export function simulateInsideZone(options = {}) {
   const originalEngage = W.engage.bind(W);
   const originalDisengage = W.disengage.bind(W);
   W.engage = (a, b) => {
+    if (sharedSnapshot && collectingBrains) { pendingEngagements.push({ a, b }); return; }
     const before = a.engaged || b.engaged;
     originalEngage(a, b);
     if (!before && a.engaged === b && a.team !== b.team) {
@@ -487,6 +503,7 @@ export function simulateInsideZone(options = {}) {
     const attack = d.info.group === 'DL' ? Math.max(d.R.PMV ?? 50, d.R.FMV ?? 50, d.R.BSH ?? 50) : d.R.BSH ?? 50;
     const block = blocker.R.RBK ?? blocker.R.IBL ?? 50;
     const rate = clamp(0.12 * Math.exp((attack - block) / 24), 0.025, 1.6);
+    if (sharedSnapshot) { pendingSheds.set(d.id, { defender: d, engagement: e, rate }); return; }
     if (rand() < rate * DT) W.disengage(e, d);
   }
 
@@ -736,7 +753,7 @@ export function simulateInsideZone(options = {}) {
     if (['LT', 'LG', 'C', 'RG', 'RT', 'TE', 'WR1', 'WR2', 'WR3'].includes(p.slot)) {
       if (p.engaged) {
         const d = p.engaged;
-        const lane = rb.ai.lane ?? side * 0.58;
+        const lane = (sharedSnapshot ? tickRunnerLane : rb.ai.lane) ?? side * 0.58;
         const awayFromLane = lOf(p) < lane ? -1 : 1;
         const push = unit(dir * 0.86, dir * awayFromLane * 0.55);
         p.dv = { x: push.x * 2.0, y: push.y * 2.0 };
@@ -983,7 +1000,23 @@ export function simulateInsideZone(options = {}) {
       W.event('handoff', { from: qb.id, to: rb.id });
       setIntent(rb, 'press inside-zone aiming point', 'secure handoff and read the first-level front');
     }
-    W.step(DT, (p) => p.team === 'O' ? offenseBrain(p) : defenseBrain(p));
+    tickRunnerLane = rb.ai.lane ?? null;
+    W.step(DT, (p) => {
+      collectingBrains = true;
+      try { p.team === 'O' ? offenseBrain(p) : defenseBrain(p); }
+      finally { collectingBrains = false; }
+    }, sharedSnapshot ? () => {
+      callbackEvents.sort((a, b) => JSON.stringify([a.type, a.data]).localeCompare(JSON.stringify([b.type, b.data])));
+      for (const event of callbackEvents.splice(0)) originalEvent(event.type, event.data);
+      for (const { defender, engagement, rate } of [...pendingSheds.values()].sort((a, b) => a.defender.id.localeCompare(b.defender.id))) {
+        if (!W.engagements.includes(engagement)) continue;
+        if (!shedDeadlines.has(engagement)) shedDeadlines.set(engagement, hazardDeadline(engagement.t0, rate, rand()));
+        if (W.t >= shedDeadlines.get(engagement)) W.disengage(engagement, defender);
+      }
+      pendingSheds.clear();
+      pendingEngagements.sort((a, b) => a.a.id.localeCompare(b.a.id) || a.b.id.localeCompare(b.b.id));
+      for (const { a, b } of pendingEngagements.splice(0)) W.engage(a, b);
+    } : null);
     for (const row of activeBlock.values()) {
       row.minDefF = Math.min(row.minDefF, fOf(row.defender));
       row.maxDefF = Math.max(row.maxDefF, fOf(row.defender));

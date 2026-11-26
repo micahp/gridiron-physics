@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { World } from '../engine/world.js';
-import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
+import { exampleAssignments, exampleRunAssignments } from '../engine/autonomous/example-assignments.js';
 import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
 import { buildSampleCall } from './autonomous-fixtures.mjs';
 
@@ -22,4 +22,24 @@ try {
   assert.deepEqual(reversed.events, normal.events);
   assert.equal(reversed.diagnostics.reconciliation.ok, true);
 } finally { World.prototype.step = original; }
-console.log('public assigned-pass callback order passed');
+const runCall = buildSampleCall({ family: 'run', concept: 'inside_zone', direction: 'right' });
+runCall.assignments = exampleRunAssignments('right');
+runCall.player_evaluation_mode = 'shared_snapshot';
+for (const seed of ['1', '5', '21', '31']) {
+  runCall.seed = seed;
+  const normalRun = simulateAutonomousPlay(runCall);
+  World.prototype.step = function (dt, brain, afterBrains) {
+    const pending = [];
+    return original.call(this, dt, (player) => {
+      pending.push(player);
+      if (pending.length === this.players.length) for (const candidate of pending.reverse()) brain(candidate);
+    }, afterBrains);
+  };
+  try {
+    const reversed = simulateAutonomousPlay(runCall);
+    assert.deepEqual(reversed.result, normalRun.result, `run ${seed}: result`);
+    assert.deepEqual(reversed.events, normalRun.events, `run ${seed}: events`);
+    assert.equal(reversed.diagnostics.reconciliation.ok, true);
+  } finally { World.prototype.step = original; }
+}
+console.log('public assigned pass and run callback order passed');
