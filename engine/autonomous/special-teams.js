@@ -893,6 +893,7 @@ function simulateAutonomousFieldGoal(cfg) {
         recovery_team: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
         recovery_yardline_100: Math.round(100 - recovery.p.x / YD),
         dead_ball_yardline_100: Math.round(100 - deadBall.x),
+        receiving_team_touched_beyond_line: false,
         return_yards: recovery.team === 'R'
           ? Math.round((100 - deadBall.x) - (100 - recovery.p.x / YD)) : null,
         recoverer_id: recovery.id, returner_id: recovery.team === 'R' ? recovery.id : null,

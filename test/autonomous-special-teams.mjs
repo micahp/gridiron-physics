@@ -68,6 +68,7 @@ assert.equal(blockedFieldGoal.trajectory.roster.length, 22);
 assert.equal(blockedFieldGoal.events.filter((event) => event.type === 'kick_blocked').length, 1);
 assert.ok(blockedFieldGoal.events.some((event) => event.type === 'kick_recovery'));
 assert.ok(blockedFieldGoal.events.some((event) => event.type === 'whistle'));
+assert.equal(blockedFieldGoal.result.receiving_team_touched_beyond_line, false);
 const weakFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 1 }));
 const strongFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 99 }));
 assert.ok(strongFieldGoal.diagnostics.kick_model.power_limit_mps
