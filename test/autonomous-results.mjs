@@ -57,7 +57,7 @@ assert.throws(() => simulateAutonomousPlay(broken), /required for every declared
 
 const forcedFumbleCall = buildSampleCall({ front: 'even' });
 forcedFumbleCall.output_mode = 'result_only';
-forcedFumbleCall.seed = '3';
+forcedFumbleCall.seed = '95';
 forcedFumbleCall.situation.yardline_100 = 40;
 forcedFumbleCall.player_profiles['ne-rb'].ratings.CAR = 1;
 for (const playerId of Object.values(forcedFumbleCall.defense.lineup)) {

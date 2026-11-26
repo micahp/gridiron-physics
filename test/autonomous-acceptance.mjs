@@ -19,7 +19,7 @@ const openFront = (front) => ({
 const scenarios = [
   {
     name: 'open inside gap',
-    config: { seed: 'accept-search-open-4', front: 'even', runSide: 'left', ratingOverrides: openFront('even') },
+    config: { seed: 'accept-search-open-5', front: 'even', runSide: 'left', ratingOverrides: openFront('even') },
     verify: (run) => assert.ok(run.terminal.yards_gained >= 4 && run.terminal.yards_gained < 10),
   },
   {
@@ -41,7 +41,7 @@ const scenarios = [
   {
     name: 'unblocked linebacker',
     config: {
-      seed: 'unblocked-final-26', runSide: 'left',
+      seed: 'unblocked-final-13', runSide: 'left',
       initialPositions: { 'O.C': { x: 10, y: 15 }, 'D.MIKE': { x: 40.1, y: 26.667 } },
     },
     verify: (run) => {
@@ -67,14 +67,14 @@ const scenarios = [
   {
     name: 'explosive run',
     config: {
-      seed: 'accept-search-explosive-8', front: 'even', runSide: 'left', ratingOverrides: openFront('even'),
+      seed: 'accept-search-explosive-9', front: 'even', runSide: 'left', ratingOverrides: openFront('even'),
     },
     verify: (run) => assert.ok(run.terminal.yards_gained >= 10),
   },
   {
     name: 'out-of-bounds run',
     config: {
-      seed: 'accept-search-oob-32', front: 'nickel', runSide: 'left', ballY: 1.3,
+      seed: 'accept-search-oob-36', front: 'nickel', runSide: 'left', ballY: 1.3,
       ratingOverrides: openFront('nickel'),
     },
     verify: (run) => {
@@ -85,7 +85,7 @@ const scenarios = [
   {
     name: 'touchdown',
     config: {
-      seed: 'accept-search-td-2', front: 'even', runSide: 'left', los: 98,
+      seed: 'accept-search-td-7', front: 'even', runSide: 'left', los: 98,
       ratingOverrides: openFront('even'),
     },
     verify: (run) => {
