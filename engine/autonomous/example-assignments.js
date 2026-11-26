@@ -15,8 +15,11 @@ export function exampleAssignments(concept, coverage) {
     offense[slot] = routes[slot] ? { kind: 'route', route: routes[slot], ...(slot === 'RB' ? { check_release: true } : {}) } : { kind: 'block' };
   }
   const defense = Object.fromEntries(['LEDGE', 'LDT', 'RDT', 'REDGE'].map((slot) => [slot, { kind: 'rush' }]));
-  const zones = { MLB: [3, 10, -4, 4], WLB: [3, 10, 5, 14], NB: [3, 10, -14, -4],
-    LCB: [8, 18, 8, 25], RCB: [8, 18, -25, -8], SS: [6, 14, -8, 0], FS: [13, 25, -8, 8] };
+  // Cover 3: three deep thirds and four underneath zones. Coordinates are
+  // forward and lateral yards relative to the offense's line of scrimmage.
+  const zones = { MLB: [3, 12, -2, 8], WLB: [3, 12, 8, 26], NB: [3, 12, -26, -8],
+    SS: [3, 12, -8, 2], LCB: [12, 30, 8, 27], RCB: [12, 30, -27, -8],
+    FS: [12, 30, -8, 8] };
   const man = { LCB: 'WR1', RCB: 'WR2', NB: 'WR3', MLB: 'RB', WLB: 'TE' };
   for (const [slot, bounds] of Object.entries(zones)) {
     const target = man[slot];

@@ -51,6 +51,21 @@ export function tackleFinishChance({ tak, btk, strength, closing }) {
   return clamp(0.43 + (tak - btk) * 0.006 + strength * 0.0015 + closing * 0.027, 0.08, 0.92);
 }
 
+// A coverage defender can break only on an observed, reachable ball that
+// threatens the assigned zone. Man defenders retain their receiver unless
+// the estimated catch point is physically reachable before the ball arrives.
+export function coverageBallOpportunity({ task, estimate, position, los, ballY, direction, speed }) {
+  if (!estimate || !Number.isFinite(estimate.flightSeconds) || estimate.flightSeconds < 0) return false;
+  const distance = Math.hypot(estimate.x - position.x, estimate.y - position.y);
+  const reach = Math.max(0, speed) * estimate.flightSeconds + 1.5 * YD;
+  if (distance > reach) return false;
+  if (task.kind !== 'zone') return task.kind === 'man' || task.kind === 'read';
+  const f = (estimate.x / YD - los) * direction;
+  const l = (estimate.y / YD - ballY) * direction;
+  const [f0, f1, l0, l1] = task.bounds;
+  return f >= f0 - 3 && f <= f1 + 3 && l >= l0 - 3 && l <= l1 + 3;
+}
+
 // Contract defensive slots -> the roster slots the physics front knows.
 const DEFENSE_SLOT_MAP = { LEDGE: 'LDE', REDGE: 'RDE', MLB: 'MIKE', WLB: 'WILL' };
 const FRONT_TO_ROSTER = { nickel_over: 'nickel', nickel_under: 'nickel', nickel: 'nickel' };
@@ -58,7 +73,7 @@ const FRONT_TO_ROSTER = { nickel_over: 'nickel', nickel_under: 'nickel', nickel:
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
-  'assignments', 'behaviorMode', 'resultOnly', 'contestDiagnostics', 'physicsHz',
+  'assignments', 'behaviorMode', 'playerEvaluationMode', 'resultOnly', 'contestDiagnostics', 'physicsHz',
 ]);
 
 function validateConfig(input) {
@@ -82,6 +97,7 @@ function validateConfig(input) {
     defenseTeam: input.defenseTeam ?? 'DEF',
     assignments: input.assignments ?? null,
     behaviorMode: input.behaviorMode ?? (input.assignments ? 'retro' : 'detailed'),
+    playerEvaluationMode: input.playerEvaluationMode ?? 'legacy_sequential',
     resultOnly: input.resultOnly ?? false,
     contestDiagnostics: input.contestDiagnostics ?? false,
     physicsHz: input.physicsHz ?? 120,
@@ -93,6 +109,9 @@ function validateConfig(input) {
   if ((cfg.concept === 'assigned') !== (cfg.assignments != null)) throw new RangeError('assigned concept requires assignments');
   if (cfg.assignments) validateAssignments(cfg.assignments, { executable: true });
   if (!['retro', 'detailed'].includes(cfg.behaviorMode)) throw new RangeError('unsupported behavior mode');
+  if (!['legacy_sequential', 'shared_snapshot'].includes(cfg.playerEvaluationMode)) {
+    throw new RangeError('unsupported player evaluation mode');
+  }
   if (cfg.direction !== 'left' && cfg.direction !== 'right') throw new RangeError('direction must be left or right');
   if (!FRONT_TO_ROSTER[cfg.front]) throw new RangeError(`unsupported passing front: ${cfg.front}`);
   if (cfg.coverage !== 'cover_1' && cfg.coverage !== 'cover_3') throw new RangeError(`unsupported coverage: ${cfg.coverage}`);
@@ -142,8 +161,22 @@ export function createPassRoster(options = {}) {
 export function simulatePassPlay(options = {}) {
   const cfg = validateConfig(options);
   const rand = rng(cfg.seed);
+  const sharedSnapshot = cfg.playerEvaluationMode === 'shared_snapshot';
   const rosterInfo = createPassRoster(cfg);
   const W = new World(rand);
+  const originalEvent = W.event.bind(W);
+  const pendingCallbackEvents = [];
+  let collectingCallbackEvents = false;
+  const stableEventValue = (value) => {
+    if (Array.isArray(value)) return `[${value.map(stableEventValue).join(',')}]`;
+    if (value && typeof value === 'object') return `{${Object.keys(value).sort()
+      .map((key) => `${JSON.stringify(key)}:${stableEventValue(value[key])}`).join(',')}}`;
+    return JSON.stringify(value);
+  };
+  W.event = (type, data = {}) => {
+    if (sharedSnapshot && collectingCallbackEvents) pendingCallbackEvents.push({ type, data });
+    else originalEvent(type, data);
+  };
   const physicsDt = 1 / cfg.physicsHz;
   const dir = cfg.dir;
   const side = cfg.direction === 'left' ? 1 : -1; // concept side in local lateral yards
@@ -345,6 +378,12 @@ export function simulatePassPlay(options = {}) {
   let physicalOpportunitySequence = 0;
   const contestDiagnostics = cfg.contestDiagnostics ? { throws: [], by_player: {} } : null;
   let sack = null, tackle = null, terminal = null, fumble = null, fumbleRecovery = null;
+  let pendingPass = null, pendingThrowaway = false;
+  const pendingSackCandidates = new Set();
+  const pendingBlockRequests = new Map();
+  const pendingShedRequests = new Map();
+  const pendingFumbleEngagements = new Map();
+  let tickEngagementSnapshot = null;
   let fumbleRecoverySpot = null;
   let passInterference = null;
   let maxForward = null;
@@ -377,20 +416,78 @@ export function simulatePassPlay(options = {}) {
 
   const visible = (p) => p.team === possession ? offense : defense;
 
-  function chooseBlockTarget(p) {
-    const pool = defense.filter((q) => !q.down && q.info.group === 'DL' && (!q.engaged || q.engaged === p));
-    const free = pool.filter((q) => !q.engaged);
+  function rankBlockTargets(p) {
+    const engagedAtTick = (q) => tickEngagementSnapshot?.has(q.id)
+      ? tickEngagementSnapshot.get(q.id) : q.engaged;
+    const pool = defense.filter((q) => !q.down && q.info.group === 'DL'
+      && (!engagedAtTick(q) || engagedAtTick(q) === p));
+    const free = pool.filter((q) => !engagedAtTick(q));
     const options = free.length ? free : pool;
-    if (!options.length) return null;
+    if (!options.length) return [];
     // Protect the inside first: nearest rusher to the quarterback, then nearest to the blocker.
-    const scored = options.map((q) => [d2(q, qb) * 0.55 + d2(q, p) * 0.45, q])
-      .sort((a, b) => a[0] - b[0] || a[1].id.localeCompare(b[1].id));
-    return scored[0][1];
+    return options.map((q) => [d2(q, qb) * 0.55 + d2(q, p) * 0.45, q])
+      .sort((a, b) => a[0] - b[0] || a[1].id.localeCompare(b[1].id))
+      .map(([, target]) => target);
   }
 
-  function engageBlocker(p, d) {
+  function chooseBlockTarget(p) {
+    if (!sharedSnapshot) {
+      const pool = defense.filter((q) => !q.down && q.info.group === 'DL' && (!q.engaged || q.engaged === p));
+      const free = pool.filter((q) => !q.engaged);
+      const options = free.length ? free : pool;
+      if (!options.length) return null;
+      const scored = options.map((q) => [d2(q, qb) * 0.55 + d2(q, p) * 0.45, q])
+        .sort((a, b) => a[0] - b[0] || a[1].id.localeCompare(b[1].id));
+      return scored[0][1];
+    }
+    return rankBlockTargets(p)[0] ?? null;
+  }
+
+  function engageBlocker(p, d, mode = 'pass_set') {
     if (!d || p.engaged || d.engaged || p.down || d.down) return;
-    if (d2(p, d) <= p.r + d.r + 0.15) W.engage(p, d);
+    if (d2(p, d) > p.r + d.r + 0.15) return;
+    if (!sharedSnapshot) {
+      W.engage(p, d);
+      return;
+    }
+    const candidates = (mode === 'check_release' ? [d] : rankBlockTargets(p))
+      .filter((candidate) => !candidate.down
+        && d2(p, candidate) <= p.r + candidate.r + 0.15
+        && (candidate.shedCD ?? 0) <= 0);
+    pendingBlockRequests.set(p.id, { blocker: p, preferred: d, candidates, mode });
+  }
+
+  function resolveBlockRequests() {
+    const requests = [...pendingBlockRequests.values()]
+      .sort((a, b) => W.players.indexOf(a.blocker) - W.players.indexOf(b.blocker));
+    pendingBlockRequests.clear();
+    for (const request of requests) {
+      const { blocker, mode } = request;
+      if (blocker.down || blocker.engaged) continue;
+      const target = request.candidates.find((candidate) => !candidate.down && !candidate.engaged
+        && (candidate.shedCD ?? 0) <= 0
+        && d2(blocker, candidate) <= blocker.r + candidate.r + 0.15);
+      if (!target || target.engaged) continue;
+      blocker.ai.blockOn = target;
+      if (mode === 'check_release') {
+        blocker.dv = seek(blocker, lead(blocker, target, 0.1), 0.75, 12);
+      } else {
+        blocker.dv = seek(blocker, lead(blocker, target, 0.12), 0.9, 14);
+        blocker.face = Math.atan2(target.p.y - blocker.p.y, target.p.x - blocker.p.x);
+      }
+      W.engage(blocker, target);
+    }
+  }
+
+  function resolveFumbleEngagements() {
+    const requests = [...pendingFumbleEngagements.values()]
+      .sort((a, b) => W.players.indexOf(a.blocker) - W.players.indexOf(b.blocker));
+    pendingFumbleEngagements.clear();
+    for (const { blocker, defender } of requests) {
+      if (blocker.down || defender.down || blocker.engaged || defender.engaged
+          || d2(blocker, defender) >= 1.0) continue;
+      W.engage(blocker, defender);
+    }
   }
 
   function tryShed(d) {
@@ -398,10 +495,31 @@ export function simulatePassPlay(options = {}) {
     if (!e) return;
     const blocker = e.a === d ? e.b : e.a;
     if (blocker.team !== 'O') return;
-    const attack = d.info.group === 'DL' ? Math.max(d.R.PMV ?? 50, d.R.FMV ?? 50, d.R.BSH ?? 50) : d.R.BSH ?? 50;
-    const block = blocker.R.PBK ?? blocker.R.RBK ?? 50;
-    const rate = clamp(0.34 * Math.exp((attack - block) / 22), 0.05, 3);
-    if (rand() < rate * physicsDt) W.disengage(e, d);
+    if (!sharedSnapshot) {
+      const attack = d.info.group === 'DL' ? Math.max(d.R.PMV ?? 50, d.R.FMV ?? 50, d.R.BSH ?? 50) : d.R.BSH ?? 50;
+      const block = blocker.R.PBK ?? blocker.R.RBK ?? 50;
+      const rate = clamp(0.34 * Math.exp((attack - block) / 22), 0.05, 3);
+      if (rand() < rate * physicsDt) W.disengage(e, d);
+      return;
+    }
+    pendingShedRequests.set(d.id, { defender: d, engagement: e });
+  }
+
+  function resolveShedRequests() {
+    const requests = [...pendingShedRequests.values()]
+      .sort((a, b) => W.players.indexOf(a.defender) - W.players.indexOf(b.defender));
+    pendingShedRequests.clear();
+    for (const { defender, engagement } of requests) {
+      if (!W.engagements.includes(engagement)
+          || (engagement.a !== defender && engagement.b !== defender)) continue;
+      const blocker = engagement.a === defender ? engagement.b : engagement.a;
+      const attack = defender.info.group === 'DL'
+        ? Math.max(defender.R.PMV ?? 50, defender.R.FMV ?? 50, defender.R.BSH ?? 50)
+        : defender.R.BSH ?? 50;
+      const block = blocker.R.PBK ?? blocker.R.RBK ?? 50;
+      const rate = clamp(0.34 * Math.exp((attack - block) / 22), 0.05, 3);
+      if (rand() < rate * physicsDt) W.disengage(engagement, defender);
+    }
   }
 
   function routeTarget(p) {
@@ -578,7 +696,7 @@ export function simulatePassPlay(options = {}) {
     contestDiagnostics.throws.push(currentThrowDiagnostics);
   }
 
-  function launchPass(best) {
+  function preparePassLaunch(best) {
     const from = { x: W.ball.x, y: W.ball.y, z: 1.45 };
     // Location error is the quarterback's, not the receiver's: it grows with
     // throw distance and pressure and shrinks with accuracy.
@@ -592,6 +710,11 @@ export function simulatePassPlay(options = {}) {
       z: 1.5,
     };
     const flight = solveLaunch(from, to, Math.max(0.32, best.flight), AERO.spiral);
+    return { best, from, to, flight, accuracy, sigma };
+  }
+
+  function launchPass(prepared) {
+    const { best, from, to, flight, accuracy, sigma } = prepared;
     Object.assign(W.ball, {
       state: 'air', holder: null, x: from.x, y: from.y, z: from.z,
       vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k,
@@ -639,7 +762,11 @@ export function simulatePassPlay(options = {}) {
     if (options.length) {
       const best = options[0];
       if (best.utility > 0.62 || (pressure < 1.5 && best.utility > 0.34)) {
-        launchPass(best);
+        // Draw the throw's error at the QB's decision point, but hold the ball
+        // transition until every player has observed the same held-ball snapshot.
+        const prepared = preparePassLaunch(best);
+        if (sharedSnapshot) pendingPass = prepared;
+        else launchPass(prepared);
         return;
       }
       W.event('qb_read', {
@@ -661,19 +788,24 @@ export function simulatePassPlay(options = {}) {
       setIntent(qb, 'scramble away from pressure', rusher
         ? `move away from remembered pressure by ${rusher.player.slot}` : 'use a pressure cue and remembered pocket space');
     } else if (elapsed > 3.0) {
-      const target = at(-1.0, side * 22);
-      const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
-      Object.assign(W.ball, { state: 'air', holder: null, vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k });
-      W.ball.intentionalGround = true;
-      W.ball.thrower = qb;
-      W.ball.target = null;
-      W.ball.landing = { x: target.x, y: target.y };
-      W.ball.thrownAt = W.t;
-      beginAirborneThrow({ type: 'throwaway', flightSeconds: 0.9,
-        landing: { x: target.x / YD, y: target.y / YD } });
-      qb.hasBall = false;
-      W.event('throw_away', { quarterback_id: qb.id });
+      if (sharedSnapshot) pendingThrowaway = true;
+      else launchThrowaway();
     }
+  }
+
+  function launchThrowaway() {
+    const target = at(-1.0, side * 22);
+    const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
+    Object.assign(W.ball, { state: 'air', holder: null, vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k });
+    W.ball.intentionalGround = true;
+    W.ball.thrower = qb;
+    W.ball.target = null;
+    W.ball.landing = { x: target.x, y: target.y };
+    W.ball.thrownAt = W.t;
+    beginAirborneThrow({ type: 'throwaway', flightSeconds: 0.9,
+      landing: { x: target.x / YD, y: target.y / YD } });
+    qb.hasBall = false;
+    W.event('throw_away', { quarterback_id: qb.id });
   }
 
   // ------------------------------------------------------------ ball contest
@@ -982,7 +1114,10 @@ export function simulatePassPlay(options = {}) {
     }
     const threat = W.players.filter((q) => q.team !== carrier.team && !q.down)
       .sort((a, b) => d2(p, a) - d2(p, b) || a.id.localeCompare(b.id))[0];
-    if (threat && d2(threat, p) < 1.0 && !p.engaged && !threat.engaged) W.engage(p, threat);
+    if (threat && d2(threat, p) < 1.0 && !p.engaged && !threat.engaged) {
+      if (sharedSnapshot) pendingFumbleEngagements.set(p.id, { blocker: p, defender: threat });
+      else W.engage(p, threat);
+    }
     const attack = p.team === 'O' ? dir : -dir;
     p.dv = seek(p, { x: carrier.p.x - attack * 2.0 * YD,
       y: carrier.p.y + (((p.ai.index ?? 0) % 3) - 1) * 1.0 * YD }, 0.82, 12);
@@ -1092,15 +1227,21 @@ export function simulatePassPlay(options = {}) {
       d.dv = seek(d, lead(d, qb, 0.12), 1, 22);
       d.face = Math.atan2(qb.p.y - d.p.y, qb.p.x - d.p.x);
       if (d2(d, qb) < d.r + qb.r + 0.2) {
-        W.event('sack', { defender_id: d.id, quarterback_id: qb.id, time: W.t });
-        sack = { defender: d, t0: W.t };
-        carrier = qb;
-        const closing = Math.hypot(d.v.x - qb.v.x, d.v.y - qb.v.y) / YD;
-        if (attemptForcedFumble(d, qb, closing)) return;
-        d.pose = POSE.WRAP;
-        tackle = { tackler: d, carrier: qb, t0: W.t };
-        W.wrap(d, qb, { fall: 0.5, keepCarrier: 0.1 });
-        finish('sack', { x: W.ball.x, y: W.ball.y });
+        if (sharedSnapshot) {
+          // Resolve a same-tick sack after all player decisions, before the
+          // deferred QB release is committed.
+          pendingSackCandidates.add(d);
+        } else {
+          W.event('sack', { defender_id: d.id, quarterback_id: qb.id, time: W.t });
+          sack = { defender: d, t0: W.t };
+          carrier = qb;
+          const closing = Math.hypot(d.v.x - qb.v.x, d.v.y - qb.v.y) / YD;
+          if (attemptForcedFumble(d, qb, closing)) return;
+          d.pose = POSE.WRAP;
+          tackle = { tackler: d, carrier: qb, t0: W.t };
+          W.wrap(d, qb, { fall: 0.5, keepCarrier: 0.1 });
+          finish('sack', { x: W.ball.x, y: W.ball.y });
+        }
       }
     } else {
       d.dv = seek(d, at(0.8, d.ai.gapL ?? 0), 0.5, 8);
@@ -1252,7 +1393,7 @@ export function simulatePassPlay(options = {}) {
   }
 
   function estimateObservedBallLanding(p) {
-    if (cfg.behaviorMode === 'retro') {
+    if (cfg.behaviorMode === 'retro' && !cfg.assignments) {
       return estimateBallLanding({ position: { x: W.ball.x, y: W.ball.y }, velocity: { x: W.ball.vx, y: W.ball.vy },
         z: W.ball.z, vz: W.ball.vz, uncertaintyMeters: 0 }, G);
     }
@@ -1263,7 +1404,7 @@ export function simulatePassPlay(options = {}) {
   }
 
   function estimateObservedBallCatchPoint(p) {
-    if (cfg.behaviorMode === 'retro') {
+    if (cfg.behaviorMode === 'retro' && !cfg.assignments) {
       return estimateBallCatchPoint({ position: { x: W.ball.x, y: W.ball.y }, velocity: { x: W.ball.vx, y: W.ball.vy },
         z: W.ball.z, vz: W.ball.vz, uncertaintyMeters: 0 }, AERO.spiral);
     }
@@ -1341,11 +1482,16 @@ export function simulatePassPlay(options = {}) {
     if (!cfg.assignments && p.info.group === 'DL') { rushPasser(p); return; }
     if (W.ball.state === 'air') {
       const estimate = estimateObservedBallLanding(p);
-      if (estimate) {
+      const task = cfg.assignments?.defense[p.slot];
+      if (estimate && task) p.ai.throwCueAt ??= W.t;
+      const recognitionDelay = clamp(0.34 - (p.R.PRC ?? p.R.AWR ?? 60) * 0.0026, 0.08, 0.30);
+      const recognized = !task || (p.ai.throwCueAt != null && W.t - p.ai.throwCueAt >= recognitionDelay);
+      if (estimate && recognized && (!task || coverageBallOpportunity({ task, estimate,
+        position: p.p, los: cfg.los, ballY: cfg.ballY, direction: dir,
+        speed: p.vmax }))) {
         p.dv = seek(p, estimate, 1, 16);
         p.face = Math.atan2(estimate.y - p.p.y, estimate.x - p.p.x);
-        setIntent(p, 'break on the thrown ball',
-          `estimate the landing point from the delayed trajectory (${estimate.uncertaintyMeters.toFixed(2)} m uncertainty)`);
+        setIntent(p, 'break on the thrown ball', 'attack the reachable ball from an observed trajectory');
         return;
       }
     }
@@ -1443,6 +1589,43 @@ export function simulatePassPlay(options = {}) {
     else defenseBrain(p);
   };
 
+  function resolveTickActions() {
+    if (!sharedSnapshot) return;
+    pendingCallbackEvents.sort((a, b) => stableEventValue([a.type, a.data])
+      .localeCompare(stableEventValue([b.type, b.data])));
+    for (const row of pendingCallbackEvents.splice(0)) originalEvent(row.type, row.data);
+    resolveShedRequests();
+    resolveBlockRequests();
+    resolveFumbleEngagements();
+    if (!terminal && received && W.ball.holder === qb && pendingSackCandidates.size > 0) {
+      const defender = [...pendingSackCandidates].filter((candidate) => !candidate.engaged)
+        .sort((a, b) => d2(a, qb) - d2(b, qb)
+        || a.id.localeCompare(b.id))[0];
+      if (defender) {
+        W.event('sack', { defender_id: defender.id, quarterback_id: qb.id, time: W.t });
+        sack = { defender, t0: W.t };
+        carrier = qb;
+        const closing = Math.hypot(defender.v.x - qb.v.x, defender.v.y - qb.v.y) / YD;
+        if (!attemptForcedFumble(defender, qb, closing)) {
+          defender.pose = POSE.WRAP;
+          tackle = { tackler: defender, carrier: qb, t0: W.t };
+          W.wrap(defender, qb, { fall: 0.5, keepCarrier: 0.1 });
+          finish('sack', { x: W.ball.x, y: W.ball.y });
+        }
+      }
+    }
+    pendingSackCandidates.clear();
+    if (terminal || W.ball.holder !== qb) {
+      pendingPass = null;
+      pendingThrowaway = false;
+      return;
+    }
+    if (pendingPass) launchPass(pendingPass);
+    else if (pendingThrowaway) launchThrowaway();
+    pendingPass = null;
+    pendingThrowaway = false;
+  }
+
   // ------------------------------------------------------------------ finish
   function finish(reason, spot) {
     if (terminal) return;
@@ -1533,7 +1716,13 @@ export function simulatePassPlay(options = {}) {
     if (received && !carrier && W.ball.state === 'air') throwInfo = { snapT: W.ball.receivedAt, thrownAt: W.t };
     if (received && carrier) throwInfo = null;
 
-    W.step(physicsDt, brains);
+    tickEngagementSnapshot = sharedSnapshot
+      ? new Map(W.players.map((player) => [player.id, player.engaged])) : null;
+    const tickBrains = sharedSnapshot ? (player) => {
+      collectingCallbackEvents = true;
+      try { brains(player); } finally { collectingCallbackEvents = false; }
+    } : brains;
+    W.step(physicsDt, tickBrains, resolveTickActions);
     for (const row of activeBlock.values()) {
       row.minDefF = Math.min(row.minDefF, fOf(row.defender));
       row.maxDefF = Math.max(row.maxDefF, fOf(row.defender));
@@ -1629,6 +1818,7 @@ export function simulatePassPlay(options = {}) {
     blockers, topSpeed,
     diagnostics: {
       ...(contestDiagnostics ? { pass_contests: contestDiagnostics } : {}),
+      ...(sharedSnapshot ? { player_evaluation_mode: 'shared_snapshot' } : {}),
       ...(cfg.assignments ? { behavior_mode: cfg.behaviorMode } : {}),
       ...(cfg.assignments && cfg.behaviorMode === 'retro' ? { cadence: Object.fromEntries(W.players.map((p) => [p.id,
         { ticks: p.ai.tickCount ?? 0, interrupts: p.ai.interruptCount ?? 0,

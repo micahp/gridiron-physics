@@ -13,6 +13,14 @@ function assigned(concept, coverage) {
   call.assignments = exampleAssignments(concept, coverage);
   return call;
 }
+const cover3 = exampleAssignments('slant_flat', 'zone').defense;
+assert.deepEqual(['LEDGE', 'LDT', 'RDT', 'REDGE'].map((slot) => cover3[slot].kind), Array(4).fill('rush'));
+assert.deepEqual(['LCB', 'FS', 'RCB'].map((slot) => cover3[slot].bounds),
+  [[12, 30, 8, 27], [12, 30, -8, 8], [12, 30, -27, -8]], 'three deep thirds');
+for (const slot of ['MLB', 'WLB', 'NB', 'SS']) {
+  assert.equal(cover3[slot].kind, 'zone');
+  assert.ok(cover3[slot].bounds[1] <= 12, `${slot} covers underneath`);
+}
 for (const concept of ['slant_flat', 'curls', 'four_verticals']) {
   for (const coverage of ['man', 'zone']) {
     const call = assigned(concept, coverage);
