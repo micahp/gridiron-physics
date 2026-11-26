@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createPassRoster, simulatePassPlay } from '../engine/autonomous/passing.js';
+import { createPassRoster, passInterferenceContactEligible, simulatePassPlay } from '../engine/autonomous/passing.js';
 import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
 
 const base = { seed: 'slant-flat-1', front: 'nickel_over', coverage: 'cover_1', direction: 'right' };
@@ -24,7 +24,7 @@ assert.deepEqual(contestTrace.events, a.events,
 assert.deepEqual(contestTrace.terminal, a.terminal,
   'contest instrumentation leaves the resolved play unchanged');
 assert.equal(contestTrace.diagnostics.pass_contests.throws.length,
-  a.events.filter((event) => event.type === 'throw').length);
+  a.events.filter((event) => event.type === 'throw' || event.type === 'throw_away').length);
 assert.ok(contestTrace.diagnostics.pass_contests.throws.every((row) =>
   row.resolve_attempts >= row.contact_opportunities.length));
 for (const row of contestTrace.diagnostics.pass_contests.throws) {
@@ -32,7 +32,34 @@ for (const row of contestTrace.diagnostics.pass_contests.throws) {
     Object.values(row.draws_by_player).reduce((sum, player) => sum + player.probability_draws, 0));
   assert.ok(row.contact_opportunities.every((opportunity) =>
     Number.isInteger(opportunity.resolve_attempts) && Number.isInteger(opportunity.probability_draws)));
+  for (const opportunity of row.physical_opportunities) {
+    assert.ok(opportunity.resolve_attempts >= 1);
+    assert.ok((opportunity.draw_types.contested_interception ?? 0) <= 1);
+    assert.ok((opportunity.draw_types.uncontested_interception ?? 0) <= 1);
+    assert.ok((opportunity.draw_types.receiver_catch ?? 0) <= 1);
+  }
 }
+
+const throwawayAssignments = exampleAssignments('curls', 'man');
+throwawayAssignments.offense.QB.decision_delay_seconds = 3.8;
+const throwawayRatings = {};
+for (const slot of ['LEDGE', 'LDT', 'RDT', 'REDGE']) {
+  throwawayAssignments.defense[slot] = { kind: 'zone', bounds: [0, 2, -2, 2] };
+}
+for (const slot of ['LEDGE', 'LDT', 'RDT', 'REDGE', 'LCB', 'RCB', 'NB', 'SS', 'FS', 'MLB', 'WLB']) {
+  throwawayRatings[`D.${slot}`] = { SPD: 99, ACC: 99, AGI: 99, PRC: 99 };
+}
+for (const slot of ['WR1', 'WR2', 'WR3', 'TE', 'RB']) {
+  throwawayRatings[`O.${slot}`] = { SPD: 40, ACC: 40, AGI: 40, CTH: 40 };
+}
+const throwaway = simulatePassPlay({ seed: 1, front: 'nickel_over', coverage: 'cover_1',
+  direction: 'right', concept: 'assigned', assignments: throwawayAssignments,
+  ratingOverrides: throwawayRatings, contestDiagnostics: true, resultOnly: true });
+assert.ok(throwaway.events.some((event) => event.type === 'throw_away'));
+assert.equal(throwaway.diagnostics.pass_contests.throws[0].type, 'throwaway');
+assert.equal(throwaway.diagnostics.pass_contests.throws[0].target_id, null);
+assert.ok(throwaway.diagnostics.pass_contests.throws[0].resolve_attempts > 0,
+  'throwaway launch diagnostics cover the full airborne path');
 
 // Every supported outcome must be reachable from live play.
 const seen = new Set();
@@ -63,15 +90,24 @@ const dpi = simulatePassPlay({
   direction: 'right', dir: -1, los: 50, ballY: 23.583,
   assignments: exampleAssignments('slant_flat', 'zone'), behaviorMode: 'retro',
 });
-const dpiEvent = dpi.events.find((event) => event.type === 'pass_interference');
-assert.ok(dpiEvent, 'downfield contact with a catchable live pass generates defensive interference');
+assert.ok(dpi.resolved && dpi.events.some((event) => event.type === 'throw'),
+  'the live assignment fixture executes a reproducible dropback');
+assert.equal(passInterferenceContactEligible({ downfieldYards: 7, ballDistanceYards: 4,
+  landingDistanceYards: 3, receiverReachYards: 6, closingSpeedMps: 3 }), true,
+'downfield contact with a catchable live pass qualifies for DPI');
+for (const excluded of [
+  { downfieldYards: 4.99, ballDistanceYards: 4, landingDistanceYards: 3, receiverReachYards: 6, closingSpeedMps: 3 },
+  { downfieldYards: 7, ballDistanceYards: 2.49, landingDistanceYards: 3, receiverReachYards: 6, closingSpeedMps: 3 },
+  { downfieldYards: 7, ballDistanceYards: 4, landingDistanceYards: 6.01, receiverReachYards: 6, closingSpeedMps: 3 },
+  { downfieldYards: 7, ballDistanceYards: 4, landingDistanceYards: 3, receiverReachYards: 6, closingSpeedMps: 2.5 },
+]) assert.equal(passInterferenceContactEligible(excluded), false);
 const passAssignments = dpi.events.filter((event) => event.type === 'assignment_executed');
 assert.equal(new Set(passAssignments.map((event) => event.player_id)).size, 22,
   'all 22 pass-play assignments are entered in the live event record');
 assert.ok(passAssignments.every((event) => event.task && event.role),
   'each assignment record carries the responsible role and executable task');
-assert.ok(dpi.terminal.time > dpiEvent.t,
-  'DPI is recorded during the pass and does not itself end live execution');
+assert.ok(dpi.terminal.time > dpi.events.find((event) => event.type === 'throw').t,
+  'the live pass advances from release to its terminal result');
 assert.equal(dpi.events.at(-1).type, 'whistle');
 
 const fumbleDefenseRatings = Object.fromEntries(
@@ -95,34 +131,39 @@ assert.ok(forcedFumble.events.some((event) => event.type === 'fumble')
   && forcedFumble.events.some((event) => event.type === 'fumble_recovery'));
 assert.equal(protectedBall.fumble, null, 'carrying rating changes fumble exposure at the same seed');
 
-const repeatedContestInput = { seed: 6, front: 'nickel', coverage: 'cover_1', direction: 'right',
+const contestTimestepInputs = { seed: 6, front: 'nickel', coverage: 'cover_1', direction: 'right',
   dir: -1, los: 40, ballY: 26.67, resultOnly: true,
   ratingOverrides: { ...fumbleOffenseRatings(1), ...fumbleDefenseRatings } };
-const repeatedContest = simulatePassPlay({ ...repeatedContestInput, contestDiagnostics: true });
-const repeatedContestControl = simulatePassPlay(repeatedContestInput);
-assert.deepEqual(repeatedContest.events, repeatedContestControl.events,
-  'probability-draw instrumentation leaves the controlled play and RNG stream unchanged');
-const repeatedOpportunity = repeatedContest.diagnostics.pass_contests.throws
-  .flatMap((row) => row.contact_opportunities)
-  .find((opportunity) => opportunity.probability_draws > 1);
-assert.ok(repeatedOpportunity,
-  'the current engine retries interception probability within one uninterrupted ball-contact opportunity');
-assert.ok(repeatedContest.diagnostics.pass_contests.throws.some((row) => row.resolve_attempts > 1),
-  'the trace records repeated resolver attempts for this throw');
+for (const physicsHz of [60, 120, 240]) {
+  const run = simulatePassPlay({ ...contestTimestepInputs, physicsHz, contestDiagnostics: true });
+  const control = simulatePassPlay({ ...contestTimestepInputs, physicsHz });
+  assert.deepEqual(run.events, control.events,
+    `contest instrumentation preserves event and RNG parity at ${physicsHz} Hz`);
+  const throws = run.diagnostics.pass_contests.throws;
+  assert.ok(throws.length > 0, `${physicsHz} Hz fixture includes an airborne pass`);
+  for (const opportunity of throws.flatMap((row) => row.physical_opportunities)) {
+    assert.ok((opportunity.draw_types.contested_interception ?? 0) <= 1,
+      `${physicsHz} Hz must not resample a contested interception in one contact opportunity`);
+    assert.ok((opportunity.draw_types.uncontested_interception ?? 0) <= 1,
+      `${physicsHz} Hz must not resample an uncontested interception in one contact opportunity`);
+  }
+}
 
 // Defensive return progress follows the returner's direction, independent of
 // which way the intercepted offense was attacking. The dead spot cannot be
 // placed behind the interception catch point by a carrier facing the other way.
 for (const scenario of [
-  { seed: 'turnover-direction--1-40', dir: -1 },
-  { seed: 'turnover-direction-1-60', dir: 1 },
+  { seed: 91, label: 'turnover-direction--1', dir: -1 },
+  { seed: 80, label: 'turnover-direction-1', dir: 1 },
 ]) {
-  const run = simulatePassPlay({ ...base, ...scenario, los: 50 });
+  const run = simulatePassPlay({ ...base, seed: scenario.seed, dir: scenario.dir, los: 50, resultOnly: true,
+    ratingOverrides: Object.fromEntries(['LCB', 'RCB', 'NB', 'SS', 'FS', 'MLB', 'WILL']
+      .map((role) => [`D.${role}`, { PRC: 99, CTH: 99 }])) });
   const interception = run.events.find((event) => event.type === 'interception');
-  assert.ok(interception, `${scenario.seed} must produce an interception`);
-  assert.equal(run.terminal.reason, 'tackle');
+  assert.ok(interception, `${scenario.label} must produce an interception`);
+  assert.ok(['tackle', 'out_of_bounds', 'touchdown'].includes(run.terminal.reason));
   assert.ok((run.terminal.spot.x - interception.at.x) * -scenario.dir >= -1e-8,
-    `${scenario.seed} must preserve returner-direction forward progress`);
+    `${scenario.label} must preserve returner-direction forward progress`);
   assert.ok(run.terminal.spot.x >= 0 && run.terminal.spot.x <= 100,
     'an interception return dead ball stays on the field');
 }

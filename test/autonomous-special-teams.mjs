@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
 import { simulateAutonomousSpecialTeams } from '../engine/autonomous/special-teams.js';
+import { roundYardline100, statReturnYards } from '../engine/autonomous/field-geometry.js';
 
 const ids = ['K', ...Array.from({ length: 10 }, (_, i) => `C${i}`), 'R',
   ...Array.from({ length: 10 }, (_, i) => `B${i}`)];
+
+assert.equal(roundYardline100(32.499999), 32);
+assert.equal(roundYardline100(32.5), 33, 'statistical spots use the shared half-up convention');
+assert.equal(statReturnYards(45, 43, -1), 2, 'kicking-team advancement lowers yardline_100');
+assert.equal(statReturnYards(45, 47, 1), 2, 'receiving-team advancement raises yardline_100');
+assert.equal(statReturnYards(45, 47, -1), -2, 'the same convention preserves a loss');
 
 function call({ kind = 'punt', seed = 42, cth = 78, kpw = 70, kac = 70, awr = 70, spd = 76,
   rush = 70, protect = 70, ratingOverrides = {} } = {}) {
@@ -112,6 +119,15 @@ const muffRecoveryEvent = poorHands.events.find((event) => event.type === 'kick_
 assert.deepEqual(poorHands.result.recovery_at,
   { ...muffRecoveryEvent.at, time: muffRecoveryEvent.time },
   'muff return spot keeps the ball coordinates and time from the recovery event');
+const kickingTeamMuff = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 55, cth: 1, awr: 1 }));
+assert.equal(kickingTeamMuff.status, 'complete');
+assert.equal(kickingTeamMuff.result.recovery_team, 'kicking_team');
+assert.equal(kickingTeamMuff.result.return_yards,
+  kickingTeamMuff.result.recovery_yardline_100 - kickingTeamMuff.result.dead_ball_yardline_100,
+  'a kicking-team muff recovery uses its own advancement direction');
+assert.equal(kickingTeamMuff.result.return_yards, 0,
+  'a kicking-team scrimmage-kick recovery beyond the line is dead at recovery');
+assert.ok(kickingTeamMuff.events.some((event) => event.type === 'kick_recovery_dead_ball'));
 const muffedEndZoneRecovery = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5, cth: 1 }));
 assert.equal(muffedEndZoneRecovery.status, 'failed');
 assert.equal(muffedEndZoneRecovery.failure.reason,

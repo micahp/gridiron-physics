@@ -9,6 +9,7 @@ import { Player, POSE, World } from '../world.js';
 import { assertNoOutcomeFields } from './schema.js';
 import { retroDecisionInterval } from './retro-cadence.js';
 import { estimateBallLanding } from './perception.js';
+import { roundYardline100, statReturnYards } from './field-geometry.js';
 
 // Long kickoff returns can cover the field diagonally while players disengage
 // and reset their lanes. Keep a hard bound, but allow the generated live play
@@ -234,6 +235,7 @@ export function simulateAutonomousSpecialTeams(input) {
   // The recoverer continues moving during the return, so their final position
   // cannot be used later as the recovery spot.
   let recoveryAt = null;
+  let unsupportedRecoveryReason = null;
   let terminal = null;
   let tackleStarted = null;
   let catchResolved = false;
@@ -261,6 +263,27 @@ export function simulateAutonomousSpecialTeams(input) {
     W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
     W.event('kick_recovery', { player_id: p.id, team: p.team, muff: muffed,
       at: { x: recoveryAt.x, y: recoveryAt.y }, time: recoveryAt.time });
+    if (muffed && p.team === 'K') {
+      const muffEvent = W.events.find((event) => event.type === 'muff');
+      const receiverTouchedBeyondLine = (muffEvent?.ball_spot?.x ?? -Infinity) > los;
+      if (kickoff) {
+        deadBall = { x: recoveryAt.x, y: recoveryAt.y };
+        deadReason = 'kicking_team_free_kick_recovery';
+        terminal = W.t;
+      } else if (recoveryAt.x > los && receiverTouchedBeyondLine) {
+        deadBall = { x: recoveryAt.x, y: recoveryAt.y };
+        deadReason = 'kicking_team_recovery_beyond_line';
+        terminal = W.t;
+      } else if (recoveryAt.x > los) {
+        unsupportedRecoveryReason = 'kicking_team_recovery_beyond_line_without_receiver_touch_unmodelled';
+        deadBall = { x: recoveryAt.x, y: recoveryAt.y };
+        deadReason = 'unsupported_kicking_team_recovery';
+        terminal = W.t;
+      }
+      if (terminal != null) W.event('kick_recovery_dead_ball', {
+        reason: deadReason, at: { x: recoveryAt.x, y: recoveryAt.y }, time: recoveryAt.time,
+      });
+    }
   }
 
   function observeBall(p) {
@@ -469,6 +492,16 @@ export function simulateAutonomousSpecialTeams(input) {
           player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
             x_yards: p.p.x / YD, y_yards: p.p.y / YD, speed_yards_per_second: p.speed / YD })) } };
   }
+
+  if (unsupportedRecoveryReason) {
+    return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
+      failure: { reason: unsupportedRecoveryReason }, events: W.events,
+      trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
+      diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
+        decision_counts: Object.fromEntries(decisionCount), outcome_inputs: [],
+        player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
+          x_yards: p.p.x / YD, y_yards: p.p.y / YD, speed_yards_per_second: p.speed / YD })) } };
+  }
   if (frames.length === 0 || terminal - (frames.length - 1) / REC_HZ > 1e-6) record();
 
   if (muffed && recovery && deadReason === 'touchback') {
@@ -486,15 +519,17 @@ export function simulateAutonomousSpecialTeams(input) {
     const team = recovery.team === 'K' ? 'kicking_team' : 'receiving_team';
     const fumbleEvent = W.events.find((event) => event.type === 'muff');
     const muffingReturnerId = fumbleEvent?.player_id ?? fumblerId;
-    const fumbleSpot = Math.round(100 - (fumbleEvent?.ball_spot?.x ?? returnStartXActual));
-    const recoverySpot = Math.round(100 - recoveryAt.x);
-    const deadSpot = Math.round(100 - deadBall.x);
-    const returnYards = deadSpot - recoverySpot;
+    const fumbleSpot = roundYardline100(100 - (fumbleEvent?.ball_spot?.x ?? returnStartXActual));
+    const recoverySpot = roundYardline100(100 - recoveryAt.x);
+    const deadSpot = roundYardline100(100 - deadBall.x);
+    const returnYards = statReturnYards(recoverySpot, deadSpot, recovery.team === 'K' ? -1 : 1);
     result = { result: 'muff', possession_after: team, recovery_team: team,
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: deadSpot, recovery_yardline_100: recoverySpot,
       recovery_at: { x: recoveryAt.x, y: recoveryAt.y, time: recoveryAt.time },
-      fumble_spot_yardline_100: fumbleSpot, receiving_team_touched_beyond_line: true,
+      fumble_spot_yardline_100: fumbleSpot,
+      receiving_team_touched_beyond_line: kickoff
+        ? true : (fumbleEvent?.ball_spot?.x ?? -Infinity) > los,
       return_yards: returnYards, returner_id: null,
       muffing_returner_id: muffingReturnerId, post_recovery_returner_id: carrier?.id ?? recovery.id,
       recoverer_id: recovery.id, fumbler_id: fumblerId,
@@ -900,18 +935,22 @@ function simulateAutonomousFieldGoal(cfg) {
     diagnostics: { assignments_executed: assignments.size, expected_assignments: 22, outcome_inputs: [] } };
 
   if (frames.length === 0 || terminal - (frames.length - 1) / REC_HZ > 1e-6) record();
+  if (blocked && !recovery) {
+    return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
+      seed: cfg.seed, failure: { reason: 'blocked_field_goal_recovery_not_awarded' }, events: W.events,
+      trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
+      diagnostics: { assignments_executed: assignments.size, expected_assignments: 22, outcome_inputs: [] } };
+  }
   W.event('whistle', { reason: blocked ? 'blocked_field_goal' : `field_goal_${resultName}`, terminal_t: terminal });
-  const recoverySpot = recoveryAt ? Math.round(100 - recoveryAt.x) : null;
-  const deadSpot = deadBall ? Math.round(100 - deadBall.x) : null;
+  const recoverySpot = recoveryAt ? roundYardline100(100 - recoveryAt.x) : null;
+  const deadSpot = deadBall ? roundYardline100(100 - deadBall.x) : null;
   const result = blocked
     ? { result: 'blocked', possession_after: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
         recovery_team: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
         recovery_yardline_100: recoverySpot, recovery_at: { ...recoveryAt },
         dead_ball_yardline_100: deadSpot,
         receiving_team_touched_beyond_line: false,
-        return_yards: recovery.team === 'K'
-          ? recoverySpot - deadSpot
-          : deadSpot - recoverySpot,
+        return_yards: statReturnYards(recoverySpot, deadSpot, recovery.team === 'K' ? -1 : 1),
         recoverer_id: recovery.id, returner_id: carrier?.id ?? recovery.id,
         post_block_returner_id: carrier?.id ?? recovery.id,
         scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,

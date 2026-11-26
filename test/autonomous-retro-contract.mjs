@@ -37,7 +37,10 @@ assert.ok(a.diagnostics.cadence[db].interval_seconds > b.diagnostics.cadence[db]
 assert.ok(a.diagnostics.cadence[qb].interrupts >= 2, 'snap and possession changes interrupt cadence');
 assert.equal(a.events.at(-1).type, 'whistle');
 assert.ok(a.events.at(-1).t <= a.result.elapsed_seconds + 0.001);
-const possessionChange = call(); possessionChange.seed = '6';
+// Seed 6 used to reach a possession event only after repeated probability
+// draws on the same ball-contact opportunity. Seed 8 exercises the legal
+// catch/interception interrupt path with one draw per physical opportunity.
+const possessionChange = call(); possessionChange.seed = '8';
 const changeResult = simulateAutonomousPlay(possessionChange);
 assert.ok(changeResult.events.some((e) => e.type === 'catch' || e.type === 'interception'));
 assert.ok(changeResult.diagnostics.cadence[possessionChange.offense.lineup.WR1].interrupts >= 4,

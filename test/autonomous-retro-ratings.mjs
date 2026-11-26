@@ -1,6 +1,7 @@
 // Matched-seed interaction fixtures. Authored ratings, no NFL calibration.
 import assert from 'node:assert/strict';
 import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
+import { tackleFinishChance } from '../engine/autonomous/passing.js';
 import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
 import { buildSampleCall } from './autonomous-fixtures.mjs';
 function run(attribute, value, seed) {
@@ -25,18 +26,26 @@ for (const name of ['PBK','RBK','BSH','PMV','FMV']) {
   assert.notDeepEqual(events(low,'block_release'), events(high,'block_release'), `${name} changes actual block releases`);
 }
 for (const name of ['TAK','BTK','ELU']) {
-  const low = events(run(name,5,6),'tackle_attempt')[0];
-  const high = events(run(name,95,6),'tackle_attempt')[0];
-  assert.ok(low && high, `${name} fixture must produce tackles`);
-  if (name === 'TAK') assert.ok(high.chance > low.chance);
-  else assert.ok(high.chance < low.chance);
+  // Hold the physical contact and every other rating fixed. Successful tackle
+  // events are selection-biased and may describe different later contacts.
+  const low = tackleFinishChance({
+    tak: name === 'TAK' ? 5 : 70,
+    btk: name === 'BTK' ? 5 : name === 'ELU' ? 5 : 70,
+    strength: 0, closing: 1.5,
+  });
+  const high = tackleFinishChance({
+    tak: name === 'TAK' ? 95 : 70,
+    btk: name === 'BTK' ? 95 : name === 'ELU' ? 95 : 70,
+    strength: 0, closing: 1.5,
+  });
+  assert.ok(name === 'TAK' ? high > low : high < low, `${name} changes the same-contact tackle chance`);
 }
 for (const name of ['CTH','CAR']) {
-  const low = events(run(name,5,6),'catch_contest')[0];
-  const high = events(run(name,95,6),'catch_contest')[0];
+  const low = events(run(name,5,8),'catch_contest')[0];
+  const high = events(run(name,95,8),'catch_contest')[0];
   assert.ok(low && high && high.chance > low.chance, `${name} changes catch odds`);
 }
 const firstPursuit = (r) => r.events.find((e) => e.type === 'decision' && e.assignment === 'pursue the carrier');
-const lowPursuit = firstPursuit(run('PUR',5,6)), highPursuit = firstPursuit(run('PUR',95,6));
+const lowPursuit = firstPursuit(run('PUR',5,8)), highPursuit = firstPursuit(run('PUR',95,8));
 assert.ok(lowPursuit && highPursuit && highPursuit.t < lowPursuit.t, 'PUR changes pursuit timing');
 console.log('matched-seed blocking, shedding, tackling, catch and pursuit rating effects passed');
