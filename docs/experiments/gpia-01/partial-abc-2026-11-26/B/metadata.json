@@ -1,0 +1,29 @@
+{
+  "experiment": "GPIA-01",
+  "created_at": "2026-11-26T18:47:29.649Z",
+  "root_commit": "122ce3b7975b263e61317406304a90ca14f86fdc",
+  "refs": {
+    "B": "e1f98a4305ec5160d183d8be7bcdf1872ab99f58"
+  },
+  "seeds_per_cell": 1000,
+  "timestep_seeds": 100,
+  "arms": [
+    "B"
+  ],
+  "factorial_complete": false,
+  "scenarios": [
+    "inside_zone",
+    "slant_flat_man",
+    "slant_flat_zone",
+    "four_verticals",
+    "check_release",
+    "collapsing_pocket",
+    "forced_turnover"
+  ],
+  "timestep_hz": [
+    60,
+    120,
+    240
+  ],
+  "timestep_scope": "pass scenarios only; inside-zone executor currently exposes a fixed physics step"
+}
