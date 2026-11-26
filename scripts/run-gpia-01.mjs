@@ -15,7 +15,7 @@ const SCENARIOS = [
 ];
 
 function args(argv) {
-  const out = { arms: {}, seeds: 1000, timestepSeeds: 100, output: null };
+  const out = { arms: {}, armNames: null, seeds: 1000, timestepSeeds: 100, output: null };
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
     if (token === '--help' || token === '-h') out.help = true;
@@ -23,6 +23,11 @@ function args(argv) {
       const [name, ref, ...extra] = (argv[++i] ?? '').split('=');
       if (!['A', 'B', 'C', 'D'].includes(name) || !ref || extra.length) throw new Error('--arm format is NAME=GIT_REF');
       out.arms[name] = ref;
+    } else if (token === '--arms') {
+      const names = (argv[++i] ?? '').split(',');
+      if (!names.length || names.some((name) => !['A', 'B', 'C', 'D'].includes(name))
+          || new Set(names).size !== names.length) throw new Error('--arms must be a comma-separated subset of A,B,C,D');
+      out.armNames = names;
     } else if (token === '--seeds') out.seeds = positiveInt(argv[++i], '--seeds');
     else if (token === '--timestep-seeds') out.timestepSeeds = nonnegativeInt(argv[++i], '--timestep-seeds');
     else if (token === '--output') out.output = path.resolve(argv[++i] ?? '');
@@ -44,7 +49,7 @@ function nonnegativeInt(value, label) {
 }
 
 function usage() {
-  process.stdout.write(`Usage: node scripts/run-gpia-01.mjs --arm A=REF --arm B=REF --arm C=REF --arm D=REF [options]\n\nOptions:\n  --seeds N             Matched seeds per scenario and arm (default 1000)\n  --timestep-seeds N    Matched pass seeds per scenario, arm, and 60/120/240 Hz (default 100)\n  --output DIR          Output directory (default docs/experiments/gpia-01/<run-id>)\n\nD must name the separately implemented combined candidate. The runner does not\nconstruct or substitute the combined arm.\n`);
+  process.stdout.write(`Usage: node scripts/run-gpia-01.mjs --arm A=REF --arm B=REF --arm C=REF --arm D=REF [options]\n       node scripts/run-gpia-01.mjs --arms A,B,C --arm A=REF --arm B=REF --arm C=REF [options]\n\nOptions:\n  --seeds N             Matched seeds per scenario and arm (default 1000)\n  --timestep-seeds N    Matched pass seeds per scenario, arm, and 60/120/240 Hz (default 100)\n  --output DIR          Output directory (default docs/experiments/gpia-01/<run-id>)\n\nD must name the combined candidate for a full factorial. Partial runs produce\narm summaries but omit four-arm contrasts.\n`);
 }
 
 function git(ref, ...extra) {
@@ -52,13 +57,15 @@ function git(ref, ...extra) {
 }
 
 function prepareArms(config) {
-  const refs = { ...DEFAULT_REFS, ...config.arms };
-  for (const arm of ['A', 'B', 'C', 'D']) {
-    if (!refs[arm]) throw new Error(`missing arm ${arm}; specify --arm ${arm}=GIT_REF`);
-    execFileSync('git', ['-C', ROOT, 'cat-file', '-e', `${refs[arm]}^{commit}`]);
-    refs[arm] = git(refs[arm], 'rev-parse');
+  const names = config.armNames ?? ['A', 'B', 'C', 'D'];
+  const available = { ...DEFAULT_REFS, ...config.arms };
+  const refs = {};
+  for (const arm of names) {
+    if (!available[arm]) throw new Error(`missing arm ${arm}; specify --arm ${arm}=GIT_REF`);
+    execFileSync('git', ['-C', ROOT, 'cat-file', '-e', `${available[arm]}^{commit}`]);
+    refs[arm] = git(available[arm], 'rev-parse');
   }
-  if (new Set(Object.values(refs)).size !== 4) throw new Error('A, B, C, and D must resolve to four distinct commits');
+  if (new Set(Object.values(refs)).size !== Object.keys(refs).length) throw new Error('selected arms must resolve to distinct commits');
   return refs;
 }
 
@@ -169,6 +176,7 @@ async function main() {
   const metadata = {
     experiment: 'GPIA-01', created_at: new Date().toISOString(), root_commit: git('HEAD', 'rev-parse'),
     refs, seeds_per_cell: config.seeds, timestep_seeds: config.timestepSeeds,
+    arms: Object.keys(refs), factorial_complete: ['A', 'B', 'C', 'D'].every((arm) => refs[arm]),
     scenarios: SCENARIOS, timestep_hz: [60, 120, 240],
     timestep_scope: 'pass scenarios only; inside-zone executor currently exposes a fixed physics step',
   };
@@ -221,7 +229,7 @@ async function main() {
       execFileSync('git', ['-C', ROOT, 'worktree', 'remove', repo], { stdio: 'ignore' });
     }
   } finally {
-    for (const arm of ['A', 'B', 'C', 'D']) {
+    for (const arm of Object.keys(refs)) {
       const repo = path.join(temp, arm);
       if (fs.existsSync(repo)) {
         try { execFileSync('git', ['-C', ROOT, 'worktree', 'remove', '--force', repo], { stdio: 'ignore' }); } catch {}
@@ -234,7 +242,7 @@ async function main() {
   fs.writeFileSync(path.join(output, 'summary.json'), `${JSON.stringify(summaries, null, 2)}\n`);
   const metrics = ['completion_rate', 'interception_rate', 'sack_rate', 'fumble_rate', 'mean_yards'];
   const contrasts = {};
-  for (const scenario of SCENARIOS) {
+  for (const scenario of Object.keys(refs).length === 4 ? SCENARIOS : []) {
     contrasts[scenario] = {};
     for (const metric of metrics) {
       const values = Object.fromEntries(['A', 'B', 'C', 'D'].map((arm) => [arm, summaries[`${arm}/${scenario}`][metric]]));
@@ -247,7 +255,11 @@ async function main() {
       };
     }
   }
-  fs.writeFileSync(path.join(output, 'contrasts.json'), `${JSON.stringify(contrasts, null, 2)}\n`);
+  const contrastReport = Object.keys(contrasts).length ? contrasts : {
+    status: 'incomplete_factorial', available_arms: Object.keys(refs),
+    missing_arms: ['A', 'B', 'C', 'D'].filter((arm) => !refs[arm]),
+  };
+  fs.writeFileSync(path.join(output, 'contrasts.json'), `${JSON.stringify(contrastReport, null, 2)}\n`);
   const timestepSummaries = {};
   for (const [cell, rows] of timestepByCell) timestepSummaries[cell] = statsFor(rows);
   fs.writeFileSync(path.join(output, 'timestep-summary.json'), `${JSON.stringify(timestepSummaries, null, 2)}\n`);
