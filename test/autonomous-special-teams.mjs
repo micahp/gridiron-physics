@@ -189,6 +189,12 @@ const kickback = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 12
 assert.equal(kickback.result.result, 'touchback');
 assert.equal(kickback.result.clock_runoff_seconds, 0);
 assert.equal(kickback.result.dead_ball_yardline_100, 35);
+const midfieldKickTouchback = simulateAutonomousSpecialTeams({
+  ...call({ kind: 'kickoff', seed: 12 }), yardline_100: 50,
+});
+assert.equal(midfieldKickTouchback.result.result, 'touchback');
+assert.equal(midfieldKickTouchback.result.dead_ball_yardline_100, 20,
+  'a kickoff from midfield has the rule-specific 20-yard touchback spot');
 const safetyFreeTouchback = simulateAutonomousSpecialTeams({
   ...call({ kind: 'kickoff', seed: 12 }), yardline_100: 80,
 });

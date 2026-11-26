@@ -18,6 +18,8 @@ const MAX_SECONDS = 36;
 const MAX_PLAYERS_PER_SIDE = 11;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const kickoffTouchbackSpot = (kickSpotYardline100) =>
+  (kickSpotYardline100 === 50 || kickSpotYardline100 === 80) ? 20 : 35;
 const unit = (x, y) => {
   const n = Math.hypot(x, y);
   return n > 1e-9 ? { x: x / n, y: y / n } : { x: 0, y: 0 };
@@ -530,14 +532,14 @@ export function simulateAutonomousSpecialTeams(input) {
       recoverer_id: recovery.id, fumbler_id: fumblerId,
       ...(deadReason === 'touchback' ? { touchback: true,
         receiving_restart_yardline_100: kickoff
-          ? (kickSpotY100 === 80 ? 20 : 35) : 20 } : {}),
+          ? kickoffTouchbackSpot(kickSpotY100) : 20 } : {}),
       scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,
       scoring_team: deadReason === 'touchdown' ? team
         : deadReason === 'safety' ? (recovery.team === 'R' ? 'kicking_team' : 'receiving_team') : null };
   } else if (deadReason === 'touchback') {
     result = { result: 'touchback', possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
-      dead_ball_yardline_100: kickoff ? (kickSpotY100 === 80 ? 20 : 35) : 20,
+      dead_ball_yardline_100: kickoff ? kickoffTouchbackSpot(kickSpotY100) : 20,
       return_yards: null, returner_id: null };
   } else if (deadReason === 'fair_catch') {
     const spot = Math.round(100 - deadBall.x);
