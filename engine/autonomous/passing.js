@@ -27,6 +27,12 @@ export function firstUnattemptedContact(candidates, attempted, playerId = (candi
   return candidates.find((candidate) => !attempted.has(playerId(candidate))) ?? candidates[0] ?? null;
 }
 
+// Proactive catch attempts require an active receiving assignment. Accidental
+// tips off protection players are not a modeled receiving action.
+export function receivingAssignmentActive(task, released, engaged = false) {
+  return task?.kind === 'route' && !engaged && (!task.check_release || released === true);
+}
+
 export function compareBallContact(a, b) {
   return a.planar - b.planar || a.player.id.localeCompare(b.player.id);
 }
@@ -651,7 +657,8 @@ export function simulatePassPlay(options = {}) {
     const gaze = qb.ai.gazeHeading;
     // Read only delayed observations and their confidence/uncertainty, never a target's live position.
     return throwers.flatMap((rec) => {
-      if (cfg.assignments?.offense[rec.slot].check_release && !rec.ai.protectionReleased) return [];
+      if (cfg.assignments && !receivingAssignmentActive(cfg.assignments.offense[rec.slot],
+        rec.ai.protectionReleased, !!rec.engaged)) return [];
       const receiver = observe(rec);
       if (!receiver || receiver.down || receiver.confidence < 0.12) return [];
       const flight = clamp(Math.hypot(receiver.position.x - qb.p.x, receiver.position.y - qb.p.y) / (16 * YD), 0.32, 1.25);
@@ -868,7 +875,8 @@ export function simulatePassPlay(options = {}) {
     const out = [];
     for (const p of W.players) {
       if (p.down) continue;
-      if (cfg.assignments && p.team === 'O' && cfg.assignments.offense[p.slot].kind !== 'route') continue;
+      if (cfg.assignments && p.team === 'O' && !receivingAssignmentActive(cfg.assignments.offense[p.slot],
+        p.ai.protectionReleased, !!p.engaged)) continue;
       const planar = Math.hypot(p.p.x - b.x, p.p.y - b.y) / YD;
       const reach = 1.15 + p.r / YD;
       if (planar > reach) continue;
@@ -881,7 +889,8 @@ export function simulatePassPlay(options = {}) {
   function recordAirborneReachability() {
     if (!contestDiagnostics || !currentThrowDiagnostics || W.ball.state !== 'air') return;
     const eligibleReceivers = offense.filter((p) => !p.down
-      && (!cfg.assignments || cfg.assignments.offense[p.slot].kind === 'route'));
+      && (!cfg.assignments || receivingAssignmentActive(cfg.assignments.offense[p.slot],
+        p.ai.protectionReleased, !!p.engaged)));
     const availableDefenders = defense.filter((p) => !p.down);
     const distance = (p) => Math.hypot(p.p.x - W.ball.x, p.p.y - W.ball.y) / YD;
     const receiverDistances = eligibleReceivers.map((p) => ({ p, d: distance(p) }));
@@ -1503,6 +1512,15 @@ export function simulatePassPlay(options = {}) {
     const sighting = captureObservedBall(p, defenderBallObservations, p.h, DEFENDER_FIELD_OF_VIEW);
     if (!sighting) return null;
     observedDefenderBallPredictions++;
+    // Assigned defenders pursue an observable catch-height interception point,
+    // not the ground landing of an untouched pass. Use the same drag-aware
+    // estimator and observation age as the receiver, with independent memory.
+    if (cfg.assignments) {
+      const { estimate, observation } = sighting;
+      return estimateBallCatchPoint({ position: observation.position, velocity: observation.velocity,
+        z: observation.z, vz: observation.vz, ageSeconds: estimate.ageSeconds,
+        uncertaintyMeters: estimate.uncertaintyMeters }, AERO.spiral);
+    }
     return estimateBallLanding(sighting.estimate, G);
   }
 
