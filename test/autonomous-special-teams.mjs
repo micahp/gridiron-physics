@@ -77,6 +77,20 @@ assert.ok(blockedFieldGoal.events.some((event) => event.type === 'whistle'));
 assert.equal(blockedFieldGoal.result.receiving_team_touched_beyond_line, false);
 assert.ok(blockedFieldGoal.result.recoverer_id);
 assert.ok(blockedFieldGoal.result.post_block_returner_id);
+const recoveryEvent = blockedFieldGoal.events.find((event) => event.type === 'kick_recovery');
+assert.ok(recoveryEvent?.recovery_at && Number.isFinite(recoveryEvent.recovery_at.x)
+  && Number.isFinite(recoveryEvent.recovery_at.y));
+assert.deepEqual(blockedFieldGoal.result.recovery_at, recoveryEvent.recovery_at,
+  'the reported recovery coordinates come from the immutable recovery event');
+assert.equal(blockedFieldGoal.result.recovery_yardline_100,
+  Math.round(100 - recoveryEvent.recovery_at.x),
+  'recovery spot is derived from the ball coordinates at recovery, not the recoverer’s final position');
+const recovererIndex = blockedFieldGoal.trajectory.roster.findIndex(
+  (player) => player.id === blockedFieldGoal.result.recoverer_id);
+const finalFrame = blockedFieldGoal.trajectory.frames.at(-1);
+assert.ok(Math.hypot(finalFrame[recovererIndex * 6] - recoveryEvent.recovery_at.x,
+  finalFrame[recovererIndex * 6 + 1] - recoveryEvent.recovery_at.y) > 0.1,
+  'the recovering player moves after the immutable ball-recovery coordinates are captured');
 assert.equal(Number.isInteger(blockedFieldGoal.result.return_yards), true,
   'blocked field goal reports the recovery-to-dead-ball leg in the recovery team frame');
 const weakFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 1 }));
@@ -94,6 +108,10 @@ assert.ok(poorHands.events.some((event) => event.type === 'muff'));
 assert.equal(poorHands.result.result, 'muff');
 assert.equal(poorHands.result.recovery_team, 'receiving_team');
 assert.ok(poorHands.result.recoverer_id);
+const muffRecoveryEvent = poorHands.events.find((event) => event.type === 'kick_recovery');
+assert.deepEqual(poorHands.result.recovery_at,
+  { ...muffRecoveryEvent.at, time: muffRecoveryEvent.time },
+  'muff return spot keeps the ball coordinates and time from the recovery event');
 const muffedEndZoneRecovery = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5, cth: 1 }));
 assert.equal(muffedEndZoneRecovery.status, 'failed');
 assert.equal(muffedEndZoneRecovery.failure.reason,

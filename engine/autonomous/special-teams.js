@@ -230,6 +230,10 @@ export function simulateAutonomousSpecialTeams(input) {
   let muffed = false;
   let fumblerId = null;
   let recovery = null;
+  // Snapshot the ball's coordinates at the instant the recovery is awarded.
+  // The recoverer continues moving during the return, so their final position
+  // cannot be used later as the recovery spot.
+  let recoveryAt = null;
   let terminal = null;
   let tackleStarted = null;
   let catchResolved = false;
@@ -248,13 +252,15 @@ export function simulateAutonomousSpecialTeams(input) {
     const p = candidates[0];
     if (!p || rand() > clamp(0.55 + ((p.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9)) return;
     recovery = p;
+    recoveryAt = Object.freeze({ x: W.ball.x / YD, y: W.ball.y / YD, time: W.t });
     carrier = p;
     p.hasBall = true;
     p.mode = 'carry';
     returnStartXActual = p.p.x / YD;
     returnStartYActual = p.p.y / YD;
     W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
-    W.event('kick_recovery', { player_id: p.id, team: p.team, muff: muffed });
+    W.event('kick_recovery', { player_id: p.id, team: p.team, muff: muffed,
+      at: { x: recoveryAt.x, y: recoveryAt.y }, time: recoveryAt.time });
   }
 
   function observeBall(p) {
@@ -481,12 +487,13 @@ export function simulateAutonomousSpecialTeams(input) {
     const fumbleEvent = W.events.find((event) => event.type === 'muff');
     const muffingReturnerId = fumbleEvent?.player_id ?? fumblerId;
     const fumbleSpot = Math.round(100 - (fumbleEvent?.ball_spot?.x ?? returnStartXActual));
-    const recoverySpot = Math.round(100 - recovery.p.x / YD);
+    const recoverySpot = Math.round(100 - recoveryAt.x);
     const deadSpot = Math.round(100 - deadBall.x);
     const returnYards = deadSpot - recoverySpot;
     result = { result: 'muff', possession_after: team, recovery_team: team,
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: deadSpot, recovery_yardline_100: recoverySpot,
+      recovery_at: { x: recoveryAt.x, y: recoveryAt.y, time: recoveryAt.time },
       fumble_spot_yardline_100: fumbleSpot, receiving_team_touched_beyond_line: true,
       return_yards: returnYards, returner_id: null,
       muffing_returner_id: muffingReturnerId, post_recovery_returner_id: carrier?.id ?? recovery.id,
@@ -645,6 +652,7 @@ function simulateAutonomousFieldGoal(cfg) {
   let previousBall = null;
   let kickModel = null;
   let recovery = null;
+  let recoveryAt = null;
   let carrier = null;
   let tackleStarted = null;
   let deadReason = null;
@@ -816,11 +824,13 @@ function simulateAutonomousFieldGoal(cfg) {
       if (candidate && dist(candidate.p, W.ball) <= 1.3 * YD
           && rand() <= clamp(0.55 + ((candidate.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9)) {
         recovery = carrier = candidate;
+        recoveryAt = Object.freeze({ x: W.ball.x / YD, y: W.ball.y / YD, time: W.t });
         candidate.hasBall = true;
         candidate.mode = 'carry';
         W.ball.state = 'held'; W.ball.holder = candidate; W.ball.hand = 'carry';
         W.event('kick_recovery', { player_id: candidate.id, team: candidate.team,
-          ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
+          ball_spot: { x: recoveryAt.x, y: recoveryAt.y }, recovery_at: { ...recoveryAt },
+          time: recoveryAt.time });
       }
     }
     if (blocked && carrier && terminal == null) {
@@ -891,15 +901,17 @@ function simulateAutonomousFieldGoal(cfg) {
 
   if (frames.length === 0 || terminal - (frames.length - 1) / REC_HZ > 1e-6) record();
   W.event('whistle', { reason: blocked ? 'blocked_field_goal' : `field_goal_${resultName}`, terminal_t: terminal });
+  const recoverySpot = recoveryAt ? Math.round(100 - recoveryAt.x) : null;
+  const deadSpot = deadBall ? Math.round(100 - deadBall.x) : null;
   const result = blocked
     ? { result: 'blocked', possession_after: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
         recovery_team: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
-        recovery_yardline_100: Math.round(100 - recovery.p.x / YD),
-        dead_ball_yardline_100: Math.round(100 - deadBall.x),
+        recovery_yardline_100: recoverySpot, recovery_at: { ...recoveryAt },
+        dead_ball_yardline_100: deadSpot,
         receiving_team_touched_beyond_line: false,
         return_yards: recovery.team === 'K'
-          ? Math.round((100 - recovery.p.x / YD) - (100 - deadBall.x))
-          : Math.round((100 - deadBall.x) - (100 - recovery.p.x / YD)),
+          ? recoverySpot - deadSpot
+          : deadSpot - recoverySpot,
         recoverer_id: recovery.id, returner_id: carrier?.id ?? recovery.id,
         post_block_returner_id: carrier?.id ?? recovery.id,
         scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,

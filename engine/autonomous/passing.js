@@ -34,7 +34,7 @@ const FRONT_TO_ROSTER = { nickel_over: 'nickel', nickel_under: 'nickel', nickel:
 const ALLOWED = new Set([
   'seed', 'los', 'dir', 'ballY', 'concept', 'direction', 'front', 'coverage',
   'ratingOverrides', 'playerIds', 'massOverrides', 'offenseTeam', 'defenseTeam',
-  'assignments', 'behaviorMode', 'resultOnly',
+  'assignments', 'behaviorMode', 'resultOnly', 'contestDiagnostics',
 ]);
 
 function validateConfig(input) {
@@ -59,8 +59,10 @@ function validateConfig(input) {
     assignments: input.assignments ?? null,
     behaviorMode: input.behaviorMode ?? (input.assignments ? 'retro' : 'detailed'),
     resultOnly: input.resultOnly ?? false,
+    contestDiagnostics: input.contestDiagnostics ?? false,
   };
   if (typeof cfg.resultOnly !== 'boolean') throw new TypeError('resultOnly must be boolean');
+  if (typeof cfg.contestDiagnostics !== 'boolean') throw new TypeError('contestDiagnostics must be boolean');
   if (!['slant_flat', 'assigned'].includes(cfg.concept)) throw new RangeError(`unsupported passing concept: ${cfg.concept}`);
   if ((cfg.concept === 'assigned') !== (cfg.assignments != null)) throw new RangeError('assigned concept requires assignments');
   if (cfg.assignments) validateAssignments(cfg.assignments, { executable: true });
@@ -304,6 +306,10 @@ export function simulatePassPlay(options = {}) {
   let possession = 'O';
   let throwInfo = null;
   let resolveAttempt = null;
+  let throwSequence = 0;
+  let currentThrowDiagnostics = null;
+  let activeContactOpportunities = new Map();
+  const contestDiagnostics = cfg.contestDiagnostics ? { throws: [], by_player: {} } : null;
   let sack = null, tackle = null, terminal = null, fumble = null, fumbleRecovery = null;
   let fumbleRecoverySpot = null;
   let passInterference = null;
@@ -514,6 +520,28 @@ export function simulatePassPlay(options = {}) {
       state: 'air', holder: null, x: from.x, y: from.y, z: from.z,
       vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k,
     });
+    if (contestDiagnostics) {
+      currentThrowDiagnostics = {
+        throw_id: ++throwSequence,
+        quarterback_id: qb.id,
+        target_id: best.receiver.id,
+        target_separation_yards: best.separation,
+        lane_risk: best.lane,
+        pressure_yards: best.pressure,
+        accuracy_rating: accuracy,
+        accuracy_sigma_yards: sigma,
+        flight_seconds: best.flight,
+        resolve_attempts: 0,
+        no_candidate_attempts: 0,
+        contact_candidate_ticks: 0,
+        probability_draws: 0,
+        draws_by_player: {},
+        probability_draw_trace: [],
+        contact_opportunities: [],
+      };
+      contestDiagnostics.throws.push(currentThrowDiagnostics);
+      activeContactOpportunities = new Map();
+    }
     qb.hasBall = false;
     W.ball.thrower = qb;
     W.ball.target = best.receiver;
@@ -604,6 +632,41 @@ export function simulatePassPlay(options = {}) {
   // the catch point, which is why most failed catches are simply incomplete.
   function resolveContest() {
     const candidates = catchCandidates();
+    if (contestDiagnostics && currentThrowDiagnostics) {
+      currentThrowDiagnostics.resolve_attempts += 1;
+      if (candidates.length === 0) currentThrowDiagnostics.no_candidate_attempts += 1;
+      const candidateIds = new Set(candidates.map((candidate) => candidate.player.id));
+      for (const id of activeContactOpportunities.keys()) {
+        if (!candidateIds.has(id)) activeContactOpportunities.delete(id);
+      }
+      for (const candidate of candidates) {
+        const playerId = candidate.player.id;
+        let opportunity = activeContactOpportunities.get(playerId);
+        if (!opportunity) {
+          opportunity = {
+            opportunity_id: `${currentThrowDiagnostics.throw_id}:${playerId}:${currentThrowDiagnostics.contact_opportunities.length + 1}`,
+            player_id: playerId,
+            first_time_seconds: Number(W.t.toFixed(4)),
+            last_time_seconds: Number(W.t.toFixed(4)),
+            first_planar_yards: Number(candidate.planar.toFixed(4)),
+            last_planar_yards: Number(candidate.planar.toFixed(4)),
+            min_planar_yards: Number(candidate.planar.toFixed(4)),
+            max_planar_yards: Number(candidate.planar.toFixed(4)),
+            resolve_attempts: 0,
+            probability_draws: 0,
+            draw_types: {},
+          };
+          activeContactOpportunities.set(playerId, opportunity);
+          currentThrowDiagnostics.contact_opportunities.push(opportunity);
+        }
+        opportunity.resolve_attempts += 1;
+        opportunity.last_time_seconds = Number(W.t.toFixed(4));
+        opportunity.last_planar_yards = Number(candidate.planar.toFixed(4));
+        opportunity.min_planar_yards = Math.min(opportunity.min_planar_yards, candidate.planar);
+        opportunity.max_planar_yards = Math.max(opportunity.max_planar_yards, candidate.planar);
+        currentThrowDiagnostics.contact_candidate_ticks += 1;
+      }
+    }
     if (!candidates.length) return;
     const receiver = candidates.find((c) => c.player.team === 'O');
     const defender = candidates.find((c) => c.player.team !== 'O');
@@ -622,12 +685,14 @@ export function simulatePassPlay(options = {}) {
         player_id: receiver.player.id, team: receiver.player.team, chance: Number(chance.toFixed(3)),
         separation_yards: Number(separation.toFixed(2)), ball_z: Number(ballZ.toFixed(2)),
       });
-      if (rand() < chance) { secure(receiver.player); return; }
+      if (contestRoll('receiver_catch', receiver.player, chance) < chance) { secure(receiver.player); return; }
       // Contested and not caught: only a defender on top of the ball picks it.
       const interceptionChance = defender
         ? clamp(0.045 - separation * 0.03 + ((defender.player.R.PRC ?? 60) - 60) * 0.0005, 0.005, 0.05)
         : 0;
-      if (defender && rand() < interceptionChance) { secure(defender.player); return; }
+      if (defender && contestRoll('contested_interception', defender.player, interceptionChance) < interceptionChance) {
+        secure(defender.player); return;
+      }
       knockDown(defender?.player ?? receiver.player);
       return;
     }
@@ -635,8 +700,45 @@ export function simulatePassPlay(options = {}) {
     // Nobody on offence is at the ball: a defender can only catch what he can reach.
     const interceptionChance = clamp(0.10 - (defender?.planar ?? 2) * 0.04
       + ((defender?.player.R.PRC ?? 60) - 60) * 0.001, 0.01, 0.12);
-    if (defender && rand() < interceptionChance) { secure(defender.player); return; }
+    if (defender && contestRoll('uncontested_interception', defender.player, interceptionChance) < interceptionChance) {
+      secure(defender.player); return;
+    }
     knockDown(defender?.player ?? null);
+  }
+
+  // Count existing probability draws without consuming any additional random
+  // values. Contact opportunities are uninterrupted frames where a player is
+  // physically within the ball's catchable reach; leaving that envelope ends
+  // the opportunity, so a later re-entry gets a new id.
+  function contestRoll(kind, player, chance) {
+    const value = rand();
+    if (!contestDiagnostics || !currentThrowDiagnostics) return value;
+    currentThrowDiagnostics.probability_draws += 1;
+    const playerId = player.id;
+    const playerRow = contestDiagnostics.by_player[playerId] ??= {
+      probability_draws: 0, draw_types: {},
+    };
+    playerRow.probability_draws += 1;
+    playerRow.draw_types[kind] = (playerRow.draw_types[kind] ?? 0) + 1;
+    const throwPlayerRow = currentThrowDiagnostics.draws_by_player[playerId] ??= {
+      probability_draws: 0, draw_types: {},
+    };
+    throwPlayerRow.probability_draws += 1;
+    throwPlayerRow.draw_types[kind] = (throwPlayerRow.draw_types[kind] ?? 0) + 1;
+    const opportunity = activeContactOpportunities.get(playerId);
+    const opportunityId = opportunity?.opportunity_id ?? null;
+    if (opportunity) {
+      opportunity.probability_draws += 1;
+      opportunity.draw_types[kind] = (opportunity.draw_types[kind] ?? 0) + 1;
+    }
+    currentThrowDiagnostics.probability_draw_trace.push({
+      time_seconds: Number(W.t.toFixed(4)), kind, player_id: playerId,
+      opportunity_id: opportunityId, chance: Number(chance.toFixed(6)),
+      random_value: Number(value.toFixed(9)), outcome: value < chance ? 'success' : 'failure',
+      planar_yards: opportunity?.last_planar_yards ?? null,
+      ball_z: Number(W.ball.z.toFixed(4)),
+    });
+    return value;
   }
 
   function knockDown(by) {
@@ -1290,6 +1392,11 @@ export function simulatePassPlay(options = {}) {
   for (const row of activeBlock.values()) row.end = W.t;
 
   const spot = terminal?.spot ?? null;
+  // Geometry remains continuous. Box-score return yards are the difference
+  // between the two whole-yard spots in one snap-offense frame, matching the
+  // SLC event adapter's yardline conversion instead of rounding the continuous
+  // displacement independently.
+  const offenseFrameYardline = (xYards) => Math.round(dir === 1 ? 100 - xYards : xYards);
   const yardsGained = spot ? (spot.x - cfg.los) * dir : null;
   const blockers = offense.filter((p) => cfg.assignments
     ? cfg.assignments.offense[p.slot].kind === 'block' || cfg.assignments.offense[p.slot].check_release
@@ -1328,12 +1435,15 @@ export function simulatePassPlay(options = {}) {
       recovery_team: fumbleRecovery.team, recoverer_id: fumbleRecovery.id,
       recovery_spot: { x: fumbleRecoverySpot.x / YD, y: fumbleRecoverySpot.y / YD },
       dead_ball_spot: terminal?.spot ?? null,
-      return_yards: terminal && carrier ? (terminal.spot.x - fumbleRecoverySpot.x / YD)
-        * (carrier.team === 'O' ? dir : -dir) : null,
+      return_yards: terminal && carrier
+        ? (offenseFrameYardline(terminal.spot.x) - offenseFrameYardline(fumbleRecoverySpot.x / YD))
+          * (carrier.team === 'O' ? -1 : 1)
+        : null,
     } : null,
     interception_id: catches.find((c) => c.team === 'D')?.player_id ?? null,
     blockers, topSpeed,
     diagnostics: {
+      ...(contestDiagnostics ? { pass_contests: contestDiagnostics } : {}),
       ...(cfg.assignments ? { behavior_mode: cfg.behaviorMode } : {}),
       ...(cfg.assignments && cfg.behaviorMode === 'retro' ? { cadence: Object.fromEntries(W.players.map((p) => [p.id,
         { ticks: p.ai.tickCount ?? 0, interrupts: p.ai.interruptCount ?? 0,

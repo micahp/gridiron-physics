@@ -18,6 +18,21 @@ assert.ok(a.events.some((e) => e.type === 'snap'));
 assert.equal(a.events.filter((e) => e.type === 'snap_receive').length, 1);
 assert.ok(a.resolved, 'the pass resolves without a time-cap failure');
 assert.equal(a.events.at(-1).type, 'whistle');
+const contestTrace = simulatePassPlay({ ...base, contestDiagnostics: true });
+assert.deepEqual(contestTrace.events, a.events,
+  'contest instrumentation preserves all events and consumes no additional random values');
+assert.deepEqual(contestTrace.terminal, a.terminal,
+  'contest instrumentation leaves the resolved play unchanged');
+assert.equal(contestTrace.diagnostics.pass_contests.throws.length,
+  a.events.filter((event) => event.type === 'throw').length);
+assert.ok(contestTrace.diagnostics.pass_contests.throws.every((row) =>
+  row.resolve_attempts >= row.contact_opportunities.length));
+for (const row of contestTrace.diagnostics.pass_contests.throws) {
+  assert.equal(row.probability_draws,
+    Object.values(row.draws_by_player).reduce((sum, player) => sum + player.probability_draws, 0));
+  assert.ok(row.contact_opportunities.every((opportunity) =>
+    Number.isInteger(opportunity.resolve_attempts) && Number.isInteger(opportunity.probability_draws)));
+}
 
 // Every supported outcome must be reachable from live play.
 const seen = new Set();
@@ -72,9 +87,28 @@ const protectedBall = simulatePassPlay({ seed: 6, front: 'nickel', coverage: 'co
   ratingOverrides: { ...fumbleOffenseRatings(99), ...fumbleDefenseRatings } });
 assert.equal(forcedFumble.fumble.recovery_team, 'D', 'a generated catch fumble can change possession');
 assert.ok(forcedFumble.fumble.return_yards > 0, 'the live recovery advances before the whistle');
+assert.equal(forcedFumble.fumble.return_yards,
+  Math.round(100 - forcedFumble.fumble.dead_ball_spot.x)
+    - Math.round(100 - forcedFumble.fumble.recovery_spot.x),
+  'statistical return yards subtract whole-yard spots in the snap-offense frame');
 assert.ok(forcedFumble.events.some((event) => event.type === 'fumble')
   && forcedFumble.events.some((event) => event.type === 'fumble_recovery'));
 assert.equal(protectedBall.fumble, null, 'carrying rating changes fumble exposure at the same seed');
+
+const repeatedContestInput = { seed: 6, front: 'nickel', coverage: 'cover_1', direction: 'right',
+  dir: -1, los: 40, ballY: 26.67, resultOnly: true,
+  ratingOverrides: { ...fumbleOffenseRatings(1), ...fumbleDefenseRatings } };
+const repeatedContest = simulatePassPlay({ ...repeatedContestInput, contestDiagnostics: true });
+const repeatedContestControl = simulatePassPlay(repeatedContestInput);
+assert.deepEqual(repeatedContest.events, repeatedContestControl.events,
+  'probability-draw instrumentation leaves the controlled play and RNG stream unchanged');
+const repeatedOpportunity = repeatedContest.diagnostics.pass_contests.throws
+  .flatMap((row) => row.contact_opportunities)
+  .find((opportunity) => opportunity.probability_draws > 1);
+assert.ok(repeatedOpportunity,
+  'the current engine retries interception probability within one uninterrupted ball-contact opportunity');
+assert.ok(repeatedContest.diagnostics.pass_contests.throws.some((row) => row.resolve_attempts > 1),
+  'the trace records repeated resolver attempts for this throw');
 
 // Defensive return progress follows the returner's direction, independent of
 // which way the intercepted offense was attacking. The dead spot cannot be
