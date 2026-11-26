@@ -75,6 +75,10 @@ assert.equal(blockedFieldGoal.events.filter((event) => event.type === 'kick_bloc
 assert.ok(blockedFieldGoal.events.some((event) => event.type === 'kick_recovery'));
 assert.ok(blockedFieldGoal.events.some((event) => event.type === 'whistle'));
 assert.equal(blockedFieldGoal.result.receiving_team_touched_beyond_line, false);
+assert.ok(blockedFieldGoal.result.recoverer_id);
+assert.ok(blockedFieldGoal.result.post_block_returner_id);
+assert.equal(Number.isInteger(blockedFieldGoal.result.return_yards), true,
+  'blocked field goal reports the recovery-to-dead-ball leg in the recovery team frame');
 const weakFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 1 }));
 const strongFieldGoal = simulateAutonomousSpecialTeams(call({ kind: 'field_goal', seed: 42, kpw: 99 }));
 assert.ok(strongFieldGoal.diagnostics.kick_model.power_limit_mps
