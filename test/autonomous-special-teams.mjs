@@ -129,9 +129,25 @@ assert.equal(kickingTeamMuff.result.return_yards, 0,
   'a kicking-team scrimmage-kick recovery beyond the line is dead at recovery');
 assert.ok(kickingTeamMuff.events.some((event) => event.type === 'kick_recovery_dead_ball'));
 const muffedEndZoneRecovery = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5, cth: 1 }));
-assert.equal(muffedEndZoneRecovery.status, 'failed');
-assert.equal(muffedEndZoneRecovery.failure.reason,
-  'muff_recovery_touchback_unmodeled_in_ceg_play_3');
+assert.equal(muffedEndZoneRecovery.status, 'complete');
+assert.equal(muffedEndZoneRecovery.result.result, 'muff');
+assert.equal(muffedEndZoneRecovery.result.touchback, true);
+assert.equal(muffedEndZoneRecovery.result.possession_after, 'receiving_team');
+assert.equal(muffedEndZoneRecovery.result.dead_ball_yardline_100, 0,
+  'preserve the physical dead-ball spot at the receiving goal line');
+assert.equal(muffedEndZoneRecovery.result.receiving_restart_yardline_100, 35,
+  'an airborne kickoff downed in the end zone restarts at the 35');
+assert.equal(muffedEndZoneRecovery.result.return_yards,
+  muffedEndZoneRecovery.result.dead_ball_yardline_100
+    - muffedEndZoneRecovery.result.recovery_yardline_100,
+  'return yards reconcile to the physical dead-ball spot, separately from touchback placement');
+assert.equal(muffedEndZoneRecovery.result.clock_runoff_seconds,
+  Math.ceil(muffedEndZoneRecovery.result.elapsed_seconds
+    - muffedEndZoneRecovery.result.catch_elapsed_seconds),
+  'a muffed free kick starts game-clock accounting at the receiving-team touch');
+assert.equal(muffedEndZoneRecovery.result.fumbler_id, 'R');
+assert.ok(muffedEndZoneRecovery.result.recoverer_id);
+assert.ok(muffedEndZoneRecovery.result.post_recovery_returner_id);
 assert.ok(sureHands.events.some((event) => event.type === 'catch'));
 
 const weakLeg = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 2, kpw: 1 }));

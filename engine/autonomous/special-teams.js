@@ -9,7 +9,7 @@ import { Player, POSE, World } from '../world.js';
 import { assertNoOutcomeFields } from './schema.js';
 import { retroDecisionInterval } from './retro-cadence.js';
 import { estimateBallLanding } from './perception.js';
-import { roundYardline100, statReturnYards } from './field-geometry.js';
+import { roundYardline100, serializeReturnGeometry, statReturnYards } from './field-geometry.js';
 
 // Long kickoff returns can cover the field diagonally while players disengage
 // and reset their lanes. Keep a hard bound, but allow the generated live play
@@ -504,25 +504,18 @@ export function simulateAutonomousSpecialTeams(input) {
   }
   if (frames.length === 0 || terminal - (frames.length - 1) / REC_HZ > 1e-6) record();
 
-  if (muffed && recovery && deadReason === 'touchback') {
-    return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
-      failure: { reason: 'muff_recovery_touchback_unmodeled_in_ceg_play_3' }, events: W.events,
-      trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
-      diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
-        decision_counts: Object.fromEntries(decisionCount), outcome_inputs: [],
-        player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
-          x_yards: p.p.x / YD, y_yards: p.p.y / YD, speed_yards_per_second: p.speed / YD })) } };
-  }
-
   let result;
-  if (muffed && recovery && deadReason !== 'touchback') {
+  if (muffed && recovery) {
     const team = recovery.team === 'K' ? 'kicking_team' : 'receiving_team';
     const fumbleEvent = W.events.find((event) => event.type === 'muff');
     const muffingReturnerId = fumbleEvent?.player_id ?? fumblerId;
     const fumbleSpot = roundYardline100(100 - (fumbleEvent?.ball_spot?.x ?? returnStartXActual));
     const recoverySpot = roundYardline100(100 - recoveryAt.x);
     const deadSpot = roundYardline100(100 - deadBall.x);
-    const returnYards = statReturnYards(recoverySpot, deadSpot, recovery.team === 'K' ? -1 : 1);
+    const geometry = recovery.team === 'R'
+      ? serializeReturnGeometry({ recoveryX: recoveryAt.x, deadBallX: deadBall.x,
+        direction: 1, carrierTeam: 'D' })
+      : { return_yards: 0, return_displacement_yards: 0 };
     result = { result: 'muff', possession_after: team, recovery_team: team,
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: deadSpot, recovery_yardline_100: recoverySpot,
@@ -530,9 +523,14 @@ export function simulateAutonomousSpecialTeams(input) {
       fumble_spot_yardline_100: fumbleSpot,
       receiving_team_touched_beyond_line: kickoff
         ? true : (fumbleEvent?.ball_spot?.x ?? -Infinity) > los,
-      return_yards: returnYards, returner_id: null,
+      return_yards: geometry.return_yards,
+      return_displacement_yards: geometry.return_displacement_yards,
+      returner_id: null,
       muffing_returner_id: muffingReturnerId, post_recovery_returner_id: carrier?.id ?? recovery.id,
       recoverer_id: recovery.id, fumbler_id: fumblerId,
+      ...(deadReason === 'touchback' ? { touchback: true,
+        receiving_restart_yardline_100: kickoff
+          ? (kickSpotY100 === 80 ? 20 : 35) : 20 } : {}),
       scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,
       scoring_team: deadReason === 'touchdown' ? team
         : deadReason === 'safety' ? (recovery.team === 'R' ? 'kicking_team' : 'receiving_team') : null };
@@ -571,10 +569,10 @@ export function simulateAutonomousSpecialTeams(input) {
   result.elapsed_seconds = terminal;
   result.catch_elapsed_seconds = catchAt;
   // Scrimmage kicks charge time from the snap through the whistle. Free kicks
-  // start the game clock on a legal receiving-team touch; an untouched
-  // touchback therefore has no charged live time.
+  // start the game clock on the first receiving-team touch. An untouched
+  // touchback has no live interval, while a muffed touchback keeps its interval.
   result.live_elapsed_seconds = kickoff
-    ? ((deadReason === 'touchback' || catchAt == null) ? 0 : Math.max(0, terminal - catchAt))
+    ? (catchAt == null ? 0 : Math.max(0, terminal - catchAt))
     : Math.max(0, terminal);
   result.clock_runoff_seconds = Math.ceil(result.live_elapsed_seconds);
   W.event('whistle', { reason: deadReason, ball_spot: deadBall, terminal_t: terminal });
