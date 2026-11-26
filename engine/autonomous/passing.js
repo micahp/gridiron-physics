@@ -10,7 +10,7 @@ import { rng } from '../rng.js';
 import { AERO, solveLaunch } from '../ball.js';
 import { Player, POSE, World } from '../world.js';
 import { createInsideZoneRoster } from '../autonomous-run.js';
-import { estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
+import { estimateBallCatchPoint, estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
 import { routeOffsets } from '../routes.js';
 import { validateAssignments } from './assignments.js';
 import { retroDecisionInterval } from './retro-cadence.js';
@@ -30,6 +30,8 @@ const MAX_SECONDS = 12;
 const DECISION_HZ = 10;
 const QB_FIELD_OF_VIEW = 220 * Math.PI / 180;
 const DEFENDER_FIELD_OF_VIEW = 190 * Math.PI / 180;
+const RECEIVER_FIELD_OF_VIEW = DEFENDER_FIELD_OF_VIEW;
+const PLAYER_GAZE_TURN_RATE = 5.5;
 const QB_REACTION_DELAY_SECONDS = 0.18;
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -215,8 +217,10 @@ export function simulatePassPlay(options = {}) {
   const routeReceivers = cfg.assignments ? offense.filter((p) => cfg.assignments.offense[p.slot].kind === 'route') : [z, slotRec, rb];
   const qbObservationTargets = [...new Set([...routeReceivers, ...defense].filter(Boolean))];
   const defenderBallObservations = new Map();
+  const receiverBallObservations = new Map();
   qb.ai.gazeHeading = dir > 0 ? 0 : Math.PI;
-  let observedBallPredictions = 0;
+  let observedDefenderBallPredictions = 0;
+  let observedReceiverBallPredictions = 0;
   const ballAtSnap = at(0, 0);
   Object.assign(W.ball, { x: ballAtSnap.x, y: ballAtSnap.y, z: 0.15, state: 'held', holder: center, hand: 'chest' });
   center.hasBall = true;
@@ -447,7 +451,8 @@ export function simulatePassPlay(options = {}) {
     const lookPoint = read ? read.p : elapsed < 1.2 ? at(2.6, side * 17)
       : elapsed < 1.65 ? at(2.4, side * 15) : at(1.6, side * 3.2);
     const desiredGaze = Math.atan2(lookPoint.y - qb.p.y, lookPoint.x - qb.p.x);
-    qb.ai.gazeHeading = turnHeadingToward(qb.ai.gazeHeading ?? qb.h, desiredGaze, 5.5 / DECISION_HZ);
+    qb.ai.gazeHeading = turnHeadingToward(qb.ai.gazeHeading ?? qb.h, desiredGaze,
+      PLAYER_GAZE_TURN_RATE / DECISION_HZ);
     for (const target of qbObservationTargets) {
       lastSeenMemory.capture(qb, target, W.players, W.t, {
         heading: qb.ai.gazeHeading, fieldOfView: QB_FIELD_OF_VIEW, maxDistance: 38 * YD,
@@ -1195,12 +1200,30 @@ export function simulatePassPlay(options = {}) {
       p.dv = seek(p, at(4, lOf(p)), 0.5, 8);
     }
     if (throwInfo) {
-      // Attack the ball once it is in the air.
-      const b = W.ball;
-      if (b.state === 'air') {
-        p.dv = seek(p, { x: b.landing?.x ?? b.x, y: b.landing?.y ?? b.y }, 1, 14);
+      if (W.ball.state === 'air') {
+        if (!cfg.assignments && cfg.behaviorMode === 'detailed') {
+          // Preserve the unassigned detailed replay as a legacy comparison.
+          // V1 Complete always supplies assignments and follows the causal path.
+          legacyDetailedReceiverPursuit(p);
+        } else {
+          // Estimate the landing point from the ball's currently observable state.
+          // The simulator's exact future landing coordinate is private physics state.
+          const passerHeading = Math.atan2(qb.p.y - p.p.y, qb.p.x - p.p.x);
+          p.ai.gazeHeading = turnHeadingToward(p.ai.gazeHeading ?? p.h, passerHeading,
+            PLAYER_GAZE_TURN_RATE / DECISION_HZ);
+          const estimate = estimateObservedBallCatchPoint(p);
+          if (estimate) {
+            p.dv = seek(p, estimate, 1, 14);
+            setIntent(p, 'adjust to observed pass', 'pursue the estimated catch point from the live ball trajectory');
+          }
+        }
       }
     }
+  }
+
+  function legacyDetailedReceiverPursuit(p) {
+    const ball = W.ball;
+    p.dv = seek(p, { x: ball.landing?.x ?? ball.x, y: ball.landing?.y ?? ball.y }, 1, 14);
   }
 
   function closestRusherSide() {
@@ -1209,28 +1232,52 @@ export function simulatePassPlay(options = {}) {
     return Math.sign((r.estimate.position.y - qb.p.y) * dir || 1);
   }
 
-  function estimateObservedBallLanding(p) {
-    if (cfg.behaviorMode === 'retro') {
-      return estimateBallLanding({ position: { x: W.ball.x, y: W.ball.y }, velocity: { x: W.ball.vx, y: W.ball.vy },
-        z: W.ball.z, vz: W.ball.vz, uncertaintyMeters: 0 }, G);
-    }
-    if (!defenderBallObservations.has(p.id)) {
-      defenderBallObservations.set(p.id, new ObservationMemory({ reactionDelaySeconds: 0.14,
+  function captureObservedBall(p, observations, heading, fieldOfView) {
+    if (!observations.has(p.id)) {
+      observations.set(p.id, new ObservationMemory({ reactionDelaySeconds: 0.14,
         maxMemorySeconds: 0.9, maxPredictionSeconds: 0.18, confidenceDecaySeconds: 0.45,
         uncertaintyGrowthMetersPerSecond: 1.5 }));
     }
-    const memory = defenderBallObservations.get(p.id);
+    const memory = observations.get(p.id);
     const ballObservation = { id: 'ball', p: { x: W.ball.x, y: W.ball.y },
       v: { x: W.ball.vx, y: W.ball.vy }, z: W.ball.z, vz: W.ball.vz, r: BALL_R };
     memory.capture(p, ballObservation, W.players, W.t, {
-      heading: p.h, fieldOfView: DEFENDER_FIELD_OF_VIEW, maxDistance: 55 * YD,
+      heading, fieldOfView, maxDistance: 55 * YD,
       observerEyeHeight: 1.72, targetEyeHeight: Math.max(0.2, W.ball.z), defaultBlockerHeight: 1.9,
     });
     memory.advance(W.t);
     const estimate = memory.estimate('ball', W.t);
     if (!estimate || estimate.confidence < 0.12) return null;
-    observedBallPredictions++;
-    return estimateBallLanding(estimate, G);
+    return { estimate, observation: memory.lastSeen.get('ball') };
+  }
+
+  function estimateObservedBallLanding(p) {
+    if (cfg.behaviorMode === 'retro') {
+      return estimateBallLanding({ position: { x: W.ball.x, y: W.ball.y }, velocity: { x: W.ball.vx, y: W.ball.vy },
+        z: W.ball.z, vz: W.ball.vz, uncertaintyMeters: 0 }, G);
+    }
+    const sighting = captureObservedBall(p, defenderBallObservations, p.h, DEFENDER_FIELD_OF_VIEW);
+    if (!sighting) return null;
+    observedDefenderBallPredictions++;
+    return estimateBallLanding(sighting.estimate, G);
+  }
+
+  function estimateObservedBallCatchPoint(p) {
+    if (cfg.behaviorMode === 'retro') {
+      return estimateBallCatchPoint({ position: { x: W.ball.x, y: W.ball.y }, velocity: { x: W.ball.vx, y: W.ball.vy },
+        z: W.ball.z, vz: W.ball.vz, uncertaintyMeters: 0 }, AERO.spiral);
+    }
+    const sighting = captureObservedBall(p, receiverBallObservations,
+      p.ai.gazeHeading ?? p.h, RECEIVER_FIELD_OF_VIEW);
+    if (!sighting) return null;
+    observedReceiverBallPredictions++;
+    const { estimate, observation: observedBall } = sighting;
+    const landing = estimateBallCatchPoint({
+      position: observedBall.position, velocity: observedBall.velocity,
+      z: observedBall.z, vz: observedBall.vz,
+      ageSeconds: estimate.ageSeconds, uncertaintyMeters: estimate.uncertaintyMeters,
+    }, AERO.spiral);
+    return landing;
   }
 
   function carrierBrain(p) {
@@ -1596,10 +1643,16 @@ export function simulatePassPlay(options = {}) {
       },
       defender_ball_perception: {
         observers: defenderBallObservations.size,
-        trajectory_estimates: observedBallPredictions,
+        trajectory_estimates: observedDefenderBallPredictions,
         observations: Object.fromEntries([...defenderBallObservations].map(([playerId, memory]) =>
           [playerId, { ...memory.counts }])),
       },
+      ...(cfg.assignments || cfg.behaviorMode === 'retro' ? { receiver_ball_perception: {
+        observers: receiverBallObservations.size,
+        trajectory_estimates: observedReceiverBallPredictions,
+        observations: Object.fromEntries([...receiverBallObservations].map(([playerId, memory]) =>
+          [playerId, { ...memory.counts }])),
+      } } : {}),
     },
     provenance: {
       execution: 'snap-to-whistle player decisions and ball flight generated by the simulation',

@@ -1,3 +1,5 @@
+import { AERO, dragK, flyStep } from '../ball.js';
+
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 
 function angleDifference(a, b) {
@@ -135,6 +137,44 @@ export function estimateBallLanding(observation, gravity = 9.80665) {
     x: observation.position.x + observation.velocity.x * flightSeconds,
     y: observation.position.y + observation.velocity.y * flightSeconds,
     flightSeconds,
+    uncertaintyMeters: observation.uncertaintyMeters + flightSeconds * 0.8,
+  };
+}
+
+/** Estimate the descending pass point at a catch height from the observed flight state. */
+export function estimateBallCatchPoint(observation, aero = AERO.spiral, catchHeight = 1.5) {
+  const ball = {
+    x: observation.position.x, y: observation.position.y, z: Math.max(0, observation.z),
+    vx: observation.velocity.x, vy: observation.velocity.y, vz: observation.vz,
+  };
+  const k = dragK(aero);
+  const step = 1 / 120;
+  let flightSeconds = 0;
+  let observationAge = 0;
+  while (observationAge < (observation.ageSeconds ?? 0)) {
+    const dt = Math.min(step, observation.ageSeconds - observationAge);
+    flyStep(ball, dt, k);
+    observationAge += dt;
+    if (ball.z <= 0 && ball.vz < 0) {
+      ball.z = 0;
+      ball.vz = 0;
+      break;
+    }
+  }
+  let previous = { ...ball };
+  while (flightSeconds < 5 && !(ball.z <= catchHeight && ball.vz <= 0)) {
+    previous = { ...ball };
+    flyStep(ball, step, k);
+    flightSeconds += step;
+  }
+  if (previous.z > catchHeight && ball.z <= catchHeight && ball.vz < 0) {
+    const fraction = (previous.z - catchHeight) / (previous.z - ball.z);
+    ball.x = previous.x + (ball.x - previous.x) * fraction;
+    ball.y = previous.y + (ball.y - previous.y) * fraction;
+    flightSeconds -= step * (1 - fraction);
+  }
+  return {
+    x: ball.x, y: ball.y, flightSeconds,
     uncertaintyMeters: observation.uncertaintyMeters + flightSeconds * 0.8,
   };
 }
