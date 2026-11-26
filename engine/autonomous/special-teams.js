@@ -228,6 +228,7 @@ export function simulateAutonomousSpecialTeams(input) {
   let returnStartXActual = null;
   let returnStartYActual = null;
   let muffed = false;
+  let fumblerId = null;
   let recovery = null;
   let terminal = null;
   let tackleStarted = null;
@@ -250,15 +251,10 @@ export function simulateAutonomousSpecialTeams(input) {
     carrier = p;
     p.hasBall = true;
     p.mode = 'carry';
+    returnStartXActual = p.p.x / YD;
+    returnStartYActual = p.p.y / YD;
     W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
     W.event('kick_recovery', { player_id: p.id, team: p.team, muff: muffed });
-    // A muff recovery is whistled at the recovery spot in this V1 contract;
-    // return after recovery requires a separate classified event transition.
-    if (muffed) {
-      deadBall = { x: W.ball.x / YD, y: W.ball.y / YD };
-      deadReason = 'muff_recovery';
-      terminal = W.t;
-    }
   }
 
   function observeBall(p) {
@@ -273,12 +269,15 @@ export function simulateAutonomousSpecialTeams(input) {
   }
 
   function chooseReturnLane(p) {
-    const threats = kickRoster.filter((q) => !q.down && q !== specialist);
+    const direction = p.team === 'K' ? 1 : -1;
+    const threats = (p.team === 'K' ? returnRoster : kickRoster)
+      .filter((q) => !q.down && q !== specialist);
     const candidates = [-8, -4, 0, 4, 8].map((offset) => {
       const y = clamp(p.p.y / YD + offset, 1.5, FIELD_W_YD - 1.5) * YD;
-      const ahead = threats.filter((q) => q.p.x < p.p.x + 2 * YD);
+      const ahead = threats.filter((q) => direction > 0
+        ? q.p.x > p.p.x - 2 * YD : q.p.x < p.p.x + 2 * YD);
       const space = ahead.reduce((score, q) => {
-        const forward = Math.max(0, p.p.x - q.p.x) / YD;
+        const forward = Math.max(0, (p.p.x - q.p.x) * direction) / YD;
         const lateral = Math.abs(y - q.p.y) / YD;
         return score + 1 / (1 + forward * 0.08 + lateral * 0.45);
       }, 0);
@@ -296,25 +295,50 @@ export function simulateAutonomousSpecialTeams(input) {
     p.ai.lastBallState = W.ball.state;
     p.ai.lastCarrier = carrier?.id ?? null;
     decisionCount.set(p.id, decisionCount.get(p.id) + 1);
-    if (p.team === 'K' && p.engaged && carrier?.team === 'R') {
+    if (p.engaged && carrier && p.team !== carrier.team) {
       const engagement = W.engagements.find((row) => row.a === p || row.b === p);
       if (engagement && (p.ai.nextShed == null || W.t >= p.ai.nextShed)) {
-        setIntent(p, 'shed return block', 'use strength and block-shed skill to rejoin coverage pursuit');
+        setIntent(p, 'shed return block', 'use strength and block-shed skill to rejoin pursuit');
         W.disengage(engagement, p);
         p.ai.nextShed = W.t + clamp(1.25 - ((p.R.BSH ?? 60) - 50) * 0.009, 0.45, 1.7);
       }
     }
     const ball = { x: W.ball.x, y: W.ball.y };
-    if (p === specialist) {
-      p.dv = carrier && carrier.team === 'R' ? seek(p, carrier.p, 0.95) : seek(p, p.p, 0);
+    if (carrier) {
+      if (p === carrier) {
+        if (W.t >= carrierDecision) {
+          chooseReturnLane(p);
+          carrierDecision = W.t + Math.max(0.4, interval * 3);
+          setIntent(p, 'advance recovered kick', 'protect possession and choose the clearest observed lane');
+        }
+        const direction = p.team === 'K' ? 1 : -1;
+        p.dv = seek(p, { x: clamp(p.p.x / YD + direction * 3, 0.5, 99.5) * YD,
+          y: selectedLaneY ?? p.p.y }, 1, 5.6);
+      } else if (p.team !== carrier.team) {
+        setIntent(p, 'pursue kick carrier', 'close on the current carrier and attempt a wrap');
+        p.dv = seek(p, { x: carrier.p.x + carrier.v.x * 0.16,
+          y: carrier.p.y + carrier.v.y * 0.16 });
+      } else {
+        const opponents = carrier.team === 'K' ? returnRoster : kickRoster;
+        const threat = nearest(p, opponents.filter((q) => !q.down && !q.engaged));
+        if (threat && dist(p.p, threat.p) < 8 * YD) {
+          setIntent(p, 'engage kick pursuit', 'protect the carrier and preserve the return lane');
+          p.dv = seek(p, { x: threat.p.x + (carrier.team === 'K' ? -0.55 : 0.55) * YD,
+            y: threat.p.y }, 0.9, 4.5);
+          if (dist(p.p, threat.p) <= p.r + threat.r + 0.16 * YD) W.engage(p, threat);
+        } else {
+          const direction = carrier.team === 'K' ? 1 : -1;
+          const offset = (((p.ai.index ?? 0) % 5) - 2) * 1.2 * YD;
+          setIntent(p, 'escort kick carrier', 'screen pursuit and keep the return lane open');
+          p.dv = seek(p, { x: clamp(carrier.p.x / YD - direction * 2, 0.5, 99.5) * YD,
+            y: clamp(carrier.p.y + offset, 1.5 * YD, (FIELD_W_YD - 1.5) * YD) }, 0.8);
+        }
+      }
       return;
     }
+    if (p === specialist) { p.dv = seek(p, p.p, 0); return; }
     if (p.team === 'K') {
-      if (carrier?.team === 'R') {
-        const target = { x: carrier.p.x + carrier.v.x * 0.16, y: carrier.p.y + carrier.v.y * 0.16 };
-        setIntent(p, 'coverage pursuit', 'close on the current returner and attempt a wrap');
-        p.dv = seek(p, target);
-      } else if (W.ball.state === 'air' || W.ball.state === 'loose') {
+      if (W.ball.state === 'air' || W.ball.state === 'loose') {
         const laneY = clamp(ball.y + (p.ai.lane - 4.5) * 0.42 * YD, 1.5 * YD, (FIELD_W_YD - 1.5) * YD);
         setIntent(p, `cover lane ${p.ai.lane + 1}`, 'read current ball flight, then close the return lane');
         p.dv = seek(p, { x: ball.x + (cfg.kind === 'punt' ? 4 : 2) * YD, y: laneY }, 0.96);
@@ -322,35 +346,12 @@ export function simulateAutonomousSpecialTeams(input) {
       return;
     }
     if (p === returner) {
-      if (!carrier) {
-        setIntent(p, 'track and secure the live kick', 'adjust to observed ball position and catch when in reach');
-        p.dv = observeBall(p);
-      } else if (carrier === p) {
-        if (W.t >= carrierDecision) {
-          chooseReturnLane(p);
-          carrierDecision = W.t + Math.max(0.4, interval * 3);
-          setIntent(p, 'return through daylight', 'scan current coverage and select the clearest observed lane');
-        }
-        const targetX = Math.max(0.5, p.p.x / YD - 3.0) * YD;
-        p.dv = seek(p, { x: targetX, y: selectedLaneY ?? p.p.y }, 1, 5.6);
-      } else p.dv = seek(p, p.p, 0);
+      setIntent(p, 'track and secure the live kick', 'adjust to observed ball position and catch when in reach');
+      p.dv = observeBall(p);
       return;
     }
     if (p.role === 'blocker') {
-      if (carrier?.team === 'R') {
-        const threat = p.ai.index < 6
-          ? nearest(p, kickRoster.filter((q) => q !== specialist), (q) => !q.down && !q.engaged && q.p.x < carrier.p.x + 5 * YD)
-          : null;
-        if (threat) {
-          setIntent(p, 'engage nearest coverage threat', 'protect the current return lane');
-          p.dv = seek(p, { x: threat.p.x + 0.55 * YD, y: threat.p.y }, 0.9, 4.5);
-          if (dist(p.p, threat.p) <= p.r + threat.r + 0.16 * YD) W.engage(p, threat);
-        } else {
-          const offset = ((p.ai.index % 5) - 2) * 1.2 * YD;
-          setIntent(p, 'escort returner', 'stay ahead of the ball carrier and preserve the lane');
-          p.dv = seek(p, { x: carrier.p.x - 2.0 * YD, y: clamp(carrier.p.y + offset, 1.5 * YD, (FIELD_W_YD - 1.5) * YD) }, 0.8);
-        }
-      } else if (!carrier && (W.ball.state === 'air' || W.ball.state === 'loose')) {
+      if (W.ball.state === 'air' || W.ball.state === 'loose') {
         const threat = nearest(p, kickRoster, (q) => !q.down && !q.engaged);
         if (threat && dist(p.p, threat.p) < 6 * YD) {
           setIntent(p, 'protect the catch point', 'engage the nearest coverage player');
@@ -391,6 +392,7 @@ export function simulateAutonomousSpecialTeams(input) {
           }
         } else {
           muffed = true;
+          fumblerId = returner.id;
           W.ball.state = 'loose'; W.ball.holder = null;
           returner.hasBall = false;
           W.event('muff', { player_id: returner.id, ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
@@ -411,24 +413,40 @@ export function simulateAutonomousSpecialTeams(input) {
       deadBall = { x: clamp(W.ball.x / YD, 0, 100), y: clamp(W.ball.y / YD, 0, FIELD_W_YD) };
       deadReason = 'downed'; terminal = W.t;
     }
-    if (terminal == null && carrier === returner) {
-      const tackler = kickRoster.filter((p) => !p.down && !p.engaged)
-        .sort((a, b) => dist(a.p, returner.p) - dist(b.p, returner.p) || a.id.localeCompare(b.id))[0];
+    if (terminal == null && carrier) {
+      const direction = carrier.team === 'K' ? 1 : -1;
+      const opponents = carrier.team === 'K' ? returnRoster : kickRoster;
+      const tackler = opponents.filter((p) => !p.down && !p.engaged)
+        .sort((a, b) => dist(a.p, carrier.p) - dist(b.p, carrier.p) || a.id.localeCompare(b.id))[0];
       const tackleReach = 0.35 + ((tackler?.R.TAK ?? 60) - 50) * 0.003;
-      if (tackleStarted == null && tackler && dist(tackler.p, returner.p) <= tackler.r + returner.r + tackleReach * YD) {
-        W.wrap(tackler, returner, { fall: 0.28, keepCarrier: 0.28 });
+      if (tackleStarted == null && tackler && dist(tackler.p, carrier.p) <= tackler.r + carrier.r + tackleReach * YD) {
+        W.wrap(tackler, carrier, { fall: 0.28, keepCarrier: 0.28 });
         tackleStarted = W.t;
-        W.event('return_tackle', { tackler_id: tackler.id, returner_id: returner.id });
+        W.event('return_tackle', { tackler_id: tackler.id, returner_id: carrier.id });
       }
-      if (returner.p.x <= 0.55 * YD) {
-        deadBall = { x: 0, y: clamp(returner.p.y / YD, 0, FIELD_W_YD) };
+      if ((carrier.team === 'R' && carrier.p.x <= 0.55 * YD)
+          || (carrier.team === 'K' && carrier.p.x >= 99.45 * YD)) {
+        deadBall = { x: carrier.team === 'R' ? 0 : 100,
+          y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
         deadReason = 'touchdown'; terminal = W.t;
-        W.event('touchdown', { player_id: returner.id, team: 'R' });
-      } else if (returner.p.y < 0 || returner.p.y > FIELD_W) {
-        deadBall = { x: clamp(returner.p.x / YD, 0, 100), y: clamp(returner.p.y / YD, 0, FIELD_W_YD) };
+        W.event('touchdown', { player_id: carrier.id, team: carrier.team });
+      } else if ((carrier.team === 'R' && carrier.p.x >= 99.45 * YD)
+          || (carrier.team === 'K' && carrier.p.x <= 0.55 * YD)) {
+        if (carrier.team === 'R' && muffed && returnStartXActual >= 99.45) {
+          deadBall = { x: 100, y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+          deadReason = 'touchback';
+        } else {
+          deadBall = { x: carrier.team === 'R' ? 100 : 0,
+            y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+          deadReason = 'safety';
+          W.event('safety', { player_id: carrier.id, team: carrier.team });
+        }
+        terminal = W.t;
+      } else if (carrier.p.y < 0 || carrier.p.y > FIELD_W) {
+        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
         deadReason = 'out_of_bounds'; terminal = W.t;
       } else if (tackleStarted != null && W.t - tackleStarted >= 0.3) {
-        deadBall = { x: clamp(returner.p.x / YD, 0, 100), y: clamp(returner.p.y / YD, 0, FIELD_W_YD) };
+        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
         deadReason = 'tackle'; terminal = W.t;
       }
     }
@@ -437,36 +455,48 @@ export function simulateAutonomousSpecialTeams(input) {
     }
   }
   if (terminal == null) {
-    if (muffed && recovery) {
-      deadBall = { x: recovery.p.x / YD, y: recovery.p.y / YD };
-      deadReason = 'muff_recovery'; terminal = W.t;
-    } else {
-      return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
+    return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
         failure: { reason: 'special_teams_live_ball_time_cap', time_limit_seconds: MAX_SECONDS }, events: W.events,
         trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
         diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
           decision_counts: Object.fromEntries(decisionCount), outcome_inputs: [],
           player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
             x_yards: p.p.x / YD, y_yards: p.p.y / YD, speed_yards_per_second: p.speed / YD })) } };
-    }
   }
   if (frames.length === 0 || terminal - (frames.length - 1) / REC_HZ > 1e-6) record();
 
+  if (muffed && recovery && deadReason === 'touchback') {
+    return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
+      failure: { reason: 'muff_recovery_touchback_requires_ceg_play_2_extension' }, events: W.events,
+      trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
+      diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
+        decision_counts: Object.fromEntries(decisionCount), outcome_inputs: [],
+        player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
+          x_yards: p.p.x / YD, y_yards: p.p.y / YD, speed_yards_per_second: p.speed / YD })) } };
+  }
+
   let result;
-  if (deadReason === 'touchback') {
+  if (muffed && recovery && deadReason !== 'touchback') {
+    const team = recovery.team === 'K' ? 'kicking_team' : 'receiving_team';
+    const fumbleEvent = W.events.find((event) => event.type === 'muff');
+    const fumbleSpot = Math.round(100 - (fumbleEvent?.ball_spot?.x ?? returnStartXActual));
+    const recoverySpot = Math.round(100 - returnStartXActual);
+    const deadSpot = Math.round(100 - deadBall.x);
+    const returnYards = deadSpot - recoverySpot;
+    result = { result: 'muff', possession_after: team, recovery_team: team,
+      kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
+      dead_ball_yardline_100: deadSpot, recovery_yardline_100: recoverySpot,
+      fumble_spot_yardline_100: fumbleSpot, receiving_team_touched_beyond_line: true,
+      return_yards: returnYards, returner_id: recovery.id,
+      recoverer_id: recovery.id, fumbler_id: fumblerId,
+      scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,
+      scoring_team: deadReason === 'touchdown' ? team
+        : deadReason === 'safety' ? (recovery.team === 'R' ? 'kicking_team' : 'receiving_team') : null };
+  } else if (deadReason === 'touchback') {
     result = { result: 'touchback', possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: kickoff ? (kickSpotY100 === 80 ? 20 : 35) : 20,
       return_yards: null, returner_id: null };
-  } else if (deadReason === 'muff_recovery') {
-    const team = recovery?.team === 'K' ? 'kicking_team' : 'receiving_team';
-    const fumbleSpot = Math.round(100 - (W.events.find((e) => e.type === 'muff')?.ball_spot?.x ?? deadBall.x));
-    const recoverySpot = Math.round(100 - deadBall.x);
-    result = { result: 'muff', possession_after: team, recovery_team: team,
-      kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
-      dead_ball_yardline_100: recoverySpot, recovery_yardline_100: recoverySpot,
-      fumble_spot_yardline_100: fumbleSpot, receiving_team_touched_beyond_line: true,
-      return_yards: null, returner_id: returner.id, recoverer_id: recovery?.id ?? null };
   } else if (deadReason === 'fair_catch') {
     const spot = Math.round(100 - deadBall.x);
     result = { result: 'fair_catch', possession_after: 'receiving_team',
@@ -489,7 +519,9 @@ export function simulateAutonomousSpecialTeams(input) {
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       return_start_yardline_100: Math.round(startSpot), dead_ball_yardline_100: Math.round(deadSpot),
       return_yards: returnYards, returner_id: returner.id,
-      scoring: deadReason === 'touchdown' ? 'touchdown' : null,
+      scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,
+      scoring_team: deadReason === 'touchdown' ? 'receiving_team'
+        : deadReason === 'safety' ? 'kicking_team' : null,
       fair_catch: false, out_of_bounds: false };
   }
   result.elapsed_seconds = terminal;

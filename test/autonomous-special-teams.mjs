@@ -5,15 +5,19 @@ const ids = ['K', ...Array.from({ length: 10 }, (_, i) => `C${i}`), 'R',
   ...Array.from({ length: 10 }, (_, i) => `B${i}`)];
 
 function call({ kind = 'punt', seed = 42, cth = 78, kpw = 70, kac = 70, awr = 70, spd = 76,
-  rush = 70, protect = 70 } = {}) {
-  const profiles = Object.fromEntries(ids.map((id) => [id, {
-    ratings: { SPD: id === 'R' ? spd : 76, ACC: 75, AGI: 75, STR: 68, AWR: id === 'R' ? awr : 70,
-      PUR: 75, TAK: 70, BSH: id.startsWith('B') || id === 'R' ? rush : 70,
+  rush = 70, protect = 70, ratingOverrides = {} } = {}) {
+  const profiles = Object.fromEntries(ids.map((id) => {
+    const unit = id === 'R' ? 'returner' : id.startsWith('C') ? 'coverage'
+      : id.startsWith('B') ? 'blocker' : 'specialist';
+    const ratings = { SPD: id === 'R' ? spd : 76, ACC: 75, AGI: 75, STR: 68,
+      AWR: id === 'R' ? awr : 70, PUR: 75, TAK: 70,
+      BSH: id.startsWith('B') || id === 'R' ? rush : 70,
       RBK: 70, IBL: id.startsWith('C') ? protect : 70, CTH: id === 'R' ? cth : 78,
       CAR: 78, BCV: 75, ELU: 75, TRK: 65, PRC: 70,
-      KPW: id === 'K' ? kpw : 70, KAC: id === 'K' ? kac : 70 },
-    physics: {},
-  }]));
+      KPW: id === 'K' ? kpw : 70, KAC: id === 'K' ? kac : 70 };
+    Object.assign(ratings, ratingOverrides[unit] ?? {});
+    return [id, { ratings, physics: {} }];
+  }));
   return {
     schema_version: 'gridiron.autonomous-special-teams.v1', kind, seed,
     kicking_team: 'A', receiving_team: 'B',
@@ -79,6 +83,10 @@ assert.ok(poorHands.events.some((event) => event.type === 'muff'));
 assert.equal(poorHands.result.result, 'muff');
 assert.equal(poorHands.result.recovery_team, 'receiving_team');
 assert.ok(poorHands.result.recoverer_id);
+const muffedEndZoneRecovery = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5, cth: 1 }));
+assert.equal(muffedEndZoneRecovery.status, 'failed');
+assert.equal(muffedEndZoneRecovery.failure.reason,
+  'muff_recovery_touchback_requires_ceg_play_2_extension');
 assert.ok(sureHands.events.some((event) => event.type === 'catch'));
 
 const weakLeg = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 2, kpw: 1 }));
@@ -124,6 +132,37 @@ const safetyFreeTouchback = simulateAutonomousSpecialTeams({
 });
 assert.equal(safetyFreeTouchback.result.result, 'touchback');
 assert.equal(safetyFreeTouchback.result.dead_ball_yardline_100, 20);
+const longKickoffReturn = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 15 }));
+assert.equal(longKickoffReturn.status, 'complete');
+assert.equal(longKickoffReturn.result.return_yards, 68);
+assert.ok(longKickoffReturn.result.elapsed_seconds > 18,
+  'a long live kickoff return completes beyond the former 18-second cap');
+assert.equal(longKickoffReturn.events.at(-1).type, 'whistle');
+assert.equal(longKickoffReturn.diagnostics.assignments_executed, 22);
+const eliteReturnRatings = {
+  returner: { SPD: 99, ACC: 99, AGI: 99, STR: 90, AWR: 99, BSH: 99,
+    CTH: 99, CAR: 99, BCV: 99, ELU: 99, TRK: 99, PRC: 99 },
+  coverage: { SPD: 50, ACC: 50, AGI: 50, STR: 45, PUR: 50, TAK: 45, BSH: 45 },
+  blocker: { SPD: 88, ACC: 88, AGI: 88, STR: 99, BSH: 99, RBK: 99, IBL: 99 },
+};
+const kickoffReturnTouchdown = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 24,
+  ratingOverrides: eliteReturnRatings }));
+assert.equal(kickoffReturnTouchdown.result.result, 'return');
+assert.equal(kickoffReturnTouchdown.result.scoring, 'touchdown');
+assert.equal(kickoffReturnTouchdown.result.scoring_team, 'receiving_team');
+assert.equal(kickoffReturnTouchdown.result.returner_id, 'R');
+const muffReturnTouchdown = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 4,
+  ratingOverrides: eliteReturnRatings }));
+assert.equal(muffReturnTouchdown.result.result, 'muff');
+assert.equal(muffReturnTouchdown.result.scoring, 'touchdown');
+assert.equal(muffReturnTouchdown.result.scoring_team, 'receiving_team');
+assert.equal(muffReturnTouchdown.result.fumbler_id, 'R');
+assert.ok(muffReturnTouchdown.result.recoverer_id);
+const kickoffReturnSafety = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5,
+  ratingOverrides: eliteReturnRatings }));
+assert.equal(kickoffReturnSafety.result.result, 'return');
+assert.equal(kickoffReturnSafety.result.scoring, 'safety');
+assert.equal(kickoffReturnSafety.result.scoring_team, 'kicking_team');
 const missingRatings = call({ kind: 'punt', seed: 42 });
 delete missingRatings.player_profiles.K.ratings.KPW;
 assert.throws(() => simulateAutonomousSpecialTeams(missingRatings), /K\.ratings_missing:KPW/);
