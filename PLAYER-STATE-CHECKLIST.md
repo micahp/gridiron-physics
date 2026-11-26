@@ -6,7 +6,7 @@ Work from existing controllers and research; check an item only when its integra
 - [x] Make coverage reactions depend on observed throws, assigned responsibility, and a legitimate opportunity to contest.
 - [x] Verify receivers use observed ball flight without access to the prescribed landing point.
 - [x] Integrate shared-snapshot arbitration and verify callback-order independence in applicable play types.
-- [ ] Implement play-specific QB reads and coherent drop, scramble, pass, and legal throwaway transitions.
+- [x] Implement play-specific QB reads and coherent drop, scramble, pass, and legal throwaway transitions.
 - [x] Preserve assigned protection, rush lanes, gaps, and edge contain, including blitz pickup.
 - [ ] Complete runner, receiver, and support transitions after possession changes.
 - [x] Limit loose-ball recovery trials to distinct opportunities across executors.

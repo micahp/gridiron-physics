@@ -793,8 +793,10 @@ export function simulatePassPlay(options = {}) {
     const availableOptions = readOptions().filter((o) => elapsed >= o.readyAt);
     const pressureCue = sensedPressure();
     const pressure = pressureCue.distance;
-    if (cfg.assignments && qb.ai.escape && pressureCue.level === 'none') {
+    if (cfg.assignments && qb.ai.escape && qb.ai.escapeReason !== 'illegal_throwaway'
+        && pressureCue.level === 'none') {
       qb.ai.escape = null;
+      qb.ai.escapeReason = null;
       qb.ai.quarterbackState = 'read';
       W.event('quarterback_state', { player_id: qb.id, state: 'read', reason: 'pressure_cleared' });
     }
@@ -842,13 +844,36 @@ export function simulatePassPlay(options = {}) {
       setIntent(qb, 'scramble away from pressure', rusher
         ? `move away from remembered pressure by ${rusher.player.slot}` : 'use a pressure cue and remembered pocket space');
     } else if (elapsed > 3.0) {
-      if (sharedSnapshot) pendingThrowaway = true;
-      else launchThrowaway();
+      const target = legalThrowawayTarget();
+      if (target) {
+        if (sharedSnapshot) pendingThrowaway = true;
+        else launchThrowaway(target);
+      } else {
+        const lateralSide = Math.sign(lOf(qb)) || side;
+        const escape = unit(dir * 0.2, dir * lateralSide);
+        qb.ai.escape = escape;
+        qb.ai.escapeReason = 'illegal_throwaway';
+        if (qb.ai.quarterbackState !== 'escape') {
+          qb.ai.quarterbackState = 'escape';
+          W.event('quarterback_state', { player_id: qb.id, state: 'escape', reason: 'throwaway_not_legal_from_pocket' });
+        }
+        setIntent(qb, 'scramble away from pressure', 'keep the ball and move outside the pocket before throwing it away');
+      }
     }
   }
 
-  function launchThrowaway() {
-    const target = at(-1.0, side * 22);
+  function legalThrowawayTarget() {
+    // The pocket extends five yards laterally from the center. An outside
+    // throwaway must also carry the ball beyond the line of scrimmage.
+    if (Math.abs(lOf(qb)) <= 5) return null;
+    const target = at(1.0, (Math.sign(lOf(qb)) || side) * 22);
+    const forwardYards = (target.x / YD - cfg.los) * dir;
+    if (forwardYards < 0 || target.y < YD || target.y > (FIELD_W_YD - 1) * YD) return null;
+    return target;
+  }
+
+  function launchThrowaway(target = legalThrowawayTarget()) {
+    if (!target) return false;
     const flight = solveLaunch({ x: W.ball.x, y: W.ball.y, z: 1.4 }, { x: target.x, y: target.y, z: 0.2 }, 0.9, AERO.spiral);
     Object.assign(W.ball, { state: 'air', holder: null, vx: flight.vx, vy: flight.vy, vz: flight.vz, k: flight.k });
     W.ball.intentionalGround = true;
@@ -860,6 +885,7 @@ export function simulatePassPlay(options = {}) {
       landing: { x: target.x / YD, y: target.y / YD } });
     qb.hasBall = false;
     W.event('throw_away', { quarterback_id: qb.id });
+    return true;
   }
 
   // ------------------------------------------------------------ ball contest

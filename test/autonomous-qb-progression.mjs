@@ -47,6 +47,48 @@ for (const mode of ['legacy_sequential', 'shared_snapshot']) {
       && event.state === 'read' && event.reason === 'pressure_cleared'), `${mode}: escape returns to reading`);
   } finally { World.prototype.step = step; }
 }
+for (const initialLateral of [0, 6]) {
+  const step = World.prototype.step;
+  const event = World.prototype.event;
+  let prepared = false;
+  let releaseLateral = null;
+  World.prototype.event = function (type, data) {
+    if (type === 'throw_away') {
+      const qb = this.players.find((p) => p.roleKey === 'O.QB');
+      releaseLateral = Math.abs(qb.p.y / YD - 26.67);
+    }
+    return event.call(this, type, data);
+  };
+  World.prototype.step = function (dt, brains, afterBrains) {
+    if (!prepared && this.t >= 0.3) {
+      const qb = this.players.find((p) => p.roleKey === 'O.QB');
+      for (const defender of this.players.filter((p) => p.team === 'D')) defender.down = true;
+      for (const receiver of this.players.filter((p) => p.team === 'O'
+        && ['TE', 'WR1', 'WR2', 'WR3'].includes(p.slot))) receiver.down = true;
+      qb.p.y = (26.67 + initialLateral) * YD;
+      qb.ai.nextDecision = this.t;
+      prepared = true;
+    }
+    return step.call(this, dt, brains, afterBrains);
+  };
+  try {
+    const assignments = exampleAssignments('slant_flat', 'zone');
+    const result = simulatePassPlay({ seed: `throwaway-${initialLateral}`, concept: 'assigned', assignments,
+      front: 'nickel_over', coverage: 'cover_3', direction: 'right', resultOnly: true });
+    assert.ok(prepared);
+    const throwaway = result.events.find((event) => event.type === 'throw_away');
+    if (initialLateral === 0) {
+      assert.ok(result.events.some((event) => event.type === 'quarterback_state'
+        && event.state === 'escape' && event.reason === 'throwaway_not_legal_from_pocket'));
+      assert.ok(throwaway, 'QB eventually escapes the pocket before throwing the ball away');
+    } else {
+      assert.ok(throwaway, 'outside-pocket QB can throw the ball away');
+    }
+    assert.ok(releaseLateral > 5,
+      'throwaway is released only after the QB leaves the tackle box');
+    assert.ok(throwaway.t >= 3, 'throwaway follows the read progression timeout');
+  } finally { World.prototype.step = step; World.prototype.event = event; }
+}
 {
   const step = World.prototype.step;
   let injected = false;
