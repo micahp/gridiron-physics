@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { exampleAssignments } from '../engine/autonomous/example-assignments.js';
 import { validateAssignments } from '../engine/autonomous/assignments.js';
 import { simulatePassPlay } from '../engine/autonomous/passing.js';
+import { World } from '../engine/world.js';
 
 function play(order) {
   const assignments = exampleAssignments('slant_flat', 'man');
@@ -19,4 +20,28 @@ assert.ok(second.events.some((event) => event.type === 'throw' && event.target_i
 const invalid = exampleAssignments('slant_flat', 'man');
 invalid.offense.QB.read_order = ['WR2', 'WR2'];
 assert.throws(() => validateAssignments(invalid, { executable: true }), /read order/);
+for (const mode of ['legacy_sequential', 'shared_snapshot']) {
+  const step = World.prototype.step;
+  let injected = false;
+  World.prototype.step = function (dt, brains, afterBrains) {
+    if (!injected && this.t >= 0.25) {
+      const qb = this.players.find((p) => p.roleKey === 'O.QB');
+      for (const defender of this.players.filter((p) => p.team === 'D')) {
+        defender.p.x = qb.p.x + 20;
+      }
+      qb.ai.escape = { x: -1, y: 0 };
+      qb.ai.quarterbackState = 'escape';
+      injected = true;
+    }
+    return step.call(this, dt, brains, afterBrains);
+  };
+  try {
+    const assignments = exampleAssignments('slant_flat', 'zone');
+    const result = simulatePassPlay({ seed: 'escape-clear', concept: 'assigned', assignments,
+      front: 'nickel_over', coverage: 'cover_3', direction: 'right', resultOnly: true,
+      playerEvaluationMode: mode });
+    assert.ok(injected && result.events.some((event) => event.type === 'quarterback_state'
+      && event.state === 'read' && event.reason === 'pressure_cleared'), `${mode}: escape returns to reading`);
+  } finally { World.prototype.step = step; }
+}
 console.log('play-specific quarterback progression passed');

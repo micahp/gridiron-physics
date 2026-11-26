@@ -766,7 +766,13 @@ export function simulatePassPlay(options = {}) {
     // A three-step drop from the gun takes about 0.8 s before the first read is live.
     if (elapsed < 0.75 + (cfg.assignments?.offense.QB.decision_delay_seconds ?? 0)) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
     const availableOptions = readOptions().filter((o) => elapsed >= o.readyAt);
-    const pressure = sensedPressure().distance;
+    const pressureCue = sensedPressure();
+    const pressure = pressureCue.distance;
+    if (cfg.assignments && qb.ai.escape && pressureCue.level === 'none') {
+      qb.ai.escape = null;
+      qb.ai.quarterbackState = 'read';
+      W.event('quarterback_state', { player_id: qb.id, state: 'read', reason: 'pressure_cleared' });
+    }
     const progression = cfg.assignments?.offense.QB.read_order;
     const developedOptions = cfg.assignments && !progression
       ? availableOptions.filter((option) => fOf(option.receiver) >= 5)
@@ -804,6 +810,10 @@ export function simulatePassPlay(options = {}) {
       const away = rusher ? unit(qb.p.x - rusher.estimate.position.x, qb.p.y - rusher.estimate.position.y)
         : unit(-dir * 0.25, -side);
       qb.ai.escape = { x: away.x, y: away.y };
+      if (cfg.assignments && qb.ai.quarterbackState !== 'escape') {
+        qb.ai.quarterbackState = 'escape';
+        W.event('quarterback_state', { player_id: qb.id, state: 'escape', reason: 'pressure' });
+      }
       setIntent(qb, 'scramble away from pressure', rusher
         ? `move away from remembered pressure by ${rusher.player.slot}` : 'use a pressure cue and remembered pocket space');
     } else if (elapsed > 3.0) {
