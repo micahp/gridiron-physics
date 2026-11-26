@@ -167,6 +167,12 @@ export function simulatePassPlay(options = {}) {
     p.engageMul = (0.75 + (0.5 * ((blockRating ?? 60) - 50)) / 50) * (0.8 + 0.2 * (p.R.STR ?? 60) / 80);
     p.ai.assignment = 'align';
     p.ai.decision = 'read snap';
+    if (cfg.assignments) {
+      const task = cfg.assignments[info.team === 'O' ? 'offense' : 'defense'][p.slot];
+      if (!task) throw new RangeError(`missing pass assignment for ${info.team}.${p.slot}`);
+      p.ai.playAssignment = task;
+      W.event('assignment_executed', { player_id: p.id, role: p.roleKey, task });
+    }
     p.ai.nextDecision = 0;
     byRole.set(info.roleKey, p);
     (info.team === 'O' ? offense : defense).push(p);

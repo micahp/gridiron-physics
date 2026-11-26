@@ -50,6 +50,11 @@ const dpi = simulatePassPlay({
 });
 const dpiEvent = dpi.events.find((event) => event.type === 'pass_interference');
 assert.ok(dpiEvent, 'downfield contact with a catchable live pass generates defensive interference');
+const passAssignments = dpi.events.filter((event) => event.type === 'assignment_executed');
+assert.equal(new Set(passAssignments.map((event) => event.player_id)).size, 22,
+  'all 22 pass-play assignments are entered in the live event record');
+assert.ok(passAssignments.every((event) => event.task && event.role),
+  'each assignment record carries the responsible role and executable task');
 assert.ok(dpi.terminal.time > dpiEvent.t,
   'DPI is recorded during the pass and does not itself end live execution');
 assert.equal(dpi.events.at(-1).type, 'whistle');

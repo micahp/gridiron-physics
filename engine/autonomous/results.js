@@ -80,6 +80,11 @@ export function toResultRecord(call, run) {
     diagnostics: {
       ...(call.assignments ? { behavior_mode: call.behavior_mode } : {}),
       ...(run.diagnostics?.cadence ? { cadence: run.diagnostics.cadence } : {}),
+      ...(call.assignments ? {
+        assignments_executed: new Set(run.events.filter((event) => event.type === 'assignment_executed')
+          .map((event) => event.player_id)).size,
+        expected_assignments: 22,
+      } : {}),
       agent_decisions: run.events.filter((e) => e.type === 'decision').map((e) => ({
         t: e.t, player_id: e.player_id, role: e.role, assignment: e.assignment, decision: e.decision,
       })),
