@@ -1,0 +1,471 @@
+{
+  "inside_zone": {
+    "completion_rate": {
+      "values": {
+        "A": null,
+        "B": null,
+        "C": null,
+        "D": null
+      },
+      "B_minus_A": null,
+      "C_minus_A": null,
+      "D_minus_B": null,
+      "D_minus_C": null,
+      "interaction_D_minus_B_minus_C_plus_A": null
+    },
+    "interception_rate": {
+      "values": {
+        "A": null,
+        "B": null,
+        "C": null,
+        "D": null
+      },
+      "B_minus_A": null,
+      "C_minus_A": null,
+      "D_minus_B": null,
+      "D_minus_C": null,
+      "interaction_D_minus_B_minus_C_plus_A": null
+    },
+    "sack_rate": {
+      "values": {
+        "A": null,
+        "B": null,
+        "C": null,
+        "D": null
+      },
+      "B_minus_A": null,
+      "C_minus_A": null,
+      "D_minus_B": null,
+      "D_minus_C": null,
+      "interaction_D_minus_B_minus_C_plus_A": null
+    },
+    "fumble_rate": {
+      "values": {
+        "A": 0.016112789526686808,
+        "B": 0.019095477386934675,
+        "C": 0.016112789526686808,
+        "D": 0.019095477386934675
+      },
+      "B_minus_A": 0.0029826878602478672,
+      "C_minus_A": 0.0,
+      "D_minus_B": 0.0,
+      "D_minus_C": 0.0029826878602478672,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0
+    },
+    "mean_yards": {
+      "values": {
+        "A": 0.8196253776435147,
+        "B": 0.6623457286432207,
+        "C": 0.8196253776435147,
+        "D": 0.6623457286432207
+      },
+      "B_minus_A": -0.157279649000294,
+      "C_minus_A": 0.0,
+      "D_minus_B": 0.0,
+      "D_minus_C": -0.157279649000294,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0
+    }
+  },
+  "slant_flat_man": {
+    "completion_rate": {
+      "values": {
+        "A": 0.032,
+        "B": 0.037,
+        "C": 0.022,
+        "D": 0.031
+      },
+      "B_minus_A": 0.0049999999999999975,
+      "C_minus_A": -0.010000000000000002,
+      "D_minus_B": -0.005999999999999998,
+      "D_minus_C": 0.009000000000000001,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0040000000000000036
+    },
+    "interception_rate": {
+      "values": {
+        "A": 0.015,
+        "B": 0.021,
+        "C": 0.056,
+        "D": 0.062
+      },
+      "B_minus_A": 0.006000000000000002,
+      "C_minus_A": 0.041,
+      "D_minus_B": 0.040999999999999995,
+      "D_minus_C": 0.005999999999999998,
+      "interaction_D_minus_B_minus_C_plus_A": -6.938893903907228e-18
+    },
+    "sack_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0,
+      "D_minus_B": 0,
+      "D_minus_C": 0,
+      "interaction_D_minus_B_minus_C_plus_A": 0
+    },
+    "fumble_rate": {
+      "values": {
+        "A": 0.001,
+        "B": 0.002,
+        "C": 0.006,
+        "D": 0.001
+      },
+      "B_minus_A": 0.001,
+      "C_minus_A": 0.005,
+      "D_minus_B": -0.001,
+      "D_minus_C": -0.005,
+      "interaction_D_minus_B_minus_C_plus_A": -0.006
+    },
+    "mean_yards": {
+      "values": {
+        "A": 0.9050940000000001,
+        "B": 1.3123150000000003,
+        "C": 0.2308700000000001,
+        "D": 0.719014
+      },
+      "B_minus_A": 0.4072210000000003,
+      "C_minus_A": -0.6742239999999999,
+      "D_minus_B": -0.5933010000000003,
+      "D_minus_C": 0.4881439999999999,
+      "interaction_D_minus_B_minus_C_plus_A": 0.08092299999999963
+    }
+  },
+  "slant_flat_zone": {
+    "completion_rate": {
+      "values": {
+        "A": 0.054,
+        "B": 0.059,
+        "C": 0.054,
+        "D": 0.059
+      },
+      "B_minus_A": 0.0049999999999999975,
+      "C_minus_A": 0.0,
+      "D_minus_B": 0.0,
+      "D_minus_C": 0.0049999999999999975,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0
+    },
+    "interception_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0.001,
+        "D": 0
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0.001,
+      "D_minus_B": 0,
+      "D_minus_C": -0.001,
+      "interaction_D_minus_B_minus_C_plus_A": -0.001
+    },
+    "sack_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0,
+      "D_minus_B": 0,
+      "D_minus_C": 0,
+      "interaction_D_minus_B_minus_C_plus_A": 0
+    },
+    "fumble_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0.002,
+        "D": 0.001
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0.002,
+      "D_minus_B": 0.001,
+      "D_minus_C": -0.001,
+      "interaction_D_minus_B_minus_C_plus_A": -0.001
+    },
+    "mean_yards": {
+      "values": {
+        "A": 2.542406,
+        "B": 2.7396,
+        "C": 2.6642550000000003,
+        "D": 2.908578
+      },
+      "B_minus_A": 0.19719399999999965,
+      "C_minus_A": 0.1218490000000001,
+      "D_minus_B": 0.16897800000000007,
+      "D_minus_C": 0.24432299999999962,
+      "interaction_D_minus_B_minus_C_plus_A": 0.047128999999999976
+    }
+  },
+  "four_verticals": {
+    "completion_rate": {
+      "values": {
+        "A": 0.173,
+        "B": 0.17617617617617617,
+        "C": 0.17217217217217218,
+        "D": 0.17452357071213642
+      },
+      "B_minus_A": 0.0031761761761761875,
+      "C_minus_A": -0.0008278278278278095,
+      "D_minus_B": -0.0016526054640397525,
+      "D_minus_C": 0.0023513985399642445,
+      "interaction_D_minus_B_minus_C_plus_A": -0.000824777636211943
+    },
+    "interception_rate": {
+      "values": {
+        "A": 0.038,
+        "B": 0.03303303303303303,
+        "C": 0.03803803803803804,
+        "D": 0.033099297893681046
+      },
+      "B_minus_A": -0.004966966966966968,
+      "C_minus_A": 3.803803803804212e-05,
+      "D_minus_B": 6.626486064801457e-05,
+      "D_minus_C": -0.004938740144356996,
+      "interaction_D_minus_B_minus_C_plus_A": 2.8226822609972446e-05
+    },
+    "sack_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0,
+      "D_minus_B": 0,
+      "D_minus_C": 0,
+      "interaction_D_minus_B_minus_C_plus_A": 0
+    },
+    "fumble_rate": {
+      "values": {
+        "A": 0.003,
+        "B": 0.002002002002002002,
+        "C": 0.003003003003003003,
+        "D": 0.0010030090270812437
+      },
+      "B_minus_A": -0.000997997997997998,
+      "C_minus_A": 3.0030030030029145e-06,
+      "D_minus_B": -0.0009989929749207583,
+      "D_minus_C": -0.0019999939759217595,
+      "interaction_D_minus_B_minus_C_plus_A": -0.0010019959779237614
+    },
+    "mean_yards": {
+      "values": {
+        "A": 7.724257,
+        "B": 8.110767767767769,
+        "C": 7.7535095095095095,
+        "D": 8.190850551654965
+      },
+      "B_minus_A": 0.3865107677677688,
+      "C_minus_A": 0.02925250950950975,
+      "D_minus_B": 0.08008278388719603,
+      "D_minus_C": 0.4373410421454551,
+      "interaction_D_minus_B_minus_C_plus_A": 0.05083027437768628
+    }
+  },
+  "check_release": {
+    "completion_rate": {
+      "values": {
+        "A": 0.03507014028056112,
+        "B": 0.037,
+        "C": 0.031,
+        "D": 0.033
+      },
+      "B_minus_A": 0.0019298597194388756,
+      "C_minus_A": -0.004070140280561123,
+      "D_minus_B": -0.003999999999999997,
+      "D_minus_C": 0.0020000000000000018,
+      "interaction_D_minus_B_minus_C_plus_A": 7.01402805611262e-05
+    },
+    "interception_rate": {
+      "values": {
+        "A": 0.01603206412825651,
+        "B": 0.024,
+        "C": 0.047,
+        "D": 0.053
+      },
+      "B_minus_A": 0.007967935871743489,
+      "C_minus_A": 0.03096793587174349,
+      "D_minus_B": 0.028999999999999998,
+      "D_minus_C": 0.005999999999999998,
+      "interaction_D_minus_B_minus_C_plus_A": -0.0019679358717434904
+    },
+    "sack_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0,
+      "D_minus_B": 0,
+      "D_minus_C": 0,
+      "interaction_D_minus_B_minus_C_plus_A": 0
+    },
+    "fumble_rate": {
+      "values": {
+        "A": 0.001002004008016032,
+        "B": 0.002,
+        "C": 0.004,
+        "D": 0.001
+      },
+      "B_minus_A": 0.000997995991983968,
+      "C_minus_A": 0.002997995991983968,
+      "D_minus_B": -0.001,
+      "D_minus_C": -0.003,
+      "interaction_D_minus_B_minus_C_plus_A": -0.003997995991983968
+    },
+    "mean_yards": {
+      "values": {
+        "A": 1.270366733466934,
+        "B": 1.315585,
+        "C": 0.49570700000000006,
+        "D": 0.637377
+      },
+      "B_minus_A": 0.04521826653306604,
+      "C_minus_A": -0.7746597334669338,
+      "D_minus_B": -0.678208,
+      "D_minus_C": 0.1416699999999999,
+      "interaction_D_minus_B_minus_C_plus_A": 0.09645173346693392
+    }
+  },
+  "collapsing_pocket": {
+    "completion_rate": {
+      "values": {
+        "A": 0.058,
+        "B": 0.053,
+        "C": 0.058,
+        "D": 0.053
+      },
+      "B_minus_A": -0.0050000000000000044,
+      "C_minus_A": 0.0,
+      "D_minus_B": 0.0,
+      "D_minus_C": -0.0050000000000000044,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0
+    },
+    "interception_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0,
+      "D_minus_B": 0,
+      "D_minus_C": 0,
+      "interaction_D_minus_B_minus_C_plus_A": 0
+    },
+    "sack_rate": {
+      "values": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0
+      },
+      "B_minus_A": 0,
+      "C_minus_A": 0,
+      "D_minus_B": 0,
+      "D_minus_C": 0,
+      "interaction_D_minus_B_minus_C_plus_A": 0
+    },
+    "fumble_rate": {
+      "values": {
+        "A": 0.001,
+        "B": 0.001,
+        "C": 0,
+        "D": 0
+      },
+      "B_minus_A": 0.0,
+      "C_minus_A": -0.001,
+      "D_minus_B": -0.001,
+      "D_minus_C": 0,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0
+    },
+    "mean_yards": {
+      "values": {
+        "A": 2.83992,
+        "B": 2.5090389999999996,
+        "C": 2.992782,
+        "D": 2.5496
+      },
+      "B_minus_A": -0.33088100000000065,
+      "C_minus_A": 0.15286199999999983,
+      "D_minus_B": 0.04056100000000029,
+      "D_minus_C": -0.4431820000000002,
+      "interaction_D_minus_B_minus_C_plus_A": -0.11230099999999954
+    }
+  },
+  "forced_turnover": {
+    "completion_rate": {
+      "values": {
+        "A": null,
+        "B": null,
+        "C": null,
+        "D": null
+      },
+      "B_minus_A": null,
+      "C_minus_A": null,
+      "D_minus_B": null,
+      "D_minus_C": null,
+      "interaction_D_minus_B_minus_C_plus_A": null
+    },
+    "interception_rate": {
+      "values": {
+        "A": null,
+        "B": null,
+        "C": null,
+        "D": null
+      },
+      "B_minus_A": null,
+      "C_minus_A": null,
+      "D_minus_B": null,
+      "D_minus_C": null,
+      "interaction_D_minus_B_minus_C_plus_A": null
+    },
+    "sack_rate": {
+      "values": {
+        "A": null,
+        "B": null,
+        "C": null,
+        "D": null
+      },
+      "B_minus_A": null,
+      "C_minus_A": null,
+      "D_minus_B": null,
+      "D_minus_C": null,
+      "interaction_D_minus_B_minus_C_plus_A": null
+    },
+    "fumble_rate": {
+      "values": {
+        "A": 0.19458896982310095,
+        "B": 0.17922606924643583,
+        "C": 0.19458896982310095,
+        "D": 0.17922606924643583
+      },
+      "B_minus_A": -0.015362900576665117,
+      "C_minus_A": 0.0,
+      "D_minus_B": 0.0,
+      "D_minus_C": -0.015362900576665117,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0
+    },
+    "mean_yards": {
+      "values": {
+        "A": -0.7926711758584709,
+        "B": -0.4175091649694609,
+        "C": -0.7926711758584709,
+        "D": -0.4175091649694609
+      },
+      "B_minus_A": 0.37516201088901,
+      "C_minus_A": 0.0,
+      "D_minus_B": 0.0,
+      "D_minus_C": 0.37516201088901,
+      "interaction_D_minus_B_minus_C_plus_A": 0.0
+    }
+  }
+}

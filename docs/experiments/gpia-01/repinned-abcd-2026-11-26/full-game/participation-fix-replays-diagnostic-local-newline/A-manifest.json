@@ -1,0 +1,19 @@
+{
+  "acceptance": "Not accepted: 0/20 complete legal games; blockers and full tracebacks are in games.jsonl.gz; retained per-seed Gridiron payloads are on the fast host.",
+  "arm": "A",
+  "engine_commit": "f031fd98dd821f49164dfc794025fcf6669383da",
+  "games": 20,
+  "lp_commit": "9bbc00a4405c9f909d3a267e9184820d487c51e8",
+  "paired_randomness": true,
+  "participation_entry_current": true,
+  "participation_field_sha256": "9aaf7e57ce45bc525393de105c2b803673d441b589588a279a28e57ce2880a41",
+  "participation_snap_counts_sha256": "9c99574d5605c2bf853e658767cfa5b6915a3e9b7febaa05d191ba731e790be6",
+  "phase": "replay-fixed-local",
+  "playbook_manifest_sha256": "220af2a590b2e7ddf5c28a32977aadd4d5a5e6e128ca8392da8bac37ef0917ac",
+  "rating_profile_sha256": "949539b1440009171693fe0c5e2c05f018e4911735b04d75d95c514f94214b15",
+  "retained_full_results_remote": "/root/ot-sim-out/gpia-01-fullgame/replay-fixed-local/A/2026_12_GB_LA.v1-complete.frozen/.seed-*.json",
+  "seed_start": 710001,
+  "snapshot": "/root/ot-sim-out/gpia-01-fullgame-inputs-2026-11-26/snapshots/2026_12_GB_LA.v1-complete.frozen.json",
+  "snapshot_file_sha256": "d3ffe12cf1a533bc18df72765d347a2b431634ee53971ed16ca56fd936635b89",
+  "source_note": "Diagnostic replay only: the checkout at lp_commit contains a literal backslash-n syntax error in scripts/nfl_sequence/participation_field.py. A temporary local newline correction was applied to that file before replay; no commit was created and the pinned ref was not changed."
+}

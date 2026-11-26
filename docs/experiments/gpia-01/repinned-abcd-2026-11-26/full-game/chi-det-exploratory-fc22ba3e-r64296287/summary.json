@@ -1,0 +1,104 @@
+{
+  "acceptance": "0/20 legal complete games in each arm; no arm qualifies for a 100-game pilot.",
+  "arms": {
+    "A": {
+      "attempted": 20,
+      "blocker_categories": {
+        "'quarter'": 1,
+        "ILLEGAL_STATE": 2,
+        "autonomous_event_transition_unsupported": 1,
+        "gridiron_executor_failed": 1,
+        "gridiron_special_teams_incomplete": 1,
+        "play 4": 5,
+        "play 7": 1,
+        "pregame player/team stats do not reconcile for A": 8
+      },
+      "complete_games": 0,
+      "engine_commit": "f031fd98dd821f49164dfc794025fcf6669383da",
+      "legal_games": 0,
+      "lp_commit": "9bbc00a4405c9f909d3a267e9184820d487c51e8",
+      "results": "games.jsonl.gz",
+      "retained_gridiron_results": ".seed-*.json",
+      "statuses": {
+        "blocked": 3,
+        "exception": 17
+      }
+    },
+    "B": {
+      "attempted": 20,
+      "blocker_categories": {
+        "ILLEGAL_STATE": 2,
+        "autonomous_event_transition_unsupported": 2,
+        "gridiron_executor_failed": 1,
+        "gridiron_special_teams_incomplete": 1,
+        "play 4": 5,
+        "play 5": 1,
+        "play 6": 1,
+        "play 8": 1,
+        "pregame player/team stats do not reconcile for A": 6
+      },
+      "complete_games": 0,
+      "engine_commit": "122ce3b7975b263e61317406304a90ca14f86fdc",
+      "legal_games": 0,
+      "lp_commit": "d0b5a8e56bfa1ede9f6f21f306e9a89a113f2e26",
+      "results": "games.jsonl.gz",
+      "retained_gridiron_results": ".seed-*.json",
+      "statuses": {
+        "blocked": 4,
+        "exception": 16
+      }
+    },
+    "C": {
+      "attempted": 20,
+      "blocker_categories": {
+        "'quarter'": 2,
+        "ILLEGAL_STATE": 4,
+        "autonomous_event_generation_invalid": 2,
+        "autonomous_event_transition_unsupported": 2,
+        "gridiron_executor_failed": 1,
+        "gridiron_special_teams_incomplete": 1,
+        "play 4": 5,
+        "pregame player/team stats do not reconcile for A": 3
+      },
+      "complete_games": 0,
+      "engine_commit": "61eac5b47a8ca7052a70a69a5f2d4e7f63b9e6aa",
+      "legal_games": 0,
+      "lp_commit": "cd44abace4e2737e871d05eb368caae63597cdbb",
+      "results": "games.jsonl.gz",
+      "retained_gridiron_results": ".seed-*.json",
+      "statuses": {
+        "blocked": 6,
+        "exception": 14
+      }
+    },
+    "D": {
+      "attempted": 20,
+      "blocker_categories": {
+        "ILLEGAL_STATE": 5,
+        "autonomous_event_transition_unsupported": 1,
+        "gridiron_executor_failed": 4,
+        "gridiron_special_teams_incomplete": 1,
+        "play 4": 7,
+        "play 5": 1,
+        "pregame player/team stats do not reconcile for A": 1
+      },
+      "complete_games": 0,
+      "engine_commit": "885036d4c2a2f2f0b5ccea9006f7bb7ce2acabb7",
+      "legal_games": 0,
+      "lp_commit": "759e6123b8948ce7868937ab5cfb89bba9a099ea",
+      "results": "games.jsonl.gz",
+      "retained_gridiron_results": ".seed-*.json",
+      "statuses": {
+        "blocked": 6,
+        "exception": 14
+      }
+    }
+  },
+  "classification": "exploratory_replay",
+  "experiment": "GPIA-01 V1 Complete full-game integration diagnostic",
+  "games_per_arm": 20,
+  "matchup": "CHI-DET",
+  "ratings_profile_sha256": "64296287b48f93dc8e311f095928df3cc78f1f01892ed46c7b7cedafc9ad15ef",
+  "seed_start": 710001,
+  "snapshot_file_sha256": "fc22ba3e20970967b955e58476a428537485dc076320039ad7fa2ddb46036266"
+}

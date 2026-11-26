@@ -1,0 +1,20 @@
+{
+  "acceptance": "No legal complete games in this 20-seed check; do not use for 100-game pilots or forecast evaluation.",
+  "arm": "B",
+  "engine_commit": "122ce3b7975b263e61317406304a90ca14f86fdc",
+  "games": 20,
+  "lp_commit": "d0b5a8e56bfa1ede9f6f21f306e9a89a113f2e26",
+  "paired_randomness": true,
+  "participation_entry_current": true,
+  "participation_field_sha256": "9aaf7e57ce45bc525393de105c2b803673d441b589588a279a28e57ce2880a41",
+  "participation_snap_counts_sha256": "9c99574d5605c2bf853e658767cfa5b6915a3e9b7febaa05d191ba731e790be6",
+  "phase": "CHI-DET-exploratory-replay-fc22ba3e-r64296287",
+  "playbook_manifest_sha256": "220af2a590b2e7ddf5c28a32977aadd4d5a5e6e128ca8392da8bac37ef0917ac",
+  "rating_profile_sha256": "64296287b48f93dc8e311f095928df3cc78f1f01892ed46c7b7cedafc9ad15ef",
+  "replay_note": "20-seed diagnostic replay using the corrected CHI-DET snapshot and matching regenerated ratings profile. The LP checkout required a temporary local newline syntax correction in participation_field.py; the branch ref was not changed.",
+  "seed_start": 710001,
+  "snapshot": "/root/ot-sim-out/gpia-01-fullgame-inputs-2026-11-26/snapshots/snapshot.json",
+  "snapshot_classification": "exploratory_replay",
+  "snapshot_file_sha256": "fc22ba3e20970967b955e58476a428537485dc076320039ad7fa2ddb46036266",
+  "source_note": "Diagnostic replay used an isolated checkout at the recorded LP commit with only a temporary syntax correction to the literal backslash-n in scripts/nfl_sequence/participation_field.py. The pinned branch ref and Gridiron engine ref were not changed."
+}

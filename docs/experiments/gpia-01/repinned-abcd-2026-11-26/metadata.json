@@ -1,0 +1,36 @@
+{
+  "experiment": "GPIA-01",
+  "created_at_utc": "2026-11-26T19:24:55.374417+00:00",
+  "arms": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "refs": {
+    "A": "f031fd98dd821f49164dfc794025fcf6669383da",
+    "B": "122ce3b7975b263e61317406304a90ca14f86fdc",
+    "C": "61eac5b47a8ca7052a70a69a5f2d4e7f63b9e6aa",
+    "D": "885036d4c2a2f2f0b5ccea9006f7bb7ce2acabb7"
+  },
+  "seeds_per_scenario": 1000,
+  "timestep_seeds_per_scenario_hz": 100,
+  "scenarios": [
+    "inside_zone",
+    "slant_flat_man",
+    "slant_flat_zone",
+    "four_verticals",
+    "check_release",
+    "collapsing_pocket",
+    "forced_turnover"
+  ],
+  "timestep_hz": [
+    60,
+    120,
+    240
+  ],
+  "factorial_complete": true,
+  "matched_primary_keys": 7000,
+  "matched_timestep_keys": 1500,
+  "note": "A and C reuse the preserved verified partial run; B was rerun at its requested 122ce3b7 pin because the earlier B artifact used e1f98a43; D was run at 885036d4. Exact key sets and pins were verified before contrasts."
+}

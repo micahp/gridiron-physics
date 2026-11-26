@@ -1,0 +1,14 @@
+{
+  "experiment": "GPIA-01",
+  "issue": "collapsing-pocket return-geometry exception",
+  "scenario": "collapsing_pocket",
+  "seed": "gpia01-timestep-collapsing_pocket-0003",
+  "physics_hz": 60,
+  "results": {
+    "A": {"engine_commit": "f031fd98dd821f49164dfc794025fcf6669383da", "status": "complete", "event": "touchdown", "reconciliation_ok": true},
+    "B": {"engine_commit": "122ce3b7975b263e61317406304a90ca14f86fdc", "status": "complete", "event": "tackle", "reconciliation_ok": true},
+    "C": {"engine_commit": "61eac5b47a8ca7052a70a69a5f2d4e7f63b9e6aa", "status": "exception", "error": "RangeError: return geometry coordinates must be between 0 and 100 yards"},
+    "D": {"engine_commit": "885036d4c2a2f2f0b5ccea9006f7bb7ce2acabb7", "status": "complete", "event": "touchdown", "reconciliation_ok": true}
+  },
+  "method": "Replayed the exact timestep fixture configuration and seed in each pinned Gridiron worktree."
+}

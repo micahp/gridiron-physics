@@ -1,0 +1,20 @@
+{
+  "acceptance": "No legal complete games in this 20-seed check; do not use for forecast evaluation.",
+  "arm": "D",
+  "classification_note": "Snapshot evaluation has unverified schedule and archived depth-chart capture times.",
+  "engine_commit": "885036d4c2a2f2f0b5ccea9006f7bb7ce2acabb7",
+  "games": 20,
+  "lp_commit": "759e6123b8948ce7868937ab5cfb89bba9a099ea",
+  "paired_randomness": true,
+  "participation_entry_current": true,
+  "participation_field_sha256": "9aaf7e57ce45bc525393de105c2b803673d441b589588a279a28e57ce2880a41",
+  "participation_snap_counts_sha256": "9c99574d5605c2bf853e658767cfa5b6915a3e9b7febaa05d191ba731e790be6",
+  "phase": "GB-LA-exploratory-replay-46c10393-r8b19ea9",
+  "playbook_manifest_sha256": "220af2a590b2e7ddf5c28a32977aadd4d5a5e6e128ca8392da8bac37ef0917ac",
+  "rating_profile_sha256": "8b19ea961af1d2c9e82799cadb070b9607b59a17954157e1c3b25e3c13bda22f",
+  "seed_start": 710001,
+  "snapshot": "/root/ot-sim-out/gpia-01-fullgame-inputs-2026-11-26/snapshots/2026_12_GB_LA.v1-complete.frozen.json",
+  "snapshot_classification": "exploratory_replay",
+  "snapshot_file_sha256": "46c10393825904f805e4a2928bd547b36a84f8ee1d3d449ec56224af256ded14",
+  "source_note": "Diagnostic replay used an isolated checkout at the recorded LP commit with only a temporary syntax correction to the literal backslash-n in scripts/nfl_sequence/participation_field.py. The pinned branch ref and Gridiron engine ref were not changed."
+}

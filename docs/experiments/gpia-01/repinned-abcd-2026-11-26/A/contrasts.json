@@ -1,0 +1,11 @@
+{
+  "status": "incomplete_factorial",
+  "available_arms": [
+    "A"
+  ],
+  "missing_arms": [
+    "B",
+    "C",
+    "D"
+  ]
+}
