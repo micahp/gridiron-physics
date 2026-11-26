@@ -53,5 +53,10 @@ try {
   assert.equal(special.value.status, 'complete');
   assert.equal(special.value.diagnostics.assignments_executed, 22);
   assert.equal(special.value.trajectory.roster.length, 22);
+  const sharedSpecial = await request({ id: 9, op: 'special_teams',
+    call: { ...specialTeams, player_evaluation_mode: 'shared_snapshot' } });
+  assert.equal(sharedSpecial.ok, true);
+  assert.equal(sharedSpecial.value.status, 'complete');
+  assert.equal(sharedSpecial.value.diagnostics.player_evaluation_mode, 'shared_snapshot');
   console.log('persistent server: error isolation, scrimmage replay and autonomous special teams passed');
 } finally { child.stdin.end(); }

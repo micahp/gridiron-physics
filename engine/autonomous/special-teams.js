@@ -56,10 +56,12 @@ function validateInput(input) {
   requireObject(input, 'special-teams input');
   assertNoOutcomeFields(input);
   const allowed = new Set(['schema_version', 'kind', 'seed', 'kicking_team', 'receiving_team',
-    'yardline_100', 'ball_lateral_yards', 'lineups', 'player_profiles']);
+    'yardline_100', 'ball_lateral_yards', 'lineups', 'player_profiles', 'player_evaluation_mode']);
   for (const key of Object.keys(input)) if (!allowed.has(key)) throw new TypeError(`unsupported special-teams input: ${key}`);
   if (input.schema_version !== 'gridiron.autonomous-special-teams.v1') throw new TypeError('unsupported special-teams schema');
   if (!['punt', 'kickoff', 'field_goal'].includes(input.kind)) throw new RangeError('special-teams kind must be punt, kickoff, or field_goal');
+  if (input.player_evaluation_mode != null && (!['legacy_sequential', 'shared_snapshot'].includes(input.player_evaluation_mode)
+      || input.kind === 'field_goal')) throw new RangeError('player_evaluation_mode is supported for punts and kickoffs');
   if (!(typeof input.seed === 'string' && input.seed.trim()) && !Number.isInteger(input.seed)) throw new TypeError('seed must be a non-empty string or integer');
   for (const key of ['kicking_team', 'receiving_team']) if (typeof input[key] !== 'string' || !input[key].trim()) throw new TypeError(`${key} must be a team identity`);
   if (input.kicking_team === input.receiving_team) throw new TypeError('special-teams units must belong to different teams');
@@ -120,6 +122,24 @@ export function simulateAutonomousSpecialTeams(input) {
   if (cfg.kind === 'field_goal') return simulateAutonomousFieldGoal(cfg);
   const rand = rng(cfg.seed);
   const W = new World(rand);
+  const sharedSnapshot = cfg.player_evaluation_mode === 'shared_snapshot';
+  const originalEvent = W.event.bind(W);
+  const originalEngage = W.engage.bind(W);
+  const originalDisengage = W.disengage.bind(W);
+  const pendingEvents = [], pendingEngagements = [], pendingSheds = [];
+  let collectingBrains = false;
+  W.event = (type, data = {}) => {
+    if (sharedSnapshot && collectingBrains) pendingEvents.push({ type, data });
+    else originalEvent(type, data);
+  };
+  W.engage = (a, b) => {
+    if (sharedSnapshot && collectingBrains) pendingEngagements.push({ a, b });
+    else originalEngage(a, b);
+  };
+  W.disengage = (engagement, shedder) => {
+    if (sharedSnapshot && collectingBrains) pendingSheds.push({ engagement, shedder });
+    else originalDisengage(engagement, shedder);
+  };
   const lineups = cfg.lineups;
   const kickRoster = [];
   const returnRoster = [];
@@ -418,7 +438,19 @@ export function simulateAutonomousSpecialTeams(input) {
 
   for (let step = 0; step < Math.ceil(MAX_SECONDS / DT); step++) {
     if (terminal != null) break;
-    W.step(DT, brain);
+    W.step(DT, (player) => {
+      collectingBrains = true;
+      try { brain(player); } finally { collectingBrains = false; }
+    }, sharedSnapshot ? () => {
+      pendingEvents.sort((a, b) => JSON.stringify([a.type, a.data]).localeCompare(JSON.stringify([b.type, b.data])));
+      for (const event of pendingEvents.splice(0)) originalEvent(event.type, event.data);
+      pendingSheds.sort((a, b) => a.shedder.id.localeCompare(b.shedder.id));
+      for (const { engagement, shedder } of pendingSheds.splice(0)) {
+        if (W.engagements.includes(engagement)) originalDisengage(engagement, shedder);
+      }
+      pendingEngagements.sort((a, b) => a.a.id.localeCompare(b.a.id) || a.b.id.localeCompare(b.b.id));
+      for (const { a, b } of pendingEngagements.splice(0)) originalEngage(a, b);
+    } : null);
     if (!catchResolved && W.ball.state === 'air' && W.ball.z <= 2.4) {
       const d = Math.hypot(W.ball.x - returner.p.x, W.ball.y - returner.p.y);
       if (d <= 1.35 * YD) {
@@ -607,6 +639,7 @@ export function simulateAutonomousSpecialTeams(input) {
     result, carrier_id: carrier?.id ?? null, events: W.events,
     trajectory: { roster, frames: framesFlat, stride, t0: 0, hz: REC_HZ },
     diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
+      ...(cfg.player_evaluation_mode ? { player_evaluation_mode: cfg.player_evaluation_mode } : {}),
       decision_counts: Object.fromEntries(decisionCount), outcome_inputs: [],
       player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
         top_speed_yards_per_second: p.topSpeed / YD, distance_yards: p.dist / YD })),
