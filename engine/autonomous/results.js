@@ -78,6 +78,8 @@ export function toResultRecord(call, run) {
       hz: run.hz,
     },
     diagnostics: {
+      ...((run.failure_state ?? run.diagnostics?.failure_state)
+        ? { failure_state: run.failure_state ?? run.diagnostics.failure_state } : {}),
       ...(call.assignments ? { behavior_mode: call.behavior_mode } : {}),
       ...(call.player_evaluation_mode ? { player_evaluation_mode: call.player_evaluation_mode } : {}),
       ...(run.diagnostics?.cadence ? { cadence: run.diagnostics.cadence } : {}),

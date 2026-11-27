@@ -18,6 +18,24 @@ assert.ok(recoveredKick.result.elapsed_seconds > 7);
 assert.equal(recoveredKick.result.scoring, 'touchdown');
 assert.equal(recoveredKick.result.dead_ball_yardline_100, 0);
 
+// Exact CHI–DET seed 300021: a muffed kickoff rolled through the end zone
+// and previously remained live beyond the end line until the 36-second cap.
+const muffedKickEndlineCall = JSON.parse(fs.readFileSync(
+  new URL('./fixtures/muffed-kick-endline-seed-300021.json', import.meta.url), 'utf8'));
+const muffedKickEndline = simulateAutonomousSpecialTeams(muffedKickEndlineCall);
+assert.equal(muffedKickEndline.status, 'complete');
+assert.equal(muffedKickEndline.result.result, 'touchback');
+assert.ok(muffedKickEndline.result.elapsed_seconds < 36);
+assert.ok(muffedKickEndline.events.some((event) => event.type === 'muff'));
+assert.ok(muffedKickEndline.events.some((event) => event.type === 'loose_kick_end_line'));
+assert.equal(muffedKickEndline.events.some((event) => event.type === 'fumble_recovery'), false,
+  'the ball is dead at the end line before any out-of-bounds recovery can be awarded');
+const looseStart = muffedKickEndline.events.find((event) => event.type === 'muff')?.t;
+const looseChasers = muffedKickEndline.events.filter((event) => event.type === 'decision'
+  && event.t >= looseStart && event.assignment === 'recover loose kick');
+assert.equal(new Set(looseChasers.map((event) => event.player_id)).size, 22,
+  'every player interrupts lane or block behavior to pursue the loose kick');
+
 assert.equal(roundYardline100(32.499999), 32);
 assert.equal(roundYardline100(32.5), 33, 'statistical spots use the shared half-up convention');
 assert.equal(statReturnYards(45, 43, -1), 2, 'kicking-team advancement lowers yardline_100');

@@ -383,6 +383,13 @@ export function simulateAutonomousSpecialTeams(input) {
     p.ai.lastBallState = W.ball.state;
     p.ai.lastCarrier = carrier?.id ?? null;
     decisionCount.set(p.id, decisionCount.get(p.id) + 1);
+    if (!carrier && W.ball.state === 'loose') {
+      const engagement = W.engagements.find((row) => row.a === p || row.b === p);
+      if (engagement) W.disengage(engagement);
+      setIntent(p, 'recover loose kick', 'abandon the prior lane or block and pursue the live loose ball');
+      p.dv = seek(p, { x: W.ball.x, y: W.ball.y }, 0.98, 12);
+      return;
+    }
     if (p.engaged && carrier && p.team !== carrier.team) {
       const engagement = W.engagements.find((row) => row.a === p || row.b === p);
       if (engagement && (p.ai.nextShed == null || W.t >= p.ai.nextShed)) {
@@ -520,6 +527,15 @@ export function simulateAutonomousSpecialTeams(input) {
           W.event('muff', { player_id: returner.id, ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD } });
         }
       }
+    }
+    if (terminal == null && W.ball.state === 'loose' && W.ball.x >= 110 * YD) {
+      const dx = W.ball.x - previousBall.x;
+      const fraction = dx > 1e-9 ? clamp((110 * YD - previousBall.x) / dx, 0, 1) : 0;
+      const crossingY = previousBall.y + fraction * (W.ball.y - previousBall.y);
+      deadBall = { x: 100, y: clamp(crossingY / YD, 0, FIELD_W_YD) };
+      deadReason = 'touchback';
+      terminal = W.t;
+      W.event('loose_kick_end_line', { ball_spot: { x: 110, y: deadBall.y }, dead_ball_spot: deadBall });
     }
     if (terminal == null && W.ball.state === 'loose' && muffed && recovery == null) attemptRecovery();
     if (terminal == null && W.ball.state === 'air' && (W.ball.y < 0 || W.ball.y > FIELD_W)) {

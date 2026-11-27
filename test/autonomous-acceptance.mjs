@@ -202,7 +202,8 @@ assert.notEqual(weakTackler.tackle_id, strongTackler.tackle_id, 'tackle ratings 
 const capped = simulateInsideZone({ seed: 'timeout-100', los: 1, initialPositions: { 'O.RB': { x: 110, y: 55 } } });
 assert.equal(capped.terminal, null);
 assert.equal(capped.resolved, false);
-assert.deepEqual(capped.failure, { reason: 'simulation_time_cap', time_limit_seconds: 12 });
+assert.deepEqual(capped.failure, { reason: 'live_play_no_progress',
+  hard_time_limit_seconds: 36, no_progress_limit_seconds: 3.5 });
 assert.equal(capped.events.some((e) => e.type === 'whistle'), false);
 assert.equal(capped.events.some((e) => e.type === 'handoff'), false);
 assert.equal(capped.events.at(-1).type, 'simulation_failure');

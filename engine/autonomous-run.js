@@ -9,7 +9,11 @@ import { serializeReturnGeometry } from './autonomous/field-geometry.js';
 import { nextRecoveryAttempt } from './autonomous/contact-attempts.js';
 import { engagementHazardUniform, hazardDeadline } from './autonomous/retro-cadence.js';
 
-const MAX_SECONDS = 12;
+// A moving carrier remains live until a football terminal event. This ceiling
+// is an emergency guard; the shorter no-progress watchdog below identifies a
+// stalled play without cutting off a long but active run or return.
+const HARD_MAX_SECONDS = 36;
+const NO_PROGRESS_SECONDS = 3.5;
 const ARM_TACKLE_REACH = 0.12;
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -987,7 +991,10 @@ export function simulateInsideZone(options = {}) {
 
   if (!cfg.resultOnly) record();
   nextRecord = 1 / REC_HZ;
-  while (W.t < MAX_SECONDS && !terminal) {
+  let lastLiveProgressAt = W.t;
+  let previousLiveBall = { x: W.ball.x, y: W.ball.y };
+  let failureReason = null;
+  while (W.t < HARD_MAX_SECONDS && !terminal) {
     if (!snapped) {
       snapped = true;
       for (const p of W.players) if (p.pose === POSE.STANCE) p.pose = POSE.RUN;
@@ -1033,6 +1040,15 @@ export function simulateInsideZone(options = {}) {
       pendingEngagements.sort((a, b) => a.a.id.localeCompare(b.a.id) || a.b.id.localeCompare(b.b.id));
       for (const { a, b } of pendingEngagements.splice(0)) W.engage(a, b);
     } : null);
+    const liveActor = carrier ?? (W.ball.state === 'loose' ? null : W.ball.holder);
+    const currentLivePosition = liveActor
+      ? liveActor.p
+      : { x: W.ball.x, y: W.ball.y };
+    if (Math.hypot(currentLivePosition.x - previousLiveBall.x,
+      currentLivePosition.y - previousLiveBall.y) > 0.012 * YD) {
+      lastLiveProgressAt = W.t;
+    }
+    previousLiveBall = { x: currentLivePosition.x, y: currentLivePosition.y };
     for (const row of activeBlock.values()) {
       row.minDefF = Math.min(row.minDefF, fOf(row.defender));
       row.maxDefF = Math.max(row.maxDefF, fOf(row.defender));
@@ -1054,15 +1070,37 @@ export function simulateInsideZone(options = {}) {
       const spot = maxForward || { x: W.ball.x, y: W.ball.y };
       finish('tackle', spot);
     }
+    if (!terminal && !tackle && W.t - lastLiveProgressAt >= NO_PROGRESS_SECONDS) {
+      failureReason = 'live_play_no_progress';
+      break;
+    }
     if (!cfg.resultOnly && !terminal && W.t >= nextRecord - 1e-9) {
       record();
       nextRecord += 1 / REC_HZ;
     }
   }
 
+  const failureState = !terminal ? {
+    elapsed_seconds: W.t,
+    ball: { state: W.ball.state, x_yards: W.ball.x / YD, y_yards: W.ball.y / YD,
+      height: W.ball.z, holder_id: W.ball.holder?.id ?? null },
+    carrier_id: carrier?.id ?? null,
+    last_transition: W.events.at(-1) ?? null,
+    active_assignments: W.players.map((p) => ({ player_id: p.id, team: p.team,
+      role: p.roleKey, assignment: p.ai.assignment ?? null, decision: p.ai.decision ?? null,
+      position: { x_yards: p.p.x / YD, y_yards: p.p.y / YD },
+      velocity: { x_yards_per_second: p.v.x / YD, y_yards_per_second: p.v.y / YD },
+      pose: p.pose, has_ball: p.hasBall, engaged_with: p.engaged?.id ?? null })),
+    active_engagements: W.engagements.map((e) => ({ a: e.a.id, b: e.b.id, since: e.t0 })),
+    last_contact_attempt: [...W.events].reverse().find((e) =>
+      ['tackle_attempt', 'tackle', 'fumble', 'fumble_recovery'].includes(e.type)) ?? null,
+  } : null;
   if (!terminal) {
     for (const engagement of [...W.engagements]) W.disengage(engagement);
-    W.event('simulation_failure', { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS });
+    failureReason ??= 'simulation_hard_time_cap';
+    W.event('simulation_failure', { reason: failureReason,
+      hard_time_limit_seconds: HARD_MAX_SECONDS,
+      no_progress_limit_seconds: NO_PROGRESS_SECONDS });
   }
   if (!cfg.resultOnly && (frames.length === 0 || W.t - ((frames.length - 1) / REC_HZ) > 1e-6)) record();
   for (const row of activeBlock.values()) row.end = W.t;
@@ -1099,7 +1137,10 @@ export function simulateInsideZone(options = {}) {
         deadBallX: terminal.spot.x, direction: dir, carrierTeam: carrier.team })
         : { return_yards: null, return_displacement_yards: null }),
     } : null,
-    failure: terminal ? null : { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS },
+    failure: terminal ? null : { reason: failureReason ?? 'simulation_hard_time_cap',
+      hard_time_limit_seconds: HARD_MAX_SECONDS,
+      no_progress_limit_seconds: NO_PROGRESS_SECONDS },
+    failure_state: failureState,
     tackle_id: terminal?.reason === 'tackle' ? tackle?.tackler.id ?? null : null,
     blockers, topSpeed,
     provenance: {

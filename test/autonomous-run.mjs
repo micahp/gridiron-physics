@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { createInsideZoneRoster, simulateInsideZone } from '../engine/autonomous-run.js';
+import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
 import { scoreAutonomousTracking } from '../engine/tracking-eval.js';
 
 const base = { seed: 'inside-zone-1', front: 'even', runSide: 'left' };
 const a = simulateInsideZone(base);
 const b = simulateInsideZone(base);
+
+const longRunCall = JSON.parse(fs.readFileSync(new URL('./fixtures/run-over-12-seed-300022.json', import.meta.url), 'utf8'));
+const longRun = simulateAutonomousPlay(longRunCall);
+assert.equal(longRun.status, 'complete', JSON.stringify(longRun.failure));
+assert.ok(longRun.result.elapsed_seconds > 12,
+  'a live run that is advancing must continue past the old fixed 12-second cutoff');
+assert.ok(['tackle', 'touchdown', 'out_of_bounds', 'safety'].includes(longRun.result.event));
 
 assert.deepEqual(a, b, 'fixed seed and snap inputs reproduce the full play and every trajectory sample');
 assert.equal(a.schema_version, 'gridiron.autonomous-inside-zone.v1');
