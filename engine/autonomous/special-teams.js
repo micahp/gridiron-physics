@@ -277,13 +277,20 @@ export function simulateAutonomousSpecialTeams(input) {
 
   function attemptRecovery() {
     if (W.ball.state !== 'loose') return;
-    const candidates = [...W.players].filter((p) => !p.down && dist(p.p, { x: W.ball.x, y: W.ball.y }) < 1.15)
+    const candidates = [...W.players].filter((p) => !p.down
+      && p.p.y >= 0 && p.p.y <= FIELD_W && p.p.x >= -10 * YD && p.p.x <= 110 * YD
+      && dist(p.p, { x: W.ball.x, y: W.ball.y }) < 1.15)
       .sort((a, b) => dist(a.p, { x: W.ball.x, y: W.ball.y }) - dist(b.p, { x: W.ball.x, y: W.ball.y }) || a.id.localeCompare(b.id));
     const p = nextRecoveryAttempt(recoveryAttempts, candidates);
     if (!p) return;
     const chance = clamp(0.55 + ((p.R.AWR ?? 60) - 60) * 0.004, 0.25, 0.9);
     W.event('loose_ball_recovery_attempt', { player_id: p.id, chance });
     if (rand() > chance) return;
+    if (W.ball.x < 0) {
+      unsupportedRecoveryReason = 'muffed_kick_kicking_end_zone_recovery_unmodelled';
+      terminal = W.t;
+      return;
+    }
     recovery = p;
     recoveryAt = Object.freeze({ x: W.ball.x / YD, y: W.ball.y / YD, time: W.t });
     carrier = p;
@@ -294,6 +301,13 @@ export function simulateAutonomousSpecialTeams(input) {
     W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
     W.event('kick_recovery', { player_id: p.id, team: p.team, muff: muffed,
       at: { x: recoveryAt.x, y: recoveryAt.y }, time: recoveryAt.time });
+    if (muffed && recoveryAt.x >= 100) {
+      deadBall = { x: 100, y: recoveryAt.y };
+      deadReason = p.team === 'R' ? 'touchback' : 'touchdown';
+      terminal = W.t;
+      W.event(deadReason, { player_id: p.id, team: p.team });
+      return;
+    }
     if (muffed && p.team === 'K') {
       const muffEvent = W.events.find((event) => event.type === 'muff');
       const receiverTouchedBeyondLine = (muffEvent?.ball_spot?.x ?? -Infinity) > los;
@@ -439,6 +453,7 @@ export function simulateAutonomousSpecialTeams(input) {
 
   for (let step = 0; step < Math.ceil(MAX_SECONDS / DT); step++) {
     if (terminal != null) break;
+    const previousBall = { x: W.ball.x, y: W.ball.y, state: W.ball.state };
     W.step(DT, (player) => {
       collectingBrains = true;
       try { brain(player); } finally { collectingBrains = false; }
@@ -452,7 +467,28 @@ export function simulateAutonomousSpecialTeams(input) {
       pendingEngagements.sort((a, b) => a.a.id.localeCompare(b.a.id) || a.b.id.localeCompare(b.b.id));
       for (const { a, b } of pendingEngagements.splice(0)) originalEngage(a, b);
     } : null);
-    if (!catchResolved && W.ball.state === 'air' && W.ball.z <= 2.4) {
+    // A live kick crossing the sideline is dead before any catch or recovery.
+    if ((W.ball.state === 'air' || W.ball.state === 'loose')
+        && (W.ball.y < 0 || W.ball.y > FIELD_W)) {
+      const boundaryY = W.ball.y < 0 ? 0 : FIELD_W;
+      const deltaY = W.ball.y - previousBall.y;
+      const fraction = deltaY === 0 ? 0 : (boundaryY - previousBall.y) / deltaY;
+      const crossingX = previousBall.x + fraction * (W.ball.x - previousBall.x);
+      if (muffed) {
+        unsupportedRecoveryReason = 'muffed_kick_out_of_bounds_restart_unmodelled';
+        terminal = W.t;
+      } else if (crossingX < 0 || crossingX > 100 * YD) {
+        unsupportedRecoveryReason = 'kick_boundary_in_end_zone_unmodelled';
+        terminal = W.t;
+      } else {
+        deadBall = { x: crossingX / YD, y: boundaryY / YD };
+        deadReason = 'out_of_bounds'; terminal = W.t;
+        W.event('kick_out_of_bounds', { ball_spot: deadBall });
+      }
+    }
+    if (terminal == null && !catchResolved && W.ball.state === 'air' && W.ball.z <= 2.4
+        && returner.p.y >= 0 && returner.p.y <= FIELD_W
+        && returner.p.x >= -10 * YD && returner.p.x <= 110 * YD) {
       const d = Math.hypot(W.ball.x - returner.p.x, W.ball.y - returner.p.y);
       if (d <= 1.35 * YD) {
         catchResolved = true;
@@ -485,7 +521,7 @@ export function simulateAutonomousSpecialTeams(input) {
         }
       }
     }
-    if (W.ball.state === 'loose' && muffed && recovery == null) attemptRecovery();
+    if (terminal == null && W.ball.state === 'loose' && muffed && recovery == null) attemptRecovery();
     if (terminal == null && W.ball.state === 'air' && (W.ball.y < 0 || W.ball.y > FIELD_W)) {
       deadBall = { x: clamp(W.ball.x / YD, 0, 100), y: clamp(W.ball.y / YD, 0, FIELD_W_YD) };
       deadReason = 'out_of_bounds'; terminal = W.t;
@@ -566,10 +602,13 @@ export function simulateAutonomousSpecialTeams(input) {
     const team = recovery.team === 'K' ? 'kicking_team' : 'receiving_team';
     const fumbleEvent = W.events.find((event) => event.type === 'muff');
     const muffingReturnerId = fumbleEvent?.player_id ?? fumblerId;
-    const fumbleSpot = roundYardline100(100 - (fumbleEvent?.ball_spot?.x ?? returnStartXActual));
-    const recoverySpot = roundYardline100(100 - recoveryAt.x);
+    const fumbleX = fumbleEvent?.ball_spot?.x ?? returnStartXActual;
+    // The wire contract represents a receiving-end-zone spot by its goal line;
+    // recovery_at retains the actual physical coordinates.
+    const fumbleSpot = fumbleX >= 100 ? 0 : roundYardline100(100 - fumbleX);
+    const recoverySpot = recoveryAt.x >= 100 ? 0 : roundYardline100(100 - recoveryAt.x);
     const deadSpot = roundYardline100(100 - deadBall.x);
-    const geometry = recovery.team === 'R'
+    const geometry = recovery.team === 'R' && recoveryAt.x < 100
       ? serializeReturnGeometry({ recoveryX: recoveryAt.x, deadBallX: deadBall.x,
         direction: 1, carrierTeam: 'D' })
       : { return_yards: 0, return_displacement_yards: 0 };
