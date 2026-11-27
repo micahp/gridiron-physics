@@ -1780,6 +1780,10 @@ export function simulatePassPlay(options = {}) {
   function finish(reason, spot) {
     if (terminal) return;
     terminal = { reason, spot: { x: spot.x / YD, y: clamp(spot.y / YD, 0, FIELD_W_YD) }, time: W.t };
+    if (reason === 'safety') {
+      W.event('safety', { carrier_id: carrier.id, team: carrier.team === 'O' ? 'D' : 'O',
+        spot: terminal.spot });
+    }
     if ((reason === 'tackle' || reason === 'sack') && tackle) {
       const victim = tackle.carrier;
       victim.down = true; victim.pose = POSE.DOWN; victim.downT = W.t;

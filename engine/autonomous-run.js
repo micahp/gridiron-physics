@@ -933,6 +933,10 @@ export function simulateInsideZone(options = {}) {
   function finish(reason, spot) {
     if (terminal) return;
     terminal = { reason, spot: { x: spot.x / YD, y: clamp(spot.y / YD, 0, FIELD_W_YD) }, time: W.t };
+    if (reason === 'safety') {
+      W.event('safety', { carrier_id: carrier.id, team: carrier.team === 'O' ? 'D' : 'O',
+        spot: terminal.spot });
+    }
     if (reason === 'tackle' && tackle) {
       carrier.down = true; carrier.pose = POSE.DOWN; carrier.downT = W.t;
       tackle.tackler.down = true; tackle.tackler.pose = POSE.DOWN; tackle.tackler.downT = W.t;
