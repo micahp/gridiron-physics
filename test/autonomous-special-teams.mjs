@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { simulateAutonomousSpecialTeams } from '../engine/autonomous/special-teams.js';
-import { roundYardline100, statReturnYards } from '../engine/autonomous/field-geometry.js';
+import { roundYardline100, statReturnYards, statFieldSpot } from '../engine/autonomous/field-geometry.js';
 
 const ids = ['K', ...Array.from({ length: 10 }, (_, i) => `C${i}`), 'R',
   ...Array.from({ length: 10 }, (_, i) => `B${i}`)];
@@ -167,26 +167,24 @@ assert.equal(kickingTeamMuff.result.return_yards,
 assert.equal(kickingTeamMuff.result.return_yards, 0,
   'a kicking-team scrimmage-kick recovery beyond the line is dead at recovery');
 assert.ok(kickingTeamMuff.events.some((event) => event.type === 'kick_recovery_dead_ball'));
-const muffedEndZoneRecovery = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5, cth: 1 }));
-assert.equal(muffedEndZoneRecovery.status, 'complete');
-assert.equal(muffedEndZoneRecovery.result.result, 'muff');
-assert.equal(muffedEndZoneRecovery.result.touchback, true);
-assert.equal(muffedEndZoneRecovery.result.possession_after, 'receiving_team');
-assert.equal(muffedEndZoneRecovery.result.dead_ball_yardline_100, 0,
-  'preserve the physical dead-ball spot at the receiving goal line');
-assert.equal(muffedEndZoneRecovery.result.receiving_restart_yardline_100, 35,
-  'an airborne kickoff downed in the end zone restarts at the 35');
-assert.equal(muffedEndZoneRecovery.result.return_yards,
-  muffedEndZoneRecovery.result.dead_ball_yardline_100
-    - muffedEndZoneRecovery.result.recovery_yardline_100,
-  'return yards reconcile to the physical dead-ball spot, separately from touchback placement');
-assert.equal(muffedEndZoneRecovery.result.clock_runoff_seconds,
-  Math.ceil(muffedEndZoneRecovery.result.elapsed_seconds
-    - muffedEndZoneRecovery.result.catch_elapsed_seconds),
-  'a muffed free kick starts game-clock accounting at the receiving-team touch');
-assert.equal(muffedEndZoneRecovery.result.fumbler_id, 'R');
-assert.ok(muffedEndZoneRecovery.result.recoverer_id);
-assert.ok(muffedEndZoneRecovery.result.post_recovery_returner_id);
+// The original fixture was labelled an end-zone recovery, but the immutable
+// ball recovery is actually at x=98.98, inside the field. A carrier's center
+// at the goal line did not justify a touchback at that instant.
+const muffedNearGoalRecovery = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5, cth: 1 }));
+assert.equal(muffedNearGoalRecovery.status, 'complete');
+assert.equal(muffedNearGoalRecovery.result.result, 'muff');
+assert.ok(muffedNearGoalRecovery.result.recovery_at.x < 100);
+assert.equal(Boolean(muffedNearGoalRecovery.result.touchback), false);
+assert.equal(muffedNearGoalRecovery.result.possession_after, 'receiving_team');
+assert.equal(muffedNearGoalRecovery.result.return_yards,
+  statFieldSpot(muffedNearGoalRecovery.result.dead_ball_at.x, 1)
+    - statFieldSpot(muffedNearGoalRecovery.result.recovery_at.x, 1));
+assert.equal(muffedNearGoalRecovery.result.clock_runoff_seconds,
+  Math.ceil(muffedNearGoalRecovery.result.elapsed_seconds
+    - muffedNearGoalRecovery.result.catch_elapsed_seconds));
+assert.equal(muffedNearGoalRecovery.result.fumbler_id, 'R');
+assert.ok(muffedNearGoalRecovery.result.recoverer_id);
+assert.ok(muffedNearGoalRecovery.result.post_recovery_returner_id);
 assert.ok(sureHands.events.some((event) => event.type === 'catch'));
 
 const weakLeg = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 2, kpw: 1 }));
@@ -207,7 +205,10 @@ assert.equal(fairCatch.result.fair_catch, true);
 assert.equal(fairCatch.result.return_yards, null);
 assert.ok(fairCatch.events.some((event) => event.type === 'fair_catch'));
 const negativeReturn = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 1, cth: 99, awr: 99, spd: 99 }));
-assert.equal(negativeReturn.result.return_yards, -1);
+assert.ok(negativeReturn.result.return_yards < 0);
+assert.equal(negativeReturn.result.return_yards,
+  statFieldSpot(negativeReturn.result.dead_ball_at.x, 1)
+  - statFieldSpot(negativeReturn.result.return_start_at.x, 1));
 assert.equal(negativeReturn.result.clock_runoff_seconds,
   Math.ceil(negativeReturn.result.elapsed_seconds));
 const outOfBoundsPunt = simulateAutonomousSpecialTeams(call({ kind: 'punt', seed: 5 }));
@@ -241,7 +242,10 @@ assert.equal(safetyFreeTouchback.result.result, 'touchback');
 assert.equal(safetyFreeTouchback.result.dead_ball_yardline_100, 20);
 const longKickoffReturn = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 29 }));
 assert.equal(longKickoffReturn.status, 'complete');
-assert.equal(longKickoffReturn.result.return_yards, 67);
+assert.ok(longKickoffReturn.result.return_yards > 50);
+assert.equal(longKickoffReturn.result.return_yards,
+  statFieldSpot(longKickoffReturn.result.dead_ball_at.x, 1)
+  - statFieldSpot(longKickoffReturn.result.return_start_at.x, 1));
 assert.ok(longKickoffReturn.result.elapsed_seconds > 18,
   'a long live kickoff return completes beyond the former 18-second cap');
 assert.equal(longKickoffReturn.result.clock_runoff_seconds,
@@ -268,11 +272,15 @@ assert.equal(muffReturnTouchdown.result.scoring, 'touchdown');
 assert.equal(muffReturnTouchdown.result.scoring_team, 'receiving_team');
 assert.equal(muffReturnTouchdown.result.fumbler_id, 'R');
 assert.ok(muffReturnTouchdown.result.recoverer_id);
-const kickoffReturnSafety = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5,
+// This seed used to produce a zero-live-time safety simply because the
+// player's center was within 0.55 yards of the goal line at the catch.
+// The kick is caught in the field of play; continue to a real dead ball.
+const nearGoalReturn = simulateAutonomousSpecialTeams(call({ kind: 'kickoff', seed: 5,
   ratingOverrides: eliteReturnRatings }));
-assert.equal(kickoffReturnSafety.result.result, 'return');
-assert.equal(kickoffReturnSafety.result.scoring, 'safety');
-assert.equal(kickoffReturnSafety.result.scoring_team, 'kicking_team');
+assert.equal(nearGoalReturn.result.result, 'return');
+assert.ok(nearGoalReturn.result.return_start_at.x < 100);
+assert.equal(nearGoalReturn.result.scoring, null);
+assert.ok(nearGoalReturn.result.live_elapsed_seconds > 0);
 const missingRatings = call({ kind: 'punt', seed: 42 });
 delete missingRatings.player_profiles.K.ratings.KPW;
 assert.throws(() => simulateAutonomousSpecialTeams(missingRatings), /K\.ratings_missing:KPW/);

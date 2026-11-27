@@ -409,7 +409,9 @@ export function simulateAutonomousSpecialTeams(input) {
           setIntent(p, 'advance recovered kick', 'protect possession and choose the clearest observed lane');
         }
         const direction = p.team === 'K' ? 1 : -1;
-        p.dv = seek(p, { x: clamp(p.p.x / YD + direction * 3, 0.5, 99.5) * YD,
+        // The carrier must be able to break the goal-line plane; a target clamped
+        // half a yard short of it cannot support ball-based scoring.
+        p.dv = seek(p, { x: clamp(p.p.x / YD + direction * 3, -1, 101) * YD,
           y: selectedLaneY ?? p.p.y }, 1, 5.6);
       } else if (p.team !== carrier.team) {
         setIntent(p, 'pursue kick carrier', 'close on the current carrier and attempt a wrap');
