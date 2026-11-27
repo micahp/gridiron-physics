@@ -577,11 +577,27 @@ export function simulateAutonomousSpecialTeams(input) {
     }
   }
   if (terminal == null) {
+    const failureState = {
+      elapsed_seconds: W.t,
+      ball: { state: W.ball.state, x_yards: W.ball.x / YD, y_yards: W.ball.y / YD,
+        height: W.ball.z, holder_id: W.ball.holder?.id ?? null },
+      carrier_id: carrier?.id ?? null,
+      last_transition: W.events.at(-1) ?? null,
+      active_assignments: W.players.map((p) => ({ player_id: p.id, team: p.team,
+        role: p.roleKey, assignment: p.ai.assignment ?? null, decision: p.ai.decision ?? null,
+        position: { x_yards: p.p.x / YD, y_yards: p.p.y / YD },
+        velocity: { x_yards_per_second: p.v.x / YD, y_yards_per_second: p.v.y / YD },
+        pose: p.pose, has_ball: p.hasBall, engaged_with: p.engaged?.id ?? null })),
+      active_engagements: W.engagements.map((e) => ({ a: e.a.id, b: e.b.id, since: e.t0 })),
+      last_contact_attempt: [...W.events].reverse().find((e) =>
+        ['loose_ball_recovery_attempt', 'return_tackle', 'muff', 'kick_recovery'].includes(e.type)) ?? null,
+    };
     return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed', kind: cfg.kind,
         failure: { reason: 'special_teams_live_ball_time_cap', time_limit_seconds: MAX_SECONDS }, events: W.events,
         trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
         diagnostics: { assignments_executed: assignments.size, expected_assignments: 22,
           decision_counts: Object.fromEntries(decisionCount), outcome_inputs: [],
+          failure_state: failureState,
           player_execution: W.players.map((p) => ({ player_id: p.id, assignment: assignments.get(p.id),
             x_yards: p.p.x / YD, y_yards: p.p.y / YD, speed_yards_per_second: p.speed / YD })) } };
   }

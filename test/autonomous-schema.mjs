@@ -9,6 +9,19 @@ assert.equal(call.offense.family, 'run');
 assert.equal(call.defense.frontKey, 'nickel_over');
 assert.equal(call.profiles.size, 22, 'every declared player needs a profile');
 
+const overtime = validatePlayInput({ ...sample, situation: { ...sample.situation,
+  quarter: 5, period_type: 'overtime' } });
+assert.equal(overtime.situation.quarter, 5);
+assert.equal(overtime.situation.period_type, 'overtime');
+assert.throws(() => validatePlayInput({ ...sample, situation: { ...sample.situation,
+  quarter: 5 } }), /period_type must explicitly match/);
+assert.throws(() => validatePlayInput({ ...sample, situation: { ...sample.situation,
+  quarter: 5, period_type: 'regulation' } }), /period_type must explicitly match/);
+assert.throws(() => validatePlayInput({ ...sample, situation: { ...sample.situation,
+  quarter: 4, period_type: 'overtime' } }), /period_type must explicitly match/);
+assert.throws(() => validatePlayInput({ ...sample, situation: { ...sample.situation,
+  quarter: 6, period_type: 'overtime' } }), /situation.quarter/);
+
 // 11 per side, unique ids, both teams present.
 const ids = [...Object.values(call.offense.lineup), ...Object.values(call.defense.lineup)];
 assert.equal(ids.length, 22);

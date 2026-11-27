@@ -1921,6 +1921,21 @@ export function simulatePassPlay(options = {}) {
     }
     finish(tackle === sack ? 'sack' : 'tackle', spot);
   }
+  const failureState = !terminal ? {
+    elapsed_seconds: W.t,
+    ball: { state: W.ball.state, x_yards: W.ball.x / YD, y_yards: W.ball.y / YD,
+      height: W.ball.z, holder_id: W.ball.holder?.id ?? null },
+    carrier_id: carrier?.id ?? null,
+    last_transition: W.events.at(-1) ?? null,
+    active_assignments: W.players.map((p) => ({ player_id: p.id, team: p.team,
+      role: p.roleKey, assignment: p.ai.assignment ?? null, decision: p.ai.decision ?? null,
+      position: { x_yards: p.p.x / YD, y_yards: p.p.y / YD },
+      velocity: { x_yards_per_second: p.v.x / YD, y_yards_per_second: p.v.y / YD },
+      pose: p.pose, has_ball: p.hasBall, engaged_with: p.engaged?.id ?? null })),
+    active_engagements: W.engagements.map((e) => ({ a: e.a.id, b: e.b.id, since: e.t0 })),
+    last_contact_attempt: [...W.events].reverse().find((e) =>
+      ['tackle_attempt', 'pass_contest', 'catch_attempt', 'fumble', 'fumble_recovery'].includes(e.type)) ?? null,
+  } : null;
   if (!terminal) {
     for (const engagement of [...W.engagements]) W.disengage(engagement);
     W.event('simulation_failure', { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS });
@@ -1981,6 +1996,7 @@ export function simulatePassPlay(options = {}) {
     interception_id: catches.find((c) => c.team === 'D')?.player_id ?? null,
     blockers, topSpeed,
     diagnostics: {
+      ...(failureState ? { failure_state: failureState } : {}),
       ...(contestDiagnostics ? { pass_contests: contestDiagnostics } : {}),
       ...(sharedSnapshot ? { player_evaluation_mode: 'shared_snapshot' } : {}),
       ...(cfg.assignments ? { behavior_mode: cfg.behaviorMode } : {}),

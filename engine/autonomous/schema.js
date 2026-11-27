@@ -89,7 +89,13 @@ export function validatePlayInput(input) {
   }
 
   const situation = requireObject(input.situation, 'situation');
-  const quarter = requireRange(situation.quarter, 1, 4, 'situation.quarter');
+  const quarter = requireRange(situation.quarter, 1, 5, 'situation.quarter');
+  const periodType = situation.period_type ?? (quarter <= 4 ? 'regulation' : null);
+  if (!['regulation', 'overtime'].includes(periodType)
+      || (quarter <= 4 && periodType !== 'regulation')
+      || (quarter === 5 && periodType !== 'overtime')) {
+    throw new RangeError('situation.period_type must explicitly match regulation quarter 1-4 or overtime quarter 5');
+  }
   const clock = requireRange(situation.clock_seconds, 0, 3600, 'situation.clock_seconds');
   const down = requireRange(situation.down, 1, 4, 'situation.down');
   const toGo = requireRange(situation.yards_to_go, 1, 99, 'situation.yards_to_go');
@@ -163,7 +169,7 @@ export function validatePlayInput(input) {
     play_id: input.play_id,
     seed: String(input.seed),
     situation: {
-      quarter, clock_seconds: clock, down, yards_to_go: toGo,
+      quarter, period_type: periodType, clock_seconds: clock, down, yards_to_go: toGo,
       yardline_100: yardline, offense_direction: situation.offense_direction,
       ball_lateral_yards: lateral,
     },
