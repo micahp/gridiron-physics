@@ -1789,6 +1789,7 @@ export function simulatePassPlay(options = {}) {
   // ------------------------------------------------------------------ finish
   function finish(reason, spot) {
     if (terminal) return;
+    const physicalReason = reason;
     if (carrier?.team === 'D' && interceptionPossession && !fumble) {
       const ownGoal = interceptionPossession.ownGoal;
       const inOwnEndZone = ownGoal === 100 ? spot.x / YD >= 100 : spot.x / YD <= 0;
@@ -1798,6 +1799,12 @@ export function simulatePassPlay(options = {}) {
         spot = { ...spot, x: ownGoal * YD };
         W.event('touchback', { player_id: carrier.id, team: 'D', spot: { x: ownGoal, y: spot.y / YD },
           basis: 'interception_in_own_end_zone_never_established_in_field' });
+      } else if (inOwnEndZone && interceptionPossession.establishedInField
+          && ['tackle', 'out_of_bounds'].includes(reason)) {
+        // Retain the physical dead-ball event. The LP rules layer must decide
+        // whether the defender supplied the impetus or a momentum exception applies.
+        W.event('defensive_end_zone_dead_ball', { player_id: carrier.id, team: 'D',
+          spot: { x: spot.x / YD, y: spot.y / YD }, physical_reason: reason });
       }
     }
     terminal = { reason, spot: { x: spot.x / YD, y: clamp(spot.y / YD, 0, FIELD_W_YD) }, time: W.t };
@@ -1805,7 +1812,7 @@ export function simulatePassPlay(options = {}) {
       W.event('safety', { carrier_id: carrier.id, team: carrier.team === 'O' ? 'D' : 'O',
         spot: terminal.spot });
     }
-    if ((reason === 'tackle' || reason === 'sack') && tackle) {
+    if ((physicalReason === 'tackle' || physicalReason === 'sack') && tackle) {
       const victim = tackle.carrier;
       victim.down = true; victim.pose = POSE.DOWN; victim.downT = W.t;
       tackle.tackler.down = true; tackle.tackler.pose = POSE.DOWN; tackle.tackler.downT = W.t;
@@ -1831,7 +1838,11 @@ export function simulatePassPlay(options = {}) {
     }
     if (carrier && W.ball.holder === carrier) {
       const x = W.ball.x / YD;
-      if (interceptionPossession && x > 0 && x < 100) interceptionPossession.establishedInField = true;
+      if (interceptionPossession && !interceptionPossession.establishedInField && x > 0 && x < 100) {
+        interceptionPossession.establishedInField = true;
+        W.event('interception_possession_established_in_field', { player_id: carrier.id,
+          spot: { x, y: W.ball.y / YD } });
+      }
       const carrierDir = carrier.team === 'O' ? dir : -dir;
       const f = (x - cfg.los) * carrierDir;
       if (!maxForward || maxForward.direction !== carrierDir || f > maxForward.f) {

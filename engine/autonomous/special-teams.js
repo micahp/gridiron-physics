@@ -298,7 +298,7 @@ export function simulateAutonomousSpecialTeams(input) {
     p.hasBall = true;
     p.mode = 'carry';
     returnStartXActual = recoveryAt.x;
-    receivingPossessionInField = p.team === 'R' && recoveryAt.x < 100;
+    receivingPossessionInField = p.team === 'R' && recoveryAt.x > 0 && recoveryAt.x < 100;
     returnStartYActual = p.p.y / YD;
     W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
     W.event('kick_recovery', { player_id: p.id, team: p.team, muff: muffed,
@@ -486,8 +486,13 @@ export function simulateAutonomousSpecialTeams(input) {
       if (muffed) {
         unsupportedRecoveryReason = 'muffed_kick_out_of_bounds_restart_unmodelled';
         terminal = W.t;
-      } else if (crossingX < 0 || crossingX > 100 * YD) {
-        unsupportedRecoveryReason = 'kick_boundary_in_end_zone_unmodelled';
+      } else if (crossingX >= 100 * YD) {
+        deadBall = { x: 100, y: boundaryY / YD };
+        deadReason = 'touchback'; terminal = W.t;
+        W.event('kick_end_zone_out_of_bounds', { ball_spot: { x: crossingX / YD, y: boundaryY / YD },
+          dead_ball_spot: deadBall });
+      } else if (crossingX <= 0) {
+        unsupportedRecoveryReason = 'kick_boundary_in_kicking_end_zone_unmodelled';
         terminal = W.t;
       } else {
         deadBall = { x: crossingX / YD, y: boundaryY / YD };
@@ -506,7 +511,7 @@ export function simulateAutonomousSpecialTeams(input) {
           carrier = returner; returner.hasBall = true; returner.mode = 'carry';
           W.ball.state = 'held'; W.ball.holder = returner; W.ball.hand = 'carry';
           returnStartXActual = W.ball.x / YD; returnStartYActual = W.ball.y / YD;
-          receivingPossessionInField = returnStartXActual < 100;
+          receivingPossessionInField = returnStartXActual > 0 && returnStartXActual < 100;
           W.event('catch', { player_id: returner.id, ball_spot: { x: returnStartXActual, y: returnStartYActual } });
           if (!kickoff) {
             const nearestThreat = Math.min(...kickRoster.filter((p) => p !== specialist && !p.down)
@@ -649,6 +654,7 @@ export function simulateAutonomousSpecialTeams(input) {
     result = { result: 'muff', possession_after: team, recovery_team: team,
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: deadSpot, recovery_yardline_100: recoverySpot,
+      dead_ball_at: { ...deadBall },
       recovery_at: { x: recoveryAt.x, y: recoveryAt.y, time: recoveryAt.time },
       fumble_spot_yardline_100: fumbleSpot,
       receiving_team_touched_beyond_line: kickoff
@@ -696,6 +702,7 @@ export function simulateAutonomousSpecialTeams(input) {
       scoring_team: deadReason === 'touchdown' ? 'receiving_team'
         : deadReason === 'safety' ? 'kicking_team' : null,
       return_start_at: { x: startX, y: returnStartYActual },
+      dead_ball_at: { ...deadBall },
       fair_catch: false, out_of_bounds: deadReason === 'out_of_bounds' };
   }
   result.elapsed_seconds = terminal;
@@ -1119,7 +1126,7 @@ function simulateAutonomousFieldGoal(cfg) {
     ? { result: 'blocked', possession_after: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
         recovery_team: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
         recovery_yardline_100: recoverySpot, recovery_at: { ...recoveryAt },
-        dead_ball_yardline_100: deadSpot,
+        dead_ball_yardline_100: deadSpot, dead_ball_at: { ...deadBall },
         receiving_team_touched_beyond_line: false,
         return_yards: statReturnYards(recoverySpot, deadSpot, recovery.team === 'K' ? -1 : 1),
         recoverer_id: recovery.id, returner_id: carrier?.id ?? recovery.id,

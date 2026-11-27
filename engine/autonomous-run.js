@@ -994,7 +994,7 @@ export function simulateInsideZone(options = {}) {
   const progress = makeLiveProgressTracker({ time: W.t, x: W.ball.x, y: W.ball.y,
     phase: W.ball.state, distance: 0.25 * YD });
   let failureReason = null;
-  while (W.t < HARD_MAX_SECONDS && !terminal) {
+  while (!terminal && (W.t < HARD_MAX_SECONDS || (tackle && W.t < HARD_MAX_SECONDS + 0.5))) {
     if (!snapped) {
       snapped = true;
       for (const p of W.players) if (p.pose === POSE.STANCE) p.pose = POSE.RUN;
