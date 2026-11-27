@@ -9,7 +9,7 @@ import { Player, POSE, World } from '../world.js';
 import { assertNoOutcomeFields } from './schema.js';
 import { retroDecisionInterval } from './retro-cadence.js';
 import { estimateBallCatchPoint, ObservationMemory } from './perception.js';
-import { roundYardline100, serializeReturnGeometry, statReturnYards } from './field-geometry.js';
+import { statFieldSpot, serializeReturnGeometry, statReturnYards } from './field-geometry.js';
 import { nextRecoveryAttempt } from './contact-attempts.js';
 
 // Long kickoff returns can cover the field diagonally while players disengage
@@ -250,6 +250,7 @@ export function simulateAutonomousSpecialTeams(input) {
   specialist.pose = POSE.KICK;
 
   let carrier = null;
+  let receivingPossessionInField = false;
   let returnStartXActual = null;
   let returnStartYActual = null;
   let muffed = false;
@@ -296,7 +297,8 @@ export function simulateAutonomousSpecialTeams(input) {
     carrier = p;
     p.hasBall = true;
     p.mode = 'carry';
-    returnStartXActual = p.p.x / YD;
+    returnStartXActual = recoveryAt.x;
+    receivingPossessionInField = p.team === 'R' && recoveryAt.x < 100;
     returnStartYActual = p.p.y / YD;
     W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
     W.event('kick_recovery', { player_id: p.id, team: p.team, muff: muffed,
@@ -503,7 +505,8 @@ export function simulateAutonomousSpecialTeams(input) {
         if (rand() <= catchSkill) {
           carrier = returner; returner.hasBall = true; returner.mode = 'carry';
           W.ball.state = 'held'; W.ball.holder = returner; W.ball.hand = 'carry';
-          returnStartXActual = returner.p.x / YD; returnStartYActual = returner.p.y / YD;
+          returnStartXActual = W.ball.x / YD; returnStartYActual = W.ball.y / YD;
+          receivingPossessionInField = returnStartXActual < 100;
           W.event('catch', { player_id: returner.id, ball_spot: { x: returnStartXActual, y: returnStartYActual } });
           if (!kickoff) {
             const nearestThreat = Math.min(...kickRoster.filter((p) => p !== specialist && !p.down)
@@ -512,12 +515,14 @@ export function simulateAutonomousSpecialTeams(input) {
             if (nearestThreat <= 5.5 * YD && rand() < fairCatchSkill) {
               fairCaught = true;
               deadBall = { x: returnStartXActual, y: returnStartYActual };
-              deadReason = 'fair_catch'; terminal = W.t;
+              deadReason = returnStartXActual >= 100 ? 'touchback' : 'fair_catch'; terminal = W.t;
               W.event('fair_catch', { player_id: returner.id, ball_spot: deadBall });
+              if (deadReason === 'touchback') W.event('touchback', { player_id: returner.id, reason: 'fair_catch_in_end_zone' });
             }
           }
-          if (kickoff && returnStartXActual >= 100) {
+          if (terminal == null && kickoff && returnStartXActual >= 100) {
             deadBall = { x: 100, y: returnStartYActual }; deadReason = 'touchback'; terminal = W.t;
+            W.event('touchback', { player_id: returner.id, reason: 'receiving_team_downs_kick_in_end_zone' });
           }
         } else {
           muffed = true;
@@ -549,7 +554,7 @@ export function simulateAutonomousSpecialTeams(input) {
     if (W.ball.state === 'loose' && !muffed && W.ball.z <= 0.11) {
       // A ball that is not fielded is downed where the live ball settles.
       deadBall = { x: clamp(W.ball.x / YD, 0, 100), y: clamp(W.ball.y / YD, 0, FIELD_W_YD) };
-      deadReason = 'downed'; terminal = W.t;
+      deadReason = W.ball.x >= 100 * YD ? 'touchback' : 'downed'; terminal = W.t;
     }
     if (terminal == null && carrier) {
       const direction = carrier.team === 'K' ? 1 : -1;
@@ -562,30 +567,29 @@ export function simulateAutonomousSpecialTeams(input) {
         tackleStarted = W.t;
         W.event('return_tackle', { tackler_id: tackler.id, returner_id: carrier.id });
       }
-      if ((carrier.team === 'R' && carrier.p.x <= 0.55 * YD)
-          || (carrier.team === 'K' && carrier.p.x >= 99.45 * YD)) {
-        deadBall = { x: carrier.team === 'R' ? 0 : 100,
-          y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+      const ballX = W.ball.x / YD;
+      if (carrier.team === 'R' && ballX > 0 && ballX < 100) receivingPossessionInField = true;
+      const ownEndZone = carrier.team === 'R' ? ballX >= 100 : ballX <= 0;
+      const reachedEndLine = carrier.team === 'R' ? ballX >= 110 : ballX <= -10;
+      const downed = tackleStarted != null && W.t - tackleStarted >= 0.3;
+      const leftSideline = carrier.p.y < 0 || carrier.p.y > FIELD_W;
+      if ((carrier.team === 'R' && ballX <= 0) || (carrier.team === 'K' && ballX >= 100)) {
+        deadBall = { x: carrier.team === 'R' ? 0 : 100, y: clamp(W.ball.y / YD, 0, FIELD_W_YD) };
         deadReason = 'touchdown'; terminal = W.t;
         W.event('touchdown', { player_id: carrier.id, team: carrier.team });
-      } else if ((carrier.team === 'R' && carrier.p.x >= 99.45 * YD)
-          || (carrier.team === 'K' && carrier.p.x <= 0.55 * YD)) {
-        if (carrier.team === 'R' && muffed && returnStartXActual >= 99.45) {
-          deadBall = { x: 100, y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
-          deadReason = 'touchback';
+      } else if (downed || leftSideline || reachedEndLine) {
+        // Keep actual possession/ball coordinates. An opponent's kick acquired
+        // in the receiving end zone and never advanced into the field is not a safety.
+        deadBall = { x: ballX, y: clamp(W.ball.y / YD, 0, FIELD_W_YD) };
+        if (ownEndZone) {
+          deadReason = carrier.team === 'R' && !receivingPossessionInField ? 'touchback' : 'safety';
+          deadBall.x = carrier.team === 'R' ? 100 : 0;
+          W.event(deadReason, { player_id: carrier.id, team: carrier.team,
+            reason: downed ? 'tackle' : 'out_of_bounds' });
         } else {
-          deadBall = { x: carrier.team === 'R' ? 100 : 0,
-            y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
-          deadReason = 'safety';
-          W.event('safety', { player_id: carrier.id, team: carrier.team });
+          deadReason = leftSideline ? 'out_of_bounds' : 'tackle';
         }
         terminal = W.t;
-      } else if (carrier.p.y < 0 || carrier.p.y > FIELD_W) {
-        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
-        deadReason = 'out_of_bounds'; terminal = W.t;
-      } else if (tackleStarted != null && W.t - tackleStarted >= 0.3) {
-        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
-        deadReason = 'tackle'; terminal = W.t;
       }
     }
     if (terminal == null && W.t >= nextFrame - 1e-9) {
@@ -637,13 +641,11 @@ export function simulateAutonomousSpecialTeams(input) {
     const fumbleX = fumbleEvent?.ball_spot?.x ?? returnStartXActual;
     // The wire contract represents a receiving-end-zone spot by its goal line;
     // recovery_at retains the actual physical coordinates.
-    const fumbleSpot = fumbleX >= 100 ? 0 : roundYardline100(100 - fumbleX);
-    const recoverySpot = recoveryAt.x >= 100 ? 0 : roundYardline100(100 - recoveryAt.x);
-    const deadSpot = roundYardline100(100 - deadBall.x);
-    const geometry = recovery.team === 'R' && recoveryAt.x < 100
-      ? serializeReturnGeometry({ recoveryX: recoveryAt.x, deadBallX: deadBall.x,
-        direction: 1, carrierTeam: 'D' })
-      : { return_yards: 0, return_displacement_yards: 0 };
+    const fumbleSpot = statFieldSpot(fumbleX, 1);
+    const recoverySpot = statFieldSpot(recoveryAt.x, 1);
+    const deadSpot = statFieldSpot(deadBall.x, 1);
+    const geometry = serializeReturnGeometry({ recoveryX: recoveryAt.x, deadBallX: deadBall.x,
+        direction: 1, carrierTeam: recovery.team === 'R' ? 'D' : 'O' });
     result = { result: 'muff', possession_after: team, recovery_team: team,
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       dead_ball_yardline_100: deadSpot, recovery_yardline_100: recoverySpot,
@@ -668,22 +670,23 @@ export function simulateAutonomousSpecialTeams(input) {
       dead_ball_yardline_100: kickoff ? kickoffTouchbackSpot(kickSpotY100) : 20,
       return_yards: null, returner_id: null };
   } else if (deadReason === 'fair_catch') {
-    const spot = Math.round(100 - deadBall.x);
+    const spot = statFieldSpot(deadBall.x, 1);
     result = { result: 'fair_catch', possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
       return_start_yardline_100: spot, dead_ball_yardline_100: spot,
       return_yards: null, returner_id: returner.id, fair_catch: true };
-  } else if (deadReason === 'downed' || deadReason === 'out_of_bounds') {
+  } else if (deadReason === 'downed' || (deadReason === 'out_of_bounds' && !carrier)) {
     result = { result: deadReason, possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
-      dead_ball_yardline_100: Math.round(100 - deadBall.x), return_yards: null,
+      dead_ball_yardline_100: statFieldSpot(deadBall.x, 1), return_yards: null,
       returner_id: null, out_of_bounds: deadReason === 'out_of_bounds',
       ...(deadReason === 'out_of_bounds'
-        ? { out_of_bounds_spot_yardline_100: Math.round(100 - deadBall.x) } : {}) };
+        ? { out_of_bounds_spot_yardline_100: statFieldSpot(deadBall.x, 1) } : {}) };
   } else {
-    const startX = returnStartXActual ?? clamp(landingX, 1, 99);
-    const startSpot = Math.round(100 - startX);
-    const deadSpot = Math.round(100 - deadBall.x);
+    if (returnStartXActual == null) throw new Error('kick_return_missing_observed_catch_spot');
+    const startX = returnStartXActual;
+    const startSpot = statFieldSpot(startX, 1);
+    const deadSpot = statFieldSpot(deadBall.x, 1);
     const returnYards = deadSpot - startSpot;
     result = { result: 'return', possession_after: 'receiving_team',
       kick_spot_yardline_100: kickSpotY100, distance_yards: Math.round(distanceYards),
@@ -692,7 +695,8 @@ export function simulateAutonomousSpecialTeams(input) {
       scoring: deadReason === 'touchdown' ? 'touchdown' : deadReason === 'safety' ? 'safety' : null,
       scoring_team: deadReason === 'touchdown' ? 'receiving_team'
         : deadReason === 'safety' ? 'kicking_team' : null,
-      fair_catch: false, out_of_bounds: false };
+      return_start_at: { x: startX, y: returnStartYActual },
+      fair_catch: false, out_of_bounds: deadReason === 'out_of_bounds' };
   }
   result.elapsed_seconds = terminal;
   result.catch_elapsed_seconds = catchAt;
@@ -1058,7 +1062,7 @@ function simulateAutonomousFieldGoal(cfg) {
       }
     }
 
-    if (kickLaunched && W.ball.state === 'air' && W.ball.x >= goalpostX) {
+    if (terminal == null && !blocked && kickLaunched && W.ball.state === 'air' && W.ball.x >= goalpostX) {
       const span = W.ball.x - prior.x;
       const t = span > 1e-9 ? clamp((goalpostX - prior.x) / span, 0, 1) : 1;
       crossing = { x: goalpostX / YD, y: (prior.y + (W.ball.y - prior.y) * t) / YD,
@@ -1072,15 +1076,22 @@ function simulateAutonomousFieldGoal(cfg) {
       W.event(made ? 'field_goal_made' : 'field_goal_missed', { kicker_id: kicker.id,
         crossing, distance_yards: distanceYards, power_sufficient: kickModel.power_sufficient });
     }
-    if (kickLaunched && W.ball.state === 'loose') {
+    if (terminal == null && !blocked && kickLaunched && W.ball.state === 'loose') {
       resultName = 'missed'; terminal = W.t;
       W.event('field_goal_missed', { kicker_id: kicker.id, ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD },
         distance_yards: distanceYards, power_sufficient: kickModel.power_sufficient });
     }
-    if (W.ball.y < 0 || W.ball.y > FIELD_W) {
+    if (terminal == null && !blocked && (W.ball.y < 0 || W.ball.y > FIELD_W)) {
       resultName = 'missed'; terminal = W.t;
       W.event('field_goal_missed', { kicker_id: kicker.id,
         ball_spot: { x: W.ball.x / YD, y: W.ball.y / YD }, distance_yards: distanceYards });
+    }
+    if (terminal == null && blocked && !recovery && W.ball.state === 'loose'
+        && (W.ball.y < 0 || W.ball.y > FIELD_W || W.ball.x < -10 * YD || W.ball.x > 110 * YD)) {
+      return { schema_version: 'gridiron.autonomous-special-teams.v1', status: 'failed',
+        kind: cfg.kind, seed: cfg.seed, failure: { reason: 'blocked_kick_loose_out_of_bounds_rule_unresolved' },
+        events: W.events, trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
+        diagnostics: { assignments_executed: assignments.size, expected_assignments: 22, outcome_inputs: [] } };
     }
     if (terminal == null && W.t >= nextFrame - 1e-9) {
       record(); nextFrame += 1 / REC_HZ;
@@ -1101,8 +1112,9 @@ function simulateAutonomousFieldGoal(cfg) {
       diagnostics: { assignments_executed: assignments.size, expected_assignments: 22, outcome_inputs: [] } };
   }
   W.event('whistle', { reason: blocked ? 'blocked_field_goal' : `field_goal_${resultName}`, terminal_t: terminal });
-  const recoverySpot = recoveryAt ? roundYardline100(100 - recoveryAt.x) : null;
-  const deadSpot = deadBall ? roundYardline100(100 - deadBall.x) : null;
+  const recoverySpot = recoveryAt ? statFieldSpot(recoveryAt.x, 1) : null;
+  const deadSpot = deadBall ? statFieldSpot(deadBall.x, 1) : null;
+  if (blocked && (recoverySpot == null || deadSpot == null)) throw new Error('blocked_kick_missing_live_recovery_or_dead_ball_fact');
   const result = blocked
     ? { result: 'blocked', possession_after: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',
         recovery_team: recovery.team === 'K' ? 'kicking_team' : 'receiving_team',

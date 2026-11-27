@@ -15,6 +15,7 @@ import { routeOffsets } from '../routes.js';
 import { validateAssignments } from './assignments.js';
 import { engagementHazardUniform, hazardDeadline, retroDecisionInterval } from './retro-cadence.js';
 import { serializeReturnGeometry } from './field-geometry.js';
+import { makeLiveProgressTracker } from './live-progress.js';
 import { nextRecoveryAttempt } from './contact-attempts.js';
 
 export function pruneExitedContactAttempts(attempted, activePlayerIds) {
@@ -37,7 +38,9 @@ export function compareBallContact(a, b) {
   return a.planar - b.planar || a.player.id.localeCompare(b.player.id);
 }
 
-const MAX_SECONDS = 12;
+const MAX_SECONDS = 12; // pre-possession/pass-decision budget
+const HARD_MAX_SECONDS = 36; // live returns and loose-ball recovery, matching run executor
+const NO_PROGRESS_SECONDS = 3.5;
 const DECISION_HZ = 10;
 const QB_FIELD_OF_VIEW = 220 * Math.PI / 180;
 const DEFENDER_FIELD_OF_VIEW = 190 * Math.PI / 180;
@@ -401,6 +404,7 @@ export function simulatePassPlay(options = {}) {
   let maxForward = null;
   let lastInBounds = { x: ballAtSnap.x, y: ballAtSnap.y };
   let lastCarrierX = null;
+  let interceptionPossession = null;
   let dropDepth = -7.6;
   const catches = [];
 
@@ -1154,6 +1158,11 @@ export function simulatePassPlay(options = {}) {
     carrier = player;
     carrierSince = W.t;
     const catchX = b.x / YD;
+    if (interception) {
+      const ownGoal = dir === 1 ? 100 : 0;
+      interceptionPossession = { ownGoal, acquiredInEndZone: dir === 1 ? catchX >= 100 : catchX <= 0,
+        establishedInField: catchX > 0 && catchX < 100 };
+    }
     const carrierDir = player.team === 'O' ? dir : -dir;
     maxForward = { f: (catchX - cfg.los) * carrierDir, x: b.x, y: b.y, direction: carrierDir };
     lastCarrierX = catchX;
@@ -1248,6 +1257,7 @@ export function simulatePassPlay(options = {}) {
     W.event('loose_ball_recovery_attempt', { player_id: p.id, chance });
     if (rand() >= chance) return;
     fumbleRecovery = p; fumbleRecoverySpot = { x: W.ball.x, y: W.ball.y };
+    interceptionPossession = null; // a new recovery needs its own possession/impetus ruling
     carrier = p; carrierSince = W.t; possession = p.team;
     p.hasBall = true; p.mode = 'carry';
     W.ball.state = 'held'; W.ball.holder = p; W.ball.hand = 'carry';
@@ -1779,6 +1789,17 @@ export function simulatePassPlay(options = {}) {
   // ------------------------------------------------------------------ finish
   function finish(reason, spot) {
     if (terminal) return;
+    if (carrier?.team === 'D' && interceptionPossession && !fumble) {
+      const ownGoal = interceptionPossession.ownGoal;
+      const inOwnEndZone = ownGoal === 100 ? spot.x / YD >= 100 : spot.x / YD <= 0;
+      if (inOwnEndZone && interceptionPossession.acquiredInEndZone
+          && !interceptionPossession.establishedInField && ['tackle', 'out_of_bounds', 'safety'].includes(reason)) {
+        reason = 'touchback';
+        spot = { ...spot, x: ownGoal * YD };
+        W.event('touchback', { player_id: carrier.id, team: 'D', spot: { x: ownGoal, y: spot.y / YD },
+          basis: 'interception_in_own_end_zone_never_established_in_field' });
+      }
+    }
     terminal = { reason, spot: { x: spot.x / YD, y: clamp(spot.y / YD, 0, FIELD_W_YD) }, time: W.t };
     if (reason === 'safety') {
       W.event('safety', { carrier_id: carrier.id, team: carrier.team === 'O' ? 'D' : 'O',
@@ -1810,6 +1831,7 @@ export function simulatePassPlay(options = {}) {
     }
     if (carrier && W.ball.holder === carrier) {
       const x = W.ball.x / YD;
+      if (interceptionPossession && x > 0 && x < 100) interceptionPossession.establishedInField = true;
       const carrierDir = carrier.team === 'O' ? dir : -dir;
       const f = (x - cfg.los) * carrierDir;
       if (!maxForward || maxForward.direction !== carrierDir || f > maxForward.f) {
@@ -1830,8 +1852,13 @@ export function simulatePassPlay(options = {}) {
         return;
       }
       lastInBounds = { x: W.ball.x, y: W.ball.y };
-      if ((carrierDir > 0 && previousX >= 0 && x < 0)
-          || (carrierDir < 0 && previousX <= 100 && x > 100)) {
+      if (interceptionPossession && carrier.team === 'D'
+          && ((carrierDir > 0 && x <= -10) || (carrierDir < 0 && x >= 110))) {
+        finish('out_of_bounds', { x: (carrierDir > 0 ? 0 : 100) * YD, y: W.ball.y });
+        return;
+      }
+      if (!interceptionPossession && ((carrierDir > 0 && previousX >= 0 && x < 0)
+          || (carrierDir < 0 && previousX <= 100 && x > 100))) {
         finish('safety', { x: (carrierDir > 0 ? 0 : 100) * YD, y: W.ball.y });
         return;
       }
@@ -1842,7 +1869,14 @@ export function simulatePassPlay(options = {}) {
   // --------------------------------------------------------------- main loop
   if (!cfg.resultOnly) record();
   nextRecord = 1 / REC_HZ;
-  while (W.t < MAX_SECONDS && !terminal) {
+  const progress = makeLiveProgressTracker({ time: W.t, x: W.ball.x, y: W.ball.y,
+    phase: W.ball.state, distance: 0.25 * YD });
+  let failureReason = null;
+  while (!terminal && (W.t < HARD_MAX_SECONDS || (tackle && W.t < HARD_MAX_SECONDS + 0.5))) {
+    if (W.t >= MAX_SECONDS && !carrier && !fumble && W.ball.state !== 'air' && !tackle) {
+      failureReason = 'simulation_time_cap';
+      break;
+    }
     if (!snapped) {
       snapped = true;
       for (const p of W.players) if (p.pose === POSE.STANCE) p.pose = POSE.RUN;
@@ -1893,6 +1927,24 @@ export function simulatePassPlay(options = {}) {
     }
     recoverFumble();
     trackLive();
+    const liveActor = carrier ?? W.ball.holder;
+    const livePosition = liveActor?.p ?? { x: W.ball.x, y: W.ball.y };
+    const secondsWithoutProgress = progress.observe({ time: W.t, ...livePosition,
+      phase: W.ball.state + ':' + (liveActor?.id ?? '') });
+    if (!terminal && !tackle && carrier) {
+      // Use the same physical arm-reach opportunity as the run executor.
+      // This catches contact missed by the collision callback without enlarging the reach.
+      for (const defender of W.players) {
+        if (!carrier || tackle) break;
+        if (defender.team === carrier.team || defender.down || defender.engaged
+            || (defender.ai.missUntil ?? 0) > W.t) continue;
+        if (d2(defender, carrier) <= defender.r + carrier.r + 0.12) startTackle(defender);
+      }
+    }
+    if (!terminal && !tackle && (carrier || fumble) && secondsWithoutProgress >= NO_PROGRESS_SECONDS) {
+      failureReason = 'live_play_no_progress';
+      break;
+    }
     if (!terminal && tackle && W.t - tackle.t0 >= 0.48) {
       let spot = maxForward || { x: W.ball.x, y: W.ball.y };
       if (carrier?.team === 'D') {
@@ -1909,18 +1961,7 @@ export function simulatePassPlay(options = {}) {
     }
   }
 
-  // A wrap that started before the cap is real contact, not a truncated play:
-  // resolve it at the cap rather than reporting a technical failure.
-  if (!terminal && tackle) {
-    let spot = maxForward || { x: W.ball.x, y: W.ball.y };
-    if (carrier?.team === 'D') {
-      const carrierDir = -dir;
-      const ownGoalX = carrierDir > 0 ? 0 : 100;
-      if ((carrierDir > 0 && spot.x / YD < ownGoalX)
-          || (carrierDir < 0 && spot.x / YD > ownGoalX)) spot = { ...spot, x: ownGoalX * YD };
-    }
-    finish(tackle === sack ? 'sack' : 'tackle', spot);
-  }
+  // No artificial tackle or whistle at a watchdog deadline.
   const failureState = !terminal ? {
     elapsed_seconds: W.t,
     ball: { state: W.ball.state, x_yards: W.ball.x / YD, y_yards: W.ball.y / YD,
@@ -1938,7 +1979,9 @@ export function simulatePassPlay(options = {}) {
   } : null;
   if (!terminal) {
     for (const engagement of [...W.engagements]) W.disengage(engagement);
-    W.event('simulation_failure', { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS });
+    failureReason ??= 'simulation_hard_time_cap';
+    W.event('simulation_failure', { reason: failureReason, time_limit_seconds: failureReason === 'simulation_time_cap' ? MAX_SECONDS : HARD_MAX_SECONDS,
+      no_progress_limit_seconds: NO_PROGRESS_SECONDS });
   }
   // The final frame belongs to the instant of the whistle, not to the step
   // that finished integrating after the ball went dead.
@@ -1979,7 +2022,8 @@ export function simulatePassPlay(options = {}) {
     possession_team: possession,
     throw: throwEvent ? { quarterback_id: throwEvent.quarterback_id, target_id: throwEvent.target_id } : null,
     catches,
-    failure: terminal ? null : { reason: 'simulation_time_cap', time_limit_seconds: MAX_SECONDS },
+    failure: terminal ? null : { reason: failureReason, time_limit_seconds: failureReason === 'simulation_time_cap' ? MAX_SECONDS : HARD_MAX_SECONDS,
+      no_progress_limit_seconds: NO_PROGRESS_SECONDS },
     tackle_id: terminal && (terminal.reason === 'tackle' || terminal.reason === 'sack') ? tackle?.tackler.id ?? null : null,
     sack_id: sack?.defender.id ?? null,
     fumble: fumble && fumbleRecovery ? {

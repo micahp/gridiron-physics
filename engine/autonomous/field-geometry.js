@@ -19,19 +19,33 @@ export function statReturnYards(recoveryYardline, deadBallYardline, advanceSign)
   return yards === 0 ? 0 : yards;
 }
 
+// Only the statistical projection is bounded; the physical coordinate must
+// describe a point on the field including its two ten-yard end zones.
+// An actual interior spot cannot become a scoring/restart goal line merely
+// because integer rounding would collapse it onto that line.
+export function statFieldSpot(x, direction) {
+  if (!Number.isFinite(x) || x < -10 || x > 110 || ![-1, 1].includes(direction)) {
+    throw new RangeError('invalid physical football field coordinate or direction');
+  }
+  const relative = direction === 1 ? 100 - x : x;
+  if (relative <= 0) return 0;
+  if (relative >= 100) return 100;
+  return Math.max(1, Math.min(99, roundYardline100(relative)));
+}
+
 // One wire representation shared by run and pass executors. Coordinates stay
 // continuous in absolute field space; box-score yards are computed only after
 // both endpoints are rounded in the snap-offense yardline_100 frame.
 export function serializeReturnGeometry({ recoveryX, deadBallX, direction, carrierTeam }) {
   if (![recoveryX, deadBallX].every(Number.isFinite)
-      || recoveryX < 0 || recoveryX > 100 || deadBallX < 0 || deadBallX > 100) {
-    throw new RangeError('return geometry coordinates must be between 0 and 100 yards');
+      || recoveryX < -10 || recoveryX > 110 || deadBallX < -10 || deadBallX > 110) {
+    throw new RangeError('return geometry coordinates outside the physical field and end zones');
   }
   if (![direction].every((value) => value === -1 || value === 1)
       || !['O', 'D'].includes(carrierTeam)) {
     throw new TypeError('return geometry direction or carrier team is invalid');
   }
-  const offenseFrame = (x) => roundYardline100(direction === 1 ? 100 - x : x);
+  const offenseFrame = (x) => statFieldSpot(x, direction);
   const advanceSign = carrierTeam === 'O' ? -1 : 1;
   return {
     return_yards: statReturnYards(offenseFrame(recoveryX), offenseFrame(deadBallX), advanceSign),

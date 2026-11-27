@@ -6,6 +6,7 @@ import { rng } from './rng.js';
 import { AERO, solveLaunch } from './ball.js';
 import { Player, POSE, World } from './world.js';
 import { serializeReturnGeometry } from './autonomous/field-geometry.js';
+import { makeLiveProgressTracker } from './autonomous/live-progress.js';
 import { nextRecoveryAttempt } from './autonomous/contact-attempts.js';
 import { engagementHazardUniform, hazardDeadline } from './autonomous/retro-cadence.js';
 
@@ -984,15 +985,14 @@ export function simulateInsideZone(options = {}) {
       return;
     }
     lastCarrierX = x;
-    if ((dir > 0 && x < 0) || (dir < 0 && x > 100)) {
-      finish('safety', { x: W.ball.x, y: W.ball.y });
-    }
+    // Direction belongs to the current possessing player, not the snap offense.
+    // Do not apply the snap team's own-goal test again after a turnover.
   }
 
   if (!cfg.resultOnly) record();
   nextRecord = 1 / REC_HZ;
-  let lastLiveProgressAt = W.t;
-  let previousLiveBall = { x: W.ball.x, y: W.ball.y };
+  const progress = makeLiveProgressTracker({ time: W.t, x: W.ball.x, y: W.ball.y,
+    phase: W.ball.state, distance: 0.25 * YD });
   let failureReason = null;
   while (W.t < HARD_MAX_SECONDS && !terminal) {
     if (!snapped) {
@@ -1044,11 +1044,8 @@ export function simulateInsideZone(options = {}) {
     const currentLivePosition = liveActor
       ? liveActor.p
       : { x: W.ball.x, y: W.ball.y };
-    if (Math.hypot(currentLivePosition.x - previousLiveBall.x,
-      currentLivePosition.y - previousLiveBall.y) > 0.012 * YD) {
-      lastLiveProgressAt = W.t;
-    }
-    previousLiveBall = { x: currentLivePosition.x, y: currentLivePosition.y };
+    const secondsWithoutProgress = progress.observe({ time: W.t, ...currentLivePosition,
+      phase: W.ball.state + ':' + (liveActor?.id ?? '') });
     for (const row of activeBlock.values()) {
       row.minDefF = Math.min(row.minDefF, fOf(row.defender));
       row.maxDefF = Math.max(row.maxDefF, fOf(row.defender));
@@ -1070,7 +1067,7 @@ export function simulateInsideZone(options = {}) {
       const spot = maxForward || { x: W.ball.x, y: W.ball.y };
       finish('tackle', spot);
     }
-    if (!terminal && !tackle && W.t - lastLiveProgressAt >= NO_PROGRESS_SECONDS) {
+    if (!terminal && !tackle && secondsWithoutProgress >= NO_PROGRESS_SECONDS) {
       failureReason = 'live_play_no_progress';
       break;
     }

@@ -1,0 +1,6664 @@
+{
+  "schema": "gridiron-failed-call-regression-1",
+  "source_commit": "72ea3e69123bbd7ee98992222758fe1fdccd0a9a",
+  "engine_commit": "f1adc6777fa415abf72c29df96ca2e3c7d90b942",
+  "plays": [
+    {
+      "game_id": "2026_12_CHI_DET",
+      "game_seed": 300017,
+      "baseline_failure": {
+        "reason": "simulation_time_cap",
+        "time_limit_seconds": 12
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "bounds": [
+                12,
+                30,
+                -8,
+                8
+              ],
+              "kind": "zone"
+            },
+            "LCB": {
+              "kind": "man",
+              "target_slot": "WR1"
+            },
+            "LDT": {
+              "kind": "rush"
+            },
+            "LEDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "MLB": {
+              "kind": "man",
+              "target_slot": "RB"
+            },
+            "NB": {
+              "kind": "man",
+              "target_slot": "WR3"
+            },
+            "RCB": {
+              "kind": "man",
+              "target_slot": "WR2"
+            },
+            "RDT": {
+              "kind": "rush"
+            },
+            "REDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "SS": {
+              "bounds": [
+                3,
+                12,
+                -8,
+                2
+              ],
+              "kind": "zone"
+            },
+            "WLB": {
+              "bounds": [
+                3,
+                12,
+                8,
+                26
+              ],
+              "kind": "zone"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "block",
+              "protection_area": [
+                -1.4,
+                1.4
+              ]
+            },
+            "LG": {
+              "kind": "block",
+              "protection_area": [
+                -0.3,
+                3
+              ]
+            },
+            "LT": {
+              "kind": "block",
+              "protection_area": [
+                0.8,
+                7
+              ]
+            },
+            "QB": {
+              "kind": "quarterback",
+              "read_order": [
+                "WR2",
+                "WR3",
+                "WR1",
+                "RB"
+              ]
+            },
+            "RB": {
+              "check_release": true,
+              "kind": "route",
+              "route": "check"
+            },
+            "RG": {
+              "kind": "block",
+              "protection_area": [
+                -3,
+                0.3
+              ]
+            },
+            "RT": {
+              "kind": "block",
+              "protection_area": [
+                -7,
+                -0.8
+              ]
+            },
+            "TE": {
+              "kind": "block"
+            },
+            "WR1": {
+              "kind": "route",
+              "route": "go"
+            },
+            "WR2": {
+              "kind": "route",
+              "route": "slant"
+            },
+            "WR3": {
+              "kind": "route",
+              "route": "flat"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0033294",
+            "LCB": "00-0034384",
+            "LDT": "00-0036624",
+            "LEDGE": "00-0041441",
+            "MLB": "00-0037289",
+            "NB": "00-0038125",
+            "RCB": "00-0035637",
+            "RDT": "00-0040672",
+            "REDGE": "00-0036335",
+            "SS": "00-0039141",
+            "WLB": "00-0036964"
+          },
+          "team": "DET"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "assigned",
+            "direction": "right",
+            "family": "pass",
+            "snap_type": "shotgun"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0035588",
+            "LG": "00-0032391",
+            "LT": "00-0039459",
+            "QB": "00-0039918",
+            "RB": "00-0036020",
+            "RG": "00-0036258",
+            "RT": "00-0038932",
+            "TE": "00-0040126",
+            "WR1": "00-0039919",
+            "WR2": "00-0040277",
+            "WR3": "00-0040735"
+          },
+          "team": "CHI"
+        },
+        "play_id": "2026_12_CHI_DET:CHI:pass:8982527317605151345",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0032391": {
+            "physics": {
+              "mass": 136.5
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 65,
+              "AWR": 87,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 80,
+              "PMV": 42,
+              "PRC": 87,
+              "PUR": 42,
+              "RBK": 82,
+              "SPD": 66,
+              "STR": 76,
+              "TAK": 42
+            }
+          },
+          "00-0033294": {
+            "physics": {
+              "mass": 94.8
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 84,
+              "AWR": 78,
+              "BSH": 39,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 57,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 75,
+              "PUR": 80,
+              "RBK": 48,
+              "SPD": 84,
+              "STR": 49,
+              "TAK": 77
+            }
+          },
+          "00-0034384": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 86,
+              "BSH": 34,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 73,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 83,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 88,
+              "STR": 40,
+              "TAK": 78
+            }
+          },
+          "00-0035588": {
+            "physics": {
+              "mass": 138.3
+            },
+            "ratings": {
+              "ACC": 64,
+              "AGI": 67,
+              "AWR": 89,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 85,
+              "PMV": 42,
+              "PRC": 89,
+              "PUR": 42,
+              "RBK": 87,
+              "SPD": 69,
+              "STR": 85,
+              "TAK": 42
+            }
+          },
+          "00-0035637": {
+            "physics": {
+              "mass": 88.5
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 73,
+              "AWR": 81,
+              "BSH": 40,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 66,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 77,
+              "PUR": 79,
+              "RBK": 48,
+              "SPD": 87,
+              "STR": 50,
+              "TAK": 71
+            }
+          },
+          "00-0036020": {
+            "physics": {
+              "mass": 89.4
+            },
+            "ratings": {
+              "ACC": 77,
+              "AGI": 79,
+              "AWR": 73,
+              "BSH": 48,
+              "BTK": 59,
+              "CAR": 70,
+              "CTH": 57,
+              "ELU": 70,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 73,
+              "PUR": 48,
+              "RBK": 46,
+              "SPD": 84,
+              "STR": 48,
+              "TAK": 48
+            }
+          },
+          "00-0036258": {
+            "physics": {
+              "mass": 144.7
+            },
+            "ratings": {
+              "ACC": 56,
+              "AGI": 52,
+              "AWR": 85,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 79,
+              "PMV": 42,
+              "PRC": 85,
+              "PUR": 42,
+              "RBK": 81,
+              "SPD": 59,
+              "STR": 78,
+              "TAK": 42
+            }
+          },
+          "00-0036335": {
+            "physics": {
+              "mass": 118.8
+            },
+            "ratings": {
+              "ACC": 73,
+              "AGI": 72,
+              "AWR": 77,
+              "BSH": 71,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 86,
+              "PBK": 48,
+              "PMV": 81,
+              "PRC": 76,
+              "PUR": 75,
+              "RBK": 48,
+              "SPD": 80,
+              "STR": 60,
+              "TAK": 68
+            }
+          },
+          "00-0036624": {
+            "physics": {
+              "mass": 140.6
+            },
+            "ratings": {
+              "ACC": 59,
+              "AGI": 60,
+              "AWR": 75,
+              "BSH": 77,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 81,
+              "PBK": 42,
+              "PMV": 83,
+              "PRC": 75,
+              "PUR": 68,
+              "RBK": 42,
+              "SPD": 64,
+              "STR": 77,
+              "TAK": 71
+            }
+          },
+          "00-0036964": {
+            "physics": {
+              "mass": 108.9
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 76,
+              "AWR": 90,
+              "BSH": 79,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 81,
+              "PBK": 48,
+              "PMV": 80,
+              "PRC": 85,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 86,
+              "STR": 71,
+              "TAK": 75
+            }
+          },
+          "00-0037289": {
+            "physics": {
+              "mass": 104.3
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 73,
+              "AWR": 69,
+              "BSH": 62,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 39,
+              "ELU": 48,
+              "FMV": 58,
+              "PBK": 48,
+              "PMV": 54,
+              "PRC": 67,
+              "PUR": 77,
+              "RBK": 48,
+              "SPD": 88,
+              "STR": 60,
+              "TAK": 66
+            }
+          },
+          "00-0038125": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 79,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 74,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 79,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 44,
+              "TAK": 74
+            }
+          },
+          "00-0038932": {
+            "physics": {
+              "mass": 147.4
+            },
+            "ratings": {
+              "ACC": 64,
+              "AGI": 54,
+              "AWR": 79,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 82,
+              "PMV": 42,
+              "PRC": 79,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 69,
+              "STR": 75,
+              "TAK": 42
+            }
+          },
+          "00-0039141": {
+            "physics": {
+              "mass": 92.1
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 81,
+              "AWR": 86,
+              "BSH": 37,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 70,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 84,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 86,
+              "STR": 45,
+              "TAK": 80
+            }
+          },
+          "00-0039459": {
+            "physics": {
+              "mass": 138.3
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 60,
+              "AWR": 53,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 68,
+              "PMV": 42,
+              "PRC": 53,
+              "PUR": 42,
+              "RBK": 70,
+              "SPD": 61,
+              "STR": 69,
+              "TAK": 42
+            }
+          },
+          "00-0039918": {
+            "physics": {
+              "mass": 102.5
+            },
+            "ratings": {
+              "ACC": 71,
+              "AGI": 75,
+              "AWR": 80,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 74,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 78,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 75,
+              "STR": 57,
+              "TAK": 48,
+              "THA": 77
+            }
+          },
+          "00-0039919": {
+            "physics": {
+              "mass": 97.5
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 85,
+              "AWR": 78,
+              "BSH": 48,
+              "BTK": 58,
+              "CAR": 77,
+              "CTH": 67,
+              "ELU": 76,
+              "FMV": 48,
+              "PBK": 50,
+              "PMV": 48,
+              "PRC": 78,
+              "PUR": 48,
+              "RBK": 54,
+              "SPD": 91,
+              "STR": 49,
+              "TAK": 48
+            }
+          },
+          "00-0040126": {
+            "physics": {
+              "mass": 109.3
+            },
+            "ratings": {
+              "ACC": 74,
+              "AGI": 76,
+              "AWR": 75,
+              "BSH": 48,
+              "BTK": 62,
+              "CAR": 82,
+              "CTH": 72,
+              "ELU": 70,
+              "FMV": 48,
+              "PBK": 74,
+              "PMV": 48,
+              "PRC": 75,
+              "PUR": 48,
+              "RBK": 78,
+              "SPD": 82,
+              "STR": 56,
+              "TAK": 48
+            }
+          },
+          "00-0040277": {
+            "physics": {
+              "mass": 93.4
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 79,
+              "AWR": 57,
+              "BSH": 48,
+              "BTK": 52,
+              "CAR": 72,
+              "CTH": 70,
+              "ELU": 70,
+              "FMV": 48,
+              "PBK": 46,
+              "PMV": 48,
+              "PRC": 57,
+              "PUR": 48,
+              "RBK": 50,
+              "SPD": 88,
+              "STR": 45,
+              "TAK": 48
+            }
+          },
+          "00-0040672": {
+            "physics": {
+              "mass": 147.4
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 57,
+              "AWR": 69,
+              "BSH": 68,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 65,
+              "PBK": 42,
+              "PMV": 68,
+              "PRC": 69,
+              "PUR": 64,
+              "RBK": 42,
+              "SPD": 62,
+              "STR": 80,
+              "TAK": 69
+            }
+          },
+          "00-0040735": {
+            "physics": {
+              "mass": 95.3
+            },
+            "ratings": {
+              "ACC": 83,
+              "AGI": 79,
+              "AWR": 73,
+              "BSH": 48,
+              "BTK": 60,
+              "CAR": 76,
+              "CTH": 83,
+              "ELU": 80,
+              "FMV": 48,
+              "PBK": 49,
+              "PMV": 48,
+              "PRC": 73,
+              "PUR": 48,
+              "RBK": 53,
+              "SPD": 93,
+              "STR": 50,
+              "TAK": 48
+            }
+          },
+          "00-0041441": {
+            "physics": {
+              "mass": 117.9
+            },
+            "ratings": {
+              "ACC": 70,
+              "AGI": 73,
+              "AWR": 58,
+              "BSH": 69,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 79,
+              "PBK": 48,
+              "PMV": 75,
+              "PRC": 64,
+              "PUR": 74,
+              "RBK": 48,
+              "SPD": 78,
+              "STR": 65,
+              "TAK": 72
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "8982527317605151345",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 432,
+          "down": 3,
+          "offense_direction": -1,
+          "period_type": "regulation",
+          "quarter": 4,
+          "yardline_100": 26,
+          "yards_to_go": 10
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_CHI_DET",
+      "game_seed": 300077,
+      "baseline_failure": {
+        "reason": "simulation_time_cap",
+        "time_limit_seconds": 12
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "bounds": [
+                12,
+                30,
+                -8,
+                8
+              ],
+              "kind": "zone"
+            },
+            "LCB": {
+              "kind": "man",
+              "target_slot": "WR1"
+            },
+            "LDT": {
+              "kind": "rush"
+            },
+            "LEDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "MLB": {
+              "kind": "man",
+              "target_slot": "RB"
+            },
+            "NB": {
+              "kind": "man",
+              "target_slot": "WR3"
+            },
+            "RCB": {
+              "kind": "man",
+              "target_slot": "WR2"
+            },
+            "RDT": {
+              "kind": "rush"
+            },
+            "REDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "SS": {
+              "bounds": [
+                3,
+                12,
+                -8,
+                2
+              ],
+              "kind": "zone"
+            },
+            "WLB": {
+              "bounds": [
+                3,
+                12,
+                8,
+                26
+              ],
+              "kind": "zone"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "block",
+              "protection_area": [
+                -1.4,
+                1.4
+              ]
+            },
+            "LG": {
+              "kind": "block",
+              "protection_area": [
+                -0.3,
+                3
+              ]
+            },
+            "LT": {
+              "kind": "block",
+              "protection_area": [
+                0.8,
+                7
+              ]
+            },
+            "QB": {
+              "kind": "quarterback",
+              "read_order": [
+                "WR2",
+                "WR3",
+                "WR1",
+                "RB"
+              ]
+            },
+            "RB": {
+              "check_release": true,
+              "kind": "route",
+              "route": "check"
+            },
+            "RG": {
+              "kind": "block",
+              "protection_area": [
+                -3,
+                0.3
+              ]
+            },
+            "RT": {
+              "kind": "block",
+              "protection_area": [
+                -7,
+                -0.8
+              ]
+            },
+            "TE": {
+              "kind": "block"
+            },
+            "WR1": {
+              "kind": "route",
+              "route": "go"
+            },
+            "WR2": {
+              "kind": "route",
+              "route": "slant"
+            },
+            "WR3": {
+              "kind": "route",
+              "route": "flat"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0035357",
+            "LCB": "00-0036292",
+            "LDT": "00-0031583",
+            "LEDGE": "00-0035647",
+            "MLB": "00-0035386",
+            "NB": "00-0037129",
+            "RCB": "00-0039071",
+            "RDT": "00-0035643",
+            "REDGE": "00-0036337",
+            "SS": "00-0041538",
+            "WLB": "00-0035525"
+          },
+          "team": "CHI"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "assigned",
+            "direction": "right",
+            "family": "pass",
+            "snap_type": "shotgun"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0038936",
+            "LG": "00-0039408",
+            "LT": "00-0036880",
+            "QB": "00-0033106",
+            "RB": "00-0039139",
+            "RG": "00-0040728",
+            "RT": "00-0036905",
+            "TE": "00-0039065",
+            "WR1": "00-0036963",
+            "WR2": "00-0037240",
+            "WR3": "00-0040669"
+          },
+          "team": "DET"
+        },
+        "play_id": "2026_12_CHI_DET:DET:pass:8944415907451189746",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0031583": {
+            "physics": {
+              "mass": 133.4
+            },
+            "ratings": {
+              "ACC": 60,
+              "AGI": 66,
+              "AWR": 81,
+              "BSH": 67,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 69,
+              "PBK": 42,
+              "PMV": 70,
+              "PRC": 75,
+              "PUR": 64,
+              "RBK": 42,
+              "SPD": 62,
+              "STR": 78,
+              "TAK": 68
+            }
+          },
+          "00-0033106": {
+            "physics": {
+              "mass": 98.4
+            },
+            "ratings": {
+              "ACC": 68,
+              "AGI": 71,
+              "AWR": 87,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 60,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 87,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 70,
+              "STR": 52,
+              "TAK": 48,
+              "THA": 84
+            }
+          },
+          "00-0035357": {
+            "physics": {
+              "mass": 83
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 81,
+              "AWR": 70,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 57,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 68,
+              "PUR": 79,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 43,
+              "TAK": 70
+            }
+          },
+          "00-0035386": {
+            "physics": {
+              "mass": 103.4
+            },
+            "ratings": {
+              "ACC": 74,
+              "AGI": 74,
+              "AWR": 77,
+              "BSH": 65,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 53,
+              "ELU": 48,
+              "FMV": 57,
+              "PBK": 48,
+              "PMV": 51,
+              "PRC": 76,
+              "PUR": 77,
+              "RBK": 48,
+              "SPD": 80,
+              "STR": 51,
+              "TAK": 72
+            }
+          },
+          "00-0035525": {
+            "physics": {
+              "mass": 106.1
+            },
+            "ratings": {
+              "ACC": 84,
+              "AGI": 80,
+              "AWR": 90,
+              "BSH": 81,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 55,
+              "ELU": 48,
+              "FMV": 64,
+              "PBK": 48,
+              "PMV": 61,
+              "PRC": 86,
+              "PUR": 89,
+              "RBK": 48,
+              "SPD": 92,
+              "STR": 59,
+              "TAK": 83
+            }
+          },
+          "00-0035643": {
+            "physics": {
+              "mass": 138.3
+            },
+            "ratings": {
+              "ACC": 60,
+              "AGI": 62,
+              "AWR": 94,
+              "BSH": 99,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 98,
+              "PBK": 42,
+              "PMV": 99,
+              "PRC": 91,
+              "PUR": 77,
+              "RBK": 42,
+              "SPD": 65,
+              "STR": 75,
+              "TAK": 86
+            }
+          },
+          "00-0035647": {
+            "physics": {
+              "mass": 122.5
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 78,
+              "AWR": 80,
+              "BSH": 80,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 96,
+              "PBK": 48,
+              "PMV": 91,
+              "PRC": 79,
+              "PUR": 83,
+              "RBK": 48,
+              "SPD": 91,
+              "STR": 63,
+              "TAK": 74
+            }
+          },
+          "00-0036292": {
+            "physics": {
+              "mass": 88.5
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 77,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 66,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 75,
+              "PUR": 80,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 46,
+              "TAK": 73
+            }
+          },
+          "00-0036337": {
+            "physics": {
+              "mass": 133.8
+            },
+            "ratings": {
+              "ACC": 63,
+              "AGI": 71,
+              "AWR": 73,
+              "BSH": 63,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 64,
+              "PBK": 42,
+              "PMV": 62,
+              "PRC": 70,
+              "PUR": 66,
+              "RBK": 42,
+              "SPD": 69,
+              "STR": 68,
+              "TAK": 66
+            }
+          },
+          "00-0036880": {
+            "physics": {
+              "mass": 152
+            },
+            "ratings": {
+              "ACC": 59,
+              "AGI": 60,
+              "AWR": 89,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 85,
+              "PMV": 42,
+              "PRC": 89,
+              "PUR": 42,
+              "RBK": 83,
+              "SPD": 64,
+              "STR": 83,
+              "TAK": 42
+            }
+          },
+          "00-0036905": {
+            "physics": {
+              "mass": 147.4
+            },
+            "ratings": {
+              "ACC": 58,
+              "AGI": 54,
+              "AWR": 80,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 76,
+              "PMV": 42,
+              "PRC": 80,
+              "PUR": 42,
+              "RBK": 78,
+              "SPD": 64,
+              "STR": 75,
+              "TAK": 42
+            }
+          },
+          "00-0036963": {
+            "physics": {
+              "mass": 91.6
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 82,
+              "AWR": 90,
+              "BSH": 48,
+              "BTK": 59,
+              "CAR": 74,
+              "CTH": 74,
+              "ELU": 76,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 90,
+              "PUR": 48,
+              "RBK": 52,
+              "SPD": 89,
+              "STR": 54,
+              "TAK": 48
+            }
+          },
+          "00-0037129": {
+            "physics": {
+              "mass": 81.6
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 81,
+              "AWR": 58,
+              "BSH": 35,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 55,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 61,
+              "PUR": 76,
+              "RBK": 48,
+              "SPD": 90,
+              "STR": 41,
+              "TAK": 61
+            }
+          },
+          "00-0037240": {
+            "physics": {
+              "mass": 83.5
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 80,
+              "AWR": 83,
+              "BSH": 48,
+              "BTK": 50,
+              "CAR": 82,
+              "CTH": 80,
+              "ELU": 78,
+              "FMV": 48,
+              "PBK": 37,
+              "PMV": 48,
+              "PRC": 83,
+              "PUR": 48,
+              "RBK": 41,
+              "SPD": 90,
+              "STR": 39,
+              "TAK": 48
+            }
+          },
+          "00-0038936": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 56,
+              "AGI": 57,
+              "AWR": 76,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 76,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 60,
+              "STR": 77,
+              "TAK": 42
+            }
+          },
+          "00-0039065": {
+            "physics": {
+              "mass": 111.1
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 80,
+              "AWR": 83,
+              "BSH": 48,
+              "BTK": 68,
+              "CAR": 81,
+              "CTH": 77,
+              "ELU": 78,
+              "FMV": 48,
+              "PBK": 77,
+              "PMV": 48,
+              "PRC": 83,
+              "PUR": 48,
+              "RBK": 81,
+              "SPD": 85,
+              "STR": 59,
+              "TAK": 48
+            }
+          },
+          "00-0039071": {
+            "physics": {
+              "mass": 96.2
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 74,
+              "AWR": 79,
+              "BSH": 41,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 75,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 79,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 91,
+              "STR": 51,
+              "TAK": 77
+            }
+          },
+          "00-0039139": {
+            "physics": {
+              "mass": 91.6
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 78,
+              "AWR": 88,
+              "BSH": 48,
+              "BTK": 78,
+              "CAR": 83,
+              "CTH": 73,
+              "ELU": 81,
+              "FMV": 48,
+              "PBK": 51,
+              "PMV": 48,
+              "PRC": 88,
+              "PUR": 48,
+              "RBK": 49,
+              "SPD": 95,
+              "STR": 51,
+              "TAK": 48
+            }
+          },
+          "00-0039408": {
+            "physics": {
+              "mass": 149.7
+            },
+            "ratings": {
+              "ACC": 60,
+              "AGI": 62,
+              "AWR": 61,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 75,
+              "PMV": 42,
+              "PRC": 61,
+              "PUR": 42,
+              "RBK": 77,
+              "SPD": 64,
+              "STR": 79,
+              "TAK": 42
+            }
+          },
+          "00-0040669": {
+            "physics": {
+              "mass": 97.1
+            },
+            "ratings": {
+              "ACC": 83,
+              "AGI": 85,
+              "AWR": 63,
+              "BSH": 48,
+              "BTK": 60,
+              "CAR": 79,
+              "CTH": 71,
+              "ELU": 78,
+              "FMV": 48,
+              "PBK": 50,
+              "PMV": 48,
+              "PRC": 63,
+              "PUR": 48,
+              "RBK": 54,
+              "SPD": 92,
+              "STR": 51,
+              "TAK": 48
+            }
+          },
+          "00-0040728": {
+            "physics": {
+              "mass": 146.1
+            },
+            "ratings": {
+              "ACC": 65,
+              "AGI": 62,
+              "AWR": 66,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 77,
+              "PMV": 42,
+              "PRC": 66,
+              "PUR": 42,
+              "RBK": 79,
+              "SPD": 70,
+              "STR": 74,
+              "TAK": 42
+            }
+          },
+          "00-0041538": {
+            "physics": {
+              "mass": 91.2
+            },
+            "ratings": {
+              "ACC": 86,
+              "AGI": 80,
+              "AWR": 71,
+              "BSH": 41,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 73,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 75,
+              "PUR": 88,
+              "RBK": 48,
+              "SPD": 95,
+              "STR": 51,
+              "TAK": 78
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "8944415907451189746",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 35,
+          "down": 1,
+          "offense_direction": 1,
+          "period_type": "regulation",
+          "quarter": 3,
+          "yardline_100": 99,
+          "yards_to_go": 1
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_PHI_DAL",
+      "game_seed": 300011,
+      "baseline_failure": {
+        "reason": "simulation_time_cap",
+        "time_limit_seconds": 12
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "bounds": [
+                12,
+                30,
+                -8,
+                8
+              ],
+              "kind": "zone"
+            },
+            "LCB": {
+              "kind": "man",
+              "target_slot": "WR1"
+            },
+            "LDT": {
+              "kind": "rush"
+            },
+            "LEDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "MLB": {
+              "kind": "man",
+              "target_slot": "RB"
+            },
+            "NB": {
+              "kind": "man",
+              "target_slot": "WR3"
+            },
+            "RCB": {
+              "kind": "man",
+              "target_slot": "WR2"
+            },
+            "RDT": {
+              "kind": "rush"
+            },
+            "REDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "SS": {
+              "bounds": [
+                3,
+                12,
+                -8,
+                2
+              ],
+              "kind": "zone"
+            },
+            "WLB": {
+              "bounds": [
+                3,
+                12,
+                8,
+                26
+              ],
+              "kind": "zone"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "block",
+              "protection_area": [
+                -1.4,
+                1.4
+              ]
+            },
+            "LG": {
+              "kind": "block",
+              "protection_area": [
+                -0.3,
+                3
+              ]
+            },
+            "LT": {
+              "kind": "block",
+              "protection_area": [
+                0.8,
+                7
+              ]
+            },
+            "QB": {
+              "kind": "quarterback",
+              "read_order": [
+                "WR2",
+                "WR3",
+                "WR1",
+                "RB"
+              ]
+            },
+            "RB": {
+              "check_release": true,
+              "kind": "route",
+              "route": "check"
+            },
+            "RG": {
+              "kind": "block",
+              "protection_area": [
+                -3,
+                0.3
+              ]
+            },
+            "RT": {
+              "kind": "block",
+              "protection_area": [
+                -7,
+                -0.8
+              ]
+            },
+            "TE": {
+              "kind": "block"
+            },
+            "WR1": {
+              "kind": "route",
+              "route": "go"
+            },
+            "WR2": {
+              "kind": "route",
+              "route": "slant"
+            },
+            "WR3": {
+              "kind": "route",
+              "route": "flat"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0040749",
+            "LCB": "00-0037079",
+            "LDT": "00-0038978",
+            "LEDGE": "00-0038386",
+            "MLB": "00-0040708",
+            "NB": "00-0039841",
+            "RCB": "00-0039888",
+            "RDT": "00-0039265",
+            "REDGE": "00-0038412",
+            "SS": "00-0034993",
+            "WLB": "00-0039013"
+          },
+          "team": "PHI"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "assigned",
+            "direction": "right",
+            "family": "pass",
+            "snap_type": "shotgun"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0039348",
+            "LG": "00-0037243",
+            "LT": "00-0039341",
+            "QB": "00-0033077",
+            "RB": "00-0036997",
+            "RG": "00-0040007",
+            "RT": "00-0036036",
+            "TE": "00-0039530",
+            "WR1": "00-0036358",
+            "WR2": "00-0037247",
+            "WR3": "00-0039410"
+          },
+          "team": "DAL"
+        },
+        "play_id": "2026_12_PHI_DAL:DAL:pass:15723287086507692203",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0033077": {
+            "physics": {
+              "mass": 104.3
+            },
+            "ratings": {
+              "ACC": 70,
+              "AGI": 74,
+              "AWR": 85,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 66,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 85,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 70,
+              "STR": 57,
+              "TAK": 48,
+              "THA": 79
+            }
+          },
+          "00-0034993": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 79,
+              "AWR": 70,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 50,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 68,
+              "PUR": 78,
+              "RBK": 48,
+              "SPD": 85,
+              "STR": 47,
+              "TAK": 70
+            }
+          },
+          "00-0036036": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 61,
+              "AGI": 50,
+              "AWR": 73,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 76,
+              "PMV": 42,
+              "PRC": 73,
+              "PUR": 42,
+              "RBK": 74,
+              "SPD": 67,
+              "STR": 77,
+              "TAK": 42
+            }
+          },
+          "00-0036358": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 79,
+              "AWR": 94,
+              "BSH": 48,
+              "BTK": 50,
+              "CAR": 83,
+              "CTH": 80,
+              "ELU": 72,
+              "FMV": 48,
+              "PBK": 42,
+              "PMV": 48,
+              "PRC": 94,
+              "PUR": 48,
+              "RBK": 46,
+              "SPD": 89,
+              "STR": 41,
+              "TAK": 48
+            }
+          },
+          "00-0036997": {
+            "physics": {
+              "mass": 99.8
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 83,
+              "AWR": 88,
+              "BSH": 48,
+              "BTK": 72,
+              "CAR": 80,
+              "CTH": 64,
+              "ELU": 75,
+              "FMV": 48,
+              "PBK": 59,
+              "PMV": 48,
+              "PRC": 88,
+              "PUR": 48,
+              "RBK": 57,
+              "SPD": 87,
+              "STR": 59,
+              "TAK": 48
+            }
+          },
+          "00-0037079": {
+            "physics": {
+              "mass": 95.3
+            },
+            "ratings": {
+              "ACC": 87,
+              "AGI": 81,
+              "AWR": 74,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 77,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 74,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 98,
+              "STR": 47,
+              "TAK": 71
+            }
+          },
+          "00-0037243": {
+            "physics": {
+              "mass": 148.8
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 60,
+              "AWR": 83,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 80,
+              "PMV": 42,
+              "PRC": 83,
+              "PUR": 42,
+              "RBK": 82,
+              "SPD": 68,
+              "STR": 76,
+              "TAK": 42
+            }
+          },
+          "00-0037247": {
+            "physics": {
+              "mass": 93
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 79,
+              "AWR": 87,
+              "BSH": 48,
+              "BTK": 54,
+              "CAR": 69,
+              "CTH": 76,
+              "ELU": 74,
+              "FMV": 48,
+              "PBK": 45,
+              "PMV": 48,
+              "PRC": 87,
+              "PUR": 48,
+              "RBK": 49,
+              "SPD": 90,
+              "STR": 45,
+              "TAK": 48
+            }
+          },
+          "00-0038386": {
+            "physics": {
+              "mass": 142.4
+            },
+            "ratings": {
+              "ACC": 59,
+              "AGI": 59,
+              "AWR": 80,
+              "BSH": 82,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 79,
+              "PBK": 42,
+              "PMV": 82,
+              "PRC": 80,
+              "PUR": 70,
+              "RBK": 42,
+              "SPD": 64,
+              "STR": 77,
+              "TAK": 77
+            }
+          },
+          "00-0038412": {
+            "physics": {
+              "mass": 132.4
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 65,
+              "AWR": 66,
+              "BSH": 72,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 75,
+              "PBK": 42,
+              "PMV": 76,
+              "PRC": 67,
+              "PUR": 68,
+              "RBK": 42,
+              "SPD": 67,
+              "STR": 77,
+              "TAK": 67
+            }
+          },
+          "00-0038978": {
+            "physics": {
+              "mass": 132.4
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 63,
+              "AWR": 73,
+              "BSH": 66,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 66,
+              "PBK": 42,
+              "PMV": 66,
+              "PRC": 70,
+              "PUR": 68,
+              "RBK": 42,
+              "SPD": 69,
+              "STR": 69,
+              "TAK": 68
+            }
+          },
+          "00-0039013": {
+            "physics": {
+              "mass": 108
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 76,
+              "AWR": 71,
+              "BSH": 69,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 42,
+              "ELU": 48,
+              "FMV": 75,
+              "PBK": 48,
+              "PMV": 68,
+              "PRC": 71,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 93,
+              "STR": 60,
+              "TAK": 69
+            }
+          },
+          "00-0039265": {
+            "physics": {
+              "mass": 133.8
+            },
+            "ratings": {
+              "ACC": 64,
+              "AGI": 62,
+              "AWR": 48,
+              "BSH": 59,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 56,
+              "PBK": 42,
+              "PMV": 56,
+              "PRC": 53,
+              "PUR": 67,
+              "RBK": 42,
+              "SPD": 73,
+              "STR": 67,
+              "TAK": 63
+            }
+          },
+          "00-0039341": {
+            "physics": {
+              "mass": 147.4
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 63,
+              "AWR": 73,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 79,
+              "PMV": 42,
+              "PRC": 73,
+              "PUR": 42,
+              "RBK": 77,
+              "SPD": 61,
+              "STR": 74,
+              "TAK": 42
+            }
+          },
+          "00-0039348": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 63,
+              "AGI": 66,
+              "AWR": 70,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 70,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 68,
+              "STR": 77,
+              "TAK": 42
+            }
+          },
+          "00-0039410": {
+            "physics": {
+              "mass": 93
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 79,
+              "AWR": 67,
+              "BSH": 48,
+              "BTK": 59,
+              "CAR": 77,
+              "CTH": 74,
+              "ELU": 76,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 67,
+              "PUR": 48,
+              "RBK": 52,
+              "SPD": 91,
+              "STR": 53,
+              "TAK": 48
+            }
+          },
+          "00-0039530": {
+            "physics": {
+              "mass": 120.2
+            },
+            "ratings": {
+              "ACC": 71,
+              "AGI": 71,
+              "AWR": 65,
+              "BSH": 48,
+              "BTK": 67,
+              "CAR": 73,
+              "CTH": 64,
+              "ELU": 66,
+              "FMV": 48,
+              "PBK": 84,
+              "PMV": 48,
+              "PRC": 65,
+              "PUR": 48,
+              "RBK": 88,
+              "SPD": 78,
+              "STR": 62,
+              "TAK": 48
+            }
+          },
+          "00-0039841": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 84,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 85,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 85,
+              "PUR": 86,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 46,
+              "TAK": 81
+            }
+          },
+          "00-0039888": {
+            "physics": {
+              "mass": 87.5
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 81,
+              "AWR": 76,
+              "BSH": 42,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 85,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 79,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 96,
+              "STR": 53,
+              "TAK": 72
+            }
+          },
+          "00-0040007": {
+            "physics": {
+              "mass": 149.7
+            },
+            "ratings": {
+              "ACC": 52,
+              "AGI": 54,
+              "AWR": 69,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 69,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 54,
+              "STR": 76,
+              "TAK": 42
+            }
+          },
+          "00-0040708": {
+            "physics": {
+              "mass": 106.6
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 78,
+              "AWR": 75,
+              "BSH": 66,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 43,
+              "ELU": 48,
+              "FMV": 59,
+              "PBK": 48,
+              "PMV": 53,
+              "PRC": 72,
+              "PUR": 83,
+              "RBK": 48,
+              "SPD": 88,
+              "STR": 58,
+              "TAK": 80
+            }
+          },
+          "00-0040749": {
+            "physics": {
+              "mass": 84.4
+            },
+            "ratings": {
+              "ACC": 83,
+              "AGI": 80,
+              "AWR": 68,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 65,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 70,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 91,
+              "STR": 43,
+              "TAK": 72
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "15723287086507692203",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 478,
+          "down": 1,
+          "offense_direction": 1,
+          "period_type": "regulation",
+          "quarter": 2,
+          "yardline_100": 61,
+          "yards_to_go": 10
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_PHI_DAL",
+      "game_seed": 300045,
+      "baseline_failure": {
+        "hard_time_limit_seconds": 36,
+        "no_progress_limit_seconds": 3.5,
+        "reason": "live_play_no_progress"
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "kind": "run_support",
+              "responsibility": "deep"
+            },
+            "LCB": {
+              "kind": "run_support",
+              "responsibility": "corner"
+            },
+            "LDT": {
+              "gap": "backside_a",
+              "kind": "gap_fit"
+            },
+            "LEDGE": {
+              "gap": "backside_c",
+              "kind": "gap_fit"
+            },
+            "MLB": {
+              "gap": "play_side_a",
+              "kind": "gap_fit"
+            },
+            "NB": {
+              "kind": "run_support",
+              "responsibility": "force"
+            },
+            "RCB": {
+              "kind": "run_support",
+              "responsibility": "corner"
+            },
+            "RDT": {
+              "gap": "play_side_a",
+              "kind": "gap_fit"
+            },
+            "REDGE": {
+              "gap": "play_side_c",
+              "kind": "gap_fit"
+            },
+            "SS": {
+              "kind": "run_support",
+              "responsibility": "alley"
+            },
+            "WLB": {
+              "gap": "backside_b",
+              "kind": "gap_fit"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "zone_block",
+              "track_gap": "play_side_a"
+            },
+            "LG": {
+              "kind": "zone_block",
+              "track_gap": "backside_a"
+            },
+            "LT": {
+              "kind": "zone_block",
+              "track_gap": "backside_c"
+            },
+            "QB": {
+              "action": "handoff",
+              "kind": "quarterback",
+              "target_slot": "RB"
+            },
+            "RB": {
+              "aiming_gap": "play_side_a",
+              "kind": "runner",
+              "read": "daylight"
+            },
+            "RG": {
+              "kind": "zone_block",
+              "track_gap": "play_side_b"
+            },
+            "RT": {
+              "kind": "zone_block",
+              "track_gap": "play_side_c"
+            },
+            "TE": {
+              "kind": "block",
+              "target_slot": "REDGE"
+            },
+            "WR1": {
+              "kind": "block",
+              "target_slot": "LCB"
+            },
+            "WR2": {
+              "kind": "block",
+              "target_slot": "RCB"
+            },
+            "WR3": {
+              "kind": "block",
+              "target_slot": "NB"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0040749",
+            "LCB": "00-0037079",
+            "LDT": "00-0038978",
+            "LEDGE": "00-0038386",
+            "MLB": "00-0040708",
+            "NB": "00-0039841",
+            "RCB": "00-0039888",
+            "RDT": "00-0039265",
+            "REDGE": "00-0038412",
+            "SS": "00-0034993",
+            "WLB": "00-0039013"
+          },
+          "team": "PHI"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "inside_zone",
+            "direction": "right",
+            "family": "run",
+            "snap_type": "under_center"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0039348",
+            "LG": "00-0037243",
+            "LT": "00-0039341",
+            "QB": "00-0033077",
+            "RB": "00-0036997",
+            "RG": "00-0040007",
+            "RT": "00-0036036",
+            "TE": "00-0037282",
+            "WR1": "00-0036358",
+            "WR2": "00-0037247",
+            "WR3": "00-0037801"
+          },
+          "team": "DAL"
+        },
+        "play_id": "2026_12_PHI_DAL:DAL:run:3349784348416007641",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0033077": {
+            "physics": {
+              "mass": 104.3
+            },
+            "ratings": {
+              "ACC": 70,
+              "AGI": 74,
+              "AWR": 85,
+              "BCV": 59,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 66,
+              "FMV": 48,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 85,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 70,
+              "STR": 57,
+              "TAK": 48,
+              "TRK": 48
+            }
+          },
+          "00-0034993": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 79,
+              "AWR": 70,
+              "BCV": 48,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 50,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 68,
+              "PUR": 78,
+              "RBK": 48,
+              "SPD": 85,
+              "STR": 47,
+              "TAK": 70,
+              "TRK": 48
+            }
+          },
+          "00-0036036": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 61,
+              "AGI": 50,
+              "AWR": 73,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 76,
+              "PBK": 76,
+              "PMV": 42,
+              "PRC": 73,
+              "PUR": 42,
+              "RBK": 74,
+              "SPD": 67,
+              "STR": 77,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0036358": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 79,
+              "AWR": 94,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 50,
+              "CAR": 83,
+              "CTH": 80,
+              "ELU": 72,
+              "FMV": 48,
+              "IBL": 46,
+              "PBK": 42,
+              "PMV": 48,
+              "PRC": 94,
+              "PUR": 48,
+              "RBK": 46,
+              "SPD": 89,
+              "STR": 41,
+              "TAK": 48,
+              "TRK": 35
+            }
+          },
+          "00-0036997": {
+            "physics": {
+              "mass": 99.8
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 83,
+              "AWR": 88,
+              "BCV": 84,
+              "BSH": 48,
+              "BTK": 72,
+              "CAR": 80,
+              "CTH": 64,
+              "ELU": 75,
+              "FMV": 48,
+              "IBL": 57,
+              "PBK": 59,
+              "PMV": 48,
+              "PRC": 88,
+              "PUR": 48,
+              "RBK": 57,
+              "SPD": 87,
+              "STR": 59,
+              "TAK": 48,
+              "TRK": 59
+            }
+          },
+          "00-0037079": {
+            "physics": {
+              "mass": 95.3
+            },
+            "ratings": {
+              "ACC": 87,
+              "AGI": 81,
+              "AWR": 74,
+              "BCV": 48,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 77,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 74,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 98,
+              "STR": 47,
+              "TAK": 71,
+              "TRK": 48
+            }
+          },
+          "00-0037243": {
+            "physics": {
+              "mass": 148.8
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 60,
+              "AWR": 83,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 82,
+              "PBK": 80,
+              "PMV": 42,
+              "PRC": 83,
+              "PUR": 42,
+              "RBK": 82,
+              "SPD": 68,
+              "STR": 76,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0037247": {
+            "physics": {
+              "mass": 93
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 79,
+              "AWR": 87,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 54,
+              "CAR": 69,
+              "CTH": 76,
+              "ELU": 74,
+              "FMV": 48,
+              "IBL": 49,
+              "PBK": 45,
+              "PMV": 48,
+              "PRC": 87,
+              "PUR": 48,
+              "RBK": 49,
+              "SPD": 90,
+              "STR": 45,
+              "TAK": 48,
+              "TRK": 40
+            }
+          },
+          "00-0037282": {
+            "physics": {
+              "mass": 119.7
+            },
+            "ratings": {
+              "ACC": 69,
+              "AGI": 73,
+              "AWR": 66,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 68,
+              "CAR": 75,
+              "CTH": 67,
+              "ELU": 67,
+              "FMV": 48,
+              "IBL": 88,
+              "PBK": 84,
+              "PMV": 48,
+              "PRC": 66,
+              "PUR": 48,
+              "RBK": 88,
+              "SPD": 76,
+              "STR": 63,
+              "TAK": 48,
+              "TRK": 69
+            }
+          },
+          "00-0037801": {
+            "physics": {
+              "mass": 71.7
+            },
+            "ratings": {
+              "ACC": 84,
+              "AGI": 82,
+              "AWR": 65,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 46,
+              "CAR": 74,
+              "CTH": 72,
+              "ELU": 80,
+              "FMV": 48,
+              "IBL": 32,
+              "PBK": 28,
+              "PMV": 48,
+              "PRC": 65,
+              "PUR": 48,
+              "RBK": 32,
+              "SPD": 90,
+              "STR": 36,
+              "TAK": 48,
+              "TRK": 20
+            }
+          },
+          "00-0038386": {
+            "physics": {
+              "mass": 142.4
+            },
+            "ratings": {
+              "ACC": 59,
+              "AGI": 59,
+              "AWR": 80,
+              "BCV": 42,
+              "BSH": 82,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 79,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 82,
+              "PRC": 80,
+              "PUR": 70,
+              "RBK": 42,
+              "SPD": 64,
+              "STR": 77,
+              "TAK": 77,
+              "TRK": 42
+            }
+          },
+          "00-0038412": {
+            "physics": {
+              "mass": 132.4
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 65,
+              "AWR": 66,
+              "BCV": 42,
+              "BSH": 72,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 75,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 76,
+              "PRC": 67,
+              "PUR": 68,
+              "RBK": 42,
+              "SPD": 67,
+              "STR": 77,
+              "TAK": 67,
+              "TRK": 42
+            }
+          },
+          "00-0038978": {
+            "physics": {
+              "mass": 132.4
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 63,
+              "AWR": 73,
+              "BCV": 42,
+              "BSH": 66,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 66,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 66,
+              "PRC": 70,
+              "PUR": 68,
+              "RBK": 42,
+              "SPD": 69,
+              "STR": 69,
+              "TAK": 68,
+              "TRK": 42
+            }
+          },
+          "00-0039013": {
+            "physics": {
+              "mass": 108
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 76,
+              "AWR": 71,
+              "BCV": 48,
+              "BSH": 69,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 42,
+              "ELU": 48,
+              "FMV": 75,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 68,
+              "PRC": 71,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 93,
+              "STR": 60,
+              "TAK": 69,
+              "TRK": 48
+            }
+          },
+          "00-0039265": {
+            "physics": {
+              "mass": 133.8
+            },
+            "ratings": {
+              "ACC": 64,
+              "AGI": 62,
+              "AWR": 48,
+              "BCV": 42,
+              "BSH": 59,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 56,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 56,
+              "PRC": 53,
+              "PUR": 67,
+              "RBK": 42,
+              "SPD": 73,
+              "STR": 67,
+              "TAK": 63,
+              "TRK": 42
+            }
+          },
+          "00-0039341": {
+            "physics": {
+              "mass": 147.4
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 63,
+              "AWR": 73,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 79,
+              "PBK": 79,
+              "PMV": 42,
+              "PRC": 73,
+              "PUR": 42,
+              "RBK": 77,
+              "SPD": 61,
+              "STR": 74,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0039348": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 63,
+              "AGI": 66,
+              "AWR": 70,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 80,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 70,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 68,
+              "STR": 77,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0039841": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 84,
+              "BCV": 48,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 85,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 85,
+              "PUR": 86,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 46,
+              "TAK": 81,
+              "TRK": 48
+            }
+          },
+          "00-0039888": {
+            "physics": {
+              "mass": 87.5
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 81,
+              "AWR": 76,
+              "BCV": 48,
+              "BSH": 42,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 85,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 79,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 96,
+              "STR": 53,
+              "TAK": 72,
+              "TRK": 48
+            }
+          },
+          "00-0040007": {
+            "physics": {
+              "mass": 149.7
+            },
+            "ratings": {
+              "ACC": 52,
+              "AGI": 54,
+              "AWR": 69,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 80,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 69,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 54,
+              "STR": 76,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0040708": {
+            "physics": {
+              "mass": 106.6
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 78,
+              "AWR": 75,
+              "BCV": 48,
+              "BSH": 66,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 43,
+              "ELU": 48,
+              "FMV": 59,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 53,
+              "PRC": 72,
+              "PUR": 83,
+              "RBK": 48,
+              "SPD": 88,
+              "STR": 58,
+              "TAK": 80,
+              "TRK": 48
+            }
+          },
+          "00-0040749": {
+            "physics": {
+              "mass": 84.4
+            },
+            "ratings": {
+              "ACC": 83,
+              "AGI": 80,
+              "AWR": 68,
+              "BCV": 48,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 65,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 70,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 91,
+              "STR": 43,
+              "TAK": 72,
+              "TRK": 48
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "3349784348416007641",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 363,
+          "down": 1,
+          "offense_direction": 1,
+          "period_type": "regulation",
+          "quarter": 2,
+          "yardline_100": 50,
+          "yards_to_go": 10
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_PHI_DAL",
+      "game_seed": 300079,
+      "baseline_failure": {
+        "reason": "simulation_time_cap",
+        "time_limit_seconds": 12
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "bounds": [
+                12,
+                30,
+                -8,
+                8
+              ],
+              "kind": "zone"
+            },
+            "LCB": {
+              "kind": "man",
+              "target_slot": "WR1"
+            },
+            "LDT": {
+              "kind": "rush"
+            },
+            "LEDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "MLB": {
+              "kind": "man",
+              "target_slot": "RB"
+            },
+            "NB": {
+              "kind": "man",
+              "target_slot": "WR3"
+            },
+            "RCB": {
+              "kind": "man",
+              "target_slot": "WR2"
+            },
+            "RDT": {
+              "kind": "rush"
+            },
+            "REDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "SS": {
+              "bounds": [
+                3,
+                12,
+                -8,
+                2
+              ],
+              "kind": "zone"
+            },
+            "WLB": {
+              "bounds": [
+                3,
+                12,
+                8,
+                26
+              ],
+              "kind": "zone"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "block",
+              "protection_area": [
+                -1.4,
+                1.4
+              ]
+            },
+            "LG": {
+              "kind": "block",
+              "protection_area": [
+                -0.3,
+                3
+              ]
+            },
+            "LT": {
+              "kind": "block",
+              "protection_area": [
+                0.8,
+                7
+              ]
+            },
+            "QB": {
+              "kind": "quarterback",
+              "read_order": [
+                "WR2",
+                "WR3",
+                "WR1",
+                "RB"
+              ]
+            },
+            "RB": {
+              "check_release": true,
+              "kind": "route",
+              "route": "check"
+            },
+            "RG": {
+              "kind": "block",
+              "protection_area": [
+                -3,
+                0.3
+              ]
+            },
+            "RT": {
+              "kind": "block",
+              "protection_area": [
+                -7,
+                -0.8
+              ]
+            },
+            "TE": {
+              "kind": "block"
+            },
+            "WR1": {
+              "kind": "route",
+              "route": "go"
+            },
+            "WR2": {
+              "kind": "route",
+              "route": "slant"
+            },
+            "WR3": {
+              "kind": "route",
+              "route": "flat"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0040749",
+            "LCB": "00-0037079",
+            "LDT": "00-0038978",
+            "LEDGE": "00-0038386",
+            "MLB": "00-0040708",
+            "NB": "00-0039841",
+            "RCB": "00-0039888",
+            "RDT": "00-0039265",
+            "REDGE": "00-0038412",
+            "SS": "00-0034993",
+            "WLB": "00-0039013"
+          },
+          "team": "PHI"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "assigned",
+            "direction": "right",
+            "family": "pass",
+            "snap_type": "shotgun"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0039348",
+            "LG": "00-0037243",
+            "LT": "00-0039341",
+            "QB": "00-0033077",
+            "RB": "00-0036997",
+            "RG": "00-0040007",
+            "RT": "00-0036036",
+            "TE": "00-0039530",
+            "WR1": "00-0036358",
+            "WR2": "00-0039410",
+            "WR3": "00-0040930"
+          },
+          "team": "DAL"
+        },
+        "play_id": "2026_12_PHI_DAL:DAL:pass:7512757561492335718",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0033077": {
+            "physics": {
+              "mass": 104.3
+            },
+            "ratings": {
+              "ACC": 70,
+              "AGI": 74,
+              "AWR": 85,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 66,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 85,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 70,
+              "STR": 57,
+              "TAK": 48,
+              "THA": 79
+            }
+          },
+          "00-0034993": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 79,
+              "AWR": 70,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 50,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 68,
+              "PUR": 78,
+              "RBK": 48,
+              "SPD": 85,
+              "STR": 47,
+              "TAK": 70
+            }
+          },
+          "00-0036036": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 61,
+              "AGI": 50,
+              "AWR": 73,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 76,
+              "PMV": 42,
+              "PRC": 73,
+              "PUR": 42,
+              "RBK": 74,
+              "SPD": 67,
+              "STR": 77,
+              "TAK": 42
+            }
+          },
+          "00-0036358": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 79,
+              "AWR": 94,
+              "BSH": 48,
+              "BTK": 50,
+              "CAR": 83,
+              "CTH": 80,
+              "ELU": 72,
+              "FMV": 48,
+              "PBK": 42,
+              "PMV": 48,
+              "PRC": 94,
+              "PUR": 48,
+              "RBK": 46,
+              "SPD": 89,
+              "STR": 41,
+              "TAK": 48
+            }
+          },
+          "00-0036997": {
+            "physics": {
+              "mass": 99.8
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 83,
+              "AWR": 88,
+              "BSH": 48,
+              "BTK": 72,
+              "CAR": 80,
+              "CTH": 64,
+              "ELU": 75,
+              "FMV": 48,
+              "PBK": 59,
+              "PMV": 48,
+              "PRC": 88,
+              "PUR": 48,
+              "RBK": 57,
+              "SPD": 87,
+              "STR": 59,
+              "TAK": 48
+            }
+          },
+          "00-0037079": {
+            "physics": {
+              "mass": 95.3
+            },
+            "ratings": {
+              "ACC": 87,
+              "AGI": 81,
+              "AWR": 74,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 77,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 74,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 98,
+              "STR": 47,
+              "TAK": 71
+            }
+          },
+          "00-0037243": {
+            "physics": {
+              "mass": 148.8
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 60,
+              "AWR": 83,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 80,
+              "PMV": 42,
+              "PRC": 83,
+              "PUR": 42,
+              "RBK": 82,
+              "SPD": 68,
+              "STR": 76,
+              "TAK": 42
+            }
+          },
+          "00-0038386": {
+            "physics": {
+              "mass": 142.4
+            },
+            "ratings": {
+              "ACC": 59,
+              "AGI": 59,
+              "AWR": 80,
+              "BSH": 82,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 79,
+              "PBK": 42,
+              "PMV": 82,
+              "PRC": 80,
+              "PUR": 70,
+              "RBK": 42,
+              "SPD": 64,
+              "STR": 77,
+              "TAK": 77
+            }
+          },
+          "00-0038412": {
+            "physics": {
+              "mass": 132.4
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 65,
+              "AWR": 66,
+              "BSH": 72,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 75,
+              "PBK": 42,
+              "PMV": 76,
+              "PRC": 67,
+              "PUR": 68,
+              "RBK": 42,
+              "SPD": 67,
+              "STR": 77,
+              "TAK": 67
+            }
+          },
+          "00-0038978": {
+            "physics": {
+              "mass": 132.4
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 63,
+              "AWR": 73,
+              "BSH": 66,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 66,
+              "PBK": 42,
+              "PMV": 66,
+              "PRC": 70,
+              "PUR": 68,
+              "RBK": 42,
+              "SPD": 69,
+              "STR": 69,
+              "TAK": 68
+            }
+          },
+          "00-0039013": {
+            "physics": {
+              "mass": 108
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 76,
+              "AWR": 71,
+              "BSH": 69,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 42,
+              "ELU": 48,
+              "FMV": 75,
+              "PBK": 48,
+              "PMV": 68,
+              "PRC": 71,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 93,
+              "STR": 60,
+              "TAK": 69
+            }
+          },
+          "00-0039265": {
+            "physics": {
+              "mass": 133.8
+            },
+            "ratings": {
+              "ACC": 64,
+              "AGI": 62,
+              "AWR": 48,
+              "BSH": 59,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 56,
+              "PBK": 42,
+              "PMV": 56,
+              "PRC": 53,
+              "PUR": 67,
+              "RBK": 42,
+              "SPD": 73,
+              "STR": 67,
+              "TAK": 63
+            }
+          },
+          "00-0039341": {
+            "physics": {
+              "mass": 147.4
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 63,
+              "AWR": 73,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 79,
+              "PMV": 42,
+              "PRC": 73,
+              "PUR": 42,
+              "RBK": 77,
+              "SPD": 61,
+              "STR": 74,
+              "TAK": 42
+            }
+          },
+          "00-0039348": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 63,
+              "AGI": 66,
+              "AWR": 70,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 70,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 68,
+              "STR": 77,
+              "TAK": 42
+            }
+          },
+          "00-0039410": {
+            "physics": {
+              "mass": 93
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 79,
+              "AWR": 67,
+              "BSH": 48,
+              "BTK": 59,
+              "CAR": 77,
+              "CTH": 74,
+              "ELU": 76,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 67,
+              "PUR": 48,
+              "RBK": 52,
+              "SPD": 91,
+              "STR": 53,
+              "TAK": 48
+            }
+          },
+          "00-0039530": {
+            "physics": {
+              "mass": 120.2
+            },
+            "ratings": {
+              "ACC": 71,
+              "AGI": 71,
+              "AWR": 65,
+              "BSH": 48,
+              "BTK": 67,
+              "CAR": 73,
+              "CTH": 64,
+              "ELU": 66,
+              "FMV": 48,
+              "PBK": 84,
+              "PMV": 48,
+              "PRC": 65,
+              "PUR": 48,
+              "RBK": 88,
+              "SPD": 78,
+              "STR": 62,
+              "TAK": 48
+            }
+          },
+          "00-0039841": {
+            "physics": {
+              "mass": 89.8
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 84,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 85,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 85,
+              "PUR": 86,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 46,
+              "TAK": 81
+            }
+          },
+          "00-0039888": {
+            "physics": {
+              "mass": 87.5
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 81,
+              "AWR": 76,
+              "BSH": 42,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 85,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 79,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 96,
+              "STR": 53,
+              "TAK": 72
+            }
+          },
+          "00-0040007": {
+            "physics": {
+              "mass": 149.7
+            },
+            "ratings": {
+              "ACC": 52,
+              "AGI": 54,
+              "AWR": 69,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 69,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 54,
+              "STR": 76,
+              "TAK": 42
+            }
+          },
+          "00-0040708": {
+            "physics": {
+              "mass": 106.6
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 78,
+              "AWR": 75,
+              "BSH": 66,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 43,
+              "ELU": 48,
+              "FMV": 59,
+              "PBK": 48,
+              "PMV": 53,
+              "PRC": 72,
+              "PUR": 83,
+              "RBK": 48,
+              "SPD": 88,
+              "STR": 58,
+              "TAK": 80
+            }
+          },
+          "00-0040749": {
+            "physics": {
+              "mass": 84.4
+            },
+            "ratings": {
+              "ACC": 83,
+              "AGI": 80,
+              "AWR": 68,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 65,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 70,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 91,
+              "STR": 43,
+              "TAK": 72
+            }
+          },
+          "00-0040930": {
+            "physics": {
+              "mass": 92.5
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 79,
+              "AWR": 43,
+              "BSH": 48,
+              "BTK": 52,
+              "CAR": 69,
+              "CTH": 65,
+              "ELU": 68,
+              "FMV": 48,
+              "PBK": 45,
+              "PMV": 48,
+              "PRC": 43,
+              "PUR": 48,
+              "RBK": 49,
+              "SPD": 88,
+              "STR": 46,
+              "TAK": 48
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "7512757561492335718",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 129,
+          "down": 3,
+          "offense_direction": 1,
+          "period_type": "regulation",
+          "quarter": 1,
+          "yardline_100": 75,
+          "yards_to_go": 12
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_KC_BUF",
+      "game_seed": 300032,
+      "baseline_failure": {
+        "hard_time_limit_seconds": 36,
+        "no_progress_limit_seconds": 3.5,
+        "reason": "live_play_no_progress"
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "kind": "run_support",
+              "responsibility": "deep"
+            },
+            "LCB": {
+              "kind": "run_support",
+              "responsibility": "corner"
+            },
+            "LDT": {
+              "gap": "backside_a",
+              "kind": "gap_fit"
+            },
+            "LEDGE": {
+              "gap": "backside_c",
+              "kind": "gap_fit"
+            },
+            "MLB": {
+              "gap": "play_side_a",
+              "kind": "gap_fit"
+            },
+            "NB": {
+              "kind": "run_support",
+              "responsibility": "force"
+            },
+            "RCB": {
+              "kind": "run_support",
+              "responsibility": "corner"
+            },
+            "RDT": {
+              "gap": "play_side_a",
+              "kind": "gap_fit"
+            },
+            "REDGE": {
+              "gap": "play_side_c",
+              "kind": "gap_fit"
+            },
+            "SS": {
+              "kind": "run_support",
+              "responsibility": "alley"
+            },
+            "WLB": {
+              "gap": "backside_b",
+              "kind": "gap_fit"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "zone_block",
+              "track_gap": "play_side_a"
+            },
+            "LG": {
+              "kind": "zone_block",
+              "track_gap": "backside_a"
+            },
+            "LT": {
+              "kind": "zone_block",
+              "track_gap": "backside_c"
+            },
+            "QB": {
+              "action": "handoff",
+              "kind": "quarterback",
+              "target_slot": "RB"
+            },
+            "RB": {
+              "aiming_gap": "play_side_a",
+              "kind": "runner",
+              "read": "daylight"
+            },
+            "RG": {
+              "kind": "zone_block",
+              "track_gap": "play_side_b"
+            },
+            "RT": {
+              "kind": "zone_block",
+              "track_gap": "play_side_c"
+            },
+            "TE": {
+              "kind": "block",
+              "target_slot": "REDGE"
+            },
+            "WR1": {
+              "kind": "block",
+              "target_slot": "LCB"
+            },
+            "WR2": {
+              "kind": "block",
+              "target_slot": "RCB"
+            },
+            "WR3": {
+              "kind": "block",
+              "target_slot": "NB"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0039872",
+            "LCB": "00-0037288",
+            "LDT": "00-0040710",
+            "LEDGE": "00-0040724",
+            "MLB": "00-0037254",
+            "NB": "00-0037034",
+            "RCB": "00-0041391",
+            "RDT": "00-0035667",
+            "REDGE": "00-0035230",
+            "SS": "00-0035632",
+            "WLB": "00-0036914"
+          },
+          "team": "BUF"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "inside_zone",
+            "direction": "right",
+            "family": "run",
+            "snap_type": "under_center"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0036623",
+            "LG": "00-0039844",
+            "LT": "00-0041019",
+            "QB": "00-0033873",
+            "RB": "00-0041013",
+            "RG": "00-0036660",
+            "RT": "00-0037807",
+            "TE": "00-0030506",
+            "WR1": "00-0039067",
+            "WR2": "00-0039894",
+            "WR3": "00-0040646"
+          },
+          "team": "KC"
+        },
+        "play_id": "2026_12_KC_BUF:KC:run:993829903482071690",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0030506": {
+            "physics": {
+              "mass": 113.4
+            },
+            "ratings": {
+              "ACC": 70,
+              "AGI": 71,
+              "AWR": 91,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 69,
+              "CAR": 79,
+              "CTH": 72,
+              "ELU": 78,
+              "FMV": 48,
+              "IBL": 82,
+              "PBK": 78,
+              "PMV": 48,
+              "PRC": 91,
+              "PUR": 48,
+              "RBK": 82,
+              "SPD": 75,
+              "STR": 59,
+              "TAK": 48,
+              "TRK": 62
+            }
+          },
+          "00-0033873": {
+            "physics": {
+              "mass": 102.1
+            },
+            "ratings": {
+              "ACC": 70,
+              "AGI": 83,
+              "AWR": 86,
+              "BCV": 68,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 76,
+              "FMV": 48,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 87,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 72,
+              "STR": 56,
+              "TAK": 48,
+              "TRK": 48
+            }
+          },
+          "00-0035230": {
+            "physics": {
+              "mass": 130.2
+            },
+            "ratings": {
+              "ACC": 66,
+              "AGI": 65,
+              "AWR": 81,
+              "BCV": 42,
+              "BSH": 84,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 85,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 87,
+              "PRC": 79,
+              "PUR": 72,
+              "RBK": 42,
+              "SPD": 69,
+              "STR": 80,
+              "TAK": 74,
+              "TRK": 42
+            }
+          },
+          "00-0035632": {
+            "physics": {
+              "mass": 95.3
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 85,
+              "AWR": 84,
+              "BCV": 48,
+              "BSH": 38,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 82,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 84,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 90,
+              "STR": 46,
+              "TAK": 79,
+              "TRK": 48
+            }
+          },
+          "00-0035667": {
+            "physics": {
+              "mass": 141.5
+            },
+            "ratings": {
+              "ACC": 58,
+              "AGI": 59,
+              "AWR": 69,
+              "BCV": 42,
+              "BSH": 68,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 62,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 66,
+              "PRC": 67,
+              "PUR": 62,
+              "RBK": 42,
+              "SPD": 61,
+              "STR": 80,
+              "TAK": 66,
+              "TRK": 42
+            }
+          },
+          "00-0036623": {
+            "physics": {
+              "mass": 137
+            },
+            "ratings": {
+              "ACC": 61,
+              "AGI": 67,
+              "AWR": 86,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 82,
+              "PBK": 80,
+              "PMV": 42,
+              "PRC": 86,
+              "PUR": 42,
+              "RBK": 82,
+              "SPD": 65,
+              "STR": 78,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0036660": {
+            "physics": {
+              "mass": 145.6
+            },
+            "ratings": {
+              "ACC": 54,
+              "AGI": 55,
+              "AWR": 75,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 75,
+              "PBK": 73,
+              "PMV": 42,
+              "PRC": 75,
+              "PUR": 42,
+              "RBK": 75,
+              "SPD": 57,
+              "STR": 74,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0036914": {
+            "physics": {
+              "mass": 120.7
+            },
+            "ratings": {
+              "ACC": 72,
+              "AGI": 73,
+              "AWR": 84,
+              "BCV": 48,
+              "BSH": 85,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 99,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 99,
+              "PRC": 84,
+              "PUR": 80,
+              "RBK": 48,
+              "SPD": 82,
+              "STR": 62,
+              "TAK": 77,
+              "TRK": 48
+            }
+          },
+          "00-0037034": {
+            "physics": {
+              "mass": 81.6
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 81,
+              "AWR": 72,
+              "BCV": 48,
+              "BSH": 35,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 81,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 90,
+              "STR": 41,
+              "TAK": 71,
+              "TRK": 48
+            }
+          },
+          "00-0037254": {
+            "physics": {
+              "mass": 101.6
+            },
+            "ratings": {
+              "ACC": 77,
+              "AGI": 79,
+              "AWR": 81,
+              "BCV": 48,
+              "BSH": 75,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 49,
+              "ELU": 48,
+              "FMV": 58,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 55,
+              "PRC": 79,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 84,
+              "STR": 59,
+              "TAK": 78,
+              "TRK": 48
+            }
+          },
+          "00-0037288": {
+            "physics": {
+              "mass": 93
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 81,
+              "AWR": 73,
+              "BCV": 48,
+              "BSH": 39,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 73,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 74,
+              "PUR": 80,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 48,
+              "TAK": 71,
+              "TRK": 48
+            }
+          },
+          "00-0037807": {
+            "physics": {
+              "mass": 140.6
+            },
+            "ratings": {
+              "ACC": 58,
+              "AGI": 62,
+              "AWR": 80,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 79,
+              "PBK": 77,
+              "PMV": 42,
+              "PRC": 80,
+              "PUR": 42,
+              "RBK": 79,
+              "SPD": 61,
+              "STR": 74,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0039067": {
+            "physics": {
+              "mass": 92.1
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 79,
+              "AWR": 82,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 60,
+              "CAR": 78,
+              "CTH": 79,
+              "ELU": 85,
+              "FMV": 48,
+              "IBL": 49,
+              "PBK": 45,
+              "PMV": 48,
+              "PRC": 82,
+              "PUR": 48,
+              "RBK": 49,
+              "SPD": 89,
+              "STR": 46,
+              "TAK": 48,
+              "TRK": 40
+            }
+          },
+          "00-0039844": {
+            "physics": {
+              "mass": 147.9
+            },
+            "ratings": {
+              "ACC": 62,
+              "AGI": 53,
+              "AWR": 71,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 80,
+              "PBK": 80,
+              "PMV": 42,
+              "PRC": 71,
+              "PUR": 42,
+              "RBK": 78,
+              "SPD": 67,
+              "STR": 75,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0039872": {
+            "physics": {
+              "mass": 93.9
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 80,
+              "AWR": 76,
+              "BCV": 48,
+              "BSH": 39,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 66,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 86,
+              "RBK": 48,
+              "SPD": 91,
+              "STR": 48,
+              "TAK": 80,
+              "TRK": 48
+            }
+          },
+          "00-0039894": {
+            "physics": {
+              "mass": 74.8
+            },
+            "ratings": {
+              "ACC": 92,
+              "AGI": 81,
+              "AWR": 76,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 45,
+              "CAR": 82,
+              "CTH": 75,
+              "ELU": 77,
+              "FMV": 48,
+              "IBL": 33,
+              "PBK": 29,
+              "PMV": 48,
+              "PRC": 76,
+              "PUR": 48,
+              "RBK": 33,
+              "SPD": 99,
+              "STR": 34,
+              "TAK": 48,
+              "TRK": 21
+            }
+          },
+          "00-0040646": {
+            "physics": {
+              "mass": 88.5
+            },
+            "ratings": {
+              "ACC": 83,
+              "AGI": 80,
+              "AWR": 62,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 52,
+              "CAR": 77,
+              "CTH": 70,
+              "ELU": 74,
+              "FMV": 48,
+              "IBL": 45,
+              "PBK": 41,
+              "PMV": 48,
+              "PRC": 62,
+              "PUR": 48,
+              "RBK": 45,
+              "SPD": 92,
+              "STR": 43,
+              "TAK": 48,
+              "TRK": 35
+            }
+          },
+          "00-0040710": {
+            "physics": {
+              "mass": 150.1
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 57,
+              "AWR": 72,
+              "BCV": 42,
+              "BSH": 79,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 66,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 72,
+              "PRC": 74,
+              "PUR": 67,
+              "RBK": 42,
+              "SPD": 62,
+              "STR": 77,
+              "TAK": 71,
+              "TRK": 42
+            }
+          },
+          "00-0040724": {
+            "physics": {
+              "mass": 134.7
+            },
+            "ratings": {
+              "ACC": 63,
+              "AGI": 61,
+              "AWR": 64,
+              "BCV": 42,
+              "BSH": 65,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 66,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 67,
+              "PRC": 65,
+              "PUR": 66,
+              "RBK": 42,
+              "SPD": 68,
+              "STR": 73,
+              "TAK": 67,
+              "TRK": 42
+            }
+          },
+          "00-0041013": {
+            "physics": {
+              "mass": 91.6
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 74,
+              "AWR": 60,
+              "BCV": 78,
+              "BSH": 48,
+              "BTK": 78,
+              "CAR": 75,
+              "CTH": 76,
+              "ELU": 80,
+              "FMV": 48,
+              "IBL": 48,
+              "PBK": 50,
+              "PMV": 48,
+              "PRC": 60,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 87,
+              "STR": 48,
+              "TAK": 48,
+              "TRK": 52
+            }
+          },
+          "00-0041019": {
+            "physics": {
+              "mass": 144.7
+            },
+            "ratings": {
+              "ACC": 56,
+              "AGI": 57,
+              "AWR": 43,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 71,
+              "PBK": 71,
+              "PMV": 42,
+              "PRC": 43,
+              "PUR": 42,
+              "RBK": 69,
+              "SPD": 59,
+              "STR": 73,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0041391": {
+            "physics": {
+              "mass": 85.7
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 68,
+              "BCV": 48,
+              "BSH": 35,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 85,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 75,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 91,
+              "STR": 41,
+              "TAK": 71,
+              "TRK": 48
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "993829903482071690",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 105,
+          "down": 1,
+          "offense_direction": 1,
+          "period_type": "regulation",
+          "quarter": 4,
+          "yardline_100": 27,
+          "yards_to_go": 10
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_KC_BUF",
+      "game_seed": 300060,
+      "baseline_failure": {
+        "hard_time_limit_seconds": 36,
+        "no_progress_limit_seconds": 3.5,
+        "reason": "live_play_no_progress"
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "kind": "run_support",
+              "responsibility": "deep"
+            },
+            "LCB": {
+              "kind": "run_support",
+              "responsibility": "corner"
+            },
+            "LDT": {
+              "gap": "backside_a",
+              "kind": "gap_fit"
+            },
+            "LEDGE": {
+              "gap": "backside_c",
+              "kind": "gap_fit"
+            },
+            "MLB": {
+              "gap": "play_side_a",
+              "kind": "gap_fit"
+            },
+            "NB": {
+              "kind": "run_support",
+              "responsibility": "force"
+            },
+            "RCB": {
+              "kind": "run_support",
+              "responsibility": "corner"
+            },
+            "RDT": {
+              "gap": "play_side_a",
+              "kind": "gap_fit"
+            },
+            "REDGE": {
+              "gap": "play_side_c",
+              "kind": "gap_fit"
+            },
+            "SS": {
+              "kind": "run_support",
+              "responsibility": "alley"
+            },
+            "WLB": {
+              "gap": "backside_b",
+              "kind": "gap_fit"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "zone_block",
+              "track_gap": "play_side_a"
+            },
+            "LG": {
+              "kind": "zone_block",
+              "track_gap": "backside_a"
+            },
+            "LT": {
+              "kind": "zone_block",
+              "track_gap": "backside_c"
+            },
+            "QB": {
+              "action": "handoff",
+              "kind": "quarterback",
+              "target_slot": "RB"
+            },
+            "RB": {
+              "aiming_gap": "play_side_a",
+              "kind": "runner",
+              "read": "daylight"
+            },
+            "RG": {
+              "kind": "zone_block",
+              "track_gap": "play_side_b"
+            },
+            "RT": {
+              "kind": "zone_block",
+              "track_gap": "play_side_c"
+            },
+            "TE": {
+              "kind": "block",
+              "target_slot": "REDGE"
+            },
+            "WR1": {
+              "kind": "block",
+              "target_slot": "LCB"
+            },
+            "WR2": {
+              "kind": "block",
+              "target_slot": "RCB"
+            },
+            "WR3": {
+              "kind": "block",
+              "target_slot": "NB"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0036380",
+            "LCB": "00-0040670",
+            "LDT": "00-0032762",
+            "LEDGE": "00-0037192",
+            "MLB": "00-0036621",
+            "NB": "00-0041497",
+            "RCB": "00-0041543",
+            "RDT": "00-0036909",
+            "REDGE": "00-0039006",
+            "SS": "00-0038982",
+            "WLB": "00-0035262"
+          },
+          "team": "KC"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "inside_zone",
+            "direction": "right",
+            "family": "run",
+            "snap_type": "under_center"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0035679",
+            "LG": "00-0037428",
+            "LT": "00-0033904",
+            "QB": "00-0034857",
+            "RB": "00-0037248",
+            "RG": "00-0038548",
+            "RT": "00-0036976",
+            "TE": "00-0038933",
+            "WR1": "00-0037261",
+            "WR2": "00-0038679",
+            "WR3": "00-0039901"
+          },
+          "team": "BUF"
+        },
+        "play_id": "2026_12_KC_BUF:BUF:run:10525955373724784700",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0032762": {
+            "physics": {
+              "mass": 140.6
+            },
+            "ratings": {
+              "ACC": 58,
+              "AGI": 64,
+              "AWR": 79,
+              "BCV": 48,
+              "BSH": 80,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 94,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 93,
+              "PRC": 78,
+              "PUR": 68,
+              "RBK": 48,
+              "SPD": 64,
+              "STR": 74,
+              "TAK": 69,
+              "TRK": 48
+            }
+          },
+          "00-0033904": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 63,
+              "AWR": 88,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 81,
+              "PBK": 81,
+              "PMV": 42,
+              "PRC": 88,
+              "PUR": 42,
+              "RBK": 79,
+              "SPD": 61,
+              "STR": 75,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0034857": {
+            "physics": {
+              "mass": 107.5
+            },
+            "ratings": {
+              "ACC": 73,
+              "AGI": 77,
+              "AWR": 83,
+              "BCV": 81,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 80,
+              "FMV": 48,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 86,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 75,
+              "STR": 57,
+              "TAK": 48,
+              "TRK": 48
+            }
+          },
+          "00-0035262": {
+            "physics": {
+              "mass": 106.1
+            },
+            "ratings": {
+              "ACC": 77,
+              "AGI": 81,
+              "AWR": 85,
+              "BCV": 48,
+              "BSH": 83,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 39,
+              "ELU": 48,
+              "FMV": 59,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 59,
+              "PRC": 81,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 83,
+              "STR": 73,
+              "TAK": 83,
+              "TRK": 48
+            }
+          },
+          "00-0035679": {
+            "physics": {
+              "mass": 144.2
+            },
+            "ratings": {
+              "ACC": 56,
+              "AGI": 64,
+              "AWR": 85,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 81,
+              "PBK": 79,
+              "PMV": 42,
+              "PRC": 85,
+              "PUR": 42,
+              "RBK": 81,
+              "SPD": 58,
+              "STR": 78,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0036380": {
+            "physics": {
+              "mass": 91.2
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 85,
+              "AWR": 76,
+              "BCV": 48,
+              "BSH": 40,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 56,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 74,
+              "PUR": 78,
+              "RBK": 48,
+              "SPD": 84,
+              "STR": 50,
+              "TAK": 73,
+              "TRK": 48
+            }
+          },
+          "00-0036621": {
+            "physics": {
+              "mass": 107.5
+            },
+            "ratings": {
+              "ACC": 76,
+              "AGI": 68,
+              "AWR": 92,
+              "BCV": 48,
+              "BSH": 83,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 47,
+              "ELU": 48,
+              "FMV": 57,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 58,
+              "PRC": 86,
+              "PUR": 89,
+              "RBK": 48,
+              "SPD": 85,
+              "STR": 63,
+              "TAK": 91,
+              "TRK": 48
+            }
+          },
+          "00-0036909": {
+            "physics": {
+              "mass": 152
+            },
+            "ratings": {
+              "ACC": 55,
+              "AGI": 53,
+              "AWR": 70,
+              "BCV": 42,
+              "BSH": 68,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 57,
+              "IBL": 42,
+              "PBK": 42,
+              "PMV": 64,
+              "PRC": 68,
+              "PUR": 60,
+              "RBK": 42,
+              "SPD": 57,
+              "STR": 90,
+              "TAK": 66,
+              "TRK": 42
+            }
+          },
+          "00-0036976": {
+            "physics": {
+              "mass": 141.1
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 61,
+              "AWR": 84,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 78,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 84,
+              "PUR": 42,
+              "RBK": 76,
+              "SPD": 61,
+              "STR": 71,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0037192": {
+            "physics": {
+              "mass": 119.3
+            },
+            "ratings": {
+              "ACC": 71,
+              "AGI": 73,
+              "AWR": 84,
+              "BCV": 48,
+              "BSH": 89,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 99,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 99,
+              "PRC": 86,
+              "PUR": 80,
+              "RBK": 48,
+              "SPD": 78,
+              "STR": 62,
+              "TAK": 76,
+              "TRK": 48
+            }
+          },
+          "00-0037248": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 84,
+              "AGI": 80,
+              "AWR": 89,
+              "BCV": 86,
+              "BSH": 48,
+              "BTK": 77,
+              "CAR": 60,
+              "CTH": 64,
+              "ELU": 82,
+              "FMV": 48,
+              "IBL": 44,
+              "PBK": 46,
+              "PMV": 48,
+              "PRC": 89,
+              "PUR": 48,
+              "RBK": 44,
+              "SPD": 92,
+              "STR": 46,
+              "TAK": 48,
+              "TRK": 47
+            }
+          },
+          "00-0037261": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 84,
+              "AGI": 76,
+              "AWR": 77,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 58,
+              "CAR": 72,
+              "CTH": 76,
+              "ELU": 88,
+              "FMV": 48,
+              "IBL": 44,
+              "PBK": 40,
+              "PMV": 48,
+              "PRC": 77,
+              "PUR": 48,
+              "RBK": 44,
+              "SPD": 92,
+              "STR": 42,
+              "TAK": 48,
+              "TRK": 33
+            }
+          },
+          "00-0037428": {
+            "physics": {
+              "mass": 138.3
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 59,
+              "AWR": 63,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 72,
+              "PBK": 72,
+              "PMV": 42,
+              "PRC": 63,
+              "PUR": 42,
+              "RBK": 70,
+              "SPD": 62,
+              "STR": 71,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0038548": {
+            "physics": {
+              "mass": 149.7
+            },
+            "ratings": {
+              "ACC": 54,
+              "AGI": 54,
+              "AWR": 76,
+              "BCV": 42,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "IBL": 80,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 76,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 57,
+              "STR": 76,
+              "TAK": 42,
+              "TRK": 42
+            }
+          },
+          "00-0038679": {
+            "physics": {
+              "mass": 95.7
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 78,
+              "AWR": 58,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 54,
+              "CAR": 72,
+              "CTH": 71,
+              "ELU": 71,
+              "FMV": 48,
+              "IBL": 52,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 58,
+              "PUR": 48,
+              "RBK": 52,
+              "SPD": 88,
+              "STR": 46,
+              "TAK": 48,
+              "TRK": 42
+            }
+          },
+          "00-0038933": {
+            "physics": {
+              "mass": 111.6
+            },
+            "ratings": {
+              "ACC": 72,
+              "AGI": 75,
+              "AWR": 77,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 68,
+              "CAR": 73,
+              "CTH": 80,
+              "ELU": 76,
+              "FMV": 48,
+              "IBL": 81,
+              "PBK": 77,
+              "PMV": 48,
+              "PRC": 77,
+              "PUR": 48,
+              "RBK": 81,
+              "SPD": 80,
+              "STR": 59,
+              "TAK": 48,
+              "TRK": 61
+            }
+          },
+          "00-0038982": {
+            "physics": {
+              "mass": 91.6
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 83,
+              "BCV": 48,
+              "BSH": 42,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 60,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 78,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 54,
+              "TAK": 80,
+              "TRK": 48
+            }
+          },
+          "00-0039006": {
+            "physics": {
+              "mass": 115.7
+            },
+            "ratings": {
+              "ACC": 72,
+              "AGI": 74,
+              "AWR": 69,
+              "BCV": 48,
+              "BSH": 70,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 78,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 75,
+              "PRC": 69,
+              "PUR": 74,
+              "RBK": 48,
+              "SPD": 80,
+              "STR": 63,
+              "TAK": 70,
+              "TRK": 48
+            }
+          },
+          "00-0039901": {
+            "physics": {
+              "mass": 96.6
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 79,
+              "AWR": 72,
+              "BCV": 48,
+              "BSH": 48,
+              "BTK": 53,
+              "CAR": 78,
+              "CTH": 79,
+              "ELU": 67,
+              "FMV": 48,
+              "IBL": 53,
+              "PBK": 49,
+              "PMV": 48,
+              "PRC": 72,
+              "PUR": 48,
+              "RBK": 53,
+              "SPD": 85,
+              "STR": 48,
+              "TAK": 48,
+              "TRK": 44
+            }
+          },
+          "00-0040670": {
+            "physics": {
+              "mass": 90.7
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 81,
+              "AWR": 70,
+              "BCV": 48,
+              "BSH": 41,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 82,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 52,
+              "TAK": 72,
+              "TRK": 48
+            }
+          },
+          "00-0041497": {
+            "physics": {
+              "mass": 83.9
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 81,
+              "AWR": 53,
+              "BCV": 48,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 60,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 59,
+              "PUR": 79,
+              "RBK": 48,
+              "SPD": 90,
+              "STR": 43,
+              "TAK": 67,
+              "TRK": 48
+            }
+          },
+          "00-0041543": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 70,
+              "BCV": 48,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 79,
+              "ELU": 48,
+              "FMV": 35,
+              "IBL": 48,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 43,
+              "TAK": 75,
+              "TRK": 48
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "10525955373724784700",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 73,
+          "down": 3,
+          "offense_direction": -1,
+          "period_type": "regulation",
+          "quarter": 1,
+          "yardline_100": 55,
+          "yards_to_go": 6
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_KC_BUF",
+      "game_seed": 300064,
+      "baseline_failure": {
+        "reason": "simulation_time_cap",
+        "time_limit_seconds": 12
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "bounds": [
+                12,
+                30,
+                -8,
+                8
+              ],
+              "kind": "zone"
+            },
+            "LCB": {
+              "kind": "man",
+              "target_slot": "WR1"
+            },
+            "LDT": {
+              "kind": "rush"
+            },
+            "LEDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "MLB": {
+              "kind": "man",
+              "target_slot": "RB"
+            },
+            "NB": {
+              "kind": "man",
+              "target_slot": "WR3"
+            },
+            "RCB": {
+              "kind": "man",
+              "target_slot": "WR2"
+            },
+            "RDT": {
+              "kind": "rush"
+            },
+            "REDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "SS": {
+              "bounds": [
+                3,
+                12,
+                -8,
+                2
+              ],
+              "kind": "zone"
+            },
+            "WLB": {
+              "bounds": [
+                3,
+                12,
+                8,
+                26
+              ],
+              "kind": "zone"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "block",
+              "protection_area": [
+                -1.4,
+                1.4
+              ]
+            },
+            "LG": {
+              "kind": "block",
+              "protection_area": [
+                -0.3,
+                3
+              ]
+            },
+            "LT": {
+              "kind": "block",
+              "protection_area": [
+                0.8,
+                7
+              ]
+            },
+            "QB": {
+              "kind": "quarterback",
+              "read_order": [
+                "WR2",
+                "WR3",
+                "WR1",
+                "RB"
+              ]
+            },
+            "RB": {
+              "check_release": true,
+              "kind": "route",
+              "route": "check"
+            },
+            "RG": {
+              "kind": "block",
+              "protection_area": [
+                -3,
+                0.3
+              ]
+            },
+            "RT": {
+              "kind": "block",
+              "protection_area": [
+                -7,
+                -0.8
+              ]
+            },
+            "TE": {
+              "kind": "block"
+            },
+            "WR1": {
+              "kind": "route",
+              "route": "go"
+            },
+            "WR2": {
+              "kind": "route",
+              "route": "slant"
+            },
+            "WR3": {
+              "kind": "route",
+              "route": "flat"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0036380",
+            "LCB": "00-0040670",
+            "LDT": "00-0032762",
+            "LEDGE": "00-0037192",
+            "MLB": "00-0036621",
+            "NB": "00-0041497",
+            "RCB": "00-0041543",
+            "RDT": "00-0036909",
+            "REDGE": "00-0039006",
+            "SS": "00-0038982",
+            "WLB": "00-0035262"
+          },
+          "team": "KC"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "assigned",
+            "direction": "right",
+            "family": "pass",
+            "snap_type": "shotgun"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0035679",
+            "LG": "00-0037428",
+            "LT": "00-0033904",
+            "QB": "00-0034857",
+            "RB": "00-0035537",
+            "RG": "00-0038548",
+            "RT": "00-0036976",
+            "TE": "00-0035689",
+            "WR1": "00-0037261",
+            "WR2": "00-0039901",
+            "WR3": "00-0041443"
+          },
+          "team": "BUF"
+        },
+        "play_id": "2026_12_KC_BUF:BUF:pass:8042082372023623982",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0032762": {
+            "physics": {
+              "mass": 140.6
+            },
+            "ratings": {
+              "ACC": 58,
+              "AGI": 64,
+              "AWR": 79,
+              "BSH": 80,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 94,
+              "PBK": 48,
+              "PMV": 93,
+              "PRC": 78,
+              "PUR": 68,
+              "RBK": 48,
+              "SPD": 64,
+              "STR": 74,
+              "TAK": 69
+            }
+          },
+          "00-0033904": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 63,
+              "AWR": 88,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 81,
+              "PMV": 42,
+              "PRC": 88,
+              "PUR": 42,
+              "RBK": 79,
+              "SPD": 61,
+              "STR": 75,
+              "TAK": 42
+            }
+          },
+          "00-0034857": {
+            "physics": {
+              "mass": 107.5
+            },
+            "ratings": {
+              "ACC": 73,
+              "AGI": 77,
+              "AWR": 83,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 80,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 86,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 75,
+              "STR": 57,
+              "TAK": 48,
+              "THA": 80
+            }
+          },
+          "00-0035262": {
+            "physics": {
+              "mass": 106.1
+            },
+            "ratings": {
+              "ACC": 77,
+              "AGI": 81,
+              "AWR": 85,
+              "BSH": 83,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 39,
+              "ELU": 48,
+              "FMV": 59,
+              "PBK": 48,
+              "PMV": 59,
+              "PRC": 81,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 83,
+              "STR": 73,
+              "TAK": 83
+            }
+          },
+          "00-0035537": {
+            "physics": {
+              "mass": 95.3
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 78,
+              "AWR": 70,
+              "BSH": 48,
+              "BTK": 69,
+              "CAR": 81,
+              "CTH": 75,
+              "ELU": 73,
+              "FMV": 48,
+              "PBK": 54,
+              "PMV": 48,
+              "PRC": 70,
+              "PUR": 48,
+              "RBK": 52,
+              "SPD": 86,
+              "STR": 53,
+              "TAK": 48
+            }
+          },
+          "00-0035679": {
+            "physics": {
+              "mass": 144.2
+            },
+            "ratings": {
+              "ACC": 56,
+              "AGI": 64,
+              "AWR": 85,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 79,
+              "PMV": 42,
+              "PRC": 85,
+              "PUR": 42,
+              "RBK": 81,
+              "SPD": 58,
+              "STR": 78,
+              "TAK": 42
+            }
+          },
+          "00-0035689": {
+            "physics": {
+              "mass": 115.2
+            },
+            "ratings": {
+              "ACC": 71,
+              "AGI": 77,
+              "AWR": 76,
+              "BSH": 48,
+              "BTK": 63,
+              "CAR": 79,
+              "CTH": 71,
+              "ELU": 70,
+              "FMV": 48,
+              "PBK": 78,
+              "PMV": 48,
+              "PRC": 76,
+              "PUR": 48,
+              "RBK": 82,
+              "SPD": 77,
+              "STR": 54,
+              "TAK": 48
+            }
+          },
+          "00-0036380": {
+            "physics": {
+              "mass": 91.2
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 85,
+              "AWR": 76,
+              "BSH": 40,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 56,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 74,
+              "PUR": 78,
+              "RBK": 48,
+              "SPD": 84,
+              "STR": 50,
+              "TAK": 73
+            }
+          },
+          "00-0036621": {
+            "physics": {
+              "mass": 107.5
+            },
+            "ratings": {
+              "ACC": 76,
+              "AGI": 68,
+              "AWR": 92,
+              "BSH": 83,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 47,
+              "ELU": 48,
+              "FMV": 57,
+              "PBK": 48,
+              "PMV": 58,
+              "PRC": 86,
+              "PUR": 89,
+              "RBK": 48,
+              "SPD": 85,
+              "STR": 63,
+              "TAK": 91
+            }
+          },
+          "00-0036909": {
+            "physics": {
+              "mass": 152
+            },
+            "ratings": {
+              "ACC": 55,
+              "AGI": 53,
+              "AWR": 70,
+              "BSH": 68,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 57,
+              "PBK": 42,
+              "PMV": 64,
+              "PRC": 68,
+              "PUR": 60,
+              "RBK": 42,
+              "SPD": 57,
+              "STR": 90,
+              "TAK": 66
+            }
+          },
+          "00-0036976": {
+            "physics": {
+              "mass": 141.1
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 61,
+              "AWR": 84,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 84,
+              "PUR": 42,
+              "RBK": 76,
+              "SPD": 61,
+              "STR": 71,
+              "TAK": 42
+            }
+          },
+          "00-0037192": {
+            "physics": {
+              "mass": 119.3
+            },
+            "ratings": {
+              "ACC": 71,
+              "AGI": 73,
+              "AWR": 84,
+              "BSH": 89,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 99,
+              "PBK": 48,
+              "PMV": 99,
+              "PRC": 86,
+              "PUR": 80,
+              "RBK": 48,
+              "SPD": 78,
+              "STR": 62,
+              "TAK": 76
+            }
+          },
+          "00-0037261": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 84,
+              "AGI": 76,
+              "AWR": 77,
+              "BSH": 48,
+              "BTK": 58,
+              "CAR": 72,
+              "CTH": 76,
+              "ELU": 88,
+              "FMV": 48,
+              "PBK": 40,
+              "PMV": 48,
+              "PRC": 77,
+              "PUR": 48,
+              "RBK": 44,
+              "SPD": 92,
+              "STR": 42,
+              "TAK": 48
+            }
+          },
+          "00-0037428": {
+            "physics": {
+              "mass": 138.3
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 59,
+              "AWR": 63,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 72,
+              "PMV": 42,
+              "PRC": 63,
+              "PUR": 42,
+              "RBK": 70,
+              "SPD": 62,
+              "STR": 71,
+              "TAK": 42
+            }
+          },
+          "00-0038548": {
+            "physics": {
+              "mass": 149.7
+            },
+            "ratings": {
+              "ACC": 54,
+              "AGI": 54,
+              "AWR": 76,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 76,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 57,
+              "STR": 76,
+              "TAK": 42
+            }
+          },
+          "00-0038982": {
+            "physics": {
+              "mass": 91.6
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 83,
+              "BSH": 42,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 60,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 78,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 54,
+              "TAK": 80
+            }
+          },
+          "00-0039006": {
+            "physics": {
+              "mass": 115.7
+            },
+            "ratings": {
+              "ACC": 72,
+              "AGI": 74,
+              "AWR": 69,
+              "BSH": 70,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 78,
+              "PBK": 48,
+              "PMV": 75,
+              "PRC": 69,
+              "PUR": 74,
+              "RBK": 48,
+              "SPD": 80,
+              "STR": 63,
+              "TAK": 70
+            }
+          },
+          "00-0039901": {
+            "physics": {
+              "mass": 96.6
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 79,
+              "AWR": 72,
+              "BSH": 48,
+              "BTK": 53,
+              "CAR": 78,
+              "CTH": 79,
+              "ELU": 67,
+              "FMV": 48,
+              "PBK": 49,
+              "PMV": 48,
+              "PRC": 72,
+              "PUR": 48,
+              "RBK": 53,
+              "SPD": 85,
+              "STR": 48,
+              "TAK": 48
+            }
+          },
+          "00-0040670": {
+            "physics": {
+              "mass": 90.7
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 81,
+              "AWR": 70,
+              "BSH": 41,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 82,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 52,
+              "TAK": 72
+            }
+          },
+          "00-0041443": {
+            "physics": {
+              "mass": 87.1
+            },
+            "ratings": {
+              "ACC": 87,
+              "AGI": 80,
+              "AWR": 56,
+              "BSH": 48,
+              "BTK": 52,
+              "CAR": 77,
+              "CTH": 74,
+              "ELU": 74,
+              "FMV": 48,
+              "PBK": 41,
+              "PMV": 48,
+              "PRC": 56,
+              "PUR": 48,
+              "RBK": 45,
+              "SPD": 93,
+              "STR": 44,
+              "TAK": 48
+            }
+          },
+          "00-0041497": {
+            "physics": {
+              "mass": 83.9
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 81,
+              "AWR": 53,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 60,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 59,
+              "PUR": 79,
+              "RBK": 48,
+              "SPD": 90,
+              "STR": 43,
+              "TAK": 67
+            }
+          },
+          "00-0041543": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 70,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 79,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 43,
+              "TAK": 75
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "8042082372023623982",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 180,
+          "down": 1,
+          "offense_direction": 1,
+          "period_type": "regulation",
+          "quarter": 1,
+          "yardline_100": 78,
+          "yards_to_go": 10
+        }
+      }
+    },
+    {
+      "game_id": "2026_12_KC_BUF",
+      "game_seed": 300094,
+      "baseline_failure": {
+        "reason": "simulation_time_cap",
+        "time_limit_seconds": 12
+      },
+      "call": {
+        "assignments": {
+          "defense": {
+            "FS": {
+              "bounds": [
+                12,
+                30,
+                -8,
+                8
+              ],
+              "kind": "zone"
+            },
+            "LCB": {
+              "kind": "man",
+              "target_slot": "WR1"
+            },
+            "LDT": {
+              "kind": "rush"
+            },
+            "LEDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "MLB": {
+              "kind": "man",
+              "target_slot": "RB"
+            },
+            "NB": {
+              "kind": "man",
+              "target_slot": "WR3"
+            },
+            "RCB": {
+              "kind": "man",
+              "target_slot": "WR2"
+            },
+            "RDT": {
+              "kind": "rush"
+            },
+            "REDGE": {
+              "kind": "rush",
+              "rush_lane": "outside"
+            },
+            "SS": {
+              "bounds": [
+                3,
+                12,
+                -8,
+                2
+              ],
+              "kind": "zone"
+            },
+            "WLB": {
+              "bounds": [
+                3,
+                12,
+                8,
+                26
+              ],
+              "kind": "zone"
+            }
+          },
+          "offense": {
+            "C": {
+              "kind": "block",
+              "protection_area": [
+                -1.4,
+                1.4
+              ]
+            },
+            "LG": {
+              "kind": "block",
+              "protection_area": [
+                -0.3,
+                3
+              ]
+            },
+            "LT": {
+              "kind": "block",
+              "protection_area": [
+                0.8,
+                7
+              ]
+            },
+            "QB": {
+              "kind": "quarterback",
+              "read_order": [
+                "WR2",
+                "WR3",
+                "WR1",
+                "RB"
+              ]
+            },
+            "RB": {
+              "check_release": true,
+              "kind": "route",
+              "route": "check"
+            },
+            "RG": {
+              "kind": "block",
+              "protection_area": [
+                -3,
+                0.3
+              ]
+            },
+            "RT": {
+              "kind": "block",
+              "protection_area": [
+                -7,
+                -0.8
+              ]
+            },
+            "TE": {
+              "kind": "block"
+            },
+            "WR1": {
+              "kind": "route",
+              "route": "go"
+            },
+            "WR2": {
+              "kind": "route",
+              "route": "slant"
+            },
+            "WR3": {
+              "kind": "route",
+              "route": "flat"
+            }
+          },
+          "schema_version": "gridiron.assignments.v1"
+        },
+        "defense": {
+          "call": {
+            "coverage": "cover_1",
+            "front": "nickel_over",
+            "run_fit": "spill_force"
+          },
+          "lineup": {
+            "FS": "00-0036380",
+            "LCB": "00-0040670",
+            "LDT": "00-0032762",
+            "LEDGE": "00-0037192",
+            "MLB": "00-0036621",
+            "NB": "00-0041497",
+            "RCB": "00-0041543",
+            "RDT": "00-0036909",
+            "REDGE": "00-0039006",
+            "SS": "00-0038982",
+            "WLB": "00-0035262"
+          },
+          "team": "KC"
+        },
+        "mode": "autonomous_from_snap",
+        "offense": {
+          "call": {
+            "concept": "assigned",
+            "direction": "right",
+            "family": "pass",
+            "snap_type": "shotgun"
+          },
+          "formation": "singleback_11",
+          "lineup": {
+            "C": "00-0035679",
+            "LG": "00-0037428",
+            "LT": "00-0033904",
+            "QB": "00-0034857",
+            "RB": "00-0035537",
+            "RG": "00-0038548",
+            "RT": "00-0036976",
+            "TE": "00-0038933",
+            "WR1": "00-0034827",
+            "WR2": "00-0037261",
+            "WR3": "00-0038679"
+          },
+          "team": "BUF"
+        },
+        "play_id": "2026_12_KC_BUF:BUF:pass:522997612077312346",
+        "player_evaluation_mode": "shared_snapshot",
+        "player_profiles": {
+          "00-0032762": {
+            "physics": {
+              "mass": 140.6
+            },
+            "ratings": {
+              "ACC": 58,
+              "AGI": 64,
+              "AWR": 79,
+              "BSH": 80,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 94,
+              "PBK": 48,
+              "PMV": 93,
+              "PRC": 78,
+              "PUR": 68,
+              "RBK": 48,
+              "SPD": 64,
+              "STR": 74,
+              "TAK": 69
+            }
+          },
+          "00-0033904": {
+            "physics": {
+              "mass": 145.1
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 63,
+              "AWR": 88,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 81,
+              "PMV": 42,
+              "PRC": 88,
+              "PUR": 42,
+              "RBK": 79,
+              "SPD": 61,
+              "STR": 75,
+              "TAK": 42
+            }
+          },
+          "00-0034827": {
+            "physics": {
+              "mass": 96.6
+            },
+            "ratings": {
+              "ACC": 85,
+              "AGI": 83,
+              "AWR": 86,
+              "BSH": 48,
+              "BTK": 57,
+              "CAR": 77,
+              "CTH": 75,
+              "ELU": 75,
+              "FMV": 48,
+              "PBK": 49,
+              "PMV": 48,
+              "PRC": 86,
+              "PUR": 48,
+              "RBK": 53,
+              "SPD": 91,
+              "STR": 48,
+              "TAK": 48
+            }
+          },
+          "00-0034857": {
+            "physics": {
+              "mass": 107.5
+            },
+            "ratings": {
+              "ACC": 73,
+              "AGI": 77,
+              "AWR": 83,
+              "BSH": 48,
+              "BTK": 48,
+              "CAR": 70,
+              "CTH": 48,
+              "ELU": 80,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 86,
+              "PUR": 48,
+              "RBK": 48,
+              "SPD": 75,
+              "STR": 57,
+              "TAK": 48,
+              "THA": 80
+            }
+          },
+          "00-0035262": {
+            "physics": {
+              "mass": 106.1
+            },
+            "ratings": {
+              "ACC": 77,
+              "AGI": 81,
+              "AWR": 85,
+              "BSH": 83,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 39,
+              "ELU": 48,
+              "FMV": 59,
+              "PBK": 48,
+              "PMV": 59,
+              "PRC": 81,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 83,
+              "STR": 73,
+              "TAK": 83
+            }
+          },
+          "00-0035537": {
+            "physics": {
+              "mass": 95.3
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 78,
+              "AWR": 70,
+              "BSH": 48,
+              "BTK": 69,
+              "CAR": 81,
+              "CTH": 75,
+              "ELU": 73,
+              "FMV": 48,
+              "PBK": 54,
+              "PMV": 48,
+              "PRC": 70,
+              "PUR": 48,
+              "RBK": 52,
+              "SPD": 86,
+              "STR": 53,
+              "TAK": 48
+            }
+          },
+          "00-0035679": {
+            "physics": {
+              "mass": 144.2
+            },
+            "ratings": {
+              "ACC": 56,
+              "AGI": 64,
+              "AWR": 85,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 79,
+              "PMV": 42,
+              "PRC": 85,
+              "PUR": 42,
+              "RBK": 81,
+              "SPD": 58,
+              "STR": 78,
+              "TAK": 42
+            }
+          },
+          "00-0036380": {
+            "physics": {
+              "mass": 91.2
+            },
+            "ratings": {
+              "ACC": 78,
+              "AGI": 85,
+              "AWR": 76,
+              "BSH": 40,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 56,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 74,
+              "PUR": 78,
+              "RBK": 48,
+              "SPD": 84,
+              "STR": 50,
+              "TAK": 73
+            }
+          },
+          "00-0036621": {
+            "physics": {
+              "mass": 107.5
+            },
+            "ratings": {
+              "ACC": 76,
+              "AGI": 68,
+              "AWR": 92,
+              "BSH": 83,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 47,
+              "ELU": 48,
+              "FMV": 57,
+              "PBK": 48,
+              "PMV": 58,
+              "PRC": 86,
+              "PUR": 89,
+              "RBK": 48,
+              "SPD": 85,
+              "STR": 63,
+              "TAK": 91
+            }
+          },
+          "00-0036909": {
+            "physics": {
+              "mass": 152
+            },
+            "ratings": {
+              "ACC": 55,
+              "AGI": 53,
+              "AWR": 70,
+              "BSH": 68,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 57,
+              "PBK": 42,
+              "PMV": 64,
+              "PRC": 68,
+              "PUR": 60,
+              "RBK": 42,
+              "SPD": 57,
+              "STR": 90,
+              "TAK": 66
+            }
+          },
+          "00-0036976": {
+            "physics": {
+              "mass": 141.1
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 61,
+              "AWR": 84,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 84,
+              "PUR": 42,
+              "RBK": 76,
+              "SPD": 61,
+              "STR": 71,
+              "TAK": 42
+            }
+          },
+          "00-0037192": {
+            "physics": {
+              "mass": 119.3
+            },
+            "ratings": {
+              "ACC": 71,
+              "AGI": 73,
+              "AWR": 84,
+              "BSH": 89,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 99,
+              "PBK": 48,
+              "PMV": 99,
+              "PRC": 86,
+              "PUR": 80,
+              "RBK": 48,
+              "SPD": 78,
+              "STR": 62,
+              "TAK": 76
+            }
+          },
+          "00-0037261": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 84,
+              "AGI": 76,
+              "AWR": 77,
+              "BSH": 48,
+              "BTK": 58,
+              "CAR": 72,
+              "CTH": 76,
+              "ELU": 88,
+              "FMV": 48,
+              "PBK": 40,
+              "PMV": 48,
+              "PRC": 77,
+              "PUR": 48,
+              "RBK": 44,
+              "SPD": 92,
+              "STR": 42,
+              "TAK": 48
+            }
+          },
+          "00-0037428": {
+            "physics": {
+              "mass": 138.3
+            },
+            "ratings": {
+              "ACC": 57,
+              "AGI": 59,
+              "AWR": 63,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 72,
+              "PMV": 42,
+              "PRC": 63,
+              "PUR": 42,
+              "RBK": 70,
+              "SPD": 62,
+              "STR": 71,
+              "TAK": 42
+            }
+          },
+          "00-0038548": {
+            "physics": {
+              "mass": 149.7
+            },
+            "ratings": {
+              "ACC": 54,
+              "AGI": 54,
+              "AWR": 76,
+              "BSH": 42,
+              "BTK": 42,
+              "CAR": 42,
+              "CTH": 42,
+              "ELU": 42,
+              "FMV": 42,
+              "PBK": 78,
+              "PMV": 42,
+              "PRC": 76,
+              "PUR": 42,
+              "RBK": 80,
+              "SPD": 57,
+              "STR": 76,
+              "TAK": 42
+            }
+          },
+          "00-0038679": {
+            "physics": {
+              "mass": 95.7
+            },
+            "ratings": {
+              "ACC": 79,
+              "AGI": 78,
+              "AWR": 58,
+              "BSH": 48,
+              "BTK": 54,
+              "CAR": 72,
+              "CTH": 71,
+              "ELU": 71,
+              "FMV": 48,
+              "PBK": 48,
+              "PMV": 48,
+              "PRC": 58,
+              "PUR": 48,
+              "RBK": 52,
+              "SPD": 88,
+              "STR": 46,
+              "TAK": 48
+            }
+          },
+          "00-0038933": {
+            "physics": {
+              "mass": 111.6
+            },
+            "ratings": {
+              "ACC": 72,
+              "AGI": 75,
+              "AWR": 77,
+              "BSH": 48,
+              "BTK": 68,
+              "CAR": 73,
+              "CTH": 80,
+              "ELU": 76,
+              "FMV": 48,
+              "PBK": 77,
+              "PMV": 48,
+              "PRC": 77,
+              "PUR": 48,
+              "RBK": 81,
+              "SPD": 80,
+              "STR": 59,
+              "TAK": 48
+            }
+          },
+          "00-0038982": {
+            "physics": {
+              "mass": 91.6
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 83,
+              "BSH": 42,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 60,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 78,
+              "PUR": 85,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 54,
+              "TAK": 80
+            }
+          },
+          "00-0039006": {
+            "physics": {
+              "mass": 115.7
+            },
+            "ratings": {
+              "ACC": 72,
+              "AGI": 74,
+              "AWR": 69,
+              "BSH": 70,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 48,
+              "ELU": 48,
+              "FMV": 78,
+              "PBK": 48,
+              "PMV": 75,
+              "PRC": 69,
+              "PUR": 74,
+              "RBK": 48,
+              "SPD": 80,
+              "STR": 63,
+              "TAK": 70
+            }
+          },
+          "00-0040670": {
+            "physics": {
+              "mass": 90.7
+            },
+            "ratings": {
+              "ACC": 80,
+              "AGI": 81,
+              "AWR": 70,
+              "BSH": 41,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 82,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 82,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 52,
+              "TAK": 72
+            }
+          },
+          "00-0041497": {
+            "physics": {
+              "mass": 83.9
+            },
+            "ratings": {
+              "ACC": 82,
+              "AGI": 81,
+              "AWR": 53,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 60,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 59,
+              "PUR": 79,
+              "RBK": 48,
+              "SPD": 90,
+              "STR": 43,
+              "TAK": 67
+            }
+          },
+          "00-0041543": {
+            "physics": {
+              "mass": 86.2
+            },
+            "ratings": {
+              "ACC": 81,
+              "AGI": 81,
+              "AWR": 70,
+              "BSH": 36,
+              "BTK": 48,
+              "CAR": 48,
+              "CTH": 79,
+              "ELU": 48,
+              "FMV": 35,
+              "PBK": 48,
+              "PMV": 35,
+              "PRC": 76,
+              "PUR": 84,
+              "RBK": 48,
+              "SPD": 89,
+              "STR": 43,
+              "TAK": 75
+            }
+          }
+        },
+        "schema_version": "gridiron.autonomous-play.v1",
+        "seed": "522997612077312346",
+        "situation": {
+          "ball_lateral_yards": 26.666666666666668,
+          "clock_seconds": 15,
+          "down": 1,
+          "offense_direction": 1,
+          "period_type": "regulation",
+          "quarter": 1,
+          "yardline_100": 91,
+          "yards_to_go": 9
+        }
+      }
+    }
+  ]
+}
