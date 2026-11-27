@@ -888,8 +888,11 @@ function simulateAutonomousFieldGoal(cfg) {
     if (protector && dist(p.p, protector.p) <= p.r + protector.r + 0.16 * YD) W.engage(p, protector);
   }
 
-  for (let step = 0; step < Math.ceil(7 / DT); step++) {
+  // Seven seconds is sufficient for the snap and kick flight, but a blocked
+  // kick can be recovered and returned well beyond that point.
+  for (let step = 0; step < Math.ceil(MAX_SECONDS / DT); step++) {
     if (terminal != null) break;
+    if (!blocked && W.t >= 7) break;
     if (!snapStarted && W.t >= snapAt) {
       snapStarted = true;
       const from = { x: W.ball.x, y: W.ball.y, z: 0.85 };
@@ -1007,12 +1010,12 @@ function simulateAutonomousFieldGoal(cfg) {
       if ((carrier.team === 'R' && carrier.p.x <= 0.55 * YD)
           || (carrier.team === 'K' && carrier.p.x >= 99.45 * YD)) {
         deadReason = 'touchdown'; terminal = W.t;
-        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+        deadBall = { x: carrier.team === 'K' ? 100 : 0, y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
         W.event('touchdown', { player_id: carrier.id, team: carrier.team });
       } else if ((carrier.team === 'R' && carrier.p.x >= 99.45 * YD)
           || (carrier.team === 'K' && carrier.p.x <= 0.55 * YD)) {
         deadReason = 'safety'; terminal = W.t;
-        deadBall = { x: clamp(carrier.p.x / YD, 0, 100), y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
+        deadBall = { x: carrier.team === 'K' ? 0 : 100, y: clamp(carrier.p.y / YD, 0, FIELD_W_YD) };
         W.event('safety', { player_id: carrier.id, team: carrier.team });
       } else if (carrier.p.y < 0 || carrier.p.y > FIELD_W) {
         deadReason = 'out_of_bounds'; terminal = W.t;
@@ -1054,7 +1057,7 @@ function simulateAutonomousFieldGoal(cfg) {
   if (terminal == null) return { schema_version: 'gridiron.autonomous-special-teams.v1',
     status: 'failed', kind: cfg.kind, seed: cfg.seed,
     failure: { reason: blocked ? 'blocked_field_goal_recovery_time_cap' : 'field_goal_flight_time_cap',
-      time_limit_seconds: 7 }, events: W.events,
+      time_limit_seconds: blocked ? MAX_SECONDS : 7 }, events: W.events,
     trajectory: { roster, frames: frames.map((frame) => Array.from(frame)), stride, t0: 0, hz: REC_HZ },
     diagnostics: { assignments_executed: assignments.size, expected_assignments: 22, outcome_inputs: [] } };
 

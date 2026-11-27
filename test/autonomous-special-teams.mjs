@@ -1,9 +1,22 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { simulateAutonomousSpecialTeams } from '../engine/autonomous/special-teams.js';
 import { roundYardline100, statReturnYards } from '../engine/autonomous/field-geometry.js';
 
 const ids = ['K', ...Array.from({ length: 10 }, (_, i) => `C${i}`), 'R',
   ...Array.from({ length: 10 }, (_, i) => `B${i}`)];
+
+// Saved CHI–DET seed 300027: a live recovery at 1.62 s was previously
+// interrupted by the seven-second kick-flight limit.
+const recoveredKickCall = JSON.parse(fs.readFileSync(
+  new URL('./fixtures/blocked-field-goal-seed-300027.json', import.meta.url), 'utf8'));
+const recoveredKick = simulateAutonomousSpecialTeams(recoveredKickCall);
+assert.equal(recoveredKick.status, 'complete');
+assert.equal(recoveredKick.result.result, 'blocked');
+assert.ok(recoveredKick.events.some((event) => event.type === 'kick_recovery'));
+assert.ok(recoveredKick.result.elapsed_seconds > 7);
+assert.equal(recoveredKick.result.scoring, 'touchdown');
+assert.equal(recoveredKick.result.dead_ball_yardline_100, 0);
 
 assert.equal(roundYardline100(32.499999), 32);
 assert.equal(roundYardline100(32.5), 33, 'statistical spots use the shared half-up convention');
