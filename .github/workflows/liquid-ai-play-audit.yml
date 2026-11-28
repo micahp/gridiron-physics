@@ -16,7 +16,17 @@ jobs:
           node-version: '22'
       - run: node scripts/audit-liquid-ai-play.mjs audit-output
       - name: Passing role and catch opportunity audit
-        run: node scripts/audit-liquid-pass.mjs audit-output
+        run: |
+          git cat-file -e ca5850254e43c07117da2bf70f01ec867405c713^{commit} || git fetch --depth=1 origin ca5850254e43c07117da2bf70f01ec867405c713
+          git show ca5850254e43c07117da2bf70f01ec867405c713:engine/autonomous/passing.js > engine/autonomous/.audit-baseline-pass.js
+          node scripts/audit-liquid-pass.mjs audit-output
+          rm engine/autonomous/.audit-baseline-pass.js
+      - name: Passing contracts
+        run: |
+          node test/autonomous-coverage-reaction.mjs
+          node test/autonomous-receiving-state.mjs
+          node test/autonomous-contest-order.mjs
+          node test/autonomous-pass.mjs
       - name: Paired run-controller audit
         run: |
           git cat-file -e 3ab7083b7b073ac775e5b4205818bdfad92e517c^{commit} || git fetch --depth=1 origin 3ab7083b7b073ac775e5b4205818bdfad92e517c

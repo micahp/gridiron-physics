@@ -34,6 +34,13 @@ export function receivingAssignmentActive(task, released, engaged = false) {
   return task?.kind === 'route' && !engaged && (!task.check_release || released === true);
 }
 
+// Coverage defenders cannot intentionally play a pass before their controller
+// has recognized it. Rushers retain the existing separate line-tip path;
+// accidental body impacts are not yet modeled by this eligibility check.
+export function coverageContestActive(task, recognized) {
+  return !task || task.kind === 'rush' || recognized === true;
+}
+
 export function compareBallContact(a, b) {
   return a.planar - b.planar || a.player.id.localeCompare(b.player.id);
 }
@@ -919,6 +926,12 @@ export function simulatePassPlay(options = {}) {
       const reach = 1.15 + p.r / YD;
       if (planar > reach) continue;
       if (b.z < 0.35 || b.z > 2.75) continue;
+      if (cfg.assignments && p.team === 'D' &&
+          !coverageContestActive(cfg.assignments.defense[p.slot], p.ai.ballContestRecognized)) {
+        W.auditDecision?.('coverage_contact_rejected',{player_id:p.id,role:p.roleKey,
+          planar_yards:planar,ball_z:b.z,reason:'pass_not_recognized'});
+        continue;
+      }
       out.push({ player: p, planar });
     }
     return out.sort(compareBallContact);
@@ -961,7 +974,8 @@ export function simulatePassPlay(options = {}) {
   // the catch point, which is why most failed catches are simply incomplete.
   function resolveContest() {
     const candidates = catchCandidates();
-    W.auditDecision?.('catch_candidates',{ball:{x:W.ball.x,y:W.ball.y,z:W.ball.z},candidates:candidates.map(c=>({id:c.player.id,role:c.player.roleKey,team:c.player.team,planar_yards:c.planar,engaged:c.player.engaged?.id??null,heading:c.player.h}))});
+    W.auditDecision?.('catch_candidates',{ball:{x:W.ball.x,y:W.ball.y,z:W.ball.z},candidates:candidates.map(c=>({id:c.player.id,role:c.player.roleKey,team:c.player.team,planar_yards:c.planar,engaged:c.player.engaged?.id??null,heading:c.player.h,
+      assignment:c.player.ai.playAssignment??null,recognized:c.player.ai.ballContestRecognized??null}))});
     const offenseCandidates = candidates.filter((candidate) => candidate.player.team === 'O');
     const defenseCandidates = candidates.filter((candidate) => candidate.player.team !== 'O');
     const activeCandidateIds = new Set(candidates.map((candidate) => candidate.player.id));
@@ -1104,7 +1118,8 @@ export function simulatePassPlay(options = {}) {
   // the opportunity, so a later re-entry gets a new id.
   function contestRoll(kind, player, chance) {
     const value = rand();
-    W.auditDecision?.('contest_draw',{player_id:player.id,kind,chance,value});
+    W.auditDecision?.('contest_draw',{player_id:player.id,kind,chance,value,
+      assignment:player.ai.playAssignment??null,recognized:player.ai.ballContestRecognized??null});
     if (!contestDiagnostics || !currentThrowDiagnostics) return value;
     currentThrowDiagnostics.probability_draws += 1;
     const playerId = player.id;
@@ -1656,6 +1671,9 @@ export function simulatePassPlay(options = {}) {
       if (estimate && task) p.ai.throwCueAt ??= W.t;
       const recognitionDelay = clamp(0.34 - (p.R.PRC ?? p.R.AWR ?? 60) * 0.0026, 0.08, 0.30);
       const recognized = !task || (p.ai.throwCueAt != null && W.t - p.ai.throwCueAt >= recognitionDelay);
+      // This is the actual controller decision, not a fresh omniscient read
+      // from the catch resolver. It is refreshed on the existing cadence.
+      if (task) p.ai.ballContestRecognized = !!estimate && recognized;
       if (W.auditDecision) W.auditDecision('coverage_ball_read',{player_id:p.id,task,
         estimate:estimate??null,recognized,recognition_delay_s:recognitionDelay,
         cue_at_s:p.ai.throwCueAt??null,eligible:!!estimate&&(!task||coverageBallOpportunity({task,estimate,
