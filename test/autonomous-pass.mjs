@@ -176,12 +176,30 @@ const fumbleDefenseRatings = Object.fromEntries(
     .map((role) => [`D.${role}`, { TAK: 99, STR: 99, PRC: 99 }]));
 const fumbleOffenseRatings = (carrying) => Object.fromEntries(
   ['QB', 'RB', 'TE', 'WR1', 'WR2', 'WR3'].map((role) => [`O.${role}`, { CAR: carrying }]));
-const forcedFumble = simulatePassPlay({ seed: 6, front: 'nickel', coverage: 'cover_1',
+const fumbleScenario = (seed, carrying) => simulatePassPlay({ seed, front: 'nickel', coverage: 'cover_1',
   direction: 'right', dir: 1, los: 40, ballY: 26.67, resultOnly: true,
-  ratingOverrides: { ...fumbleOffenseRatings(1), ...fumbleDefenseRatings } });
-const protectedBall = simulatePassPlay({ seed: 6, front: 'nickel', coverage: 'cover_1',
-  direction: 'right', dir: 1, los: 40, ballY: 26.67, resultOnly: true,
-  ratingOverrides: { ...fumbleOffenseRatings(99), ...fumbleDefenseRatings } });
+  ratingOverrides: { ...fumbleOffenseRatings(carrying), ...fumbleDefenseRatings } });
+// Preserve the original seed exactly. Audited shared draw 0.7090613486 is
+// above both chances (0.14 and 0.015117); forcing a fumble here is incorrect.
+const seed6Low = fumbleScenario(6, 1), seed6High = fumbleScenario(6, 99);
+assert.equal(seed6Low.fumble, null);
+assert.equal(seed6High.fumble, null);
+assert.deepEqual(seed6Low.events, seed6High.events);
+// Bounded development-only witness discovery for the positive recovery
+// contract. The first qualifying seed is reported; do not use this selected
+// fixture as frequency/calibration evidence. Pin the discovered seed next.
+let forcedFumble, protectedBall, fumbleWitnessSeed = null, tried = 0;
+for (let seed = 0; seed < 128; seed++) {
+  tried++;
+  const low = fumbleScenario(seed, 1);
+  if (low.fumble?.recovery_team !== 'D' || !(low.fumble.return_yards > 0)
+      || !low.events.some(e => e.type === 'catch')) continue;
+  const high = fumbleScenario(seed, 99);
+  if (high.fumble !== null) continue;
+  forcedFumble = low; protectedBall = high; fumbleWitnessSeed = seed; break;
+}
+console.log('FUMBLE_RECOVERY_WITNESS ' + JSON.stringify({seed:fumbleWitnessSeed,tried}));
+assert.ok(forcedFumble, 'bounded fixture discovery must exercise catch, defensive recovery and positive return');
 assert.equal(forcedFumble.fumble.recovery_team, 'D', 'a generated catch fumble can change possession');
 assert.ok(forcedFumble.fumble.return_yards > 0, 'the live recovery advances before the whistle');
 assert.equal(forcedFumble.fumble.return_yards,

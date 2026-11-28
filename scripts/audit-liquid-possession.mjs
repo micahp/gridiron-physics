@@ -67,6 +67,25 @@ for (const [id, profile] of Object.entries(intCall.player_profiles)) {
   else profile.ratings.CTH = 1;
 }
 calls.push(intCall);
+// The old seed 15 is retained unchanged. Find a positive turnover fixture
+// for transition coverage only, from a fixed bounded development seed set.
+// Report the search denominator; this is not an interception-rate estimate.
+let turnoverWitness = null;
+let attempted = 0;
+for (let seed = 0; seed < 96; seed++) {
+  const candidate = structuredClone(intCall);
+  candidate.seed = String(seed);
+  candidate.play_id = 'liquid-audit:turnover-witness-' + seed;
+  attempted++;
+  const result = simulateAutonomousPlay(candidate);
+  if (result.events.some(e => e.type === 'interception') &&
+      result.events.some(e => e.type === 'decision' && e.assignment === 'pursue the returner')) {
+    turnoverWitness = candidate;
+    calls.push(candidate);
+    break;
+  }
+}
+console.log('TURNOVER_WITNESS ' + JSON.stringify({attempted,seed:turnoverWitness?.seed ?? null}));
 const possession = [];
 for (const call of calls) {
   const control = simulateAutonomousPlay(call);
@@ -78,25 +97,41 @@ for (const call of calls) {
   const reasons = [...trace.ticks.flatMap(t => t.reasons), ...trace.outside_tick_reasons]
     .filter(r => r.type === 'possession_pursuit');
   const firstByPlayer = new Map();
+  const observations = trace.ticks.flatMap(t => t.memory);
+  const searchReasons = [...trace.ticks.flatMap(t => t.reasons), ...trace.outside_tick_reasons]
+    .filter(r => r.type === 'possession_search');
   for (const row of reasons) {
     assert.ok(row.t_s + 1e-8 >= row.carrier_since_s);
+    assert.equal(row.target_source, 'delivered_carrier_estimate');
+    const estimate = observations.find(m => m.op === 'estimate' && m.observer === row.player_id
+      && m.target === row.carrier_id && Math.abs(m.at_s-row.t_s)<1e-8
+      && m.result && JSON.stringify(m.result) === JSON.stringify(row.estimate));
+    assert.ok(estimate, 'pursuit must consume actual delivered memory on this tick');
+    assert.ok(row.estimate.observedAt >= row.carrier_since_s - 1e-8);
+    assert.ok(row.t_s - row.estimate.observedAt + 1e-8 >= row.reaction_delay_s);
+    assert.ok(row.estimate.confidence >= 0.12);
+    for (const axis of ['x','y']) assert.ok(Math.abs(row.target_m[axis] -
+      (row.estimate.position[axis]+row.estimate.velocity[axis]*row.lead_seconds)) < 1e-8);
     if (!firstByPlayer.has(row.player_id)) firstByPlayer.set(row.player_id, row);
   }
   // No requirement that old authored interception still occurs: expose loss of
   // coverage explicitly instead of silently choosing a convenient new seed.
   const rows = [...firstByPlayer.values()].map(row => {
-    const sighting = trace.ticks.flatMap(t => t.memory).filter(m =>
+    const sighting = observations.filter(m =>
       m.observer === row.player_id && m.target === row.carrier_id && m.op === 'estimate' &&
       m.result && m.at_s <= row.t_s + 1e-8 && m.result.observedAt >= row.carrier_since_s - 1e-8).at(-1);
     return { ...row, reaction_s: row.t_s-row.carrier_since_s,
       delivered_carrier_estimate: sighting?.result ?? null };
   });
   const summary = { id:call.play_id, seed:call.seed, result:trace.record.result, acquisition:acquisition??null,
-    pursuit_decisions:reasons.length, first_pursuit_by_player:rows,
+    pursuit_decisions:reasons.length, search_decisions:searchReasons.length, first_pursuit_by_player:rows,
     direct_truth_without_delivered_estimate:rows.filter(r=>r.target_source==='live_carrier_truth' && !r.delivered_carrier_estimate).length };
   possession.push(summary);
   console.log('POST_POSSESSION_AUDIT '+JSON.stringify(summary));
 }
 assert.ok(possession.some(r => r.acquisition?.type === 'catch' && r.pursuit_decisions > 0),
   'at least one pinned case must exercise actual post-catch pursuit');
-writeFileSync(join(out,'possession-role-audit.json'),JSON.stringify({legacy,possession},null,2));
+writeFileSync(join(out,'possession-role-audit.json'),JSON.stringify({legacy,possession,turnover_witness:{attempted,seed:turnoverWitness?.seed??null}},null,2));
+assert.ok(possession.some(r => r.search_decisions > 0), 'must exercise no-observation fallback');
+assert.ok(possession.some(r => r.acquisition?.type === 'interception' && r.pursuit_decisions > 0),
+  'bounded cohort must exercise actual turnover pursuit; otherwise report uncovered transition');

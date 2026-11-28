@@ -33,8 +33,10 @@ jobs:
           node scripts/compare-unassigned-fumble.mjs /tmp/liquid-frozen-control
           git worktree remove /tmp/liquid-frozen-control
       - name: Post-possession decisions and fumble draw audit
+        if: always()
         run: node scripts/audit-liquid-possession.mjs audit-output
       - name: Full legacy passing regression
+        if: always()
         run: node test/autonomous-pass.mjs
       - name: Paired run-controller audit
         if: always()

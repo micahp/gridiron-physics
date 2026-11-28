@@ -272,6 +272,7 @@ export function simulatePassPlay(options = {}) {
   const qbObservationTargets = [...new Set([...routeReceivers, ...defense].filter(Boolean))];
   const defenderBallObservations = new Map();
   const receiverBallObservations = new Map();
+  const carrierObservations = new Map();
   qb.ai.gazeHeading = dir > 0 ? 0 : Math.PI;
   let observedDefenderBallPredictions = 0;
   let observedReceiverBallPredictions = 0;
@@ -1410,7 +1411,62 @@ export function simulatePassPlay(options = {}) {
   // -------------------------------------------------------------- agent brain
   // After a turnover the offense becomes the defence: they pursue the returner
   // from live positions instead of continuing their routes.
+  // Assigned post-possession opponent pursuit only. A visible carrier body is
+  // a coarse possession cue (not a measured view of the ball in the hands).
+  // The scheduler still knows the possession phase; it must not steer from
+  // hidden carrier coordinates. Physical touch remains a separate opportunity.
+  function observedCarrierPursuit(p, phase) {
+    const awareness = p.team === 'D' ? (p.R.PRC ?? p.R.AWR ?? 60) : (p.R.AWR ?? 60);
+    const delay = clamp(0.34 - awareness * 0.0026, 0.12, 0.30);
+    let entry = carrierObservations.get(p.id);
+    if (!entry || entry.carrier !== carrier || entry.since !== carrierSince) {
+      entry = { carrier, since: carrierSince, memory: new ObservationMemory({ reactionDelaySeconds: delay }) };
+      carrierObservations.set(p.id, entry);
+    }
+    const memory = entry.memory;
+    memory.capture(p, carrier, W.players, W.t, {
+      heading: p.h, fieldOfView: DEFENDER_FIELD_OF_VIEW, maxDistance: 55 * YD,
+    });
+    memory.advance(W.t);
+    const estimate = memory.estimate(carrier.id, W.t);
+    const visibleEstimate = estimate && estimate.confidence >= 0.12 ? estimate : null;
+    if (p.engaged) {
+      tryShed(p);
+      if (p.engaged) {
+        // Local physical engagement is a known contact, not carrier perception.
+        const toward = unit(p.engaged.p.x - p.p.x, p.engaged.p.y - p.p.y);
+        p.dv = { x: toward.x * 1.7, y: toward.y * 1.7 };
+        p.face = Math.atan2(toward.y, toward.x);
+        setIntent(p, 'shed the block', 'resolve local contact before pursuit');
+        return;
+      }
+    }
+    if (!visibleEstimate) {
+      // Brake while scanning from the player's own heading, not towards an
+      // unobserved location. Retain physical momentum rather than teleporting.
+      p.dv = { x: p.v.x * 0.35, y: p.v.y * 0.35 };
+      p.face = p.h + 0.4;
+      setIntent(p, 'locate the carrier', 'scan for a visible possession cue');
+      W.auditDecision?.('possession_search', { player_id: p.id, carrier_id: carrier.id,
+        phase, carrier_since_s: carrierSince, reaction_delay_s: delay,
+        estimate: estimate ?? null });
+      return;
+    }
+    const leadScale = clamp(0.22 + (p.R.PUR ?? awareness) * 0.0012, 0.24, 0.36);
+    const target = { x: visibleEstimate.position.x + visibleEstimate.velocity.x * leadScale,
+      y: visibleEstimate.position.y + visibleEstimate.velocity.y * leadScale };
+    p.dv = seek(p, target, 0.98, 20);
+    p.face = Math.atan2(target.y - p.p.y, target.x - p.p.x);
+    W.auditDecision?.('possession_pursuit', { player_id: p.id, carrier_id: carrier.id,
+      phase, carrier_since_s: carrierSince, reaction_delay_s: delay,
+      target_source: 'delivered_carrier_estimate', estimate: visibleEstimate,
+      lead_seconds: leadScale, target_m: target });
+    setIntent(p, phase === 'turnover_return' ? 'pursue the returner' : 'pursue the carrier',
+      'close from the delayed observed carrier position');
+  }
+
   function pursuerBrain(p) {
+    if (cfg.assignments) { observedCarrierPursuit(p, 'turnover_return'); return; }
     if (p.engaged) {
       tryShed(p);
       if (p.engaged) {
@@ -1649,6 +1705,7 @@ export function simulatePassPlay(options = {}) {
     if (!snapped) { p.dv = { x: 0, y: 0 }; p.face = dir > 0 ? Math.PI : 0; return; }
     if (cfg.assignments && carrier && p.team === carrier.team) { fumbleReturnBrain(p, true); return; }
     if (carrier && p.team !== carrier.team) {
+      if (cfg.assignments) { observedCarrierPursuit(p, 'post_catch'); return; }
       if (p.engaged) {
         tryShed(p);
         if (p.engaged) {
