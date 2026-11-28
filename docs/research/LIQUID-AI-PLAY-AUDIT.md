@@ -44,3 +44,23 @@ No production engine modifications, no repin and no large batch.
 ## Expanded running-back audit
 
 The harness records actual lane-score terms, selected lane, applied steering lane, hold/lock guards and exact canonical gap labels on every evaluated read. These diagnostic records do not drive the controller. The default set varies assigned gap, run direction, field direction, defensive front, pass concept and coverage; two saved special-teams failure fixtures are also included. Open `liquid-ai-audit.html` in the generated artifact and load any play JSON. Step a native tick, skip to a selected player's state change or event, inspect desired velocity, before/after memory and score breakdown. The viewer is a read-only replay, not a live simulation mutation interface. No NFL calibration implied.
+
+## Executed evidence — 2026-11-28
+
+[Workflow 46159733586](https://github.com/micahp/gridiron-physics/actions/runs/46159733586), source commit 4d7518ee. Artifact liquid-ai-play-audit contains the eleven complete trace files, summaries and the local HTML viewer. Native dt 1/120 s; 4,831 ticks, 106,282 controller callbacks, 22 distinct players per tick, exact result/event/reconciliation parity for all eleven traced vs untraced calls. This is instrumentation parity, not realistic play acceptance. The viewer source was not browser-tested.
+
+| Call | Ticks | Result |
+|---|---:|---|
+| Inside zone right, play-side A | 273 | tackle, -0.518 yd |
+| Same call, backside C | 574 | tackle, +1.420 yd |
+| Inside zone left | 361 | tackle, -0.546 yd |
+| Right run, field direction reversed | 273 | tackle, -0.518 yd |
+| Right run vs under front | 296 | tackle, -0.538 yd |
+| Slant-flat/man | 307 | incomplete |
+| Slant-flat/zone | 299 | incomplete |
+| Curls/zone | 299 | incomplete |
+| Four verticals/zone | 262 | incomplete |
+| Saved blocked FG | 1218 | kicking-team recovery TD |
+| Saved muffed kickoff | 669 | touchback |
+
+RB findings: at 0.441667 s the handoff selects the declared A gap (-0.58 local yd); first scored read at 0.541667 s ranks A 0.1044, backside A 0.5517, play-side B 0.8774, play-side C 1.0716, backside B 1.7449, backside C 2.8379. At 0.741667 s C is preferred but the initial 0.34 s hold prevents switching. At 0.841667 s B is preferred (0.365668 vs A 0.448476), but 0.082808 advantage < 0.55 guard, so A remains selected. Against under, backside A scores 0.741094 vs assigned A 1.410487 at 0.541667 s, while initial hold is active. At 1.141667 s B replaces A (advantage 0.637340), then A replaces B at 1.341667 s (advantage 0.554162). Both transitions obey existing thresholds, but the short re-cut deserves review alongside actual blocking/leverage; do not tune from a single seed. The assigned-gap counterfactual alters path and gain; reversing field direction preserves gain and timing. No selected/applied mismatch was seen in these five runs. Source nevertheless computes desired velocity before the late near-defender alternate branch, so that branch can emit a new lane with stale intent for a tick; not reproduced here. Canonical trace gap labels expose the old inconsistent display-label thresholds. Scores are heuristic, use live local world coordinates/engagement, not actual inferred gap width or measured sightlines. Under uses the existing NB-to-SAM translation; a dedicated SAM fit is not established. No controller policy changed. Next audit: inspect the OL/DL/LB interactions during those exact read ticks, not retune RB threshold or expand to a large batch.
