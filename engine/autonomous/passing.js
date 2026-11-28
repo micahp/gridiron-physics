@@ -926,12 +926,6 @@ export function simulatePassPlay(options = {}) {
       const reach = 1.15 + p.r / YD;
       if (planar > reach) continue;
       if (b.z < 0.35 || b.z > 2.75) continue;
-      if (cfg.assignments && p.team === 'D' &&
-          !coverageContestActive(cfg.assignments.defense[p.slot], p.ai.ballContestRecognized)) {
-        W.auditDecision?.('coverage_contact_rejected',{player_id:p.id,role:p.roleKey,
-          planar_yards:planar,ball_z:b.z,reason:'pass_not_recognized'});
-        continue;
-      }
       out.push({ player: p, planar });
     }
     return out.sort(compareBallContact);
@@ -973,16 +967,25 @@ export function simulatePassPlay(options = {}) {
   // on his own merits; an interception needs a defender who is genuinely at
   // the catch point, which is why most failed catches are simply incomplete.
   function resolveContest() {
-    const candidates = catchCandidates();
+    const geometricCandidates = catchCandidates();
+    const candidates = geometricCandidates.filter(({player:p,planar}) => {
+      const eligible = !cfg.assignments || p.team !== 'D' ||
+        coverageContestActive(cfg.assignments.defense[p.slot], p.ai.ballContestRecognized);
+      if (!eligible) W.auditDecision?.('coverage_contact_rejected',{player_id:p.id,role:p.roleKey,
+        planar_yards:planar,ball_z:W.ball.z,reason:'pass_not_recognized'});
+      return eligible;
+    });
     W.auditDecision?.('catch_candidates',{ball:{x:W.ball.x,y:W.ball.y,z:W.ball.z},candidates:candidates.map(c=>({id:c.player.id,role:c.player.roleKey,team:c.player.team,planar_yards:c.planar,engaged:c.player.engaged?.id??null,heading:c.player.h,
       assignment:c.player.ai.playAssignment??null,recognized:c.player.ai.ballContestRecognized??null}))});
     const offenseCandidates = candidates.filter((candidate) => candidate.player.team === 'O');
     const defenseCandidates = candidates.filter((candidate) => candidate.player.team !== 'O');
-    const activeCandidateIds = new Set(candidates.map((candidate) => candidate.player.id));
+    // Losing recognition does not end an uninterrupted physical opportunity.
+    // Only geometric separation can re-arm a contact's probability draw.
+    const activeCandidateIds = new Set(geometricCandidates.map((candidate) => candidate.player.id));
     pruneExitedContactAttempts(attemptedReceiverContacts,
-      offenseCandidates.map((candidate) => candidate.player.id));
+      geometricCandidates.filter(c=>c.player.team==='O').map(c=>c.player.id));
     pruneExitedContactAttempts(attemptedDefenderContacts,
-      defenseCandidates.map((candidate) => candidate.player.id));
+      geometricCandidates.filter(c=>c.player.team!=='O').map(c=>c.player.id));
     if (contestDiagnostics && currentThrowDiagnostics) {
       currentThrowDiagnostics.resolve_attempts += 1;
       if (candidates.length === 0) currentThrowDiagnostics.no_candidate_attempts += 1;
@@ -994,7 +997,7 @@ export function simulatePassPlay(options = {}) {
       for (const id of activePhysicalOpportunities.keys()) {
         if (!activeCandidateIds.has(id)) activePhysicalOpportunities.delete(id);
       }
-      for (const candidate of candidates) {
+      for (const candidate of geometricCandidates) {
         const playerId = candidate.player.id;
         let opportunity = activeContactOpportunities.get(playerId);
         if (!opportunity) {
