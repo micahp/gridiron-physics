@@ -41,7 +41,7 @@ function changed(before,after) {
     JSON.stringify(v)!==JSON.stringify(before[k])));
 }
 const execute = call => call.schema_version === 'gridiron.autonomous-special-teams.v1' ? simulateAutonomousSpecialTeams(call) : simulateAutonomousPlay(call);
-export function tracePlay(call) {
+export function tracePlay(call, runner=execute) {
   const ticks=[], owners=new WeakMap();
   let tick=null, world=null;
   const original=World.prototype.step;
@@ -86,7 +86,7 @@ export function tracePlay(call) {
     return result;
   };
   try {
-    const record=execute(call);
+    const record=runner(call);
     assert.ok(world && ticks.length,'actual World.step must execute');
     assert.ok(ticks.every(t=>t.decisions.length===22 && t.before.players.length===22
       && new Set(t.decisions.map(d=>d.id)).size===22),'each tick must visit all 22 players exactly once');
@@ -112,7 +112,7 @@ function sample(kind) {
   if(!run) call.behavior_mode='retro';
   return call;
 }
-function scenarios() {
+export function scenarios() {
   const run = sample('run');
   const alternative = structuredClone(run); alternative.play_id='liquid-audit:run-backside-c'; alternative.assignments.offense.RB.aiming_gap='backside_c';
   const left=structuredClone(run); left.play_id='liquid-audit:run-left'; left.offense.call.direction='left'; left.assignments=exampleRunAssignments('left');
@@ -150,6 +150,7 @@ function summarize(trace) {
       'qb_read','quarterback_state','throw','throw_away','route_break','protection_release','catch_contest',
       'pass_deflected','incomplete','tackle_attempt','sack','whistle','simulation_failure'].includes(e.type))};
 }
+if(process.argv[1] && fileURLToPath(import.meta.url)===process.argv[1]) {
 const args=process.argv.slice(2);
 const out=args[0]??'liquid-ai-audit';
 const calls=args[1]?[JSON.parse(readFileSync(args[1],'utf8'))]:scenarios();
@@ -184,3 +185,5 @@ for(const [i,call] of calls.entries()) {
 }
 
 copyFileSync(fileURLToPath(new URL('../liquid-ai-audit.html',import.meta.url)),join(out,'liquid-ai-audit.html'));
+
+}

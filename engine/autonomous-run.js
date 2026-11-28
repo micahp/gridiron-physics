@@ -8,6 +8,7 @@ import { Player, POSE, World } from './world.js';
 import { serializeReturnGeometry } from './autonomous/field-geometry.js';
 import { makeLiveProgressTracker } from './autonomous/live-progress.js';
 import { nextRecoveryAttempt } from './autonomous/contact-attempts.js';
+import { ObservationMemory } from './autonomous/perception.js';
 import { engagementHazardUniform, hazardDeadline } from './autonomous/retro-cadence.js';
 
 // A moving carrier remains live until a football terminal event. This ceiling
@@ -386,6 +387,7 @@ export function simulateInsideZone(options = {}) {
       setIntent(p, `press ${task.aiming_gap} aiming gap`, 'read current daylight after securing the handoff');
     } else if (task?.kind === 'block') {
       p.ai.blockTargetRole = task.target_slot;
+      p.ai.zoneL = lOf(p); // hold the assigned local area if named target is unavailable
       setIntent(p, `block assigned ${task.target_slot}`, 'close space and engage the live assigned defender');
     } else if (['LT', 'LG', 'C', 'RG', 'RT'].includes(p.slot)) {
       p.ai.zoneL = ({ LT: 2.25, LG: 1.12, C: 0, RG: -1.12, RT: -2.25 })[p.slot];
@@ -397,7 +399,10 @@ export function simulateInsideZone(options = {}) {
   }
   for (const p of defense) {
     const task = p.ai.playAssignment;
-    if (p.info.group === 'DL') {
+    if (task?.kind === 'run_support') {
+      p.ai.runSupport = task.responsibility;
+      setIntent(p, 'read run from support alignment', 'execute declared support responsibility');
+    } else if (p.info.group === 'DL') {
       p.ai.gapL = task?.kind === 'gap_fit' ? RUN_GAP_LATERAL[task.gap] * side : lOf(p);
       setIntent(p, `attack ${gapName(p.ai.gapL, side)} gap`, 'read the backfield and control assigned gap');
     } else if (p.info.group === 'LB') {
@@ -460,7 +465,38 @@ export function simulateInsideZone(options = {}) {
     const lane = p.slot === 'TE' ? side * 4.3 : p.slot.startsWith('WR') ? lOf(p) : p.ai.zoneL + side * 0.18;
     const current = p.ai.blockOn;
     const assigned = p.ai.blockTargetRole ? get(p.ai.blockTargetRole) : null;
-    if (assigned && !assigned.down && (!assigned.engaged || assigned.engaged === p)) return assigned;
+    if (assigned && !assigned.down && (!assigned.engaged || assigned.engaged === p)) {
+      W.auditDecision?.('block_target', {player_id:p.id,responsibility:'block',
+        declared_target:p.ai.playAssignment?.target_slot,selected_id:assigned.id,reason:'named_target'});
+      return assigned;
+    }
+    // Assigned run blockers must not fall back to the whole free-defender list.
+    // One lineman spacing plus half-spacing is a deliberately simple local
+    // responsibility envelope, not a fitted NFL blocking model.
+    const task = p.ai.playAssignment;
+    if (task?.kind === 'block') {
+      W.auditDecision?.('block_target', {player_id:p.id, responsibility:task.kind,
+        declared_target:task.target_slot, selected_id:null, reason:'assigned_target_unavailable'});
+      return null;
+    }
+    if (task?.kind === 'zone_block') {
+      const track = p.ai.zoneL;
+      const eligible = q => !q.down && (!q.engaged || q.engaged === p)
+        && ['DL','LB'].includes(q.info.group)
+        && Math.abs(lOf(q)-track) <= 1.68 && fOf(q) >= -2.5
+        && fOf(q) <= (q.info.group === 'DL' ? 3.7 : 5);
+      const local = defense.filter(eligible);
+      const first = local.filter(q=>q.info.group==='DL');
+      const pool = first.length ? first : local;
+      const target = pool.includes(current) ? current : pool.slice().sort((a,b)=>
+        Math.abs(lOf(a)-track)+Math.abs(fOf(a)-0.45)*0.28
+        -Math.abs(lOf(b)-track)-Math.abs(fOf(b)-0.45)*0.28 || a.id.localeCompare(b.id))[0]??null;
+      W.auditDecision?.('block_target', {player_id:p.id, responsibility:task.kind,
+        track_gap:task.track_gap, track_lateral_yards:track, envelope_yards:1.68,
+        candidates:pool.map(q=>({id:q.id,role:q.roleKey,lateral_yards:lOf(q),forward_yards:fOf(q)})),
+        selected_id:target?.id??null, reason:target===current&&target?'retain_local_target':target?'local_threat':'hold_track'});
+      return target;
+    }
     const perimeterBlocker = p.info.group === 'WR';
     const targetScore = (q) => {
       const lateral = Math.abs(lOf(q) - lane);
@@ -576,7 +612,31 @@ export function simulateInsideZone(options = {}) {
     return accepted;
   }
 
-  for (const p of defense.filter((player) => player.info.group === 'DB')) {
+  const frontMemory = new Map();
+  for (const p of defense.filter(player => player.ai.playAssignment?.kind === 'gap_fit')) {
+    // Reuse the existing LB read-time rating curve as a reaction delay after
+    // a visible carrier cue, not an elapsed-since-snap timer.
+    p.ai.runReadDelay = clamp(0.40-(p.R.PRC??p.R.AWR??60)*0.003,0.16,0.35);
+    frontMemory.set(p.id,new ObservationMemory({reactionDelaySeconds:p.ai.runReadDelay}));
+  }
+  function observedFrontRunner(p) {
+    const memory=frontMemory.get(p.id);
+    if (!memory) return null;
+    if (carrier === rb && W.ball.holder === rb && rb.hasBall) {
+      const cue=memory.capture(p,rb,W.players,W.t,{maxDistance:15*YD});
+      if(cue.visible) p.ai.runCueAt??=W.t;
+    }
+    memory.advance(W.t);
+    const seen=memory.estimate(rb.id,W.t);
+    if(seen && !p.ai.runRecognized) {
+      p.ai.runRecognized=true;
+      W.event('defensive_run_read',{player_id:p.id,role:p.roleKey,observed_at:seen.observedAt,
+        reaction_delay_seconds:p.ai.runReadDelay});
+    }
+    if(!seen||seen.confidence<0.12) return null;
+    return seen;
+  }
+  for (const p of defense.filter((player) => player.info.group === 'DB' || player.ai.runSupport)) {
     p.ai.snapL = lOf(p);
     p.ai.outsideSign = Math.sign(p.ai.snapL) || (p.slot === 'LCB' || p.slot === 'NB' ? 1 : -1);
     if (p.slot === 'LCB' || p.slot === 'RCB') {
@@ -746,9 +806,7 @@ export function simulateInsideZone(options = {}) {
         forward_yards: forward });
     }
     const press = forward < 0.65 && W.t - carrierSince < 0.55;
-    const lane = press ? (p.ai.aimingLane ?? side * 0.58) : (p.ai.lane ?? side * 0.58);
-    const target = { x: p.p.x + dir * (press ? 1.25 : 2.1) * YD, y: (cfg.ballY + dir * lane) * YD };
-    let dv = seek(p, target, 1, 6.6);
+    // Compute intent after all lane decisions, including the emergency cut.
     // React to defenders already in the near collision envelope. The lane read
     // is re-scored from live positions rather than following a pre-written path.
     const threat = closest(defense, p, (q) => !q.down && fOf(q) >= forward - 0.6 && fOf(q) <= forward + 1.8 && Math.abs(lOf(q) - lOf(p)) < 2.0);
@@ -760,13 +818,17 @@ export function simulateInsideZone(options = {}) {
         W.event('lane_read', { carrier_id: p.id, lane_local_yards: alternate, time: W.t, trigger: 'near defender' });
       }
     }
+    const lane = cfg.assignments ? (p.ai.lane ?? p.ai.aimingLane ?? side * 0.58)
+      : press ? (p.ai.aimingLane ?? side * 0.58) : (p.ai.lane ?? side * 0.58);
+    const target = {x:p.p.x+dir*(press?1.25:2.1)*YD,y:(cfg.ballY+dir*lane)*YD};
+    const dv = seek(p,target,1,6.6);
     p.dv = dv;
     W.auditDecision?.('rb_steering', { player_id: p.id, phase: press ? 'press' : 'cut_read',
       assigned_gap: p.ai.playAssignment?.aiming_gap ?? null,
       selected_lane: p.ai.lane ?? null, selected_gap: auditGap(p.ai.lane ?? lane, side),
       applied_lane: lane, applied_gap: auditGap(lane, side), target_m: { ...target },
       desired_velocity_mps: { ...dv }, forward_yards: forward, near_defender_id: threat?.id ?? null });
-    setIntent(p, 'run through selected inside-zone lane', `press ${laneLabel(p.ai.lane ?? lane, side)} and react to the nearest fit`);
+    setIntent(p, 'run through selected inside-zone lane', `press ${cfg.assignments ? auditGap(lane,side).replaceAll('_',' ') : laneLabel(p.ai.lane ?? lane,side)} and react to the nearest fit`);
   }
 
   function offenseBrain(p) {
@@ -790,7 +852,10 @@ export function simulateInsideZone(options = {}) {
     if (['LT', 'LG', 'C', 'RG', 'RT', 'TE', 'WR1', 'WR2', 'WR3'].includes(p.slot)) {
       if (p.engaged) {
         const d = p.engaged;
-        const lane = (sharedSnapshot ? tickRunnerLane : rb.ai.lane) ?? side * 0.58;
+        // Assigned blockers execute their own track, not the RB's private lane choice.
+        const lane = p.ai.playAssignment?.kind === 'zone_block' ? p.ai.zoneL :
+          p.ai.playAssignment?.kind === 'block' ? p.ai.zoneL :
+          (sharedSnapshot ? tickRunnerLane : rb.ai.lane) ?? side * 0.58;
         const awayFromLane = lOf(p) < lane ? -1 : 1;
         const push = unit(dir * 0.86, dir * awayFromLane * 0.55);
         p.dv = { x: push.x * 2.0, y: push.y * 2.0 };
@@ -805,9 +870,10 @@ export function simulateInsideZone(options = {}) {
       }
       const d = p.ai.blockOn;
       if (!d) {
-        const tgt = pointAhead(p, 1.4, p.slot === 'TE' ? side * 3 : (p.ai.zoneL ?? 0) * 0.5);
+        const tgt = p.ai.playAssignment ? at(0.85,p.ai.zoneL??lOf(p)) :
+          pointAhead(p, 1.4, p.slot === 'TE' ? side * 3 : (p.ai.zoneL ?? 0) * 0.5);
         p.dv = seek(p, tgt, 0.68, 7);
-        setIntent(p, p.ai.assignment, 'climb to the nearest unblocked level defender');
+        setIntent(p, p.ai.assignment, p.ai.playAssignment ? 'hold assigned track until a local threat appears' : 'climb to the nearest unblocked level defender');
         return;
       }
       p.ai.assignment = p.slot === 'TE' ? 'seal the play-side edge' : p.info.group === 'WR' ? 'stalk perimeter support' : `zone step ${p.slot}`;
@@ -822,12 +888,15 @@ export function simulateInsideZone(options = {}) {
   function defenseBrain(p) {
     if (!snapped) { p.dv = { x: 0, y: 0 }; p.face = dir > 0 ? Math.PI : 0; return; }
     if (fumble) { fumbleRecovery ? fumbleReturnBrain(p) : looseBallBrain(p); return; }
+    const assignedFit = p.ai.playAssignment?.kind === 'gap_fit';
+    const seen = assignedFit ? observedFrontRunner(p) : null;
     if (p.engaged) {
       const blocker = p.engaged;
       tryShed(p);
       if (p.engaged) {
         const target = carrier || qb;
-        const toward = unit(target.p.x - p.p.x, target.p.y - p.p.y);
+        const toward = assignedFit ? unit(-dir,dir*clamp(p.ai.gapL-lOf(p),-1,1))
+          : unit(target.p.x - p.p.x, target.p.y - p.p.y);
         p.dv = { x: toward.x * 1.65, y: toward.y * 1.65 };
         p.face = Math.atan2(toward.y, toward.x);
         p.pose = POSE.BLOCK;
@@ -835,7 +904,24 @@ export function simulateInsideZone(options = {}) {
         return;
       }
     }
-    if (p.info.group === 'DL') {
+    if (assignedFit) {
+      const gap=p.ai.gapL, isDL=p.info.group==='DL';
+      const gapTarget=at(isDL?0.45:0.85,gap);
+      const projected=seen?{x:seen.position.x+seen.velocity.x*0.32,y:seen.position.y+seen.velocity.y*0.32}:null;
+      const projectedF=projected?(projected.x/YD-cfg.los)*dir:null;
+      const projectedL=projected?(projected.y/YD-cfg.ballY)*dir:null;
+      const pursue=!!projected&&(projectedF>=0||Math.abs(projectedL-gap)<=1.12);
+      const target=pursue?projected:gapTarget;
+      p.dv=seek(p,target,pursue?0.98:isDL?0.82:0.60,pursue?19:8);
+      W.auditDecision?.('front_fit',{player_id:p.id,assigned_gap:p.ai.playAssignment.gap,
+        recognized:!!p.ai.runRecognized,observation_age_s:seen?.ageSeconds??null,
+        observed_at_s:seen?.observedAt??null,projected_local_yards:projected?{forward:projectedF,lateral:projectedL}:null,
+        pursuit:pursue,target_m:target});
+      setIntent(p,`${pursue?'pursue from':'fit'} ${auditGap(gap,side).replaceAll('_',' ')} gap`,
+        pursue?'pursue delayed observed runner path':'control assigned gap until a runner threatens it');
+      return;
+    }
+    if (p.info.group === 'DL' && !p.ai.runSupport) {
       if (carrier) {
         p.dv = seek(p, lead(p, carrier, 0.34), 0.98, 20);
         setIntent(p, `close ${gapName(p.ai.gapL, side)} gap`, `redirect from the mesh to carrier ${carrier.slot}`);
@@ -845,7 +931,7 @@ export function simulateInsideZone(options = {}) {
         p.dv = seek(p, target, 0.82, 12);
         setIntent(p, `attack ${gapName(gap, side)} gap`, 'read the backfield and keep shoulders square');
       }
-    } else if (p.info.group === 'LB') {
+    } else if (p.info.group === 'LB' && !p.ai.runSupport) {
       const readTime = clamp(0.40 - (p.R.PRC ?? p.R.AWR ?? 60) * 0.003, 0.16, 0.35);
       if (!carrier && W.t < readTime) {
         p.dv = seek(p, at(0.85, p.ai.gapL), 0.42, 6);

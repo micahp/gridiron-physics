@@ -9,10 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: node scripts/audit-liquid-ai-play.mjs audit-output
+      - name: Paired run-controller audit
+        run: |
+          git show HEAD^:engine/autonomous-run.js > engine/.audit-baseline-run.js
+          node scripts/compare-liquid-run.mjs audit-output
+          rm engine/.audit-baseline-run.js
+      - run: node test/autonomous-public-order.mjs
+      - run: node test/autonomous-run.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: liquid-ai-play-audit
