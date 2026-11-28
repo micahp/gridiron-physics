@@ -1,0 +1,19 @@
+name: Liquid AI play audit
+on:
+  push:
+    branches: [research/liquid-ai-play-audit-2026-11-28]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/audit-liquid-ai-play.mjs audit-output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liquid-ai-play-audit
+          path: audit-output/
