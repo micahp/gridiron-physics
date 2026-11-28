@@ -15,6 +15,8 @@ jobs:
         with:
           node-version: '22'
       - run: node scripts/audit-liquid-ai-play.mjs audit-output
+      - name: Passing role and catch opportunity audit
+        run: node scripts/audit-liquid-pass.mjs audit-output
       - name: Paired run-controller audit
         run: |
           git cat-file -e 3ab7083b7b073ac775e5b4205818bdfad92e517c^{commit} || git fetch --depth=1 origin 3ab7083b7b073ac775e5b4205818bdfad92e517c

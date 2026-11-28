@@ -44,9 +44,10 @@ const execute = call => call.schema_version === 'gridiron.autonomous-special-tea
 export function tracePlay(call, runner=execute) {
   const ticks=[], owners=new WeakMap();
   let tick=null, world=null;
+  const outsideTickReasons=[];
   const original=World.prototype.step;
   const priorAudit=World.prototype.auditDecision;
-  World.prototype.auditDecision=function(type,data){ if(tick) tick.reasons.push({type,...copy(data)}); };
+  World.prototype.auditDecision=function(type,data){ const row={type,t_s:this.t,...copy(data)}; if(tick) tick.reasons.push(row);else outsideTickReasons.push(row); };
   const capture=ObservationMemory.prototype.capture, advance=ObservationMemory.prototype.advance,
     estimate=ObservationMemory.prototype.estimate;
   function memoryState(m) {return {pending:copy(m.pending),last_seen:copy(m.lastSeen),counts:copy(m.counts)};}
@@ -92,7 +93,7 @@ export function tracePlay(call, runner=execute) {
       && new Set(t.decisions.map(d=>d.id)).size===22),'each tick must visit all 22 players exactly once');
     return {schema:'gridiron.liquid-ai-tick-audit.v1',call:copy(call),
       units:{position:'meters',velocity:'meters/second',heading:'radians',time:'seconds'},
-      ticks,final_world:worldState(world),record:copy(record)};
+      ticks,outside_tick_reasons:outsideTickReasons,final_world:worldState(world),record:copy(record)};
   } finally {
     World.prototype.step=original;
     if(priorAudit===undefined) delete World.prototype.auditDecision; else World.prototype.auditDecision=priorAudit;

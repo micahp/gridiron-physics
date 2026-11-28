@@ -764,6 +764,9 @@ export function simulatePassPlay(options = {}) {
       z: 1.5,
     };
     const flight = solveLaunch(from, to, Math.max(0.32, best.flight), AERO.spiral);
+    W.auditDecision?.('qb_launch',{player_id:qb.id,target_id:best.receiver.id,from,to,
+      aim:best.aim,flight_s:best.flight,target_position_m:{...best.receiver.p},
+      target_velocity_mps:{...best.receiver.v},accuracy,sigma,utility:best.utility});
     return { best, from, to, flight, accuracy, sigma };
   }
 
@@ -803,7 +806,10 @@ export function simulatePassPlay(options = {}) {
     updateQbPerception(elapsed);
     // A three-step drop from the gun takes about 0.8 s before the first read is live.
     if (elapsed < 0.75 + (cfg.assignments?.offense.QB.decision_delay_seconds ?? 0)) { setIntent(qb, 'complete the drop', 'get to the top of the drop before reading'); return; }
-    const availableOptions = readOptions().filter((o) => elapsed >= o.readyAt);
+    const allOptions = readOptions();
+    const availableOptions = allOptions.filter((o) => elapsed >= o.readyAt);
+    W.auditDecision?.('qb_options',{player_id:qb.id,elapsed_s:elapsed,
+      candidates:allOptions.map(({receiver,...rest})=>({id:receiver.id,role:receiver.roleKey,ready:elapsed>=rest.readyAt,...rest}))});
     const pressureCue = sensedPressure();
     const pressure = pressureCue.distance;
     if (cfg.assignments && qb.ai.escape && qb.ai.escapeReason !== 'illegal_throwaway'
@@ -955,6 +961,7 @@ export function simulatePassPlay(options = {}) {
   // the catch point, which is why most failed catches are simply incomplete.
   function resolveContest() {
     const candidates = catchCandidates();
+    W.auditDecision?.('catch_candidates',{ball:{x:W.ball.x,y:W.ball.y,z:W.ball.z},candidates:candidates.map(c=>({id:c.player.id,role:c.player.roleKey,team:c.player.team,planar_yards:c.planar,engaged:c.player.engaged?.id??null,heading:c.player.h}))});
     const offenseCandidates = candidates.filter((candidate) => candidate.player.team === 'O');
     const defenseCandidates = candidates.filter((candidate) => candidate.player.team !== 'O');
     const activeCandidateIds = new Set(candidates.map((candidate) => candidate.player.id));
@@ -1097,6 +1104,7 @@ export function simulatePassPlay(options = {}) {
   // the opportunity, so a later re-entry gets a new id.
   function contestRoll(kind, player, chance) {
     const value = rand();
+    W.auditDecision?.('contest_draw',{player_id:player.id,kind,chance,value});
     if (!contestDiagnostics || !currentThrowDiagnostics) return value;
     currentThrowDiagnostics.probability_draws += 1;
     const playerId = player.id;
@@ -1503,6 +1511,8 @@ export function simulatePassPlay(options = {}) {
           p.ai.gazeHeading = turnHeadingToward(p.ai.gazeHeading ?? p.h, passerHeading,
             PLAYER_GAZE_TURN_RATE / DECISION_HZ);
           const estimate = estimateObservedBallCatchPoint(p);
+          W.auditDecision?.('receiver_ball_read',{player_id:p.id,estimate:estimate??null,
+            gaze:p.ai.gazeHeading,route_index:p.ai.routeIndex??null});
           if (estimate) {
             p.dv = seek(p, estimate, 1, 14);
             setIntent(p, 'adjust to observed pass', 'pursue the estimated catch point from the live ball trajectory');
@@ -1646,6 +1656,10 @@ export function simulatePassPlay(options = {}) {
       if (estimate && task) p.ai.throwCueAt ??= W.t;
       const recognitionDelay = clamp(0.34 - (p.R.PRC ?? p.R.AWR ?? 60) * 0.0026, 0.08, 0.30);
       const recognized = !task || (p.ai.throwCueAt != null && W.t - p.ai.throwCueAt >= recognitionDelay);
+      if (W.auditDecision) W.auditDecision('coverage_ball_read',{player_id:p.id,task,
+        estimate:estimate??null,recognized,recognition_delay_s:recognitionDelay,
+        cue_at_s:p.ai.throwCueAt??null,eligible:!!estimate&&(!task||coverageBallOpportunity({task,estimate,
+          position:p.p,los:cfg.los,ballY:cfg.ballY,direction:dir,speed:p.vmax}))});
       if (estimate && recognized && (!task || coverageBallOpportunity({ task, estimate,
         position: p.p, los: cfg.los, ballY: cfg.ballY, direction: dir,
         speed: p.vmax }))) {
