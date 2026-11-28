@@ -21,7 +21,9 @@ assert.equal(result.diagnostics.reconciliation.ok, true);
 assert.deepEqual(result.diagnostics.outcome_inputs, []);
 
 const interceptionCall = buildSampleCall({ family: 'pass', concept: 'assigned', snap_type: 'shotgun', coverage: 'cover_1' });
-interceptionCall.seed = '15';
+// Fixed positive interception witness found in CI 46163609227; old seed 15
+// remains in the possession audit as a separate, now non-interception case.
+interceptionCall.seed = '83';
 interceptionCall.assignments = exampleAssignments('four_verticals', 'man');
 interceptionCall.player_evaluation_mode = 'shared_snapshot';
 for (const [id, profile] of Object.entries(interceptionCall.player_profiles)) {
@@ -44,9 +46,13 @@ const defense = new Set(Object.values(interceptionCall.defense.lineup));
 assert.equal(returnHelpers.size, 10, 'every other defender transitions to interceptor support');
 assert.ok([...returnHelpers].every((id) => defense.has(id) && id !== interception.player_id));
 const pursuingOffense = new Set(decisionsAtInterception.filter((event) =>
-  event.assignment === 'pursue the returner' || event.assignment === 'shed the block')
+  event.assignment === 'locate the carrier' || event.assignment === 'shed the block')
   .map((event) => event.player_id));
-assert.equal(pursuingOffense.size, 11, 'all offensive players transition to turnover pursuit');
+assert.equal(pursuingOffense.size, 11, 'all offensive players transition to search or local contact at possession');
+assert.ok(!decisionsAtInterception.some(event => event.assignment === 'pursue the returner'),
+  'opponents cannot pursue from a new possession before a delivered observation');
+assert.ok(turnover.events.some(event => event.assignment === 'pursue the returner' && event.t > interception.t),
+  'at least one opponent acquires and acts on the returner after the interception');
 assert.ok([...pursuingOffense].every((id) => Object.values(interceptionCall.offense.lineup).includes(id)));
 assert.ok(!turnover.events.some((event) => event.type === 'decision' && event.t > interception.t
   && /^run .* route$/.test(event.assignment)), 'receivers stop running routes after the turnover');

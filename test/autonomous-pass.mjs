@@ -184,7 +184,13 @@ const fumbleScenario = (seed, carrying) => simulatePassPlay({ seed, front: 'nick
 const seed6Low = fumbleScenario(6, 1), seed6High = fumbleScenario(6, 99);
 assert.equal(seed6Low.fumble, null);
 assert.equal(seed6High.fumble, null);
-assert.deepEqual(seed6Low.events, seed6High.events);
+assert.deepEqual(seed6Low.terminal, seed6High.terminal);
+// CAR also serves as the catch skill fallback when CTH is absent. The
+// catch_contest chance can legitimately differ even at identical trajectories.
+// The audit independently checks same first fumble contact and actual draw.
+const contactEvents = result => result.events.filter(e =>
+  ['catch','tackle_attempt','broken_tackle','fumble','fumble_recovery','whistle'].includes(e.type));
+assert.deepEqual(contactEvents(seed6Low), contactEvents(seed6High));
 // Bounded development-only witness discovery for the positive recovery
 // contract. The first qualifying seed is reported; do not use this selected
 // fixture as frequency/calibration evidence. Pin the discovered seed next.

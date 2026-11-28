@@ -67,28 +67,29 @@ for (const [id, profile] of Object.entries(intCall.player_profiles)) {
   else profile.ratings.CTH = 1;
 }
 calls.push(intCall);
-// The old seed 15 is retained unchanged. Find a positive turnover fixture
-// for transition coverage only, from a fixed bounded development seed set.
-// Report the search denominator; this is not an interception-rate estimate.
-let turnoverWitness = null;
-let attempted = 0;
-for (let seed = 0; seed < 96; seed++) {
-  const candidate = structuredClone(intCall);
-  candidate.seed = String(seed);
-  candidate.play_id = 'liquid-audit:turnover-witness-' + seed;
-  attempted++;
-  const result = simulateAutonomousPlay(candidate);
-  if (result.events.some(e => e.type === 'interception') &&
-      result.events.some(e => e.type === 'decision' && e.assignment === 'pursue the returner')) {
-    turnoverWitness = candidate;
-    calls.push(candidate);
-    break;
-  }
-}
-console.log('TURNOVER_WITNESS ' + JSON.stringify({attempted,seed:turnoverWitness?.seed ?? null}));
+// Fixed positive witness discovered in CI 46163609227 (84 attempted
+// development seeds, first qualifying seed 83). Never silently reselect.
+const turnoverWitness = structuredClone(intCall);
+turnoverWitness.seed = '83';
+turnoverWitness.play_id = 'liquid-audit:turnover-witness-83';
+calls.push(turnoverWitness);
+const attempted = 84; // historical discovery denominator, not a new sweep
+const originalStep = World.prototype.step;
 const possession = [];
 for (const call of calls) {
   const control = simulateAutonomousPlay(call);
+  World.prototype.step = function(dt, brain, afterBrains) {
+    const pending = [];
+    return originalStep.call(this, dt, player => {
+      pending.push(player);
+      if (pending.length === this.players.length) for (const candidate of pending.reverse()) brain(candidate);
+    }, afterBrains);
+  };
+  try {
+    const reversed = simulateAutonomousPlay(call);
+    assert.deepEqual(reversed.result, control.result, call.play_id + ': reverse callback result');
+    assert.deepEqual(reversed.events, control.events, call.play_id + ': reverse callback events');
+  } finally { World.prototype.step = originalStep; }
   const trace = tracePlay(call);
   assert.deepEqual(trace.record.result, control.result);
   assert.deepEqual(trace.record.events, control.events);
@@ -107,12 +108,28 @@ for (const call of calls) {
       && m.target === row.carrier_id && Math.abs(m.at_s-row.t_s)<1e-8
       && m.result && JSON.stringify(m.result) === JSON.stringify(row.estimate));
     assert.ok(estimate, 'pursuit must consume actual delivered memory on this tick');
+    assert.ok(observations.some(m => m.op === 'capture' && m.observer === row.player_id
+      && m.target === row.carrier_id && m.result?.visible
+      && Math.abs(m.at_s-row.estimate.observedAt)<1e-8),
+      'delivered estimate must originate in a visible capture');
     assert.ok(row.estimate.observedAt >= row.carrier_since_s - 1e-8);
     assert.ok(row.t_s - row.estimate.observedAt + 1e-8 >= row.reaction_delay_s);
     assert.ok(row.estimate.confidence >= 0.12);
     for (const axis of ['x','y']) assert.ok(Math.abs(row.target_m[axis] -
       (row.estimate.position[axis]+row.estimate.velocity[axis]*row.lead_seconds)) < 1e-8);
     if (!firstByPlayer.has(row.player_id)) firstByPlayer.set(row.player_id, row);
+  }
+  for (const row of searchReasons) {
+    assert.ok(!row.estimate || row.estimate.confidence < 0.12, 'search only without usable estimate');
+    const tick = trace.ticks.find(t => Math.abs(t.before.time_s-row.t_s)<1e-8);
+    const decision = tick?.decisions.find(x => x.id === row.player_id);
+    assert.ok(decision, 'search must execute in actual controller');
+    for (const axis of ['x','y']) assert.ok(Math.abs(decision.after.desired_velocity_mps[axis]
+      - decision.before.velocity_mps[axis]*0.35)<1e-8, 'search brake depends on own velocity');
+  }
+  if (call.play_id === turnoverWitness.play_id) {
+    assert.equal(acquisition?.type, 'interception', 'pinned witness must still intercept');
+    assert.ok(reasons.some(r=>r.phase === 'turnover_return'), 'pinned witness must execute pursuit');
   }
   // No requirement that old authored interception still occurs: expose loss of
   // coverage explicitly instead of silently choosing a convenient new seed.

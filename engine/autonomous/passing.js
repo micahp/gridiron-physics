@@ -10,7 +10,7 @@ import { rng } from '../rng.js';
 import { AERO, solveLaunch } from '../ball.js';
 import { Player, POSE, World } from '../world.js';
 import { createInsideZoneRoster } from '../autonomous-run.js';
-import { estimateBallCatchPoint, estimateBallLanding, ObservationMemory, turnHeadingToward } from './perception.js';
+import { estimateBallCatchPoint, estimateBallLanding, ObservationMemory, observationVisibility, turnHeadingToward } from './perception.js';
 import { routeOffsets } from '../routes.js';
 import { validateAssignments } from './assignments.js';
 import { engagementHazardUniform, hazardDeadline, retroDecisionInterval } from './retro-cadence.js';
@@ -1761,8 +1761,19 @@ export function simulatePassPlay(options = {}) {
       const task = cfg.assignments.defense[p.slot];
       if (task.kind === 'man') {
         const target = get(`O.${task.target_slot}`);
-        p.dv = seek(p, lead(p, target, 0.18), 0.95, 16);
+        const pursuitTarget = lead(p, target, 0.18);
+        p.dv = seek(p, pursuitTarget, 0.95, 16);
         p.face = Math.atan2(target.p.y - p.p.y, target.p.x - p.p.x);
+        // Diagnostic-only visibility probe. No observation is delivered to the
+        // legacy man controller, and this does not alter its steering.
+        if (W.auditDecision) W.auditDecision('man_coverage_tracking', {
+          player_id: p.id, target_id: target.id, target_source: 'live_receiver_truth',
+          visibility: observationVisibility(p, target, W.players, {
+            heading: p.h, fieldOfView: DEFENDER_FIELD_OF_VIEW, maxDistance: 55 * YD,
+          }), target_position_m: { ...target.p }, target_velocity_mps: { ...target.v },
+          target_m: pursuitTarget, lead_seconds: 0.18, desired_velocity_mps: { ...p.dv },
+          face_rad: p.face, max_speed_mps: p.vmax,
+        });
         setIntent(p, `cover ${target.slot} man`, 'stay in phase and squeeze the route');
       } else {
         const bounds = task.kind === 'zone' ? task.bounds : [3, 7, p.ai.routeStart.l - 1, p.ai.routeStart.l + 1];

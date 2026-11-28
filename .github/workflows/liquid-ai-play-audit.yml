@@ -35,6 +35,12 @@ jobs:
       - name: Post-possession decisions and fumble draw audit
         if: always()
         run: node scripts/audit-liquid-possession.mjs audit-output
+      - name: Assigned man coverage decision audit
+        if: always()
+        run: node scripts/audit-liquid-man.mjs audit-output
+      - name: Possession support contracts
+        if: always()
+        run: node test/autonomous-possession-support.mjs
       - name: Full legacy passing regression
         if: always()
         run: node test/autonomous-pass.mjs
