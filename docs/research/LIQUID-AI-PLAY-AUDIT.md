@@ -72,3 +72,17 @@ Stop condition: replay the five existing run calls; compare exact original and c
 ### First paired result and watchdog regression handling
 
 The five paired calls passed local target, delayed front pursuit and selected/applied lane checks at 28ffd44a. Public callback-order regression passed. Workflow 46160674428 failed on the existing long-run fixture assertion (>12 s); candidate had a complete football result but different duration. Keep the original >12 s exact assertion against the pinned baseline 3ab7083b, record both results, and independently exercise the candidate loop at the old 12-second boundary with a test-only clock injection immediately after the real handoff. The latter is a narrow boundary test, not a claim of a naturally advancing 12-second candidate play. Do not change watchdog thresholds or fabricate terminal outcomes. Preserve legacy unassigned RB steering exactly. Artifact upload is unconditional to retain failures. Baseline source is explicitly pinned rather than HEAD^.
+
+### Actual role interactions from the first paired audit
+
+| Run | Baseline yards | Candidate yards | Local target checks | Front fit checks | Delayed pursuit checks | RB steering checks |
+|---|---:|---:|---:|---:|---:|---:|
+| Right | -0.518 | 2.060 | 258 | 976 | 639 | 226 |
+| Backside C | 1.420 | 2.454 | 219 | 666 | 272 | 214 |
+| Left | -0.546 | 15.023 | 246 | 842 | 277 | 376 |
+| Reversed field | -0.518 | 2.060 | 258 | 976 | 639 | 226 |
+| Under | -0.538 | 3.610 | 161 | 836 | 340 | 201 |
+
+Baseline under at 1.141667s: RG (play-side B) and RT (play-side C) both target WILL, C engages RDT, TE engages RDE, MIKE pursues exact live carrier with no recognition memory. RB selects B. At 1.341667s, RG is engaged with MIKE and RT with WILL; RB selects A again. Candidate under selects A at handoff and B at 0.941667s, with no immediate reversal. Baseline right RT selects RDT, RDE, LDE, WILL, MIKE; candidate RDT, WILL, RDE. Right MIKE recognition at 0.808333s follows its first visible cue at 0.608333s (rating delay 0.196s); baseline pursues at handoff 0.441667s. Candidate WILL recognizes as late as 2.30s: this may be too slow and is not evidence that visibility proxy is accurate. Left run 15 yards is another warning against treating yardage improvement as validation. The joint candidate changes multiple mechanisms, so no individual causal attribution is established. No separate tuning or broad batch; keep unadopted until role behavior is reviewed, particularly defensive cue availability/occlusion and blocking coordination.
+
+Original [workflow 46160674428](https://github.com/micahp/gridiron-physics/actions/runs/46160674428) passed paired checks and callback-order check but failed the old fixed-duration regression. Follow-up source 88098164 retains baseline assertion and independently checks candidate clock boundary. [Follow-up workflow 46160863730](https://github.com/micahp/gridiron-physics/actions/runs/46160863730) records validation; use its actual result rather than assuming success.
