@@ -40,3 +40,7 @@ source review. Executor work between World.step calls appears in the next
 before snapshot and the final world/result; within-tick events are captured
 separately. Special-teams and LP game-loop auditing are not wired by this tool.
 No production engine modifications, no repin and no large batch.
+
+## Expanded running-back audit
+
+The harness records actual lane-score terms, selected lane, applied steering lane, hold/lock guards and exact canonical gap labels on every evaluated read. These diagnostic records do not drive the controller. The default set varies assigned gap, run direction, field direction, defensive front, pass concept and coverage; two saved special-teams failure fixtures are also included. Open `liquid-ai-audit.html` in the generated artifact and load any play JSON. Step a native tick, skip to a selected player's state change or event, inspect desired velocity, before/after memory and score breakdown. The viewer is a read-only replay, not a live simulation mutation interface. No NFL calibration implied.

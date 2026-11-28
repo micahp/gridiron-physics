@@ -528,6 +528,7 @@ export function simulateInsideZone(options = {}) {
     const currentL = lOf(rb);
     // Read the spaces between linemen (A/B/C tracks), not the blocker centers.
     const lanes = [-2.65, -1.68, -0.58, 0.58, 1.68, 2.65];
+    const auditScores = W.auditDecision ? [] : null;
     const scored = lanes.map((lane) => {
       let threat = 0, support = 0;
       for (const q of defense) {
@@ -548,8 +549,14 @@ export function simulateInsideZone(options = {}) {
       const readSkill = 0.78 + (rb.R.BCV ?? 60) * 0.003;
       const playsideBias = -side * lane * 0.16;
       const aimingCost = rb.ai.aimingLane == null ? 0 : Math.abs(lane - rb.ai.aimingLane) * 0.55;
-      return { lane, score: threat * 1.9 * readSkill - support * 0.58 + cutCost + playsideBias + aimingCost };
+      const score = threat * 1.9 * readSkill - support * 0.58 + cutCost + playsideBias + aimingCost;
+      if (auditScores) auditScores.push({ lane, gap: auditGap(lane, side), threat, support,
+        cutCost, readSkill, playsideBias, aimingCost, score });
+      return { lane, score };
     }).sort((a, b) => a.score - b.score || Math.abs(a.lane - side * 1.15) - Math.abs(b.lane - side * 1.15));
+    if (auditScores) W.auditDecision('rb_lane_scores', { player_id: rb.id, current_lateral_yards: currentL,
+      assigned_lane: rb.ai.aimingLane ?? null, current_lane: rb.ai.lane ?? null,
+      candidates: scored.map(s => auditScores.find(row => row.lane === s.lane)) });
     return scored;
   }
 
@@ -562,7 +569,11 @@ export function simulateInsideZone(options = {}) {
     const scores = laneScores();
     const current = scores.find((row) => row.lane === rb.ai.lane);
     const next = scores.find((row) => row.lane === nextLane);
-    return !!current && !!next && current.score - next.score >= threshold;
+    const accepted = !!current && !!next && current.score - next.score >= threshold;
+    W.auditDecision?.('rb_switch_guard', { player_id: rb.id, current_lane: rb.ai.lane,
+      proposed_lane: nextLane, current_score: current?.score ?? null, proposed_score: next?.score ?? null,
+      threshold, accepted });
+    return accepted;
   }
 
   for (const p of defense.filter((player) => player.info.group === 'DB')) {
@@ -729,6 +740,10 @@ export function simulateInsideZone(options = {}) {
       if (forward >= 0.8) p.ai.laneLocked = true;
       const readInterval = clamp(0.19 - (p.R.AWR ?? 60) * 0.0011, 0.075, 0.16);
       p.ai.nextRead = W.t + (forward < 0.7 ? readInterval : readInterval * 1.25);
+      W.auditDecision?.('rb_read', { player_id: p.id, first_assigned_read: firstAssignedRead,
+        proposed_lane: next, selected_lane: p.ai.lane, selected_gap: auditGap(p.ai.lane, side),
+        locked: !!p.ai.laneLocked, hold_until_s: p.ai.laneHoldUntil, next_read_s: p.ai.nextRead,
+        forward_yards: forward });
     }
     const press = forward < 0.65 && W.t - carrierSince < 0.55;
     const lane = press ? (p.ai.aimingLane ?? side * 0.58) : (p.ai.lane ?? side * 0.58);
@@ -746,6 +761,11 @@ export function simulateInsideZone(options = {}) {
       }
     }
     p.dv = dv;
+    W.auditDecision?.('rb_steering', { player_id: p.id, phase: press ? 'press' : 'cut_read',
+      assigned_gap: p.ai.playAssignment?.aiming_gap ?? null,
+      selected_lane: p.ai.lane ?? null, selected_gap: auditGap(p.ai.lane ?? lane, side),
+      applied_lane: lane, applied_gap: auditGap(lane, side), target_m: { ...target },
+      desired_velocity_mps: { ...dv }, forward_yards: forward, near_defender_id: threat?.id ?? null });
     setIntent(p, 'run through selected inside-zone lane', `press ${laneLabel(p.ai.lane ?? lane, side)} and react to the nearest fit`);
   }
 
@@ -1164,4 +1184,10 @@ function laneLabel(lateral, side = 1) {
   if (relative <= 0.5) return 'play-side A';
   if (relative <= 1.6) return 'play-side B';
   return 'play-side C';
+}
+
+// Audit labels derive from the same declared six tracks, never the legacy display thresholds.
+function auditGap(lane, side) {
+  if (lane == null) return null;
+  return Object.entries(RUN_GAP_LATERAL).sort((a,b)=>Math.abs(a[1]-lane*side)-Math.abs(b[1]-lane*side))[0][0];
 }

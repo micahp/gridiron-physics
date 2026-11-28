@@ -4,10 +4,13 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { copyFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { Player, World } from '../engine/world.js';
 import { ObservationMemory } from '../engine/autonomous/perception.js';
 import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
+import { simulateAutonomousSpecialTeams } from '../engine/autonomous/special-teams.js';
 import { exampleAssignments, exampleRunAssignments } from '../engine/autonomous/example-assignments.js';
 import { buildSampleCall } from '../test/autonomous-fixtures.mjs';
 
@@ -37,10 +40,13 @@ function changed(before,after) {
   return Object.fromEntries(Object.entries(after).filter(([k,v]) =>
     JSON.stringify(v)!==JSON.stringify(before[k])));
 }
+const execute = call => call.schema_version === 'gridiron.autonomous-special-teams.v1' ? simulateAutonomousSpecialTeams(call) : simulateAutonomousPlay(call);
 export function tracePlay(call) {
   const ticks=[], owners=new WeakMap();
   let tick=null, world=null;
   const original=World.prototype.step;
+  const priorAudit=World.prototype.auditDecision;
+  World.prototype.auditDecision=function(type,data){ if(tick) tick.reasons.push({type,...copy(data)}); };
   const capture=ObservationMemory.prototype.capture, advance=ObservationMemory.prototype.advance,
     estimate=ObservationMemory.prototype.estimate;
   function memoryState(m) {return {pending:copy(m.pending),last_seen:copy(m.lastSeen),counts:copy(m.counts)};}
@@ -62,7 +68,7 @@ export function tracePlay(call) {
   };
   World.prototype.step=function(dt,brain,afterBrains) {
     world=this;
-    const row={index:ticks.length,dt_s:dt,before:worldState(this),decisions:[],memory:[]};
+    const row={index:ticks.length,dt_s:dt,before:worldState(this),decisions:[],memory:[],reasons:[]};
     tick=row;
     const result=original.call(this,dt,player=>{
       const before=playerState(player);
@@ -80,7 +86,7 @@ export function tracePlay(call) {
     return result;
   };
   try {
-    const record=simulateAutonomousPlay(call);
+    const record=execute(call);
     assert.ok(world && ticks.length,'actual World.step must execute');
     assert.ok(ticks.every(t=>t.decisions.length===22 && t.before.players.length===22
       && new Set(t.decisions.map(d=>d.id)).size===22),'each tick must visit all 22 players exactly once');
@@ -89,6 +95,7 @@ export function tracePlay(call) {
       ticks,final_world:worldState(world),record:copy(record)};
   } finally {
     World.prototype.step=original;
+    if(priorAudit===undefined) delete World.prototype.auditDecision; else World.prototype.auditDecision=priorAudit;
     ObservationMemory.prototype.capture=capture;
     ObservationMemory.prototype.advance=advance;
     ObservationMemory.prototype.estimate=estimate;
@@ -104,6 +111,20 @@ function sample(kind) {
   call.output_mode='result_only'; // the audit records native ticks independently of render frames
   if(!run) call.behavior_mode='retro';
   return call;
+}
+function scenarios() {
+  const run = sample('run');
+  const alternative = structuredClone(run); alternative.play_id='liquid-audit:run-backside-c'; alternative.assignments.offense.RB.aiming_gap='backside_c';
+  const left=structuredClone(run); left.play_id='liquid-audit:run-left'; left.offense.call.direction='left'; left.assignments=exampleRunAssignments('left');
+  const reversed=structuredClone(run); reversed.play_id='liquid-audit:run-field-reversed'; reversed.situation.offense_direction=-1;
+  const front=structuredClone(run); front.play_id='liquid-audit:run-under'; front.defense.call.front='under';
+  const pass=sample('pass');
+  const zone=structuredClone(pass); zone.play_id='liquid-audit:slant-flat-zone'; zone.defense.call.coverage='cover_3'; zone.assignments=exampleAssignments('slant_flat','zone');
+  const curls=structuredClone(zone); curls.play_id='liquid-audit:curls'; curls.assignments=exampleAssignments('curls','zone');
+  const verticals=structuredClone(zone); verticals.play_id='liquid-audit:four-verticals'; verticals.assignments=exampleAssignments('four_verticals','zone');
+  const saved = name => JSON.parse(readFileSync(new URL('../test/fixtures/'+name, import.meta.url),'utf8'));
+  return [run,alternative,left,reversed,front,pass,zone,curls,verticals,
+    saved('blocked-field-goal-seed-300027.json'),saved('muffed-kick-endline-seed-300021.json')];
 }
 function summarize(trace) {
   const {ticks,record}=trace;
@@ -131,11 +152,11 @@ function summarize(trace) {
 }
 const args=process.argv.slice(2);
 const out=args[0]??'liquid-ai-audit';
-const calls=args[1]?[JSON.parse(readFileSync(args[1],'utf8'))]:[sample('run'),sample('pass')];
+const calls=args[1]?[JSON.parse(readFileSync(args[1],'utf8'))]:scenarios();
 mkdirSync(out,{recursive:true});
 const revision=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 for(const [i,call] of calls.entries()) {
-  const baseline=simulateAutonomousPlay(call);
+  const baseline=execute(call);
   const trace=tracePlay(call);
   assert.deepEqual(trace.record.result,baseline.result,'instrumentation must preserve result');
   assert.deepEqual(trace.record.events,baseline.events,'instrumentation must preserve all event rows');
@@ -143,11 +164,23 @@ for(const [i,call] of calls.entries()) {
   const summary=summarize(trace);
   summary.engine_commit=revision;summary.call_sha256=hash(call);summary.events_sha256=hash(baseline.events);
   summary.trace_sha256=hash(trace);summary.result_event_parity=true;
+  const reasons=trace.ticks.flatMap(t=>t.reasons.map(r=>({tick:t.index,t_s:t.before.time_s,...r})));
+  summary.rb_audit={reads:reasons.filter(r=>r.type==='rb_read'),score_evaluations:reasons.filter(r=>r.type==='rb_lane_scores').length,
+    first_score:reasons.find(r=>r.type==='rb_lane_scores')??null,
+    switch_guards:reasons.filter(r=>r.type==='rb_switch_guard'),
+    selected_applied_differences:reasons.filter(r=>r.type==='rb_steering'&&r.selected_lane!==r.applied_lane).length,
+    first_steering:reasons.find(r=>r.type==='rb_steering')??null};
+  if(call.offense?.call.family==='run'){
+    assert.ok(summary.rb_audit.reads.length,'must inspect actual RB reads');
+    assert.equal(summary.rb_audit.reads[0].selected_gap,call.assignments.offense.RB.aiming_gap);
+  }
   writeFileSync(join(out,'play-'+i+'.json'),JSON.stringify(trace));
   writeFileSync(join(out,'summary-'+i+'.json'),JSON.stringify(summary,null,2));
-  const compact={...summary,call:{family:call.offense.call.family,seed:call.seed,assignments:call.assignments},
+  const compact={...summary,call:{id:call.play_id??call.kind,family:call.offense?.call.family??call.kind,seed:call.seed},
     roles:summary.roles.map(r=>({role:r.role,transitions:r.transitions.length,memory_estimates:r.memory_estimates,
       ...( ['O.QB','O.RB','O.WR2','O.RT','D.MLB','D.RCB','D.MIKE','D.RDE'].includes(r.role)?
         {first:r.transitions.slice(0,6)}:{})})),events:summary.events.slice(0,30)};
-  console.log('LIQUID_AUDIT '+JSON.stringify(compact));
+  console.log('LIQUID_AUDIT '+JSON.stringify({...compact,roles:undefined,events:undefined,rb_audit:{...summary.rb_audit,reads:summary.rb_audit.reads.slice(0,12),switch_guards:summary.rb_audit.switch_guards.slice(0,5)}}));
 }
+
+copyFileSync(fileURLToPath(new URL('../liquid-ai-audit.html',import.meta.url)),join(out,'liquid-ai-audit.html'));
