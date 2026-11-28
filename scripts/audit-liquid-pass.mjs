@@ -47,6 +47,9 @@ for(const original of scenarios().filter(c=>c.offense?.call.family==='pass')){
   assert.deepEqual(t.record.result,untraced.result);assert.deepEqual(t.record.events,untraced.events);
   assert.equal(t.record.diagnostics.reconciliation.ok,true);
   const s=summarize(t);results.push(s);
+  for(const attempt of t.record.diagnostics.pass_contests.throws.flatMap(r=>r.physical_opportunities)){
+    assert.ok(attempt.probability_draws<=1,'one draw per uninterrupted physical opportunity despite recognition changes');
+  }
   const old=tracePlay(call,baseline), prior=summarize(old);
   const blocked=s.rejected;
   rejectedTotal+=blocked.length;

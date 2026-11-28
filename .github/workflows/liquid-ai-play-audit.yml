@@ -26,15 +26,25 @@ jobs:
           node test/autonomous-coverage-reaction.mjs
           node test/autonomous-receiving-state.mjs
           node test/autonomous-contest-order.mjs
-          node test/autonomous-pass.mjs
+      - name: Compare original unassigned fumble fixture
+        run: |
+          git cat-file -e 1cb375c6d95bdb24caea263f5d41801016ef173f^{commit} || git fetch --depth=1 origin 1cb375c6d95bdb24caea263f5d41801016ef173f
+          git worktree add --detach /tmp/liquid-frozen-control 1cb375c6d95bdb24caea263f5d41801016ef173f
+          node scripts/compare-unassigned-fumble.mjs /tmp/liquid-frozen-control
+          git worktree remove /tmp/liquid-frozen-control
+      - name: Full legacy passing regression
+        run: node test/autonomous-pass.mjs
       - name: Paired run-controller audit
+        if: always()
         run: |
           git cat-file -e 3ab7083b7b073ac775e5b4205818bdfad92e517c^{commit} || git fetch --depth=1 origin 3ab7083b7b073ac775e5b4205818bdfad92e517c
           git show 3ab7083b7b073ac775e5b4205818bdfad92e517c:engine/autonomous-run.js > engine/.audit-baseline-run.js
           node scripts/compare-liquid-run.mjs audit-output
           rm engine/.audit-baseline-run.js
       - run: node test/autonomous-public-order.mjs
+        if: always()
       - run: node test/autonomous-run.mjs
+        if: always()
       - uses: actions/upload-artifact@v4
         if: always()
         with:
