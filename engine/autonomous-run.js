@@ -806,7 +806,8 @@ export function simulateInsideZone(options = {}) {
         forward_yards: forward });
     }
     const press = forward < 0.65 && W.t - carrierSince < 0.55;
-    // Compute intent after all lane decisions, including the emergency cut.
+    const legacyLane = !cfg.assignments ? (press ? (p.ai.aimingLane ?? side * 0.58) : (p.ai.lane ?? side * 0.58)) : null;
+    // Compute assigned intent after all lane decisions, including the emergency cut.
     // React to defenders already in the near collision envelope. The lane read
     // is re-scored from live positions rather than following a pre-written path.
     const threat = closest(defense, p, (q) => !q.down && fOf(q) >= forward - 0.6 && fOf(q) <= forward + 1.8 && Math.abs(lOf(q) - lOf(p)) < 2.0);
@@ -819,7 +820,7 @@ export function simulateInsideZone(options = {}) {
       }
     }
     const lane = cfg.assignments ? (p.ai.lane ?? p.ai.aimingLane ?? side * 0.58)
-      : press ? (p.ai.aimingLane ?? side * 0.58) : (p.ai.lane ?? side * 0.58);
+      : legacyLane;
     const target = {x:p.p.x+dir*(press?1.25:2.1)*YD,y:(cfg.ballY+dir*lane)*YD};
     const dv = seek(p,target,1,6.6);
     p.dv = dv;

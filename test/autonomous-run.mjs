@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { createInsideZoneRoster, simulateInsideZone } from '../engine/autonomous-run.js';
 import { simulateAutonomousPlay } from '../engine/autonomous/simulator.js';
 import { scoreAutonomousTracking } from '../engine/tracking-eval.js';
+import { World } from '../engine/world.js';
 
 const base = { seed: 'inside-zone-1', front: 'even', runSide: 'left' };
 const a = simulateInsideZone(base);
@@ -11,8 +12,27 @@ const b = simulateInsideZone(base);
 const longRunCall = JSON.parse(fs.readFileSync(new URL('./fixtures/run-over-12-seed-300022.json', import.meta.url), 'utf8'));
 const longRun = simulateAutonomousPlay(longRunCall);
 assert.equal(longRun.status, 'complete', JSON.stringify(longRun.failure));
-assert.ok(longRun.result.elapsed_seconds > 12,
-  'a live run that is advancing must continue past the old fixed 12-second cutoff');
+// The original exact >12s reproduction remains asserted against its immutable
+// policy in scripts/compare-liquid-run.mjs. A different controller may legally
+// produce an earlier tackle. Check the candidate's loop boundary independently.
+const originalStep=World.prototype.step;
+let injected=false,continued=false;
+World.prototype.step=function(dt,brains,afterBrains){
+  if(injected && this.t>12) continued=true;
+  const isFirstHandoffTick=!injected && this.ball.holder?.slot==='RB';
+  const result=originalStep.call(this,dt,brains,afterBrains);
+  if(isFirstHandoffTick){
+    // Test-only clock boundary injection: the real handoff changes the tracked
+    // live phase, so the progress tracker resets. This is not a motion sample.
+    this.t+=12;
+    injected=true;
+  }
+  return result;
+};
+try {
+  simulateAutonomousPlay(longRunCall);
+  assert.ok(injected && continued,'candidate must execute another physics tick after the old 12-second boundary');
+} finally {World.prototype.step=originalStep;}
 assert.ok(['tackle', 'touchdown', 'out_of_bounds', 'safety'].includes(longRun.result.event));
 
 assert.deepEqual(a, b, 'fixed seed and snap inputs reproduce the full play and every trajectory sample');

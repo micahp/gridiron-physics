@@ -17,12 +17,14 @@ jobs:
       - run: node scripts/audit-liquid-ai-play.mjs audit-output
       - name: Paired run-controller audit
         run: |
-          git show HEAD^:engine/autonomous-run.js > engine/.audit-baseline-run.js
+          git cat-file -e 3ab7083b7b073ac775e5b4205818bdfad92e517c^{commit} || git fetch --depth=1 origin 3ab7083b7b073ac775e5b4205818bdfad92e517c
+          git show 3ab7083b7b073ac775e5b4205818bdfad92e517c:engine/autonomous-run.js > engine/.audit-baseline-run.js
           node scripts/compare-liquid-run.mjs audit-output
           rm engine/.audit-baseline-run.js
       - run: node test/autonomous-public-order.mjs
       - run: node test/autonomous-run.mjs
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: liquid-ai-play-audit
           path: audit-output/

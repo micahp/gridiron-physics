@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {writeFileSync} from 'node:fs';
+import {writeFileSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {tracePlay,scenarios} from './audit-liquid-ai-play.mjs';
 import {simulateInsideZone as baselineRun} from '../engine/.audit-baseline-run.js';
@@ -28,6 +28,14 @@ function evidence(trace){
   return {result:trace.record.result,status:trace.record.status,reconciliation:trace.record.diagnostics.reconciliation,handoff:handoff?.t??null,
     changes,recognition:trace.record.events.filter(e=>e.type==='defensive_run_read'),lane:trace.record.events.filter(e=>e.type==='lane_read'),snapshots};
 }
+// Preserve the original exact long-run watchdog reproduction on its frozen policy.
+const longCall=JSON.parse(readFileSync(new URL('../test/fixtures/run-over-12-seed-300022.json',import.meta.url),'utf8'));
+const oldLong=baseline(longCall),newLong=simulateAutonomousPlay(longCall);
+assert.equal(oldLong.status,'complete');
+assert.ok(oldLong.result.elapsed_seconds>12,'original long-run reproduction must remain intact');
+assert.equal(newLong.status,'complete',JSON.stringify(newLong.failure));
+assert.ok(['tackle','touchdown','out_of_bounds','safety'].includes(newLong.result.event));
+console.log('LONG_RUN_POLICY_COMPARE '+JSON.stringify({baseline:oldLong.result,candidate:newLong.result}));
 let all=[];
 for(const call of scenarios().filter(c=>c.offense?.call.family==='run')){
   const old=tracePlay(call,baseline),next=tracePlay(call);
@@ -51,4 +59,4 @@ for(const call of scenarios().filter(c=>c.offense?.call.family==='run')){
   console.log('RUN_ROLE_COMPARE '+JSON.stringify({id:call.play_id,checks,baseline:{result:b.result,rt:b.changes['O.RT'],recognition:b.recognition,lane:b.lane},candidate:{result:c.result,rt:c.changes['O.RT'],recognition:c.recognition,lane:c.lane},baselineAtCuts:b.snapshots.filter(x=>x.t>1.13&&x.t<1.35).map(x=>({t:x.t,players:x.players?.filter(p=>['O.RB','O.RG','O.RT','D.MIKE','D.RDT','D.RDE'].includes(p.role))}))}));
 }
 assert.ok(all.some(x=>x.checks.pursuit>0),'recognition/pursuit must be exercised');
-writeFileSync(join(process.argv[2]??'audit-output','paired-run-role-audit.json'),JSON.stringify(all,null,2));
+writeFileSync(join(process.argv[2]??'audit-output','paired-run-role-audit.json'),JSON.stringify({baseline_commit:'3ab7083b7b073ac775e5b4205818bdfad92e517c',long_run:{baseline:oldLong.result,candidate:newLong.result},plays:all},null,2));
