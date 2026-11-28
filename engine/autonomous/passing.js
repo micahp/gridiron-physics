@@ -1217,7 +1217,10 @@ export function simulatePassPlay(options = {}) {
     const force = 0.55 * (d.R.TAK ?? 60) + 0.45 * (d.R.STR ?? 60) + closing * 1.4;
     const security = victim.R.CAR ?? 65;
     const chance = clamp(0.012 + (force - security) * 0.0014, 0.003, 0.14);
-    if (rand() >= chance) return false;
+    const draw = rand();
+    W.auditDecision?.('forced_fumble_draw', { player_id: d.id, carrier_id: victim.id,
+      force, security, chance, draw, closing_speed_yards_per_s: closing, success: draw < chance });
+    if (draw >= chance) return false;
     const spot = { x: W.ball.x, y: W.ball.y };
     fumble = { fumbler: victim, forcedBy: d, spot };
     victim.hasBall = false; victim.mode = 'loose_ball';
@@ -1419,7 +1422,10 @@ export function simulatePassPlay(options = {}) {
       }
     }
     const leadScale = clamp(0.22 + (p.R.PUR ?? p.R.AWR ?? 60) * 0.0012, 0.24, 0.36);
-    p.dv = seek(p, lead(p, carrier, leadScale), 0.98, 20);
+    const target = lead(p, carrier, leadScale);
+    p.dv = seek(p, target, 0.98, 20);
+    W.auditDecision?.('possession_pursuit', { player_id: p.id, carrier_id: carrier.id,
+      phase: 'turnover_return', carrier_since_s: carrierSince, target_source: 'live_carrier_truth', target_m: target });
     p.face = Math.atan2(carrier.p.y - p.p.y, carrier.p.x - p.p.x);
     setIntent(p, 'pursue the returner', 'take the interception angle from the live carrier position');
   }
@@ -1661,7 +1667,11 @@ export function simulatePassPlay(options = {}) {
         return;
       }
       const leadScale = clamp(0.22 + (p.R.PUR ?? 60) * 0.0012, 0.24, 0.36);
-      p.dv = seek(p, lead(p, carrier, leadScale), 0.98, 20);
+      const target = lead(p, carrier, leadScale);
+      p.dv = seek(p, target, 0.98, 20);
+      W.auditDecision?.('possession_pursuit', { player_id: p.id, carrier_id: carrier.id,
+        phase: 'post_catch', carrier_since_s: carrierSince, ready_at_s: readyAt,
+        target_source: 'live_carrier_truth', target_m: target });
       p.face = Math.atan2(carrier.p.y - p.p.y, carrier.p.x - p.p.x);
       setIntent(p, 'pursue the carrier', 'take the interception angle from the live carrier position');
       return;

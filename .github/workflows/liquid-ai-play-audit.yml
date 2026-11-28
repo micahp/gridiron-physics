@@ -32,6 +32,8 @@ jobs:
           git worktree add --detach /tmp/liquid-frozen-control 1cb375c6d95bdb24caea263f5d41801016ef173f
           node scripts/compare-unassigned-fumble.mjs /tmp/liquid-frozen-control
           git worktree remove /tmp/liquid-frozen-control
+      - name: Post-possession decisions and fumble draw audit
+        run: node scripts/audit-liquid-possession.mjs audit-output
       - name: Full legacy passing regression
         run: node test/autonomous-pass.mjs
       - name: Paired run-controller audit
